@@ -1,0 +1,276 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="FreeRTOS_Dual" target="8" version="2">
+  <project Name="CM4">
+    <configuration
+      CMSIS_CORE="Yes"
+      Name="Common"
+      Placement="Flash"
+      Target="STM32H745ZI_CM4"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv5-SP-D16"
+      arm_linker_heap_size="128"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="256"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
+      arm_simulator_memory_simulation_parameter="STM32H745ZI_CM4;0x200000;0x100000"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_trace_interface_type="None"
+      c_preprocessor_definitions="USE_HAL_DRIVER; STM32H745xx; USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;CORE_CM4;STARTUP_FROM_RESET"
+      c_user_include_directories="./CM4/Inc"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM4_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM4_MemoryMap.xml"
+      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
+      macros="DeviceVectorsFile=STM32H745xx.vec"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
+      target_connect_script="TargetInterface.setDebugInterfaceProperty(&quot;set_adiv5_AHB_ap_num&quot;, 3)"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_script_file="$(TargetsDir)/STM32/STM32H7_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32H7_CM4_Loader_rpc.elf)"
+      arm_target_loader_can_erase_all="Yes"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <configuration Name="RAM" target_reset_script="Reset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
+      <file file_name="$(TargetsDir)/STM32/STM32_Startup.s" />
+      <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
+    </folder>
+    <folder Name="Application">
+      <folder Name="EWARM">
+        <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
+          <configuration Name="Common" build_exclude_from_build="Yes" />
+        </file>
+      </folder>
+      <folder Name="User">
+        <folder Name="CM4">
+          <file file_name="$(ProjectDir)/CM4/Src/stm32h7xx_it.c" />
+          <file file_name="$(ProjectDir)/CM4/Src/main_c4.c" />
+        </folder>
+      </folder>
+    </folder>
+    <folder Name="Doc">
+      <file file_name="./../readme.txt" />
+      <file file_name="Howto.txt" />
+    </folder>
+    <folder Name="Drivers">
+      <folder Name="BSP">
+        <folder Name="STM32H745I_Nucleo">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
+        </folder>
+      </folder>
+      <folder Name="CMSIS">
+        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+      </folder>
+      <folder Name="STM32H7xx_HAL_Driver">
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
+      </folder>
+    </folder>
+    <folder Name="Middlewares">
+      <folder Name="FreeRTOS">
+        <folder Name="CMSIS-RTOS">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
+        </folder>
+        <folder Name="portable">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
+            <configuration Name="Common" build_exclude_from_build="Yes" />
+          </file>
+        </folder>
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+      </folder>
+    </folder>
+  </project>
+  <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG"
+    gcc_debugging_level="Level 3"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="None"
+    hidden="Yes" />
+  <configuration
+    Name="THUMB Release"
+    inherited_configurations="THUMB;Release" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="None"
+    gcc_omit_frame_pointer="Yes"
+    gcc_optimization_level="Level 1"
+    hidden="Yes" />
+  <project Name="CM7">
+    <configuration
+      CMSIS_CORE="Yes"
+      Name="Common"
+      Placement="Flash"
+      Target="STM32H745ZI_CM7"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M7"
+      arm_fp_abi="Hard"
+      arm_fpu_type="FPv5-D16"
+      arm_linker_heap_size="128"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="256"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
+      arm_simulator_memory_simulation_parameter="STM32H745ZI_CM7;0x200000;0x100000"
+      arm_target_loader_applicable_loaders="Flash"
+      arm_target_loader_default_loader="Flash"
+      arm_target_trace_interface_type="None"
+      c_preprocessor_definitions="USE_HAL_DRIVER; STM32H745xx; USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;CORE_CM7;STARTUP_FROM_RESET"
+      c_user_include_directories="./CM7/Inc"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM7_Peripherals.xml"
+      linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM7_MemoryMap.xml"
+      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
+      macros="DeviceVectorsFile=STM32H745xx.vec"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
+      target_connect_script="TargetInterface.setDebugInterfaceProperty(&quot;set_adiv5_AHB_ap_num&quot;, 0)"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_script_file="$(TargetsDir)/STM32/STM32H7_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32H7_Loader_rpc.elf)"
+      arm_target_loader_can_erase_all="Yes"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <configuration Name="RAM" target_reset_script="Reset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
+      <file file_name="$(TargetsDir)/STM32/STM32_Startup.s" />
+      <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
+    </folder>
+    <folder Name="Application">
+      <folder Name="EWARM">
+        <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
+          <configuration Name="Common" build_exclude_from_build="Yes" />
+        </file>
+      </folder>
+      <folder Name="User">
+        <folder Name="CM7">
+          <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
+          <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
+          <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
+        </folder>
+      </folder>
+    </folder>
+    <folder Name="Doc">
+      <file file_name="$(ProjectDir)readme.txt" />
+    </folder>
+    <folder Name="Drivers">
+      <folder Name="BSP">
+        <folder Name="STM32H745I_Nucleo">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
+        </folder>
+      </folder>
+      <folder Name="CMSIS">
+        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+      </folder>
+      <folder Name="STM32H7xx_HAL_Driver">
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
+      </folder>
+    </folder>
+    <folder Name="Middlewares">
+      <folder Name="FreeRTOS">
+        <folder Name="CMSIS-RTOS">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
+        </folder>
+        <folder Name="portable">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
+            <configuration Name="Common" build_exclude_from_build="Yes" />
+          </file>
+        </folder>
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+      </folder>
+    </folder>
+  </project>
+  <configuration
+    Name="Common"
+    c_user_include_directories="./common_h7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/CPU"
+    environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.6.0" />
+</solution>

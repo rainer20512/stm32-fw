@@ -1,0 +1,2 @@
+   1. When then STM Cube Directory is changed:
+      THe easiest way is to open the project file as xml file, then search and replace the hard code STM Cube directory 
