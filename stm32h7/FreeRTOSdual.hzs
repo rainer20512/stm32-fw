@@ -83,10 +83,11 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="36" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="41" y="63" useTextEdit="1" useBinaryEdit="0" left="8" path="FreeRTOSdual.hzp" selected="1" top="39" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="29" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h" selected="1" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="41" y="63" useTextEdit="1" useBinaryEdit="0" left="8" path="FreeRTOSdual.hzp" selected="0" top="39" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1" useTextEdit="1" useBinaryEdit="0" left="0" path="Howto.txt" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="20" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/stm32h7xx_it.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="30" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.h" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="CM4" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Projects/NUCLEO-H745ZI-Q/Applications/FreeRTOS/FreeRTOS_AMP_Dual_RTOS/CM7/Src" debugSearchPath="" autoConnectCapabilities="266111"/>
+ <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Projects/NUCLEO-H745ZI-Q/Applications/FreeRTOS/FreeRTOS_AMP_Dual_RTOS/CM7/Src" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>
