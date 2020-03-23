@@ -1,0 +1,251 @@
+/**
+ ******************************************************************************
+ * @file    INIT.c
+ * @author  rainer
+ * @brief   Initialization and configuration tasks
+ *          exclusively called by main
+ ******************************************************************************
+ */
+#include "stm32l4xx.h"
+
+#include "config/config.h"
+#include "config/devices_config.h"
+
+#if DEBUG_MODE > 0
+    #include "debug_helper.h"
+#endif
+
+/* - Add additional conditional #includes here ------------------------------*/
+
+#if USE_RFM12 > 0 || USE_RFM69 > 0
+    #include "rfm/rfm.h"
+#endif
+
+#if USE_DISPLAY > 0 || USE_PWMTIMER > 0
+    #include "ui/lcd.h"
+#endif
+
+#if USE_ONEWIRE > 0
+    #include "onewire.h"
+#endif
+
+
+/******************************************************************************
+ * Find, dump and clear the most recent reset reason in PWR-SRx
+ *****************************************************************************/
+void Init_DumpAndClearResetSource(void)
+{
+  if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) == RESET) {    
+    #if DEBUG_MODE > 0
+        DEBUG_PUTS("Start from RESET");
+    #endif
+  } else {
+    /* Clear the Standby flag */
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+    #if DEBUG_MODE > 0
+        DEBUG_PUTS("Restart from Standby");
+    #endif
+    
+    /* Check and Clear the Wakeup flag */
+    if (__HAL_PWR_GET_FLAG(PWR_FLAG_WUF1) != RESET)
+    {
+       #if DEBUG_MODE > 0
+           DEBUG_PUTS("Wakeup by external event");
+       #endif
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WUF1);
+    }
+  }
+}
+
+/******************************************************************************
+ * Init all other devices except those, that are initialized early ( IODEV and
+ * debug uart ). This code portion is heavily contaminated by #ifdef's
+ * if you add addtional devices, THIS is the place to add the initialization
+ * code 
+ *****************************************************************************/
+void Init_OtherDevices(void)
+{
+  int32_t dev_idx;
+  #if defined(USE_ADC1)
+      dev_idx = AddDevice(&HW_ADC1, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init ADC1-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+       
+  #endif
+  #if defined(USE_USART1)
+      dev_idx = AddDevice(&HW_COM1, NULL, NULL );
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init USART-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+
+  #endif
+  #if USE_RFM12 > 0 || USE_RFM69 > 0
+      #include "rfm/rfm.h"
+      dev_idx = AddDevice(&RFM12_DEV, RFM_PostInit, RFM_PreDeInit);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init RFM-device %s\n", RFM12_DEV.devName );
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+        /* If no RFM device is found, DeInit again to reduce power consumption */
+        if (!RFM_IsPresent() ) DeviceDeInitByIdx(dev_idx);
+      }
+  #endif
+  #if USE_EPAPER > 0
+      dev_idx = AddDevice(&EPAPER_DEV, EPD_PostInit, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init Epaper-device %s\n", EPAPER_DEV.devName );
+      } else {
+        /* Landscape mode */
+        DeviceInitByIdx(dev_idx, (void *)1 );
+      }
+  #endif
+  #if USE_QENCODER > 0
+      /* Do this before Display Init */  
+      dev_idx = AddDevice(&QENC_DEV, NULL , NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init Quadrature Decoder-device %s\n", QENC_DEV.devName );
+      } else {
+        /* Init device */
+        DeviceInitByIdx(dev_idx, NULL );
+      }
+  #endif
+  #if USE_PWMTIMER > 0
+      /* Do this before Display Init */  
+     dev_idx = AddDevice(&HW_PWMTIMER, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init Timer-device %s\n",HW_PWMTIMER.devName );
+      } else {
+        DeviceInitByIdx(dev_idx, NULL );
+      }
+      /* Assign PWM device and channel to LCD */
+      LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
+  #endif
+  #if USE_DISPLAY > 0
+      dev_idx = AddDevice(&EPAPER_DEV, LCD_PostInit, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init LCD-device %s\n", EPAPER_DEV.devName );
+      } else {
+        /* Landscape mode */
+        DeviceInitByIdx(dev_idx, (void *)1 );
+      }
+  #endif
+  #if USE_ONEWIRE > 0
+      dev_idx = AddDevice(&ONEWIRE_DEV, OW_PostInit, OW_PreDeInit);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init OneWire-device %s\n", ONEWIRE_DEV.devName );
+      } else {
+        /* Init Oowire device */
+        DeviceInitByIdx(dev_idx, NULL );
+      }
+  #endif
+  #if USE_QSPI > 0
+      dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
+      } else {
+        /* Init QuadSpi device */
+        DeviceInitByIdx(dev_idx, NULL );
+      }
+  #endif
+  #if defined(USER_I2CDEV)
+      dev_idx = AddDevice(&USER_I2CDEV, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init I2C device %s\n", USER_I2CDEV.devName );
+      } else {
+        /* Init I2c device */
+        if ( DeviceInitByIdx(dev_idx, NULL ) ) 
+            SENSOR_IO_Init(&USER_I2C_HANDLE, NULL);
+      }
+  #endif
+  #if defined(USE_CAN1)
+      dev_idx = AddDevice(&HW_CAN1, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to add CAN device %s\n", HW_CAN1.devName );
+      } else {
+        /* Init I2c device */
+        if ( !DeviceInitByIdx(dev_idx, NULL ) ) 
+            DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
+      }
+  #endif
+
+}
+
+#include "task/minitask.h"
+#include "timer.h"
+#include "rtc.h"
+#include "interpreters.h"
+#include "system/periodic.h"
+
+#if USE_RFM12 > 0 || USE_RFM69 > 0
+    #include "rfm/rfm.h"
+#endif
+
+#if USE_THPSENSOR > 0
+    #include "sensors/thp_sensor.h"
+#endif
+
+#if USE_DS18X20 > 0
+    #include "ds18xxx20.h"
+#endif
+
+#ifdef TX18LISTENER
+    #include "sequencer/analyzer.h"
+    #include "sequencer/pulses.h"
+#endif
+#if defined(TX18LISTENER) || USE_DS18X20 > 0
+    #include "system/util.h"
+#endif
+#if USE_EPAPER > 0
+    #include "disp/epaper.h"
+    #include "disp/ssdxxxx_spi.h"
+#endif
+
+void task_handle_out  (uint32_t);
+void task_handle_qspi (uint32_t);
+
+/******************************************************************************
+ * Initially put all tasks to task list. 
+ * This code portion is heavily contaminated by #ifdef's. If you add 
+ * addtional devices, THIS is the place to add the initialization code 
+ *****************************************************************************/
+void Init_DefineTasks(void)
+{
+ TaskRegisterTask(task_init_rtc,  task_handle_tmr, TASK_TMR,      JOB_TASK_TMR,      "Timer task");
+  TaskRegisterTask(NULL,          task_handle_rtc, TASK_RTC,      JOB_TASK_RTC,      "RTC task");
+#if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
+  TaskRegisterTask(CMD_Init,      task_handle_com, TASK_COM,      JOB_TASK_DBGIO,    "Debug input");
+  TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    "Debug output");  
+#endif
+  TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, "periodic task");
+  TaskRegisterTask(task_init_adc, task_handle_adc, TASK_ADC,      JOB_ADC,           "ADC task");
+#if USE_RFM12 > 0 || USE_RFM69 > 0
+  TaskRegisterTask(task_init_rfm, task_handle_rfm, TASK_RFM,      JOB_TASK_RFM,      "RFM task");
+#endif
+#if USE_THPSENSOR > 0
+  TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
+#endif
+#if USE_DISPLAY > 0
+  TaskRegisterTask(task_init_lcd, task_handle_lcd, TASK_LCD,      JOB_TASK_LCD,      "LCD task");
+#endif
+#if USE_DS18X20 > 0
+  TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
+#endif
+#if USE_QSPI > 0
+  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,    JOB_TASK_QSPI,     "QSPI task");
+#endif
+#ifdef TX18LISTENER
+    TaskRegisterTask(PulsesInit,  task_handle_pulse,TASK_PULSE,   JOB_TASK_MAIN,     "Pulse sequencer");
+    TaskRegisterTask(AnalyzerInit,task_handle_ana,  TASK_SEQUENCE,JOB_TASK_MAIN,     "Sequence analyzer");
+#endif
+#if USE_EPAPER > 0
+    TaskRegisterTask(NULL,        task_handle_epd,TASK_EPD,       JOB_TASK_EPD,     "EPD task");
+#endif
+#if defined(TX18LISTENER) || USE_DS18X20 > 0
+    AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");
+#endif
+}
