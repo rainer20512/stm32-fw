@@ -1,0 +1,369 @@
+<!DOCTYPE CrossStudio_Project_File>
+<solution Name="Framework-L476" target="8" version="2">
+  <project Name="Framework-L476">
+    <configuration
+      Family="STM32"
+      Name="Common"
+      Placement="RAM"
+      Target="STM32L496RG"
+      arm_architecture="v7EM"
+      arm_core_type="Cortex-M4"
+      arm_fpu_type="FPv4-SP-D16"
+      arm_gcc_target="arm-unknown-eabi"
+      arm_linker_heap_size="128"
+      arm_linker_jtag_pad_pre_dr="1"
+      arm_linker_jtag_pad_pre_ir="5"
+      arm_linker_process_stack_size="0"
+      arm_linker_stack_size="1024"
+      arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
+      arm_simulator_memory_simulation_parameter="STM32L496RG;0x100000;0x50000"
+      arm_target_connect_with_reset="Yes"
+      arm_target_debug_interface_type="ADIv5"
+      arm_target_interface_type="Default"
+      arm_target_loader_applicable_loaders=""
+      arm_target_loader_default_loader="RAM"
+      arm_target_restrict_memory_accesses="Yes"
+      c_preprocessor_definitions="STM32L496xx;USE_HAL_DRIVER;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
+      c_user_include_directories="$(PackagesDir)/CMSIS_4/CMSIS/Include;.//inc;./../common/inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
+      linker_memory_map_file="$(ProjectDir)/stm32l496rg_MemoryMap.xml"
+      linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
+      linker_section_placement_file="$(StudioDir)/targets/Cortex_M/ram_placement.xml"
+      macros="DeviceVectorsFile=STM32L496xx.vec"
+      project_directory=""
+      project_type="Executable"
+      property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
+      target_get_partname_script="GetPartName()"
+      target_match_partname_script="MatchPartName(&quot;$(Target)&quot;)"
+      target_script_file="$(TargetsDir)/STM32/STM32_Target.js"
+      target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
+    <configuration
+      Name="Flash"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32L4_1M_Loader_rpc.elf)"
+      arm_target_loader_can_erase_all="Yes"
+      arm_target_loader_can_lock_all="No"
+      arm_target_loader_can_lock_range="No"
+      arm_target_loader_can_unlock_all="No"
+      arm_target_loader_can_unlock_range="No"
+      target_reset_script="FLASHReset()" />
+    <configuration Name="RAM" target_reset_script="Reset()" />
+    <folder Name="Source Files">
+      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
+      <folder Name="Inc">
+        <file file_name="$(ProjectDir)/Inc/com.h" />
+        <file file_name="$(ProjectDir)/Inc/encoding.h" />
+        <file file_name="$(ProjectDir)/Inc/error.h" />
+        <file file_name="$(ProjectDir)/Inc/global_flags.h" />
+        <file file_name="$(ProjectDir)/Inc/rtc.h" />
+        <file file_name="$(ProjectDir)/Inc/stm32l4xx_it.h" />
+        <file file_name="$(ProjectDir)/Inc/task.h" />
+        <file file_name="$(ProjectDir)/Inc/timer.h" />
+        <file file_name="$(ProjectDir)/Inc/wireless.h" />
+        <file file_name="$(ProjectDir)/Inc/circbuf.h" />
+        <file file_name="$(ProjectDir)/Inc/cmdline.h" />
+        <file file_name="$(ProjectDir)/Inc/interpreters.h" />
+        <file file_name="$(ProjectDir)/Inc/eeprom.h" />
+        <folder Name="disp">
+          <file file_name="$(ProjectDir)/Inc/disp/epaper.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/ssd1606.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/epd.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/fontsepd.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/dogm-graphic.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/ssdxxxx_spi.h" />
+          <file file_name="$(ProjectDir)/Inc/disp/lcd_fonts.h" />
+        </folder>
+        <folder Name="dev">
+          <file file_name="$(ProjectDir)/Inc/dev/io_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/spi_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/hw_device.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/devices.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/spi.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/adc_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/qencode.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/timer_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/i2c_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/qspi_dev.h" />
+          <folder Name="qspi">
+            <file file_name="$(ProjectDir)/Src/dev/qspi/mx25r6435f.c">
+              <configuration Name="Common" build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="$(ProjectDir)/Src/dev/qspi/mx25r6435f.h" />
+          </folder>
+          <file file_name="$(ProjectDir)/Inc/dev/i2c_abstract.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/can_dev.h" />
+          <file file_name="$(ProjectDir)/Inc/dev/uart_dev.h" />
+        </folder>
+        <folder Name="config">
+          <file file_name="$(ProjectDir)/Inc/config/spi_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/devices_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/gpio_config.h" />
+          <file file_name="$(ProjectDir)/Inc/stm32l4xx_hal_conf.h" />
+          <file file_name="$(ProjectDir)/Inc/config/adc_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/qencode_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/timer_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/i2c_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/qspi_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/uart_config.h" />
+          <file file_name="$(ProjectDir)/Inc/config/can_config.h" />
+        </folder>
+        <folder Name="debug">
+          <file file_name="$(ProjectDir)/Inc/debug_gpio_exti.h" />
+          <file file_name="$(ProjectDir)/Inc/debug_helper.h" />
+          <file file_name="$(ProjectDir)/Inc/debug_outbuf.h" />
+          <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
+          <file file_name="$(ProjectDir)/Inc/debug_sram.h" />
+        </folder>
+        <file file_name="$(ProjectDir)/Inc/debug.h" />
+        <file file_name="$(ProjectDir)/Inc/onewire.h" />
+        <file file_name="$(ProjectDir)/Inc/ds18xxx20.h" />
+        <file file_name="$(ProjectDir)/Inc/version.h" />
+        <file file_name="$(ProjectDir)/Inc/ext_eeprom.h" />
+        <file file_name="$(ProjectDir)/Inc/watch.h" />
+        <folder Name="system">
+          <file file_name="$(ProjectDir)/Inc/system/clockconfig.h" />
+          <file file_name="$(ProjectDir)/Inc/system/exti_handler.h" />
+          <file file_name="$(ProjectDir)/Inc/system/hw_util.h" />
+          <file file_name="$(ProjectDir)/Inc/system/profiling.h" />
+          <file file_name="$(ProjectDir)/Inc/system/status.h" />
+          <file file_name="$(ProjectDir)/Inc/system/timer_handler.h" />
+          <file file_name="$(ProjectDir)/Inc/system/util.h" />
+          <file file_name="$(ProjectDir)/Inc/system/periodic.h" />
+        </folder>
+        <folder Name="ui">
+          <file file_name="$(ProjectDir)/Inc/ui/lcd.h" />
+          <file file_name="$(ProjectDir)/Inc/ui/lcd_selector.h" />
+          <file file_name="$(ProjectDir)/Inc/ui/lcd_status.h" />
+          <file file_name="$(ProjectDir)/Inc/ui/lcd_text.h" />
+          <file file_name="$(ProjectDir)/Inc/ui/lcd_valueedit.h" />
+          <file file_name="$(ProjectDir)/Inc/ui/lcd_interface.h" />
+        </folder>
+        <folder Name="rfm">
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm_ringbuffer.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm12.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm12_lowlevel.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm_packets.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm_specific.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm_spi_interface.h" />
+          <file file_name="$(ProjectDir)/Inc/rfm/rfm69_lowlevel.h" />
+        </folder>
+        <folder Name="sequencer">
+          <file file_name="$(ProjectDir)/Inc/sequencer/analyzer.h" />
+          <file file_name="$(ProjectDir)/Inc/sequencer/ook_ringbuffer.h" />
+          <file file_name="$(ProjectDir)/Inc/sequencer/pulses.h" />
+        </folder>
+        <folder Name="sensors">
+          <file file_name="$(ProjectDir)/Inc/sensors/hts221.h" />
+          <file file_name="$(ProjectDir)/Inc/sensors/bmp085.h" />
+          <file file_name="$(ProjectDir)/Inc/sensors/thp_sensor.h" />
+        </folder>
+        <folder Name="task">
+          <file file_name="$(ProjectDir)/Inc/task/minitask.h" />
+        </folder>
+      </folder>
+      <folder Name="Src">
+        <file file_name="$(ProjectDir)/Src/com.c" />
+        <file file_name="$(ProjectDir)/Src/encoding.c" />
+        <file file_name="$(ProjectDir)/Src/timer.c" />
+        <file file_name="$(ProjectDir)/Src/wireless.c" />
+        <file file_name="$(ProjectDir)/Src/circbuf.c" />
+        <file file_name="$(ProjectDir)/Src/cmdline.c" />
+        <file file_name="$(ProjectDir)/Src/rtc.c" />
+        <file file_name="$(ProjectDir)/Src/interpreters.c" />
+        <file file_name="$(ProjectDir)/Src/fm24v10.c" />
+        <file file_name="$(ProjectDir)/Src/main.c">
+          <configuration Name="Common" gcc_optimization_level="None" />
+        </file>
+        <folder Name="disp">
+          <file file_name="$(ProjectDir)/Src/disp/epaper.c" />
+          <file file_name="$(ProjectDir)/Src/disp/ssd1606.c" />
+          <file file_name="$(ProjectDir)/Src/disp/dogm-graphic.c">
+            <configuration
+              Name="THUMB Release"
+              build_exclude_from_build="No" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/Src/disp/ssdxxxx_spi.c" />
+          <file file_name="$(ProjectDir)/Src/disp/lcd_fonts.c" />
+        </folder>
+        <folder Name="dev">
+          <file file_name="$(ProjectDir)/Src/dev/io_dev.c" />
+          <file file_name="$(ProjectDir)/Src/dev/spi_dev.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/Src/dev/bitbang_spi.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/Src/dev/hw_device.c" />
+          <file file_name="$(ProjectDir)/Src/dev/devices.c" />
+          <file file_name="$(ProjectDir)/Src/dev/hw_spi.c" />
+          <file file_name="$(ProjectDir)/Src/dev/common_spi.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/Src/dev/adc_dev.c" />
+          <file file_name="$(ProjectDir)/Src/dev/qencoder.c" />
+          <file file_name="$(ProjectDir)/Src/dev/timer_dev.c" />
+          <file file_name="$(ProjectDir)/Src/dev/i2c_dev.c" />
+          <file file_name="$(ProjectDir)/Src/dev/qspi_dev.c" />
+          <file file_name="$(ProjectDir)/Src/dev/i2c_abstract.c" />
+          <file file_name="$(ProjectDir)/Src/dev/usart.c" />
+        </folder>
+        <folder Name="debug">
+          <file file_name="$(ProjectDir)/Src/debug_gpio_exti.c" />
+          <file file_name="$(ProjectDir)/Src/debug_helper.c" />
+          <file file_name="$(ProjectDir)/Src/debug_outbuf.c" />
+          <file file_name="$(ProjectDir)/Src/debug_pwr_rcc.c" />
+          <file file_name="$(ProjectDir)/Src/debug_sram.c" />
+        </folder>
+        <folder Name="system">
+          <file file_name="$(ProjectDir)/Src/system/clockconfig.c" />
+          <file file_name="$(ProjectDir)/Src/system/exti_handler.c" />
+          <file file_name="$(ProjectDir)/Src/system/hw_util.c" />
+          <file file_name="$(ProjectDir)/Src/system/profiling.c" />
+          <file file_name="$(ProjectDir)/Src/system/status.c" />
+          <file file_name="$(ProjectDir)/Src/system/stm32l4xx_it.c" />
+          <file file_name="$(ProjectDir)/Src/system/timer_handler.c" />
+          <file file_name="$(ProjectDir)/Src/system/util.c" />
+          <file file_name="$(ProjectDir)/Src/system/periodic.c" />
+          <file file_name="$(ProjectDir)/Src/system/init.c" />
+        </folder>
+        <file file_name="$(ProjectDir)/Src/onewire.c" />
+        <file file_name="$(ProjectDir)/Src/ds18xxx20.c" />
+        <file file_name="$(ProjectDir)/Src/eeprom.c" />
+        <file file_name="$(ProjectDir)/Src/watch.c" />
+        <folder Name="ui">
+          <file file_name="$(ProjectDir)/Src/ui/lcd.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_datetime.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_menu.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_selector.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_status.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_text.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_valueedit.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_interface.c" />
+          <file file_name="$(ProjectDir)/Src/ui/lcd_selector_load.c" />
+        </folder>
+        <folder Name="rfm">
+          <file file_name="$(ProjectDir)/Src/rfm/rfm_ringbuffer.c" />
+          <file file_name="$(ProjectDir)/Src/rfm/rfm12.c" />
+          <file file_name="$(ProjectDir)/Src/rfm/rfm_packets.c" />
+          <file file_name="$(ProjectDir)/Src/rfm/rfm.c" />
+          <file file_name="$(ProjectDir)/Src/rfm/rfm_spi_interface.c" />
+          <file file_name="$(ProjectDir)/Src/rfm/rfm69.c" />
+        </folder>
+        <folder Name="sequencer">
+          <file file_name="$(ProjectDir)/Src/sequencer/analyzer.c">
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/Src/sequencer/ook_ringbuffer.c" />
+          <file file_name="$(ProjectDir)/Src/sequencer/pulses.c">
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+        </folder>
+        <folder Name="sensors">
+          <file file_name="$(ProjectDir)/Src/sensors/hts221.c" />
+          <file file_name="$(ProjectDir)/Src/sensors/bmp085.c" />
+          <file file_name="$(ProjectDir)/Src/sensors/thp_sensor.c" />
+        </folder>
+        <folder Name="task">
+          <file file_name="$(ProjectDir)/Src/task/minitask.c" />
+        </folder>
+      </folder>
+    </folder>
+    <folder Name="System Files">
+      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
+      <file file_name="$(TargetsDir)/STM32/STM32_Startup.s" />
+      <file file_name="$(ProjectDir)/Src/hardfault.s" />
+      <file file_name="stm32l476rg_MemoryMap.xml" />
+      <file file_name="stm32l496rg_MemoryMap.xml" />
+    </folder>
+    <folder Name="Doc">
+      <file file_name="$(ProjectDir)/Doc/readme.txt" />
+    </folder>
+    <folder Name="Drivers">
+      <folder Name="STM32L4xx_HAL_Driver">
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc_ex.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_spi.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_adc.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_adc_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_qspi.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c" />
+      </folder>
+      <folder Name="CMSIS">
+        <file file_name="$(ProjectDir)/Src/system_stm32l4xx.c" />
+      </folder>
+    </folder>
+    <folder Name="modules">
+      <folder Name="eeprom_emul">
+        <folder Name="core">
+          <file file_name="$(ProjectDir)/modules/eeprom_emul/core/eeprom_emul.c" />
+          <file file_name="$(ProjectDir)/modules/eeprom_emul/core/eeprom_emul.h" />
+          <file file_name="$(ProjectDir)/modules/eeprom_emul/core/eeprom_emul_types.h" />
+          <file file_name="$(ProjectDir)/modules/eeprom_emul/core/eeprom_emul_conf.h" />
+        </folder>
+        <folder Name="porting">
+          <folder Name="stm32l4">
+            <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.c" />
+            <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.h" />
+          </folder>
+        </folder>
+      </folder>
+    </folder>
+  </project>
+  <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
+  <configuration
+    Name="THUMB"
+    Platform="ARM"
+    arm_instruction_set="Thumb"
+    arm_library_instruction_set="Thumb"
+    c_preprocessor_definitions="__THUMB"
+    hidden="Yes" />
+  <configuration
+    Name="Debug"
+    c_preprocessor_definitions="DEBUG;USE_FULL_ASSERT"
+    gcc_debugging_level="Level 3"
+    gcc_optimization_level="None"
+    hidden="Yes" />
+  <configuration
+    Name="THUMB Release"
+    inherited_configurations="Release;THUMB" />
+  <configuration
+    Name="Release"
+    c_preprocessor_definitions="NDEBUG"
+    gcc_debugging_level="Level 1"
+    gcc_optimization_level="Level 3"
+    hidden="Yes" />
+  <configuration
+    Name="Common"
+    compile_post_build_command_wd="$(OutDir)"
+    gcc_enable_all_warnings="Yes"
+    linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
+    linker_post_build_command_output_file="" />
+</solution>
