@@ -16,7 +16,14 @@
   ******************************************************************************
   */
 
-#include "config/config.h"
+#include "config/devices_config.h"
+
+#if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4) 
+
+#include "dev/spi.h"
+
+#if defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4)
+
 #include "error.h"
 
 #include "system/profiling.h"
@@ -25,14 +32,11 @@
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
 
-#include "dev/spi.h"
-#include "config/devices_config.h"
 #include "dev/devices.h"
 
 
 #include "debug_helper.h"
 
-#if defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3)
 
 /*******************************************************************************************
  * Additional data that will be stored to SPI type hardware devices
@@ -522,6 +526,7 @@ const SpiFunctionT SpiFns_hw = {
     const SpiFunctionT SpiFns_hw = { 0 };
 #endif // defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3)
 
+#endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) */
 
 
 

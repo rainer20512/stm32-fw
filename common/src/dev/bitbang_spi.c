@@ -19,16 +19,21 @@
   ******************************************************************************
   */
 
+#include "config/devices_config.h"
+
+#if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4)
+
 #include "dev/spi_dev.h"
 #include "dev/spi.h"
 #include "debug_helper.h"
 #include "system/exti_handler.h"
 
+#if defined(USE_BBSPI1) || defined(USE_BBSPI2)
+
+
 #ifdef USE_BIT_BANDING
     #include "system/hw_util.h"
 #endif
-
-#if defined(USE_BBSPI1) || defined(USE_BBSPI2)
 
 
 #define BBSPI_MOSI_LOW(a)      	(*(a->bb.mosi_bsrr) = ((uint32_t)a->bb.mosi_bitpos)<<16)
@@ -217,3 +222,5 @@ const SpiFunctionT SpiFns_bb = {
 #else
     const SpiFunctionT SpiFns_bb = { 0 };
 #endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) */
+
+#endif /* #if defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4) */

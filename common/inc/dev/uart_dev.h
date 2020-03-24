@@ -17,7 +17,7 @@
 #ifndef __USART_H
 #define __USART_H
 
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #include "dev/hw_device.h"
 #include "config/config.h"

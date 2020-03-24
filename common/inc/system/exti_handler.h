@@ -10,7 +10,7 @@
 #ifndef __EXTI_HANDLER_H
 #define __EXTI_HANDLER_H
 
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #ifdef __cplusplus
  extern "C" {

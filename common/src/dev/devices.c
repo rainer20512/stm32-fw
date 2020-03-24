@@ -15,7 +15,7 @@
 #include "config/devices_config.h"
 
 #include "system/hw_util.h"
-#include "global_flags.h"
+// RHB gucken obs ohne geht: #include "global_flags.h"
 #include "debug_helper.h"
 #include "dev/devices.h"
 /** @addtogroup DEVICES

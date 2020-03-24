@@ -12,7 +12,7 @@
 #define __HW_UTIL_H
 
 #include "config/config.h"
-#include "stm32l4xx.h"
+#include "hardware.h"
 #include "dev/hw_device.h"
 
 #ifdef __cplusplus

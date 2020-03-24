@@ -13,7 +13,7 @@
 
 #include "config/config.h"
 #include <string.h>
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #include "hw_device.h"
 #include "config/devices_config.h"

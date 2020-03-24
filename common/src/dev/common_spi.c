@@ -14,10 +14,13 @@
   ******************************************************************************
   */
 
+#include "config/devices_config.h"
+
+#if defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4) || defined(USE_BBSPI1) || defined(USE_BBSPI2)
+
 #include "dev/spi.h"
 #include "system/exti_handler.h"
 
-#if defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_BBSPI1) || defined(USE_BBSPI2)
 
 #define SPI_NSEL_LOW(a)      	(*(a->nsel_bsrr) = ((uint32_t)a->nsel_bitpos)<<16)
 #define SPI_NSEL_HIGH(a)     	(*(a->nsel_bsrr) = a->nsel_bitpos)

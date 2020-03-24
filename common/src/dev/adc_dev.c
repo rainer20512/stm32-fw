@@ -10,7 +10,10 @@
   * @{
   */
 
-#include "config/config.h"
+#include "config/devices_config.h"
+
+#if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
+
 #include "error.h"
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
@@ -19,7 +22,6 @@
 #include "task/minitask.h"
 #include "system/periodic.h"
 
-#if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
 
 #define DEBUG_ADC 0
 
@@ -29,6 +31,18 @@
     #include "system/profiling.h"
 #else
     #include <stdio.h>
+#endif
+
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    #define ADC_SAMPLETIME_FAST     ADC_SAMPLETIME_24CYCLES_5
+    #define ADC_SAMPLETIME_SLOW     ADC_SAMPLETIME_47CYCLES_5
+    #define ADC_CLOCKSOURCE         RCC_ADCCLKSOURCE_SYSCLK
+#elif defined(STM32H745xx)
+    #define ADC_SAMPLETIME_FAST     ADC_SAMPLETIME_32CYCLES_5
+    #define ADC_SAMPLETIME_SLOW     ADC_SAMPLETIME_64CYCLES_5
+    #define ADC_CLOCKSOURCE         RCC_ADCCLKSOURCE_CLKP
+#else
+    #error "No setup for ADC sample times"
 #endif
 
 /* My macros --------------------------------------------------------------------*/
@@ -77,15 +91,28 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
     ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
     ADC_InitTypeDef *Init       = &hAdc->Init;
+    ADC_OversamplingTypeDef *o  = &Init->Oversampling;
 
 
     /* 
      * Do the neccessary ADC settings. Theses settings are done only once and are kept 
      * in Init-Struct as long as the variable is in scope.
      */
-    Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;      /* Synchronous clock mode, input ADC clock divided by 2*/
-    Init->Resolution            = ADC_RESOLUTION_12B;            /* 12-bit resolution for converted data */
-    Init->DataAlign             = ADC_DATAALIGN_RIGHT;           /* Right-alignment for converted data */
+    Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;         /* Synchronous clock mode, input ADC clock divided by 2*/
+    Init->Resolution            = ADC_RESOLUTION_12B;               /* 12-bit resolution for converted data */
+    Init->OversamplingMode      = ENABLE;                           /* enable oversampling */
+    #if defined(STM32L476xx) || defined(STM32L496xx)
+        Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
+        Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
+        o->Ratio                    = ADC_OVERSAMPLING_RATIO_16;        /* 16x oversampling */
+        o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
+    #elif defined(STM32H745xx)
+        o->Ratio                    = 16;                               /* 16x oversampling */
+        o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
+        Init->ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;/* ADC DMA for only one sequence */
+    #else
+        #error "NO ADC setup for selected STM32 type"
+    #endif
     if ( nrofChannels < 2 ) {
         Init->ScanConvMode          = DISABLE;                   /* Sequencer disabled, only one channel */
         Init->EOCSelection          = ADC_EOC_SINGLE_CONV;       /* EOC flag picked-up to indicate end of one conversion */
@@ -102,13 +129,8 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
     Init->NbrOfDiscConversion   = 1;                             /* Parameter discarded because sequencer is disabled */
     Init->ExternalTrigConv      = ADC_SOFTWARE_START;            /* Software start to trig the 1st conversion manually, without external event */
     Init->ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE; /* Parameter discarded because software trigger chosen */
-    Init->DMAContinuousRequests = DISABLE;                       /* ADC DMA for only one sequence */
     Init->Overrun               = ADC_OVR_DATA_OVERWRITTEN;      /* DR register is overwritten with the last conversion result in case of overrun */
-    Init->OversamplingMode      = ENABLE;                        /* 16x oversampling */
 
-    ADC_OversamplingTypeDef *o  = &Init->Oversampling;
-    o->Ratio                    = ADC_OVERSAMPLING_RATIO_16;            /* 64x oversampling */
-    o->RightBitShift            = ADC_RIGHTBITSHIFT_4;                  /* shift result, so we have again a 12bit result after oversampling */
     o->OversamplingStopReset    = ADC_REGOVERSAMPLING_CONTINUED_MODE;   /* Preserve Oversampling buffer during injected conversions */
     o->TriggeredMode            = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;     /* All samples done in one step */
 
@@ -150,7 +172,7 @@ static uint32_t Adc_GetRankFromIdx( uint32_t idx )
 {
     c->Channel      = ADC_CHANNEL_VREFINT;         /* Internal Vrefint channel ( only valid for ADC1 ) */
     c->Rank         = Adc_GetRankFromIdx(rankidx); /* Rank of sampled channel number ADCx_CHANNEL */
-    c->SamplingTime = ADC_SAMPLETIME_47CYCLES_5;   /* Sampling time (number of clock cycles unit), according to datasheet: minimum 4uS */
+    c->SamplingTime = ADC_SAMPLETIME_SLOW;         /* Sampling time (number of clock cycles unit), according to datasheet: minimum 4uS */
     c->SingleDiff   = ADC_SINGLE_ENDED;            /* Single-ended input channel */
     c->OffsetNumber = ADC_OFFSET_NONE;             /* No offset subtraction */ 
     c->Offset       = 0;                           /* Parameter discarded because offset correction is disabled */
@@ -230,7 +252,7 @@ static AdcHandleT *Adc_GetMyHandleFromHalHandle(ADC_HandleTypeDef *hadc)
     if ( &ADC2Handle.hAdc == hadc ) return &ADC2Handle;
 #endif
 #if defined(ADC3) && defined(USE_ADC3)
-    if ( &ADC3Handle.hAdc == hadc ) return &ADCHandle;
+    if ( &ADC3Handle.hAdc == hadc ) return &ADC3Handle;
 #endif
     return NULL;
 }
@@ -296,6 +318,29 @@ uint16_t ADC_GetVdda(const HW_DeviceType *self)
         return 0;
 }    
 
+#if defined(STM32L476xx) || defined(STM32L496xx)
+static inline __attribute__((always_inline))
+bool AdcCalibrate ( ADC_HandleTypeDef *hAdc )
+{
+  return    
+       (HAL_ADCEx_Calibration_Start(hAdc, ADC_SINGLE_ENDED      ) ==  HAL_OK) 
+    && (HAL_ADCEx_Calibration_Start(hAdc, ADC_DIFFERENTIAL_ENDED) ==  HAL_OK)
+  ;
+}
+#elif defined(STM32H745xx)
+bool AdcCalibrate ( ADC_HandleTypeDef *hAdc )
+{
+  return    
+       (HAL_ADCEx_Calibration_Start(hAdc, ADC_CALIB_OFFSET,           ADC_SINGLE_ENDED      ) ==  HAL_OK) 
+    && (HAL_ADCEx_Calibration_Start(hAdc, ADC_CALIB_OFFSET_LINEARITY, ADC_SINGLE_ENDED      ) ==  HAL_OK)
+    && (HAL_ADCEx_Calibration_Start(hAdc, ADC_CALIB_OFFSET,           ADC_DIFFERENTIAL_ENDED) ==  HAL_OK)
+    && (HAL_ADCEx_Calibration_Start(hAdc, ADC_CALIB_OFFSET_LINEARITY, ADC_DIFFERENTIAL_ENDED) ==  HAL_OK)
+  ;
+}
+#else
+    #error "No ADC calibration preocedure defined"
+#endif
+
 /**************************************************************************************
  * Do an ADC calibration. This is mandatory as rthe first step before any other
  * conversions may be performed
@@ -315,9 +360,7 @@ bool ADC_Calibrate(const HW_DeviceType *self)
     HAL_Delay(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
 
     /* do the mandatory ADC Calibration, MUST be done after ADC_Init! */
-    if (    (HAL_ADCEx_Calibration_Start(hAdc, ADC_SINGLE_ENDED) !=  HAL_OK) 
-         || (HAL_ADCEx_Calibration_Start(hAdc, ADC_DIFFERENTIAL_ENDED) !=  HAL_OK) 
-       ) {
+    if (  !AdcCalibrate(hAdc) ) {
         #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
             DEBUG_PRINTF("Calibration of %s failed\n", self->devName);
         #endif
@@ -415,16 +458,27 @@ static bool Adc_MeasureVdda (const HW_DeviceType *self)
     return true;
 }
 
+static inline __attribute__((always_inline))
+ADC_Common_TypeDef *GetCommonInstance(const HW_DeviceType *self)
+{
+    #if defined(STM32L476xx) || defined(STM32L496xx)
+        UNUSED(self);
+        return __LL_ADC_COMMON_INSTANCE(self->devBase);
+    #elif defined(STM32H745xx)
+        return __LL_ADC_COMMON_INSTANCE(self->devBase);
+    #else
+        #error "No implementation to determine ADC common instance"
+    #endif
+}
+
 void ADC_DisableRefintCh(const HW_DeviceType *self)
 {
-    UNUSED(self);
-    CLEAR_BIT(__LL_ADC_COMMON_INSTANCE()->CCR, ADC_CCR_VREFEN );
+    CLEAR_BIT(GetCommonInstance(self)->CCR, ADC_CCR_VREFEN );
 }
 
 void ADC_DisableAllInternalCh(const HW_DeviceType *self)
 {
-    UNUSED(self);
-    CLEAR_BIT(__LL_ADC_COMMON_INSTANCE()->CCR, ADC_CCR_VREFEN | ADC_CCR_TSEN | ADC_CCR_VBATEN );
+    CLEAR_BIT(GetCommonInstance(self)->CCR, ADC_CCR_VREFEN | ADC_CCR_TSEN | ADC_CCR_VBATEN );
 }
 
 
@@ -446,7 +500,7 @@ bool ADC_MeasureChipTemp (const HW_DeviceType *self)
     ADC_ChannelConfTypeDef c;  
     c.Channel      = ADC_CHANNEL_TEMPSENSOR;      /* Internal TempSensor ch. ( valid for ADC1/ADC3 ) */
     c.Rank         = ADC_REGULAR_RANK_1;          /* Rank of sampled channel number ADCx_CHANNEL */
-    c.SamplingTime = ADC_SAMPLETIME_24CYCLES_5;   /* Sampling time (number of clock cycles unit) */
+    c.SamplingTime = ADC_SAMPLETIME_FAST;         /* Sampling time (number of clock cycles unit) */
     c.SingleDiff   = ADC_SINGLE_ENDED;            /* Single-ended input channel */
     c.OffsetNumber = ADC_OFFSET_NONE;             /* No offset subtraction */ 
     c.Offset       = 0;                           /* Parameter discarded because offset correction is disabled */
@@ -583,7 +637,7 @@ static void ADC_ClockInit (const HW_DeviceType *self, bool bIsInit)
 {
     /* Set clock source */
     if ( bIsInit ) {
-      __HAL_RCC_ADC_CONFIG(RCC_ADCCLKSOURCE_SYSCLK);
+      __HAL_RCC_ADC_CONFIG(ADC_CLOCKSOURCE);
     }
 
     /* enable ADC clock */
@@ -725,7 +779,7 @@ void ADC_MeasureVdda ( void *arg )
  *****************************************************************************/
 void task_init_adc(void)
 {
-    AtSecond ( 56, ADC_MeasureVdda, (void *)&HW_ADC1, "Measure Vdda");
+    AtSecond ( 56, ADC_MeasureVdda, (void *)&USER_ADC, "Measure Vdda");
 }
 
 /******************************************************************************
@@ -789,6 +843,60 @@ void task_handle_adc(uint32_t arg)
         .devDmaRx       = 
             #if defined(USE_ADC1) && defined(ADC1_USE_DMA) 
                 &dmarx_adc1,
+             #else
+                NULL,
+             #endif
+        .devDmaTx       = NULL,
+        .Init           = ADC_Init,
+        .DeInit         = ADC_DeInit,
+        .OnFrqChange    = NULL,
+        .AllowStop      = ADC_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif
+
+#if defined(ADC3) && defined(USE_ADC3)
+    AdcHandleT ADC3Handle;
+    static DMA_HandleTypeDef hdma_adc3_rx;
+    static const HW_DmaType dmarx_adc3 = { &hdma_adc3_rx, ADC3_RX_DMA };
+
+    static const HW_GpioList_ADC gpio_adc = {
+        .num  = 2,
+        .gpio = { 
+            ADC3CH_REFINT,
+            ADC3CH_TEMPSENSOR,
+// example  ADC323_CH_3,
+// example  ADC323_CH_4,
+        }
+    };
+
+    static const ADC_AdditionalDataType additional_adc3 = {
+        .myAdcHandle = &ADC3Handle,
+    };
+
+    const HW_IrqList irq_adc3 = {
+        .num = 1,
+        .irq = { ADC3_IRQ },
+    };
+
+    const HW_DeviceType HW_ADC3 = {
+        .devName        = "ADC3",
+        .devBase        = ADC3,
+        .devGpioAF      = NULL,
+        .devGpioIO      = NULL,
+        .devGpioADC     = &gpio_adc,
+        .devType        = HW_DEVICE_ADC,
+        .devData        = &additional_adc3,
+        .devIrqList     = 
+            #if defined(USE_ADC3) && defined(ADC3_USE_IRQ) 
+                &irq_adc3,
+            #else
+                NULL,
+            #endif
+        .devDmaRx       = 
+            #if defined(USE_ADC3) && defined(ADC3_USE_DMA) 
+                &dmarx_adc3,
              #else
                 NULL,
              #endif

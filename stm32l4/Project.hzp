@@ -59,7 +59,6 @@
         <file file_name="$(ProjectDir)/Inc/task.h" />
         <file file_name="$(ProjectDir)/Inc/timer.h" />
         <file file_name="$(ProjectDir)/Inc/wireless.h" />
-        <file file_name="$(ProjectDir)/Inc/circbuf.h" />
         <file file_name="$(ProjectDir)/Inc/cmdline.h" />
         <file file_name="$(ProjectDir)/Inc/interpreters.h" />
         <file file_name="$(ProjectDir)/Inc/eeprom.h" />
@@ -71,27 +70,6 @@
           <file file_name="$(ProjectDir)/Inc/disp/dogm-graphic.h" />
           <file file_name="$(ProjectDir)/Inc/disp/ssdxxxx_spi.h" />
           <file file_name="$(ProjectDir)/Inc/disp/lcd_fonts.h" />
-        </folder>
-        <folder Name="dev">
-          <file file_name="$(ProjectDir)/Inc/dev/io_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/spi_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/hw_device.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/devices.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/spi.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/adc_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/qencode.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/timer_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/i2c_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/qspi_dev.h" />
-          <folder Name="qspi">
-            <file file_name="$(ProjectDir)/Src/dev/qspi/mx25r6435f.c">
-              <configuration Name="Common" build_exclude_from_build="Yes" />
-            </file>
-            <file file_name="$(ProjectDir)/Src/dev/qspi/mx25r6435f.h" />
-          </folder>
-          <file file_name="$(ProjectDir)/Inc/dev/i2c_abstract.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/can_dev.h" />
-          <file file_name="$(ProjectDir)/Inc/dev/uart_dev.h" />
         </folder>
         <folder Name="config">
           <file file_name="$(ProjectDir)/Inc/config/spi_config.h" />
@@ -122,13 +100,10 @@
         <file file_name="$(ProjectDir)/Inc/watch.h" />
         <folder Name="system">
           <file file_name="$(ProjectDir)/Inc/system/clockconfig.h" />
-          <file file_name="$(ProjectDir)/Inc/system/exti_handler.h" />
-          <file file_name="$(ProjectDir)/Inc/system/hw_util.h" />
           <file file_name="$(ProjectDir)/Inc/system/profiling.h" />
           <file file_name="$(ProjectDir)/Inc/system/status.h" />
           <file file_name="$(ProjectDir)/Inc/system/timer_handler.h" />
           <file file_name="$(ProjectDir)/Inc/system/util.h" />
-          <file file_name="$(ProjectDir)/Inc/system/periodic.h" />
         </folder>
         <folder Name="ui">
           <file file_name="$(ProjectDir)/Inc/ui/lcd.h" />
@@ -167,7 +142,6 @@
         <file file_name="$(ProjectDir)/Src/encoding.c" />
         <file file_name="$(ProjectDir)/Src/timer.c" />
         <file file_name="$(ProjectDir)/Src/wireless.c" />
-        <file file_name="$(ProjectDir)/Src/circbuf.c" />
         <file file_name="$(ProjectDir)/Src/cmdline.c" />
         <file file_name="$(ProjectDir)/Src/rtc.c" />
         <file file_name="$(ProjectDir)/Src/interpreters.c" />
@@ -187,31 +161,6 @@
           <file file_name="$(ProjectDir)/Src/disp/ssdxxxx_spi.c" />
           <file file_name="$(ProjectDir)/Src/disp/lcd_fonts.c" />
         </folder>
-        <folder Name="dev">
-          <file file_name="$(ProjectDir)/Src/dev/io_dev.c" />
-          <file file_name="$(ProjectDir)/Src/dev/spi_dev.c">
-            <configuration Name="Debug" gcc_optimization_level="Level 3" />
-            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-          </file>
-          <file file_name="$(ProjectDir)/Src/dev/bitbang_spi.c">
-            <configuration Name="Debug" gcc_optimization_level="Level 3" />
-            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-          </file>
-          <file file_name="$(ProjectDir)/Src/dev/hw_device.c" />
-          <file file_name="$(ProjectDir)/Src/dev/devices.c" />
-          <file file_name="$(ProjectDir)/Src/dev/hw_spi.c" />
-          <file file_name="$(ProjectDir)/Src/dev/common_spi.c">
-            <configuration Name="Debug" gcc_optimization_level="Level 3" />
-            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-          </file>
-          <file file_name="$(ProjectDir)/Src/dev/adc_dev.c" />
-          <file file_name="$(ProjectDir)/Src/dev/qencoder.c" />
-          <file file_name="$(ProjectDir)/Src/dev/timer_dev.c" />
-          <file file_name="$(ProjectDir)/Src/dev/i2c_dev.c" />
-          <file file_name="$(ProjectDir)/Src/dev/qspi_dev.c" />
-          <file file_name="$(ProjectDir)/Src/dev/i2c_abstract.c" />
-          <file file_name="$(ProjectDir)/Src/dev/usart.c" />
-        </folder>
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Src/debug_gpio_exti.c" />
           <file file_name="$(ProjectDir)/Src/debug_helper.c" />
@@ -221,14 +170,11 @@
         </folder>
         <folder Name="system">
           <file file_name="$(ProjectDir)/Src/system/clockconfig.c" />
-          <file file_name="$(ProjectDir)/Src/system/exti_handler.c" />
-          <file file_name="$(ProjectDir)/Src/system/hw_util.c" />
           <file file_name="$(ProjectDir)/Src/system/profiling.c" />
           <file file_name="$(ProjectDir)/Src/system/status.c" />
           <file file_name="$(ProjectDir)/Src/system/stm32l4xx_it.c" />
           <file file_name="$(ProjectDir)/Src/system/timer_handler.c" />
           <file file_name="$(ProjectDir)/Src/system/util.c" />
-          <file file_name="$(ProjectDir)/Src/system/periodic.c" />
           <file file_name="$(ProjectDir)/Src/system/init.c" />
         </folder>
         <file file_name="$(ProjectDir)/Src/onewire.c" />
@@ -333,6 +279,70 @@
             <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.c" />
             <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.h" />
           </folder>
+        </folder>
+      </folder>
+    </folder>
+    <folder Name="Common Files">
+      <folder Name="src">
+        <folder Name="dev">
+          <file file_name="$(ProjectDir)/../common/Src/dev/io_dev.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/spi_dev.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/../common/Src/dev/bitbang_spi.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/../common/Src/dev/hw_device.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/devices.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/hw_spi.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/common_spi.c">
+            <configuration Name="Debug" gcc_optimization_level="Level 3" />
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
+          <file file_name="$(ProjectDir)/../common/Src/dev/adc_dev.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/qencoder.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/timer_dev.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/i2c_dev.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/qspi_dev.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/i2c_abstract.c" />
+          <file file_name="$(ProjectDir)/../common/Src/dev/usart.c" />
+        </folder>
+        <file file_name="../common/src/circbuf.c" />
+        <folder Name="system">
+          <file file_name="../common/src/system/exti_handler.c" />
+          <file file_name="../common/src/system/hw_util.c" />
+          <file file_name="../common/src/system/periodic.c" />
+        </folder>
+      </folder>
+      <folder Name="inc">
+        <folder Name="dev">
+          <file file_name="$(ProjectDir)/../common/Inc/dev/io_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/spi_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/hw_device.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/devices.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/spi.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/adc_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/qencode.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/timer_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/i2c_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/qspi_dev.h" />
+          <folder Name="qspi">
+            <file file_name="$(ProjectDir)/../common/Src/dev/qspi/mx25r6435f.c">
+              <configuration Name="Common" build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="$(ProjectDir)/../common/Src/dev/qspi/mx25r6435f.h" />
+          </folder>
+          <file file_name="$(ProjectDir)/../common/Inc/dev/i2c_abstract.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/can_dev.h" />
+          <file file_name="$(ProjectDir)/../common/Inc/dev/uart_dev.h" />
+        </folder>
+        <file file_name="../common/inc/circbuf.h" />
+        <folder Name="system">
+          <file file_name="../common/inc/system/exti_handler.h" />
+          <file file_name="../common/inc/system/hw_util.h" />
+          <file file_name="../common/inc/system/periodic.h" />
         </folder>
       </folder>
     </folder>

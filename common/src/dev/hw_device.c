@@ -14,7 +14,6 @@
 #include "system/exti_handler.h"
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
-
 #endif
 
 /******************************************************************************

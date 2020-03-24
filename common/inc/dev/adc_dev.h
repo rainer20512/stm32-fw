@@ -59,6 +59,11 @@ void     task_handle_adc         (uint32_t);
     extern AdcHandleT ADC1Handle;
 #endif
 
+#if defined(ADC3) && defined(USE_ADC3)
+    extern const HW_DeviceType HW_ADC3;
+    extern AdcHandleT ADC3Handle;
+#endif
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

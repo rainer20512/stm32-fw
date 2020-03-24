@@ -191,26 +191,32 @@
       arm_target_loader_can_unlock_range="No"
       target_reset_script="FLASHReset()" />
     <configuration Name="RAM" target_reset_script="Reset()" />
-    <folder Name="Source Files">
-      <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
-    </folder>
     <folder Name="System Files">
       <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(TargetsDir)/STM32/STM32_Startup.s" />
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
+      <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
+        <configuration Name="Common" build_exclude_from_build="Yes" />
+      </file>
     </folder>
     <folder Name="Application">
-      <folder Name="EWARM">
-        <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
-          <configuration Name="Common" build_exclude_from_build="Yes" />
-        </file>
-      </folder>
-      <folder Name="User">
-        <folder Name="CM7">
-          <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
-          <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
-          <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
+      <folder Name="src">
+        <folder Name="User">
+          <folder Name="CM7">
+            <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
+            <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
+            <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
+          </folder>
         </folder>
+      </folder>
+      <folder Name="inc">
+        <file file_name="CM7/Inc/debug.h" />
+        <file file_name="CM7/Inc/error.h" />
+      </folder>
+      <folder Name="config">
+        <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
+        <file file_name="CM7/Inc/config/config.h" />
+        <file file_name="CM7/Inc/config/devices_config.h" />
       </folder>
     </folder>
     <folder Name="Doc">
@@ -218,12 +224,7 @@
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">
-        <folder Name="STM32H745I_Nucleo">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
-        </folder>
-      </folder>
-      <folder Name="CMSIS">
-        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
       </folder>
       <folder Name="STM32H7xx_HAL_Driver">
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
@@ -268,9 +269,76 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
       </folder>
     </folder>
+    <folder Name="common_h7">
+      <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+      <file file_name="common_h7/Inc/hardware.h" />
+    </folder>
+    <folder Name="common">
+      <folder Name="src">
+        <folder Name="dev">
+          <file file_name="../common/src/dev/adc_dev.c" />
+          <file file_name="../common/src/dev/bitbang_spi.c" />
+          <file file_name="../common/src/dev/can_dev.c" />
+          <file file_name="../common/src/dev/common_spi.c" />
+          <file file_name="../common/src/dev/devices.c" />
+          <file file_name="../common/src/dev/hw_device.c" />
+          <file file_name="../common/src/dev/hw_spi.c" />
+          <file file_name="../common/src/dev/i2c_abstract.c" />
+          <file file_name="../common/src/dev/i2c_dev.c" />
+          <file file_name="../common/src/dev/io_dev.c" />
+          <file file_name="../common/src/dev/qencoder.c" />
+          <file file_name="../common/src/dev/qspi_dev.c" />
+          <file file_name="../common/src/dev/spi_dev.c" />
+          <file file_name="../common/src/dev/timer_dev.c" />
+          <file file_name="../common/src/dev/uart_dev.c" />
+          <file file_name="../common/src/dev/usart.c" />
+          <folder Name="qspi">
+            <file file_name="../common/src/dev/qspi/mx25r6435f.c" />
+            <file file_name="../common/src/dev/qspi/mx25r6435f.h" />
+          </folder>
+        </folder>
+        <folder Name="system">
+          <file file_name="../common/src/system/hw_util.c" />
+          <file file_name="../common/src/system/periodic.c" />
+        </folder>
+      </folder>
+      <folder Name="inc">
+        <folder Name="dev">
+          <file file_name="../common/inc/dev/adc_dev.h" />
+          <file file_name="../common/inc/dev/can_dev.h" />
+          <file file_name="../common/inc/dev/devices.h" />
+          <file file_name="../common/inc/dev/hw_device.h" />
+          <file file_name="../common/inc/dev/i2c_abstract.h" />
+          <file file_name="../common/inc/dev/i2c_dev.h" />
+          <file file_name="../common/inc/dev/io_dev.h" />
+          <file file_name="../common/inc/dev/lcd.h" />
+          <file file_name="../common/inc/dev/qencode.h" />
+          <file file_name="../common/inc/dev/qspi_dev.h" />
+          <file file_name="../common/inc/dev/spi.h" />
+          <file file_name="../common/inc/dev/spi_dev.h" />
+          <file file_name="../common/inc/dev/timer_dev.h" />
+          <file file_name="../common/inc/dev/uart_dev.h" />
+        </folder>
+        <folder Name="system">
+          <file file_name="../common/inc/system/hw_util.h" />
+          <file file_name="../common/inc/system/periodic.h" />
+        </folder>
+        <folder Name="devconfig">
+          <file file_name="common_h7/Inc/config/adc_config.h" />
+          <file file_name="common_h7/Inc/config/can_config.h" />
+          <file file_name="common_h7/Inc/config/gpio_config.h" />
+          <file file_name="common_h7/Inc/config/i2c_config.h" />
+          <file file_name="common_h7/Inc/config/qencode_config.h" />
+          <file file_name="common_h7/Inc/config/qspi_config.h" />
+          <file file_name="common_h7/Inc/config/spi_config.h" />
+          <file file_name="common_h7/Inc/config/timer_config.h" />
+          <file file_name="common_h7/Inc/config/uart_config.h" />
+        </folder>
+      </folder>
+    </folder>
   </project>
   <configuration
     Name="Common"
-    c_user_include_directories="./common_h7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/CPU"
+    c_user_include_directories="./../common/inc;./common_h7/inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.6.0" />
 </solution>
