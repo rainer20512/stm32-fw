@@ -1088,7 +1088,7 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
        pattern = CMD_to_number ( word, wordlen );
        c = '?';
        for ( uint32_t i = 0; i < pattern; i++ )
-            UsartTxRxOneByteWait   (&HandleCOM6, &c, 3000);
+            UsartTxRxOneByteWait   (&HandleCOM9, &c, 3000);
        break;
 #endif
     default:

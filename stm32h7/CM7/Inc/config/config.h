@@ -147,7 +147,7 @@
 /******************************************************************************
  * Check and set constraints for BaseTimer
  *****************************************************************************/
-#if defined(TX18LISTENER) || DEBUG_PROFILING > 0
+#if defined(TX18LISTENER) || DEBUG_PROFILING > 0 || USE_BASICTIMER > 0
     #if defined(USE_BASICTIMER) && USE_BASICTIMER < 1
         #warning "USE_BASICTIMER redefined due to system useage"
         #undef USE_BASICTIMER

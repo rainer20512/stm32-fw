@@ -17,7 +17,7 @@
 #define __I2C_CONFIG_H
 
 #include "config/config.h"
-#include "stm32l4xx_hal.h"
+#include "hardware.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

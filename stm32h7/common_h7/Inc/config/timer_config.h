@@ -12,7 +12,7 @@
 #define __TMR_CONFIG_H
 
 #include "config/devices_config.h"
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #ifdef __cplusplus
  extern "C" {

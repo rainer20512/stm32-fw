@@ -20,7 +20,7 @@
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
-      c_preprocessor_definitions="USE_HAL_DRIVER; STM32H745xx; USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;CORE_CM4;STARTUP_FROM_RESET"
+      c_preprocessor_definitions="CORE_CM4"
       c_user_include_directories="./CM4/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM4_Peripherals.xml"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM4_MemoryMap.xml"
@@ -167,7 +167,7 @@
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
-      c_preprocessor_definitions="USE_HAL_DRIVER; STM32H745xx; USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;CORE_CM7;STARTUP_FROM_RESET"
+      c_preprocessor_definitions="CORE_CM7"
       c_user_include_directories="./CM7/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM7_Peripherals.xml"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM7_MemoryMap.xml"
@@ -270,8 +270,21 @@
       </folder>
     </folder>
     <folder Name="common_h7">
-      <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
-      <file file_name="common_h7/Inc/hardware.h" />
+      <folder Name="src">
+        <file file_name="common_h7/Src/debug_helper.c" />
+        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+        <file file_name="common_h7/Src/hardware.c" />
+        <folder Name="system">
+          <file file_name="common_h7/Src/system/hw_util.c" />
+        </folder>
+      </folder>
+      <folder Name="inc">
+        <file file_name="common_h7/Inc/hardware.h" />
+        <file file_name="common_h7/Inc/debug_helper.h" />
+        <folder Name="system">
+          <file file_name="common_h7/Inc/system/hw_util.h" />
+        </folder>
+      </folder>
     </folder>
     <folder Name="common">
       <folder Name="src">
@@ -291,14 +304,14 @@
           <file file_name="../common/src/dev/spi_dev.c" />
           <file file_name="../common/src/dev/timer_dev.c" />
           <file file_name="../common/src/dev/uart_dev.c" />
-          <file file_name="../common/src/dev/usart.c" />
           <folder Name="qspi">
-            <file file_name="../common/src/dev/qspi/mx25r6435f.c" />
+            <file file_name="../common/src/dev/qspi/mx25r6435f.c">
+              <configuration Name="Common" build_exclude_from_build="Yes" />
+            </file>
             <file file_name="../common/src/dev/qspi/mx25r6435f.h" />
           </folder>
         </folder>
         <folder Name="system">
-          <file file_name="../common/src/system/hw_util.c" />
           <file file_name="../common/src/system/periodic.c" />
         </folder>
       </folder>
@@ -320,7 +333,6 @@
           <file file_name="../common/inc/dev/uart_dev.h" />
         </folder>
         <folder Name="system">
-          <file file_name="../common/inc/system/hw_util.h" />
           <file file_name="../common/inc/system/periodic.h" />
         </folder>
         <folder Name="devconfig">
@@ -339,6 +351,7 @@
   </project>
   <configuration
     Name="Common"
+    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1"
     c_user_include_directories="./../common/inc;./common_h7/inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.6.0" />
 </solution>

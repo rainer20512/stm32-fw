@@ -14,3 +14,8 @@
 #include "stm32l4xx.h"
 #include "stm32l4xx_hal.h"
 
+#define DMA_IS_LINEAR(hdma)     HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC)
+#define DMA_GET_RXSIZE(hdma)    (hdma->Instance->CNDTR)
+
+uint32_t GetAPB1TimerFrequency(void);
+uint32_t GetAPB2TimerFrequency(void);

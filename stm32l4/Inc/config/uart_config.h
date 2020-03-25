@@ -17,7 +17,6 @@
 #define __SYSTEM_H
 
 #include "stm32l4xx_hal.h"
-#include "stm32l4xx_nucleo.h"
 
 
 /* Exported types ------------------------------------------------------------*/
@@ -258,9 +257,9 @@
 
  */
 #ifdef USE_LPUART1
-  #define COM6                           LPUART1
+  #define COM9                           LPUART1
  
-  /* Definition for COM6 Pins
+  /* Definition for COM9 Pins
    * Alternatives for LPUART1 : 
    TX:[PB11,PC1,PG7] RX:[PB10,PC0,PG8]
    * ALTN1   TX:PB11 RX:PB10   AF8
@@ -269,38 +268,38 @@
    */
   #ifdef USE_LPUART1_ALTN1
     /* PB11/PB10 with AF8 */
-    #define COM6_TX                        { GPIO_PIN_11, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM6_RX                        { GPIO_PIN_10, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_11, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_RX                        { GPIO_PIN_10, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
   #elif defined(USE_LPUART1_ALTN2)
     /* PC1/PC0 with AF8 */
-    #define COM6_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM6_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
   #else
     /* Default TX:PG7 RX:G8 with AF8  */
-    #define COM6_TX                        { GPIO_PIN_7, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM6_RX                        { GPIO_PIN_8, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_7, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_RX                        { GPIO_PIN_8, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
   #endif
 
-  #ifdef COM6_USE_TX_DMA
+  #ifdef COM9_USE_TX_DMA
     /* Definition for LPUART1 TX DMA */
-    #define COM6_TX_DMA                     DMA2_Channel6, DMA_REQUEST_4, DMA2_Channel6_IRQn
-    #define COM6_DMA_TX_IRQHandler          DMA2_Channel6_IRQHandler
+    #define COM9_TX_DMA                     DMA2_Channel6, DMA_REQUEST_4, DMA2_Channel6_IRQn
+    #define COM9_DMA_TX_IRQHandler          DMA2_Channel6_IRQHandler
   #endif
-  #ifdef COM6_USE_RX_DMA
+  #ifdef COM9_USE_RX_DMA
     /* Definition for LPUART1 RX DMA */
-    #define COM6_RX_DMA                     DMA2_Channel7, DMA_REQUEST_4, DMA2_Channel7_IRQn
-    #define COM6_DMA_RX_IRQHandler          DMA2_Channel7_IRQHandler
+    #define COM9_RX_DMA                     DMA2_Channel7, DMA_REQUEST_4, DMA2_Channel7_IRQn
+    #define COM9_DMA_RX_IRQHandler          DMA2_Channel7_IRQHandler
   #endif
 
-  /* Definition for COM6's NVIC */
+  /* Definition for COM9's NVIC */
   #if defined(USE_LPUART1_DEBUG)
-    #define COM6_IRQ                          { LPUART1_IRQn, DEBUG_IRQ_PRIO, 0    }
+    #define COM9_IRQ                          { LPUART1_IRQn, DEBUG_IRQ_PRIO, 0    }
   #else
-    #define COM6_IRQ                          { LPUART1_IRQn, USART_IRQ_PRIO, 0    }
+    #define COM9_IRQ                          { LPUART1_IRQn, USART_IRQ_PRIO, 0    }
   #endif
-  #define COM6_IRQHandler                   LPUART1_IRQHandler
+  #define COM9_IRQHandler                   LPUART1_IRQHandler
 
-#endif // COM6
+#endif // COM9
 
 #endif /* __SYSTEM_H */
 

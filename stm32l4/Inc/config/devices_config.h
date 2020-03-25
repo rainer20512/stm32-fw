@@ -91,8 +91,8 @@
 //#define USE_LPUART1_ALTN2
 //#define USE_LPUART1_ALTN1
 /* Undefine, if RX or TX shall be done via DMA */
-//#define COM6_USE_TX_DMA
-//#define COM6_USE_RX_DMA
+//#define COM9_USE_TX_DMA
+//#define COM9_USE_RX_DMA
 /* Choose one */
 //#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK1
 //#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_SYSCLK
@@ -205,8 +205,8 @@
 
      /* LPUART with Tx/Rx at PG7/PG8 */
     #define USE_LPUART1
-    #define COM6_USE_TX_DMA
-    //#define COM6_USE_RX_DMA
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_DEBUG
  
@@ -326,8 +326,8 @@
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
     #define USE_LPUART1
-    #define COM6_USE_TX_DMA
-    //#define COM6_USE_RX_DMA
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
     #define USE_LPUART1_DEBUG

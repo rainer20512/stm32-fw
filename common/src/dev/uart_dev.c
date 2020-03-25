@@ -79,13 +79,167 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 
 #define TX_IDX  0
 #define RX_IDX  1
+#if 0
+#define USE_USART2
+#define USE_USART3
+#define USE_UART4
+#define USE_UART5
+#define USE_USART6
+#define USE_UART7
+#define USE_UART8
+#endif
+
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    static bool Usart_SetClockSource(const void *hw)
+    {
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      PeriphClkInit.PeriphClockSelection = 0;
+      switch ( (uint32_t)hw ) {
+    #if defined(USART1) && defined(USE_USART1)
+        case USART1_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1; 
+        PeriphClkInit.Usart1ClockSelection = USART1_CLKSOURCE;
+        break;
+    #endif
+    #if defined(USART2) && defined(USE_USART2)
+        case USART2_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2; 
+        PeriphClkInit.Usart2ClockSelection = USART2_CLKSOURCE;
+        break;
+    #endif
+    #if defined(USART3) && defined(USE_USART3)
+        case USART3_BASE:    
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART3; 
+        PeriphClkInit.Usart3ClockSelection = USART3_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART4) && defined(USE_UART4)
+        case UART4_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART4; 
+        PeriphClkInit.Uart4ClockSelection  = UART4_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART5) && defined(USE_UART5)
+        case UART5_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART5; 
+        PeriphClkInit.Uart5ClockSelection  = UART5_CLKSOURCE;
+        break;
+    #endif
+    #if defined(LPUART1) && defined(USE_LPUART1)
+        case LPUART1_BASE:
+        PeriphClkInit.PeriphClockSelection  = RCC_PERIPHCLK_LPUART1; 
+        PeriphClkInit.Lpuart1ClockSelection = LPUART1_CLKSOURCE;
+        break;
+    #endif
+        default:
+            DEBUG_PRINTF("No Clock source set receipe for HW base 0x%08x\n", (uint32_t)hw );
+            return false;
+      } // switch
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PRINTF("failed to set source for HW base 0x%08x\n", (uint32_t)hw );
+        return false;
+      }
+
+      return true;
+    }
+#elif defined(STM32H745xx)
+    static bool Usart_SetClockSource(const void *hw)
+    {
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      PeriphClkInit.PeriphClockSelection = 0;
+      switch ( (uint32_t)hw ) {
+    #if defined(USART1) && defined(USE_USART1)
+        case USART1_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1; 
+        PeriphClkInit.Usart16ClockSelection = USART16_CLKSOURCE;
+        break;
+    #endif
+    #if defined(USART2) && defined(USE_USART2)
+        case USART2_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(USART3) && defined(USE_USART3)
+        case USART3_BASE:    
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART3; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART4) && defined(USE_UART4)
+        case UART4_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART4; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART5) && defined(USE_UART5)
+        case UART5_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART5; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(USART6) && defined(USE_USART6)
+        case USART6_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART6; 
+        PeriphClkInit.Usart16ClockSelection = USART16_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART7) && defined(USE_UART7)
+        case UART7_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART7; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(UART8) && defined(USE_UART8)
+        case UART8_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_UART8; 
+        PeriphClkInit.Usart234578ClockSelection = USART234578_CLKSOURCE;
+        break;
+    #endif
+    #if defined(LPUART1) && defined(USE_LPUART1)
+        case LPUART1_BASE:
+        PeriphClkInit.PeriphClockSelection  = RCC_PERIPHCLK_LPUART1; 
+        PeriphClkInit.Lpuart1ClockSelection = LPUART1_CLKSOURCE;
+        break;
+    #endif
+        default:
+            DEBUG_PRINTF("No Clock source set receipe for HW base 0x%08x\n", (uint32_t)hw );
+            return false;
+      } // switch
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PRINTF("failed to set source for HW base 0x%08x\n", (uint32_t)hw );
+        return false;
+      }
+
+      return true;
+    }
+#else 
+    #error "No usart clock assignment defined"
+#endif
+
+/*
+ * Init or DeInit Clock / clocksource 
+ */
+static bool Usart_Clock_Init(const HW_DeviceType *self, bool bDoInit)
+{
+    /* Select clock source on init*/
+    if ( bDoInit ) {
+        if ( !Usart_SetClockSource( self->devBase ) ) return false;
+    }
+
+    /* Enable/Disable clock */
+    HW_SetHWClock( ( USART_TypeDef*)self->devBase, bDoInit );
+    return true;
+}
 
 bool Usart_GPIO_Init(const HW_DeviceType *self)
 {
     GPIO_InitTypeDef  GPIO_InitStruct;
 
-    /* Enable clock */
-    HW_SetHWClock( ( USART_TypeDef*)self->devBase, 1 );
 
     /*##-2- Configure Tx and Rx pins ##########################################*/  
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
@@ -94,15 +248,6 @@ bool Usart_GPIO_Init(const HW_DeviceType *self)
     GpioAFInitAll(self->devGpioAF, &GPIO_InitStruct);
 
     return true;
-}
-
-static void Usart_GPIO_DeInit(const HW_DeviceType *self)
-{
-    /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
-
-    /* Disable Usart clock */
-    HW_SetHWClock( ( USART_TypeDef*)self->devBase, 0 );
 }
 
 
@@ -176,7 +321,7 @@ static void UART_DMATransmitCplt(DMA_HandleTypeDef *hdma)
   
   /* DMA Normal mode */
   // debug_putchar('x');
-  if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) ) {  
+  if ( DMA_IS_LINEAR(hdma) ) {  
     /* Disable the DMA transfer for transmit request by resetting the DMAT bit
     in the UART CR3 register */
     CLEAR_BIT(uhandle->Instance->CR3, USART_CR3_DMAT);
@@ -198,10 +343,10 @@ static void UART_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
 {
   UsartHandleT *uhandle = (UsartHandleT *)(hdma->Parent);
   /* Get the number of bytes transferred (ideally the requested number of bytes ) */
-  uhandle->RxCount = uhandle->RxSize - hdma->Instance->CNDTR;
+  uhandle->RxCount = uhandle->RxSize - DMA_GET_RXSIZE(hdma);
 
   /* DMA Normal mode */
-  if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) )
+  if ( DMA_IS_LINEAR(hdma) )
   {
     
     /* Disable PE and ERR (Frame error, noise error, overrun error) interrupts */
@@ -303,6 +448,9 @@ bool COM_Init(const HW_DeviceType *self)
     USART_AdditionalDataType *adt   = USART_GetAdditionalData(self);
     UsartHandleT *myHandle          = adt->myHandle;
 
+    /* Set and enable clock */
+    Usart_Clock_Init(self, true);
+    
     /* Init GPIO Pins, GPIO Clocks and UART Clock */
     Usart_GPIO_Init(self);
 
@@ -347,7 +495,8 @@ void COM_DeInit(const HW_DeviceType *self)
 {
     HW_Reset( (USART_TypeDef*)self->devBase );
 
-    Usart_GPIO_DeInit(self); 
+    /* Disable GPIO Pins */
+    GpioAFDeInitAll(self->devGpioAF);
     
     /* disable interrupts */
     HW_SetAllIRQs(self->devIrqList, false);
@@ -363,6 +512,9 @@ void COM_DeInit(const HW_DeviceType *self)
       HAL_DMA_DeInit(self->devDmaRx->dmaHandle);
       HAL_NVIC_DisableIRQ(self->devDmaRx->dmaIrqNum);
     }
+
+    /* Disable clock */
+    Usart_Clock_Init(self, false);
 }
 
 
@@ -659,46 +811,46 @@ bool COM_AllowStop(const HW_DeviceType *self)
 
 
 #if defined(LPUART1) && defined(USE_LPUART1)
-    UsartHandleT HandleCOM6;
+    UsartHandleT HandleCOM9;
 
     static const HW_GpioList_AF gpio_com6 = {
         .num = 2,
-        .gpio = {COM6_TX, COM6_RX} ,
+        .gpio = {COM9_TX, COM9_RX} ,
     };
 
-    #if defined(COM6_USE_TX_DMA)
+    #if defined(COM9_USE_TX_DMA)
         static DMA_HandleTypeDef hdma_com6_tx;
-        static const HW_DmaType dmatx_com6 = { &hdma_com6_tx, COM6_TX_DMA };
+        static const HW_DmaType dmatx_com6 = { &hdma_com6_tx, COM9_TX_DMA };
     #endif
-    #if defined(COM6_USE_RX_DMA)
+    #if defined(COM9_USE_RX_DMA)
         static DMA_HandleTypeDef hdma_com6_rx;
-        static const HW_DmaType dmarx_com6 = { &hdma_com6_rx, COM6_RX_DMA };
+        static const HW_DmaType dmarx_com6 = { &hdma_com6_rx, COM9_RX_DMA };
     #endif
 
     static const USART_AdditionalDataType additional_com6 = {
-        &HandleCOM6,
+        &HandleCOM9,
         DEBUG_BAUDRATE,
     };
 
     static const HW_IrqList irq_com6 = {
         .num = 1,
-        .irq = { COM6_IRQ, },
+        .irq = { COM9_IRQ, },
     };
 
-    const HW_DeviceType HW_COM6 = {
-        .devName        = "COM6",
+    const HW_DeviceType HW_COM9 = {
+        .devName        = "COM9",
         .devBase        = LPUART1,
         .devGpioAF      = &gpio_com6,
         .devGpioIO      = NULL,
         .devType        =  HW_DEVICE_UART,
         .devData        = &additional_com6,
         .devIrqList     = &irq_com6,
-        #if defined(COM6_USE_TX_DMA)
+        #if defined(COM9_USE_TX_DMA)
             .devDmaTx = &dmatx_com6,
         #else
             .devDmaTx = NULL,
         #endif
-        #if defined(COM6_USE_RX_DMA)
+        #if defined(COM9_USE_RX_DMA)
             .devDmaRx = &dmarx_com6,
         #else
             .devDmaRx = NULL,
@@ -717,42 +869,6 @@ bool COM_AllowStop(const HW_DeviceType *self)
 /* Exported functions -----------------------------------------------------------*/
 /* ------------------------------------------------------------------------------*/
 
-
-void UsartClockInit(void)
-{
-  RCC_PeriphCLKInitTypeDef PeriphClkInit;
-
-  PeriphClkInit.PeriphClockSelection = 0;
-#if defined(USART1) && defined(USE_USART1)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_USART1; 
-    PeriphClkInit.Usart1ClockSelection = USART1_CLKSOURCE;
-#endif
-#if defined(USART2) && defined(USE_USART2)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_USART2; 
-    PeriphClkInit.Usart2ClockSelection = USART2_CLKSOURCE;
-#endif
-#if defined(USART3) && defined(USE_USART3)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_USART3; 
-    PeriphClkInit.Usart3ClockSelection = USART3_CLKSOURCE;
-#endif
-#if defined(UART4) && defined(USE_UART4)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_UART4; 
-    PeriphClkInit.Uart4ClockSelection = UART4_CLKSOURCE;
-#endif
-#if defined(UART5) && defined(USE_UART5)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_UART5; 
-    PeriphClkInit.Uart5ClockSelection = UART5_CLKSOURCE;
-#endif
-#if defined(LPUART1) && defined(USE_LPUART1)
-    PeriphClkInit.PeriphClockSelection |= RCC_PERIPHCLK_LPUART1; 
-    PeriphClkInit.Lpuart1ClockSelection = LPUART1_CLKSOURCE;
-#endif
-
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-  {
-    Error_Handler(__FILE__, __LINE__);
-  }
-}
 
 /******************************************************************************
  * Enable Uart receiver

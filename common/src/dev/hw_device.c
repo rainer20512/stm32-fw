@@ -26,19 +26,21 @@
  *****************************************************************************/
 void GpioInitHW( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
 {
-    /* check for IOSV */
-    if ( gpio == GPIOG && Init->Pin > GPIO_PIN_1 ) {
+    #if defined( PWR_CR2_IOSV )
+        /* check for IOSV */
+        if ( gpio == GPIOG && Init->Pin > GPIO_PIN_1 ) {
 
-        /* Get clock status of PWR domain and switch on, if not already on*/
-        uint32_t pwrbit = READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
-        if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
+            /* Get clock status of PWR domain and switch on, if not already on*/
+            uint32_t pwrbit = READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
+            if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
 
-        /* Check IOSV Bit and set */
-        if ( !READ_BIT(PWR->CR2, PWR_CR2_IOSV) )SET_BIT(PWR->CR2, PWR_CR2_IOSV); 
+            /* Check IOSV Bit and set */
+            if ( !READ_BIT(PWR->CR2, PWR_CR2_IOSV) )SET_BIT(PWR->CR2, PWR_CR2_IOSV); 
 
-        /* Switch PWR domain clock off again, if it was off before */
-        if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
-    }
+            /* Switch PWR domain clock off again, if it was off before */
+            if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+        }
+    #endif
 
     /* Set hardware Pin */
     HAL_GPIO_Init(gpio, Init);
@@ -79,7 +81,7 @@ void GpioAFInitOneWithPreset( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Ini
     switch(preset) {
         case HW_OUTPUT_LOW:
             /* Set output pin low */
-            gpio->gpio->BRR = gpio->pin;
+            gpio->gpio->BSRR = gpio->pin << 16;
             break;
         case HW_OUTPUT_HIGH:
             /* Set output pin high */
@@ -245,8 +247,12 @@ void GpioADCInitAll ( const HW_GpioList_ADC *gpioList )
     const HW_Gpio_ADC_Type *gpio;
 
     GPIO_InitTypeDef Init= {0};
-    Init.Mode   = GPIO_MODE_ANALOG_ADC_CONTROL;
-    Init.Pull   = GPIO_NOPULL;
+    #if defined(GPIO_MODE_ANALOG_ADC_CONTROL)
+        Init.Mode = GPIO_MODE_ANALOG_ADC_CONTROL;
+    #else
+        Init.Mode = GPIO_MODE_ANALOG;
+    #endif
+    Init.Pull     = GPIO_NOPULL;
 
     for ( uint32_t i=0; i < gpioList->num; i++ ) {
         gpio = &gpioList->gpio[i];

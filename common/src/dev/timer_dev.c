@@ -15,7 +15,9 @@
 
 #if USE_PWMTIMER > 0 || USE_BASICTIMER > 0
 
+#include "hardware.h"
 #include "error.h"
+#include "system/profiling.h"
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
 
@@ -166,38 +168,6 @@ static void TmrHandleInit (TimerHandleT *hnd, const HW_DeviceType *self)
     hnd->MicroCountHigh     = 0;
 }
 
-/****************************************************************************** 
- * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 
-           from             HCLK, the timer input frequency is twice the 
-           APB1-Clock. If APB1 clock is equal HCLK, timer input frequency is 
-           equal to APB1 clock
- * @param  None
- * @retval Actual APB1 timers input frequency
-  *****************************************************************************/
-static uint32_t GetAPB1TimerFrequency(void)
-{
-  
-  uint32_t uPclk1 =  HAL_RCC_GetPCLK1Freq();
-  uint32_t uPclk1Prescale = (RCC->CFGR & RCC_CFGR_PPRE1_Msk ) >> RCC_CFGR_PPRE1_Pos;
-  DEBUG_PRINTF("APB1 clock .........=%d\n", uPclk1);
-  DEBUG_PRINTF("APB1 clock prescaler=%d\n", uPclk1Prescale);
-  if (uPclk1Prescale==RCC_HCLK_DIV1)
-     return uPclk1;
-  else 
-     return uPclk1*2;
-}
-static uint32_t GetAPB2TimerFrequency(void)
-{
-  
-  uint32_t uPclk2 =  HAL_RCC_GetPCLK2Freq();
-  uint32_t uPclk2Prescale = (RCC->CFGR & RCC_CFGR_PPRE2_Msk ) >> RCC_CFGR_PPRE2_Pos;
-  DEBUG_PRINTF("APB2 clock .........=%d\n", uPclk2);
-  DEBUG_PRINTF("APB2 clock prescaler=%d\n", uPclk2Prescale);
-  if (uPclk2Prescale==RCC_HCLK_DIV1)
-     return uPclk2;
-  else 
-     return uPclk2*2;
-}
 
 
 static const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */

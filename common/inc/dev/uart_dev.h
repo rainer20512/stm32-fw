@@ -76,8 +76,8 @@ typedef struct UsartHandleType {
   extern UsartHandleT HandleCOM5;
 #endif
 #if defined(LPUART1) && defined(USE_LPUART1)
-  extern const HW_DeviceType HW_COM6;
-  extern UsartHandleT HandleCOM6;
+  extern const HW_DeviceType HW_COM9;
+  extern UsartHandleT HandleCOM9;
 #endif
 
 /* Find out debug usart assignment */
@@ -92,7 +92,7 @@ typedef struct UsartHandleType {
 #elif defined(USE_UART5_DEBUG)
     #define HW_DEBUG_UART    HW_COM5
 #elif defined(USE_LPUART1_DEBUG)
-    #define HW_DEBUG_UART    HW_COM6
+    #define HW_DEBUG_UART    HW_COM9
 #else
     #undef HW_DEBUG_UART
 #endif
@@ -101,7 +101,6 @@ typedef struct UsartHandleType {
 
 UsartHandleT *USART_GetHandleFromDev(const HW_DeviceType *self);
 
-void UsartClockInit         (void);
 bool Usart_SetCommParams    (UsartHandleT *uhandle,  uint32_t baudrate, bool bFirstInit);
 void Usart_AssignBuffers    (UsartHandleT *uhandle, LinBuffT *rxcharbuf, CircBuffT *xmit); 
 void UsartAssignCallbacks   (UsartHandleT *uhandle, UsartCB OnTx, UsartCB OnErr, UsartRCB OnRx);

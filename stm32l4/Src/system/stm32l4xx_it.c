@@ -411,29 +411,29 @@ void SysTick_Handler(void)
 #endif
 
 #if defined(LPUART1) && defined(USE_LPUART1)
-    #if !defined(COM6_IRQHandler) 
+    #if !defined(COM9_IRQHandler) 
         #error "IRQ names not defined for LPUART1" 
     #endif
-    void COM6_IRQHandler(void)
+    void COM9_IRQHandler(void)
     {
         ProfilerPush(JOB_IRQ_UART);
-        UsartIRQHandler(&HandleCOM6);
+        UsartIRQHandler(&HandleCOM9);
         ProfilerPop();
     }
-  #if defined(COM6_USE_TX_DMA) || defined(COM6_USE_RX_DMA) 
-    #if defined(COM6_USE_TX_DMA)
-        void COM6_DMA_TX_IRQHandler(void) 
+  #if defined(COM9_USE_TX_DMA) || defined(COM9_USE_RX_DMA) 
+    #if defined(COM9_USE_TX_DMA)
+        void COM9_DMA_TX_IRQHandler(void) 
         {
             ProfilerPush(JOB_IRQ_UART);
-            HAL_DMA_IRQHandler(HandleCOM6.hTxDma);
+            HAL_DMA_IRQHandler(HandleCOM9.hTxDma);
             ProfilerPop();
         }
     #endif
-    #if defined(COM6_USE_RX_DMA)
-        void COM6_DMA_RX_IRQHandler(void) 
+    #if defined(COM9_USE_RX_DMA)
+        void COM9_DMA_RX_IRQHandler(void) 
         {
             ProfilerPush(JOB_IRQ_UART);
-            HAL_DMA_IRQHandler(HandleCOM6.hRxDma);
+            HAL_DMA_IRQHandler(HandleCOM9.hRxDma);
             ProfilerPop();
         }
     #endif

@@ -15,13 +15,13 @@
  extern "C" {
 #endif
 
-#include "stm32l4xx_hal.h"
+#include "hardware.h"
 
 #ifdef HAL_I2C_MODULE_ENABLED
 
     typedef void ( *I2Cx_ErrorCB) (struct __I2C_HandleTypeDef *hi2c); 
 
-    #include "stm32l4xx.h"
+    #include "hardware.h"
     #include "dev/i2c_dev.h"
     /* Link function for TOUCHSCREEN IO functions */
     I2C_HandleTypeDef*        TS_IO_Init(I2cHandleT *i2c, I2Cx_ErrorCB errCb);

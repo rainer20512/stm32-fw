@@ -22,31 +22,39 @@
  extern "C" {
 #endif
 
+/* Clock sources for USART1 / USART6 */
+/* Choose one */
+//#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_PCLK2
+//#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_PLL2Q
+//#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_PLL3Q
+//#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_CSI
+#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_HSI
+//#define USART16_CLKSOURCE         RCC_USART16CLKSOURCE_LSE
+
+/* Clock sources for USART2 / USART3 / UART4,5,7,8 */
+/* Choose one */
+//#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_PCLK2
+//#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_PLL2Q
+//#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_PLL3Q
+//#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_CSI
+#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_HSI
+//#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_LSE
+
 /*******************************************************************************
  * Maximum config below 
  * choose suitable configs for your platform
  ******************************************************************************/
-//#define USE_USART1
+#define USE_USART1
 //#define USE_USART1_ALTN1
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM1_USE_TX_DMA
 //#define COM1_USE_RX_DMA
-/* Choose one */
-//#define USART1_CLKSOURCE    RCC_USART1CLKSOURCE_PCLK2
-//#define USART1_CLKSOURCE    RCC_USART1CLKSOURCE_SYSCLK
-//#define USART1_CLKSOURCE    RCC_USART1CLKSOURCE_HSI
-//#define USART1_CLKSOURCE    RCC_USART1CLKSOURCE_LSE
 
 //#define USE_USART2
 //#define USE_USART2_ALTN1
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM2_USE_TX_DMA
 //#define COM2_USE_RX_DMA
-/* Choose one */
-//#define USART2_CLKSOURCE    RCC_USART2CLKSOURCE_PCLK1
-//#define USART2_CLKSOURCE    RCC_USART2CLKSOURCE_SYSCLK
-//#define USART2_CLKSOURCE    RCC_USART2CLKSOURCE_HSI
-//#define USART2_CLKSOURCE    RCC_USART2CLKSOURCE_LSE
 
 //#define USE_USART3
 //#define USE_USART3_ALTN1
@@ -55,33 +63,15 @@
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM3_USE_TX_DMA
 //#define COM3_USE_RX_DMA
-/* Choose one */
-//#define USART3_CLKSOURCE    RCC_USART3CLKSOURCE_PCLK1
-//#define USART3_CLKSOURCE    RCC_USART3CLKSOURCE_SYSCLK
-//#define USART3_CLKSOURCE    RCC_USART3CLKSOURCE_HSI
-//#define USART3_CLKSOURCE    RCC_USART3CLKSOURCE_LSE
 
 //#define USE_UART4
 //#define USE_UART4_ALTN1
-/* DMA Transfer not yet implemented for UART4 */
-/* Choose one */
-//#define UART4_CLKSOURCE    RCC_UART4CLKSOURCE_PCLK1
-//#define UART4_CLKSOURCE    RCC_UART4CLKSOURCE_SYSCLK
-//#define UART4_CLKSOURCE    RCC_UART4CLKSOURCE_HSI
-//#define UART4_CLKSOURCE    RCC_UART4CLKSOURCE_LSE
 
 
 //#define USE_UART5
-// No alternate pin configurations for UART5
-/* DMA Transfer not yet implemented for UART5 */
-/* Choose one */
-//#define UART5_CLKSOURCE    RCC_UART5CLKSOURCE_PCLK1
-//#define UART5_CLKSOURCE    RCC_UART5CLKSOURCE_SYSCLK
-//#define UART5_CLKSOURCE    RCC_UART5CLKSOURCE_HSI
-//#define UART5_CLKSOURCE    RCC_UART5CLKSOURCE_LSE
 
 
-//#define USE_LPUART1
+#define USE_LPUART1
    /* Alternatives for LPUART1 : 
     * TX:[PB11,PC1,PG7] RX:[PB10,PC0,PG8]
     * ALTN1   TX:PB11 RX:PB10   AF8
@@ -91,12 +81,14 @@
 //#define USE_LPUART1_ALTN2
 //#define USE_LPUART1_ALTN1
 /* Undefine, if RX or TX shall be done via DMA */
-//#define COM6_USE_TX_DMA
-//#define COM6_USE_RX_DMA
+//#define COM9_USE_TX_DMA
+//#define COM9_USE_RX_DMA
 /* Choose one */
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK1
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_SYSCLK
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK3
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL2Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL3Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_CSI
+#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
 //#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_LSE
 
 
@@ -205,8 +197,8 @@
 
      /* LPUART with Tx/Rx at PG7/PG8 */
     #define USE_LPUART1
-    #define COM6_USE_TX_DMA
-    //#define COM6_USE_RX_DMA
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_DEBUG
  
@@ -326,8 +318,8 @@
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
     #define USE_LPUART1
-    #define COM6_USE_TX_DMA
-    //#define COM6_USE_RX_DMA
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
     #define USE_LPUART1_DEBUG

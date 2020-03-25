@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * @file    hardware.h
  * @author  rainer
@@ -14,5 +13,12 @@
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
 
-#define DMA_Channel_TypeDef     DMAMUX_Channel_TypeDef
+#define USART_ISR_RXNE                  USART_ISR_RXNE_RXFNE
+#define USART_ISR_TXE                   USART_ISR_TXE_TXFNF
 
+#define DMA_Channel_TypeDef             DMAMUX_Channel_TypeDef
+#define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
+#define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
+
+uint32_t GetAPB1TimerFrequency(void);
+uint32_t GetAPB2TimerFrequency(void);

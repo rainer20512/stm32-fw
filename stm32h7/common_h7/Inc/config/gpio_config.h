@@ -7,7 +7,7 @@
 
 #include "config/config.h"
 #include "config/devices_config.h"
-#include "stm32l4xx_hal.h"
+#include "hardware.h"
 
 
 #define IO_NO_IRQ                            {-1,0,}

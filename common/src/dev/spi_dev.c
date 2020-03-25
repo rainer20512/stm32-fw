@@ -15,18 +15,22 @@
   * @{
   */
 
-#include "config/config.h"
+#include "config/devices_config.h"
+
+#if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4)
+
 #include "error.h"
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
 #include "dev/spi.h"
 
-#include "config/devices_config.h"
 #include "config/spi_config.h"
 #include "dev/devices.h"
 #include "system/exti_handler.h"
 #include "dev/spi_dev.h"
 #include "debug_helper.h"
+
+
 
 /*******************************************************************************************
  * Additional data that will be stored to I2C type hardware devices
@@ -797,7 +801,7 @@ bool SPI_AllowStop(const HW_DeviceType *self)
 #endif
 
 
-
+#endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4) */
 
 /**
   * @}
