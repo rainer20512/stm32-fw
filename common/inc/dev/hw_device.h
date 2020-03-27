@@ -155,12 +155,15 @@ typedef struct {
 #if defined(STM32L476xx) || defined(STM32L496xx)
     DMA_Channel_TypeDef *dmaChannel;     //!< Associated DMA channel / Stream
 #elif defined(STM32H745xx)
-    DMA_Stream_TypeDef *dmaChannel;     //!< Associated DMA channel / Stream
+    void                *dmaChannel;     //!< Associated DMA channel / Stream
+                                         //!< may be of type DMA_Stream_TypeDef *
+                                         //!< or BDMA_Channel_TypeDef *
 #else
     #error "No setup for DMA Channel or Stream"
 #endif
     uint8_t              dmaRequest;    //!< Associated DMA Request    
     uint8_t              dmaIrqNum;     //!< IRQ for this channel/request
+    uint32_t             dmaPrio;       //!< DMA channel priority as defined in stm32xxxxhal_dma.h
 } HW_DmaType;
 
 typedef struct HWDTS {

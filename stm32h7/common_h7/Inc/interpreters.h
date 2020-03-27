@@ -3,7 +3,7 @@
   * @file    interpreters.h 
   * @author  Rainer
   * @brief   Debug Input handling and command interpreter 
-  *
+  * @note    The header file is common to CM7 and CM4, the implementation isn't!
   ******************************************************************************
   */
 

@@ -51,6 +51,8 @@ char          HW_GetGPIOLetter        (GPIO_TypeDef *gp);
 void          HW_ReadID               (DeviceIdT *id );
 bool          HW_DumpID               (char *cmdline, size_t len, const void * arg );
 
+void          HW_DMA_HandleInit       (DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

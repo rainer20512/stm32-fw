@@ -362,14 +362,14 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
         /* Only Switch off to keep the basemode */
         RFM_SwitchOff();
         rfm_basemode = rfm_basemode_txdone;
-        TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
+        TaskNotifyFromISR(TASK_RFM); // inform the rfm task about end of transmition
         return;
     case rfm_basemode_rx:
         /* Triggered, when the whole packet is received */
         RFM_SwitchOff();
         rfm_DeliverRxBytes();
         rfm_basemode = rfm_basemode_rxdone;
-        TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
+        TaskNotifyFromISR(TASK_RFM); // inform the rfm task about end of transmition
         return;
     case rfm_basemode_rxook:
         // Not tested!
@@ -379,7 +379,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
                 /* Only Switch off to keep the basemode */
                 RFM_SwitchOff();
                 rfm_basemode = rfm_basemode_rxookdone;
-                TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
+                TaskNotifyFromISR(TASK_RFM); // inform the rfm task about end of transmition
                 return;
         } else {
                 // RFM_INT_EN_OOK(); RHB commented out: need this?

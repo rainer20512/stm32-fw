@@ -18,6 +18,9 @@
 
 #include "config/config.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -53,17 +56,19 @@ typedef void ( *MiniTaskRunFn  ) ( uint32_t );
 bool TaskIsRunableTask  (void);
 
 #if DEBUG_MODE > 0
-    void TaskRegisterTask ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, const char *Name );
+    void TaskRegisterTask ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name );
     void TaskDumpList     (void);
     extern bool bAllowStop;         /* flag variable to inhibit stop by command ( only in debug mode ) */
 #else
-    void TaskRegisterTaskShort ( MiniTaskInitFn, MiniTaskRunFn, uint32_t num, int32_t PrID);
+    void TaskRegisterTaskShort ( MiniTaskInitFn, MiniTaskRunFn, uint32_t num, int32_t PrID, StackType_t* stackMem, uint32_t ulStackDepth);
     #define TaskRegisterTask(i,r,n,d,a)     TaskRegisterTaskShort(i,r,n,d)
     #define TaskDumpList()
 #endif
 void TaskInitAll        ( void );
 void TaskRunAll         ( void );
 void TaskNotify         ( uint32_t num );
+void TaskNotifyFromISR  ( uint32_t num );
+
 
 #ifdef __cplusplus
 }

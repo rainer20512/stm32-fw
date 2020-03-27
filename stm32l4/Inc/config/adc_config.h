@@ -39,7 +39,7 @@
     /* Definition ADC1 NVIC */
     #define ADC1_IRQ                             { ADC1_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC1_IRQHandler                      ADC1_2_IRQHandler
-    #define ADC1_RX_DMA                          DMA1_Channel1, DMA_REQUEST_0, DMA1_Channel1_IRQn
+    #define ADC1_RX_DMA                          DMA1_Channel1, DMA_REQUEST_0, DMA1_Channel1_IRQn, DMA_PRIORITY_HIGH
     #define ADC1_DMA_IRQHandler                  DMA1_Channel1_IRQHandler
                                                     
 #endif
@@ -52,7 +52,7 @@
     /* Definition ADC2 NVIC */
     #define ADC2_IRQ                             { ADC2_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC2_IRQHandler                      ADC2_2_IRQHandler
-    #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_0, DMA1_Channel2_IRQn
+    #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_0, DMA1_Channel2_IRQn, DMA_PRIORITY_HIGH
     #define ADC2_DMA_IRQHandler                  DMA1_Channel2_IRQHandler
 #endif
 
@@ -66,7 +66,7 @@
     /* Definition ADC2 NVIC */
     #define ADC3_IRQ                             { ADC3_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC3_IRQHandler
-    #define ADC3_RX_DMA                          DMA1_Channel3, DMA_REQUEST_0, DMA1_Channel3_IRQn
+    #define ADC3_RX_DMA                          DMA1_Channel3, DMA_REQUEST_0, DMA1_Channel3_IRQn, DMA_PRIORITY_HIGH
     #define ADC3_DMA_IRQHandler                  DMA1_Channel3_IRQHandler
 #endif
 

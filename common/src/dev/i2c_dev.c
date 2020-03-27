@@ -210,15 +210,7 @@ static void I2cDmaChannelInit(I2cHandleT *myi2c, const HW_DmaType *dma, I2cDmaDi
 
   DMA_HandleTypeDef *hdma = dma->dmaHandle;
 
-  hdma->Instance                 = dma->dmaChannel;
-  hdma->Parent                   = myi2c;
-  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma->Init.MemInc              = DMA_MINC_ENABLE;
-  hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-  hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-  hdma->Init.Mode                = DMA_NORMAL;
-  hdma->Init.Priority            = DMA_PRIORITY_MEDIUM;
-  hdma->Init.Request             = dma->dmaRequest;
+  HW_DMA_HandleInit(hdma, dma, myi2c );
 
   switch ( dmadir ) 
   {

@@ -60,8 +60,8 @@
 
   #ifdef I2C1_USE_DMA
       /* Definition for I2C1's DMA, only used if DMA useage is configured */
-      #define I2C1_TX_DMA                    DMA1_Channel6, DMA_REQUEST_3, DMA1_Channel6_IRQn
-      #define I2C1_RX_DMA                    DMA1_Channel7, DMA_REQUEST_3, DMA1_Channel7_IRQn
+      #define I2C1_TX_DMA                    DMA1_Channel6, DMA_REQUEST_3, DMA1_Channel6_IRQn, DMA_PRIORITY_MEDIUM
+      #define I2C1_RX_DMA                    DMA1_Channel7, DMA_REQUEST_3, DMA1_Channel7_IRQn, DMA_PRIORITY_MEDIUM
       #define I2C1_DMA_TX_IRQHandler         DMA1_Channel6_IRQHandler
       #define I2C1_DMA_RX_IRQHandler         DMA1_Channel7_IRQHandler
   #endif
@@ -104,8 +104,8 @@
 
   #ifdef I2C2_USE_DMA
       /* Definition for I2C2's DMA, only used if DMA useage is configured */
-      #define I2C2_TX_DMA                    DMA1_Channel4, DMA_REQUEST_3, DMA1_Channel4_IRQn
-      #define I2C2_RX_DMA                    DMA1_Channel5, DMA_REQUEST_3, DMA1_Channel5_IRQn
+      #define I2C2_TX_DMA                    DMA1_Channel4, DMA_REQUEST_3, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
+      #define I2C2_RX_DMA                    DMA1_Channel5, DMA_REQUEST_3, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
       #define I2C2_DMA_TX_IRQHandler         DMA1_Channel4_IRQHandler
       #define I2C2_DMA_RX_IRQHandler         DMA1_Channel5_IRQHandler
   #endif

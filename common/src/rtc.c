@@ -17,8 +17,6 @@
 #include "task/minitask.h"
 #include "rtc.h"
 #include "timer.h"
-#include "stm32l4xx_hal.h"
-#include "stm32l4xx_nucleo.h"
 
 #if USE_TIMER > 0
     #include "global_flags.h"
@@ -433,8 +431,8 @@ void RTC_AddOneSecond(void)
     void RTC_IncrementSecond ( void )
     {
         RTC_AddOneSecond();
-        TaskNotify(TASK_RTC);
-        TaskNotify(TASK_PERIODIC);
+        TaskNotifyFromISR(TASK_RTC);
+        TaskNotifyFromISR(TASK_PERIODIC);
     }
 
     /*********************************************************************************
@@ -1123,7 +1121,7 @@ bool RTC_StopWatch_InUse(void)
                      if ( tmrcnt != CMP_FORBIDDEN_VALUE + 1 ) {
                             MsTimerHandleCMP(tmrcnt-1 );
                             /* Set Task bit in any case.This is neccessary to compute next timer match */
-                            TaskNotify(TASK_TMR);
+                            TaskNotifyFromISR(TASK_TMR);
                      }
                 }
             // } else {
@@ -1161,8 +1159,8 @@ bool RTC_StopWatch_InUse(void)
   
       /* Alarm A used for secondly ticks */
       if ( RTC->ISR & RTC_ISR_ALRAF ) {
-        TaskNotify(TASK_RTC);
-        TaskNotify(TASK_PERIODIC);
+        TaskNotifyFromISR(TASK_RTC);
+        TaskNotifyFromISR(TASK_PERIODIC);
       }
 
       /* reset all interrupt bits by writing 0 to */
@@ -1190,7 +1188,7 @@ bool RTC_StopWatch_InUse(void)
          DisableTmrIRQ(); 
          DISABLE_WRITE();
          // If there is an matching timer, activate Timer Task
-         if ( MsTimerHandleCMP(RHB todo: Actual timer value) ) TaskNotify(TASK_TMR);      
+         if ( MsTimerHandleCMP(RHB todo: Actual timer value) ) TaskNotifyFromISR(TASK_TMR);      
       }
 
       /* reset all interrupt bits by writing 0 to */

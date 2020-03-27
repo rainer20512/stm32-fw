@@ -212,7 +212,7 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
                     #endif
                     
                     /* Request processing of pulse */
-                    TaskNotify(TASK_PULSE);
+                    TaskNotifyFromISR(TASK_PULSE);
                 } else {
                     /* No valid pulse ( ie high or low part too short */
                     #if DEBUG_MODE && DEBUG_PULSES

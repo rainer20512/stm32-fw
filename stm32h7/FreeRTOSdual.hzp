@@ -201,22 +201,25 @@
     </folder>
     <folder Name="Application">
       <folder Name="src">
-        <folder Name="User">
-          <folder Name="CM7">
-            <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
-            <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
-            <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
-          </folder>
-        </folder>
+        <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
+        <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
+        <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
+        <file file_name="CM7/Src/init.c" />
+        <file file_name="CM7/Src/interpreters.c" />
+        <file file_name="CM7/Src/hardfault.s" />
       </folder>
       <folder Name="inc">
         <file file_name="CM7/Inc/debug.h" />
         <file file_name="CM7/Inc/error.h" />
+        <folder Name="system">
+          <file file_name="CM7/Inc/system/profiling.h" />
+        </folder>
       </folder>
       <folder Name="config">
         <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
         <file file_name="CM7/Inc/config/config.h" />
         <file file_name="CM7/Inc/config/devices_config.h" />
+        <file file_name="CM7/Inc/eeprom.h" />
       </folder>
     </folder>
     <folder Name="Doc">
@@ -284,6 +287,12 @@
         <folder Name="system">
           <file file_name="common_h7/Inc/system/hw_util.h" />
         </folder>
+        <folder Name="task">
+          <file file_name="common_h7/Inc/task/minitask.h" />
+        </folder>
+      </folder>
+      <folder Name="task">
+        <file file_name="common_h7/Src/task/minitask.c" />
       </folder>
     </folder>
     <folder Name="common">
@@ -313,7 +322,14 @@
         </folder>
         <folder Name="system">
           <file file_name="../common/src/system/periodic.c" />
+          <file file_name="../common/src/system/exti_handler.c" />
         </folder>
+        <file file_name="../common/src/rtc.c" />
+        <file file_name="../common/src/timer.c" />
+        <file file_name="../common/src/cmdline.c" />
+        <file file_name="../common/src/debug_outbuf.c" />
+        <file file_name="../common/src/eeprom.c" />
+        <file file_name="../common/src/circbuf.c" />
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -334,6 +350,7 @@
         </folder>
         <folder Name="system">
           <file file_name="../common/inc/system/periodic.h" />
+          <file file_name="../common/inc/system/exti_handler.h" />
         </folder>
         <folder Name="devconfig">
           <file file_name="common_h7/Inc/config/adc_config.h" />
@@ -346,6 +363,12 @@
           <file file_name="common_h7/Inc/config/timer_config.h" />
           <file file_name="common_h7/Inc/config/uart_config.h" />
         </folder>
+        <file file_name="../common/inc/rtc.h" />
+        <file file_name="../common/inc/timer.h" />
+        <file file_name="common_h7/Inc/interpreters.h" />
+        <file file_name="../common/inc/cmdline.h" />
+        <file file_name="../common/inc/debug_outbuf.h" />
+        <file file_name="../common/inc/circbuf.h" />
       </folder>
     </folder>
   </project>

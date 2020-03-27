@@ -15,7 +15,7 @@
 
 #include "config/config.h"
 
-#include "stm32l4xx_hal.h"
+#include "hardware.h"
 
 #define USE_TIMER  1
 #define USE_RTC    0

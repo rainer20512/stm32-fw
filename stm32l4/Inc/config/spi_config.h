@@ -59,8 +59,8 @@
     /* Definition for SPIx's NVIC */
     #define SPI1_HW_IRQ                          { SPI1_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI1_IRQHandler                      SPI1_IRQHandler
-    #define SPI1_TX_DMA                          DMA1_Channel3, DMA_REQUEST_1, DMA1_Channel3_IRQn
-    #define SPI1_RX_DMA                          DMA1_Channel2, DMA_REQUEST_1, DMA1_Channel2_IRQn
+    #define SPI1_TX_DMA                          DMA1_Channel3, DMA_REQUEST_1, DMA1_Channel3_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI1_RX_DMA                          DMA1_Channel2, DMA_REQUEST_1, DMA1_Channel2_IRQn, DMA_PRIORITY_MEDIUM
     #define SPI1_DMA_TX_IRQHandler               DMA1_Channel3_IRQHandler
     #define SPI1_DMA_RX_IRQHandler               DMA1_Channel2_IRQHandler
 #endif /* SPI1 */
@@ -94,8 +94,8 @@
     #define SPI2_HW_IRQ                          { SPI2_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI2_IRQHandler                      SPI2_IRQHandler
     /* Definition for SPIDEV2's DMA */
-    #define SPI2_TX_DMA                          DMA1_Channel5, DMA_REQUEST_1, DMA1_Channel5_IRQn
-    #define SPI2_RX_DMA                          DMA1_Channel4, DMA_REQUEST_1, DMA1_Channel4_IRQn
+    #define SPI2_TX_DMA                          DMA1_Channel5, DMA_REQUEST_1, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI2_RX_DMA                          DMA1_Channel4, DMA_REQUEST_1, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
     #define SPI2_DMA_TX_IRQHandler               DMA1_Channel5_IRQHandler
     #define SPI2_DMA_RX_IRQHandler               DMA1_Channel4_IRQHandler
 #endif /* SPI2 */
@@ -122,8 +122,8 @@
     #define SPI3_IRQ                             { SPI3_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI3_IRQHandler                      SPI3_IRQHandler
     /* Definition for SPIDEV3's DMA */
-    #define SPI3_TX_DMA                          DMA2_Channel2, DMA_REQUEST_3, DMA2_Channel2_IRQn
-    #define SPI3_RX_DMA                          DMA2_Channel1, DMA_REQUEST_3, DMA2_Channel1_IRQn
+    #define SPI3_TX_DMA                          DMA2_Channel2, DMA_REQUEST_3, DMA2_Channel2_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI3_RX_DMA                          DMA2_Channel1, DMA_REQUEST_3, DMA2_Channel1_IRQn, DMA_PRIORITY_MEDIUM
     #define SPI3_DMA_TX_IRQHandler               DMA2_Channel2_IRQHandler
     #define SPI3_DMA_RX_IRQHandler               DMA2_Channel1_IRQHandler
 #endif /* SPI3 */

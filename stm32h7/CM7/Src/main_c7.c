@@ -29,6 +29,11 @@
 #include "task.h"
 #include "message_buffer.h"
 #include "MessageBufferAMP.h"
+#include "system/hw_util.h"
+#include "eeprom.h"
+#include "dev/devices.h"
+#include "task/minitask.h"
+#include "debug_helper.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
@@ -37,12 +42,24 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+/* Exported variables --------------------------------------------------------*/
+uint32_t gflags;
+
+#if DEBUG_MODE 
+  uint32_t debuglevel;
+#endif
 
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void CPU_CACHE_Enable(void);
-static void Error_Handler(void);
 static void MPU_Config(void);
+
+/* Forward declarations for external initialization functions -----------------*/
+void HW_InitJtagDebug(void);
+void Init_DumpAndClearResetSource(void);
+void Init_OtherDevices(void);
+void Init_DefineTasks(void);
+
 
 static void prvCore1Task( void *pvParameters );
 static void prvCheckTask( void *pvParameters );
@@ -74,25 +91,30 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
   */
 int main(void)
 {
-   int32_t timeout;
-   BaseType_t x;
-  /* MPU Configuration */
-  MPU_Config();
-  /* Enable the CPU Cache */
-  CPU_CACHE_Enable();
+    int32_t timeout;
+    BaseType_t x;
 
-  BSP_LED_Init(LED2); 
-  LedToggle(250,2);
-    
-  /* Wait until CPU2 boots and enters in stop mode or timeout*/
-  timeout = 0xFFFF;
-  while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-  if ( timeout < 0 )
-  {
-    Error_Handler();
-  }
+    /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
+    HW_InitJtagDebug();  
 
-  /* STM32H7xx HAL library initialization:
+    /* MPU Configuration */
+    MPU_Config();
+    /* Enable the CPU Cache */
+    CPU_CACHE_Enable();
+
+    BSP_LED_Init(LED2); 
+    LedToggle(250,2);
+
+
+    /* Wait until CPU2 boots and enters in stop mode or timeout*/
+    timeout = 0xFFFF;
+    while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
+    if ( timeout < 0 )
+    {
+    Error_Handler(__FILE__, __LINE__);
+    }
+
+    /* STM32H7xx HAL library initialization:
        - TIM6 timer is configured by default as source of HAL time base, but user
          can eventually implement his proper time base source (another general purpose
          timer for application or other time source), keeping in mind that Time base
@@ -102,47 +124,77 @@ int main(void)
          The systick is then used for FreeRTOS time base.
        - Set NVIC Group Priority to 4
        - Low Level Initialization
-  */
-  HAL_Init();
+    */
+    HAL_Init();
+
+    /* Configure the system clock to 400 MHz */
+    SystemClock_Config();
+
+    BSP_LED_Init(LED1);
+    BSP_LED_Init(LED2);
   
-  /* Configure the system clock to 400 MHz */
-  SystemClock_Config();
-  
-  BSP_LED_Init(LED1);
-  BSP_LED_Init(LED2);
-  
-  /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
-  sensitive to rising edge : Configured only once */
-  HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
-  
-  /* Create control message buffer */
-  xControlMessageBuffer = xMessageBufferCreateStatic( mbaCONTROL_MESSAGE_BUFFER_SIZE,ucStorageBuffer_ctr ,&xStreamBufferStruct_ctrl);  
-  /* Create data message buffer */
-  for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
-  {
+    #if USE_BASICTIMER > 0
+        /* Start microsecond counter , must be done before Profiler is initialized */
+        BASTMR_EarlyInit();
+    #endif
+
+    #if DEBUG_PROFILING > 0
+        ProfilerInitTo(JOB_TASK_INIT);
+    #endif
+
+    /* configure "simulated EEPROM" in flash and read config settings */
+    Config_Init();
+
+    /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
+    BasicDevInit();
+    Init_DumpAndClearResetSource();
+
+    /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
+    sensitive to rising edge : Configured only once */
+    HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
+
+
+
+    /* Create control message buffer */
+    xControlMessageBuffer = xMessageBufferCreateStatic( mbaCONTROL_MESSAGE_BUFFER_SIZE,ucStorageBuffer_ctr ,&xStreamBufferStruct_ctrl);  
+    /* Create data message buffer */
+    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
+    {
     xDataMessageBuffers[ x ] = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, &ucStorageBuffer[x][0], &xStreamBufferStruct[x]);
     configASSERT( xDataMessageBuffers[ x ] );
-  }
+    }
 
-  /* Cortex-M7 will release Cortex-M4  by means of HSEM notification */
-  /*HW semaphore Clock enable*/
-  __HAL_RCC_HSEM_CLK_ENABLE();
-  /*Take HSEM */
-  HAL_HSEM_FastTake(HSEM_ID_0);
-  /*Release HSEM in order to wakeup the CPU2(CM4) from stop mode*/
-  HAL_HSEM_Release(HSEM_ID_0,0);
-  
-  /* Start the check task */
-  xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
-  
-  /* Start the Core 1 task */
-  xTaskCreate( prvCore1Task, "AMPCore1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );		
+    // RHB todo DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
+    DEBUG_PRINTF("SYSCLK = %d\n", HAL_RCC_GetSysClockFreq() ); 
+    Init_OtherDevices();
 
-  /* Start scheduler */
-  vTaskStartScheduler();
+    Init_DefineTasks();
 
-  /* We should never get here as control is now taken by the scheduler */
-  for (;;);
+    #if DEBUG_PROFILING > 0
+        ProfilerSwitchTo(JOB_TASK_MAIN);  
+    #endif
+
+    TaskInitAll();
+
+    /* Cortex-M7 will release Cortex-M4  by means of HSEM notification */
+    /*HW semaphore Clock enable*/
+    __HAL_RCC_HSEM_CLK_ENABLE();
+    /*Take HSEM */
+    HAL_HSEM_FastTake(HSEM_ID_0);
+    /*Release HSEM in order to wakeup the CPU2(CM4) from stop mode*/
+    HAL_HSEM_Release(HSEM_ID_0,0);
+
+    /* Start the check task */
+    xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+
+    /* Start the Core 1 task */
+    xTaskCreate( prvCore1Task, "AMPCore1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );		
+
+    /* Start scheduler */
+    vTaskStartScheduler();
+
+    /* We should never get here as control is now taken by the scheduler */
+    for (;;);
 }
 
 /* This task will periodically send data to tasks running on Core 2
@@ -355,7 +407,7 @@ static void SystemClock_Config(void)
   ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
   if(ret != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(__FILE__, __LINE__);
   }
 
 /* Select PLL as system clock source and configure  bus clocks dividers */
@@ -372,7 +424,7 @@ static void SystemClock_Config(void)
   ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4);
   if(ret != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(__FILE__, __LINE__);
   }
 
   /*activate CSI clock mondatory for I/O Compensation Cell*/
@@ -435,18 +487,32 @@ static void MPU_Config(void)
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-static void Error_Handler(void)
+uint32_t My_Delay(uint32_t waittime )
 {
-  /* User may add here some code to deal with this error */
+  uint32_t tickstart = 0U;
+  uint32_t upcount = 0;
+  tickstart = HAL_GetTick();
+  while((HAL_GetTick() - tickstart) < waittime) {
+    upcount++;
+  }
+  return upcount;
+}
+
+void Error_Handler(char *file, int line)
+{
+  /* Turn LED2 on */
+  // BSP_LED_On(LED2);
+
+  DEBUG_PRINTF("Error in %s line %d\n", file, line);
+  
   while(1)
   {
-  }
+    /* Error if LED2 is slowly blinking (1 sec. period) */
+    // BSP_LED_Toggle(LED2); 
+    DEBUG_PRINTF("Increments per second=%u\n",My_Delay(1000)); 
+  }  
 }
+
 
 #ifdef  USE_FULL_ASSERT
 

@@ -1,3 +1,4 @@
+
 /**
  ******************************************************************************
  * @file    "minitask.v" 
@@ -17,6 +18,8 @@
 #include "debug_helper.h"
 #include "task/minitask.h"
 #include "system/profiling.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
@@ -32,6 +35,10 @@ typedef struct {
     MiniTaskInitFn Init;
     MiniTaskRunFn  Run;
     int32_t        PrID;        /* Profiler ID to count the execution time on */
+    TaskHandle_t   TaskID;      /* ID of the created rtos task                */
+    StaticTask_t   staticTCB;   /* buffer for the static task control block   */
+    StackType_t*   stackMem;    /* Ptr to tasks private stack                 */
+    uint32_t       stackSize;   /* Stack size of this stack                   */
 #if DEBUG_MODE > 0
     const char *   Name;        /* Name of the task, just for debug purposes  */
 #endif
@@ -39,15 +46,8 @@ typedef struct {
 
 /* Private variables ---------------------------------------------------------*/
 
-
-/* bit vector of used tasks */ 
-static uint32_t taskUsedBits = 0;
-
-/* bit vector of runable tasks */ 
-static uint32_t taskPendbits = 0;
-
 /* Array of registered tasks */
-static MiniTaskT tasks[MAX_TASK];
+static MiniTaskT tasks[MAX_TASK] = {0};
 
 #if DEBUG_MODE > 0
     /* flag variable to inhibit StopMode (for debug purposes) */
@@ -56,11 +56,40 @@ static MiniTaskT tasks[MAX_TASK];
 /* Public functions -------------------------------------------------------- */
 
 /******************************************************************************
- * Returns true, if any task is runable
+ * Not implemented on FreeRTOS
  *****************************************************************************/
 bool TaskIsRunableTask(void)
 {
-    return taskPendbits != 0;
+    return true;
+}
+
+/******************************************************************************
+ * RTOS Wrapper for all tasks:
+ * - check the task semaphore
+ * - if task action is required, execute
+ * - suspend task
+ *****************************************************************************/
+void TaskRTOSWrapper ( void *taskArg ) {
+    uint32_t myTaskID = (uint32_t)taskArg;
+    uint32_t sema;
+    assert( myTaskID < MAX_TASK );
+    #if DEBUG_PROFILING >  0
+        /* Accounting to the specified ID, or to main, if nothing specified */
+        uint32_t profID = tasks[myTaskID].PrID;
+        if ( profID < 0 ) profID = JOB_TASK_UNCLASSIFIED;
+    #endif
+    while ( 1 ) {
+        #if DEBUG_PROFILING >  0
+            ProfilerSwitchTo(JOB_TASK_SEMWAIT);
+        #endif
+        /* Check semaphore for timeout, in this case retval == 0 */
+        if ( ulTaskNotifyTake( pdFALSE,  portMAX_DELAY ) > 0 ) {
+            #if DEBUG_PROFILING >  0
+                ProfilerSwitchTo(profID);
+            #endif
+            tasks[myTaskID].Run(myTaskID);
+        }
+    } /* endless while */
 }
 
 /******************************************************************************
@@ -68,76 +97,98 @@ bool TaskIsRunableTask(void)
  * and an unique number or prio. Task#0 has the highest prio, Task#31 the lowest
  *****************************************************************************/
 #if DEBUG_MODE > 0
-void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, const char *Name )
+void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name )
 #else 
-void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID )
+void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth )
 #endif
 {
     assert( num < MAX_TASK);
     assert( r != NULL );
 
-    uint32_t mask = 1 << num;
 
-    if ( taskUsedBits & mask ) {
+    if ( tasks[num].TaskID > 0  ) {
         DEBUG_PRINTF("Task %d already set\n", num);
         return;
     }
 
-    tasks[num].Init = i;
-    tasks[num].Run  = r;
-    tasks[num].PrID = profilerID;
+    tasks[num].Init      = i;
+    tasks[num].Run       = r;
+    tasks[num].PrID      = profilerID;
+    tasks[num].stackMem  = stackMem;
+    tasks[num].stackSize = ulStackDepth;
+    tasks[num].TaskID    = 0;
 #if DEBUG_MODE > 0
     tasks[num].Name = Name;
 #endif
 
-    taskUsedBits |= mask;
-    taskPendbits &= ~mask;
+
 }
+ #if DEBUG_MODE > 0
+    #define TASK_NAME(i)    tasks[i].Name
+ #else
+    #define TASK_NAME(i)    NULL
+ #endif
 
 /******************************************************************************
- * Call the Init-Function for all registered tasks, if specified 
+ * first, call the Init-Function for all registered tasks, if specified 
+ * thereafter create all tasks
  *****************************************************************************/
 void TaskInitAll ( void )
 {
-    uint32_t shift = 1 << 0;
+
+
+    TaskHandle_t  ret;
     ProfilerPush(JOB_TASK_INIT);
     for ( uint32_t i = 0; i < MAX_TASK; i++ ) {
-        if ( taskUsedBits & shift && tasks[i].Init ) tasks[i].Init();
-        shift <<= 1;
-    }
+        /* Check, whether task structure is set */
+        if ( tasks[i].Run ) {
+            /* Initialize task */
+            if ( tasks[i].Init ) tasks[i].Init();
+
+
+            /* start task */
+            ret = xTaskCreateStatic( TaskRTOSWrapper, TASK_NAME(i), tasks[i].stackSize, (void *)i, i, tasks[i].stackMem, &tasks[i].staticTCB );
+            if ( ret ) 
+                tasks[i].TaskID = ret;
+            else {
+                #if DEBUG_MODE > 0
+                    DEBUG_PRINTF("Error: Cannot initialize Task #%d (%s)\n", i, TASK_NAME(i) );
+                #endif
+            }
+        }
+    } // for
+
+
     ProfilerPop();
 }
 
+
 /******************************************************************************
- * Call the Run-Function for all runable tasks. The pending bit will be reset
- * before execution of run-function, so the run function may set the pending
- * bit again, if required
+ * Notify another task. 
+ * Notifications my be cumulated, resulting in more than one execution loop
+ * of that task
  *****************************************************************************/
-void TaskRunAll ( void )
+void TaskNotify ( uint32_t num )
 {
-    uint32_t shift = 1 << 0;
-    int32_t profID;
-    for ( uint32_t i = 0; i < MAX_TASK; i++ ) {
-        if ( taskPendbits & shift ) {
-            taskPendbits &= ~shift;
-            profID = tasks[i].PrID;
-            if ( profID >= 0 ) ProfilerPush(profID);
-            tasks[i].Run(i);
-            if ( profID >= 0 ) ProfilerPop();
-        }
-        shift <<= 1;
+    if ( tasks[num].TaskID )  {
+        xTaskNotifyGive(tasks[num].TaskID);
+    } else {
+        DEBUG_PRINTF("Notifying unset Task #%d\n", num);
     }
 }
 
 /******************************************************************************
- * Make a sleeping task runable
- * As notification may take place even when task ist not initialized,
- * always allow pending bit to be set
+ * Notify another task out of an interrupt context 
+ * Notifications my be cumulated, resulting in more than one execution loop
+ * of that task
  *****************************************************************************/
-void TaskNotify ( uint32_t num )
+void TaskNotifyFromISR ( uint32_t num )
 {
-    uint32_t mask = ( 1 << num );
-    taskPendbits |= mask;
+    if ( tasks[num].TaskID )  {
+        vTaskNotifyGiveFromISR(tasks[num].TaskID, NULL);
+    } else {
+        DEBUG_PRINTF("Notifying unset Task #%d\n", num);
+    }
 }
 
 
@@ -157,7 +208,7 @@ void TaskDumpList(void)
     #endif
     DEBUG_PRINTF("\n");
 
-    for ( i = 0, mask=1; i < MAX_TASK; i++, mask <<= 1 ) if ( taskUsedBits & mask ) {
+    for ( i = 0, mask=1; i < MAX_TASK; i++, mask <<= 1 ) if ( tasks[i].Run ) {
         DBG_printf_indent("%3d",i);
         #if DEBUG_PROFILING > 0
             ProfilerDumpTime( ProfilerTimes[tasks[i].PrID], (char *)tasks[i].Name);

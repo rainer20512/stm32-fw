@@ -47,7 +47,7 @@
 #define USE_EPAPER          0
 #define USE_ONEWIRE         1
 #define USE_DS18X20         1
-#define USE_EEPROM_EMUL     1
+#define USE_EEPROM_EMUL     0
 #define USE_QENCODER        1
 #define USE_DISPLAY         1
 #define USE_DOGM132         1

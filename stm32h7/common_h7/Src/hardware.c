@@ -45,3 +45,19 @@ uint32_t GetAPB2TimerFrequency(void)
   else 
      return uPclk2*2;
 }
+
+void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD);
+
+/******************************************************************************
+ * @brief  Perform a system reset by watchdog reset
+ * @param  ms - ms to delay before reset
+ * @note  Implementation is hardware dependant
+ * @note  for STM32H745  reset both CPUs via watchdog
+ *         
+ * @retval None
+ *****************************************************************************/
+void TimerWatchdogReset(uint16_t num_of_ms)
+{
+   TimerWatchdogReset_Internal(num_of_ms, IWDG1);
+   TimerWatchdogReset_Internal(num_of_ms, IWDG2);
+}

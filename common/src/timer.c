@@ -21,8 +21,7 @@
 #include "global_flags.h"
 #include "debug_helper.h"
 
-#include "stm32l4xx_hal.h"
-#include "stm32l4xx_nucleo.h"
+#include "hardware.h"
 
 #define TMR_RELATIVE_FLAG 0x8000000     /* MSB of bPeriodic indicates relative or absolute value */
 #define TMR_ALL_FLAGS    TMR_RELATIVE_FLAG
@@ -950,7 +949,8 @@ void handle_sectimer_periodic(void)
   *         
   * @retval None
   */
-void TimerWatchdogReset(uint16_t num_of_ms)
+
+void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD)
 {
     uint8_t prescale_reg;
     uint8_t prescale_val;
@@ -997,13 +997,13 @@ void TimerWatchdogReset(uint16_t num_of_ms)
     IWDG_Enable();
 #endif
 
-  IWDG->KR = IWDG_KEY_WRITE_ACCESS_ENABLE;  /* Enable write     */
-  while ( IWDG->SR & IWDG_SR_PVU );         /* Wait for PVU statusbit being reset */
-  IWDG->PR = prescale_val;                  /* Prescaler as configured  */
-  while ( IWDG->SR & IWDG_SR_RVU );         /* Wait for RVU statusbit being reset */
-  IWDG->RLR = num_of_ms/prescale_val-1;      /* Write Reload register */
-  IWDG->KR = IWDG_KEY_RELOAD;               
-  IWDG->KR = IWDG_KEY_ENABLE;               /* Enable Watchdog  */
+  myWD->KR = IWDG_KEY_WRITE_ACCESS_ENABLE;  /* Enable write     */
+  while ( myWD->SR & IWDG_SR_PVU );         /* Wait for PVU statusbit being reset */
+  myWD->PR = prescale_val;                  /* Prescaler as configured  */
+  while ( myWD->SR & IWDG_SR_RVU );         /* Wait for RVU statusbit being reset */
+  myWD->RLR = num_of_ms/prescale_val-1;      /* Write Reload register */
+  myWD->KR = IWDG_KEY_RELOAD;               
+  myWD->KR = IWDG_KEY_ENABLE;               /* Enable Watchdog  */
 
 }
 

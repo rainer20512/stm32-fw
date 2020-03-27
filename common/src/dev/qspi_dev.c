@@ -572,6 +572,8 @@ void QSpi_DeInit(const HW_DeviceType *self)
       HAL_DMA_DeInit(dma->dmaHandle);
       HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
     }
+    #else
+        UNUSED(dma);
     #endif
 
     /* Disable QUADSPI hardware */
@@ -739,7 +741,7 @@ const HW_DeviceType HW_QSPI1 = {
     {
         UNUSED(hqspi);
         DEBUG_PRINTTS("CmdCplt Callback\n");
-        TaskNotify(TASK_QSPI);
+        TaskNotifyFromISR(TASK_QSPI);
     }
 
     /**
@@ -764,7 +766,7 @@ const HW_DeviceType HW_QSPI1 = {
     {
         UNUSED(hqspi);
         DEBUG_PRINTTS("TxCplt Callback\n");
-        TaskNotify(TASK_QSPI);
+        TaskNotifyFromISR(TASK_QSPI);
     }
 
     /**
@@ -776,7 +778,7 @@ const HW_DeviceType HW_QSPI1 = {
     {
         UNUSED(hqspi);
         DEBUG_PRINTTS("StatusMatch Callback\n");
-        TaskNotify(TASK_QSPI);
+        TaskNotifyFromISR(TASK_QSPI);
     }
 
     void HAL_QSPI_ErrorCallback(QSPI_HandleTypeDef *hqspi)
@@ -785,7 +787,7 @@ const HW_DeviceType HW_QSPI1 = {
       DEBUG_PRINTTS("ERROR CALLBACK\n");
       /* Set error state and trigger next call of SM */
       currState = STATE_ERROR;
-      TaskNotify(TASK_QSPI);
+      TaskNotifyFromISR(TASK_QSPI);
     }
 #endif /* if defined(QSPI1_USE_IRQ) */
 

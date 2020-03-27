@@ -447,3 +447,20 @@ bool HW_DumpID(char *cmdline, size_t len, const void * arg )
     return true;
 }
 
+/******************************************************************************
+ * Init an HAL DMA handle to the given parameters. This initialization is
+ * hardware specific
+ *****************************************************************************/
+void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent )
+{
+  hdma->Instance                 = dma->dmaChannel;
+  hdma->Parent                   = parent;
+  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
+  hdma->Init.MemInc              = DMA_MINC_ENABLE;
+  hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+  hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
+  hdma->Init.Mode                = DMA_NORMAL;
+  hdma->Init.Priority            = dma->dmaPrio;
+  hdma->Init.Request             = dma->dmaRequest;
+}
+

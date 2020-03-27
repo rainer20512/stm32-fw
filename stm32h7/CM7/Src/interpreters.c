@@ -15,24 +15,24 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "config/config.h"
-#include "system/clockconfig.h"
+//#include "system/clockconfig.h"
 #include "config/devices_config.h"
 #include "interpreters.h"
 #include "debug_helper.h"
 #include "system/profiling.h"
-#include "system/util.h"
-#include "wireless.h"
+//#include "system/util.h"
+//#include "wireless.h"
 #include "timer.h"
-#include "rfm/rfm_packets.h"
+//#include "rfm/rfm_packets.h"
 #include "task/minitask.h"
-#include "com.h"
+//#include "com.h"
+#include "rtc.h"
 #include "dev/i2c_dev.h"
-#include "system/status.h"
+//#include "system/status.h"
 #include "system/hw_util.h"
 #include "cmdline.h"
-#include "sensors/thp_sensor.h"
-#include "eeprom.h"
+//#include "sensors/thp_sensor.h"
+//#include "eeprom.h"
 #include "dev/devices.h"
 
 #if USE_DS18X20  > 0
@@ -80,7 +80,8 @@ const InterpreterModuleT mdl##name =  {pmt##name, cmd##name, sizeof(cmd##name) /
 
 /* Private functions ---------------------------------------------------------*/
 
-#if DEBUG_FEATURES > 0
+#if DEBUG_FEATURES > 0 && 0 // RHB todo
+
 
 #include "debug_sram.h"
 #include "debug_gpio_exti.h"
@@ -969,6 +970,35 @@ static bool Test_TmrKill ( char *cmdline, size_t len, const void * arg )
   return true;
 }
 
+void UserPinSignal1(void)
+{
+  IO_UserLedOn(2);
+  /*for ( uint32_t i = 0; i < 8 ; i++ )
+     asm("NOP");*/
+  DEBUG_PUTS("1 Step");
+  IO_UserLedOff(2);
+}
+static uint32_t downcnt;
+static int8_t cnttmr;
+ 
+void SignalNCB ( uint32_t arg )
+{
+  UNUSED(arg);
+  if ( downcnt == 0 ) {
+    MsTimerDelete(cnttmr);
+  } else {
+    UserPinSignal1();
+    downcnt --;
+  }
+}
+
+void UserPinSignalN(uint32_t n, uint32_t period)
+{
+  downcnt = n;
+  cnttmr =  MsTimerSetRel ( MILLISEC_TO_TIMERUNIT(period), true, SignalNCB, 0 );
+  SignalNCB(0);
+}
+
 static bool Test_Toggle ( char *cmdline, size_t len, const void * arg )
 {
   UNUSED(cmdline);UNUSED(len);UNUSED(arg);
@@ -988,21 +1018,6 @@ static bool Test_Toggle ( char *cmdline, size_t len, const void * arg )
 
   DEBUG_PRINTF("%d Steps, Period %d\n", p1,p2  );
   UserPinSignalN(p1, p2);
-  return true;
-}
-
-static bool Test_Bitband ( char *cmdline, size_t len, const void * arg )
-{
-  uint32_t *start, *stop;
-  UNUSED(cmdline);UNUSED(len);UNUSED(arg);
-  DEBUG_PRINTF("LPUART1->CR1=%04x\n",(uint16_t)LPUART1->CR1);
-  
-  start = HW_GetPeriphBitBandAddr(&LPUART1->CR1,0);
-  stop  = HW_GetPeriphBitBandAddr(&LPUART1->CR1,15);
-  for ( ;start <= stop; start++ )
-    DEBUG_PRINTF("%04x ",(uint16_t)*start);
-  DEBUG_PUTS("");
- 
   return true;
 }
 
@@ -1067,8 +1082,7 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
        }
        break;
   #endif
-
-#if USE_EEPROM_EMUL > 0
+  #if USE_EEPROM_EMUL > 0
       case 3:
         if ( CMD_argc() < 1 ) {
             printf("Usage: 'Write config[31] <x> times\n");
@@ -1162,7 +1176,6 @@ static const CommandSetT cmdTest[] = {
   { "Multi Tmr",       ctype_fn, .exec.fn = Test_TmrMulti,  VOID(0), "Lots of timers" }, 
   { "Kill Tmr",        ctype_fn, .exec.fn = Test_TmrKill,   VOID(0), "Generates Error" }, 
   { "Toggle",          ctype_fn, .exec.fn = Test_Toggle,    VOID(0), "Toggle UserLed2" },
-  { "Bit-band test",   ctype_fn, .exec.fn = Test_Bitband,   VOID(0), "Test Bit-banding"}, 
 #if USE_EPAPER > 0
   { "ePaper Test",     ctype_fn, .exec.fn = Test_Menu,      VOID(1), "Test ePaper"}, 
 #endif
@@ -1170,7 +1183,7 @@ static const CommandSetT cmdTest[] = {
   { "QEncoder test",   ctype_fn, .exec.fn = Test_Menu,      VOID(2), "Test quadrature encoder"}, 
 #endif
 #if defined(USE_LPUART1) 
-  { "LPUART1 test",     ctype_fn, .exec.fn = Test_Menu,      VOID(4), "Test LPUART1"}, 
+  { "LPUART1 test",     ctype_fn, .exec.fn = Test_Menu,     VOID(4), "Test LPUART1"}, 
 #endif
 #if USE_EEPROM_EMUL > 0
   { "Write config ",   ctype_fn, .exec.fn = Test_Menu,      VOID(3), "Write config[31] x times"}, 
@@ -2053,7 +2066,7 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(CAN);
 #endif
 
-
+#include "eeprom.h"
 
 /*********************************************************************************
   * @brief  Show/Alter the persistent EEPROM settings
@@ -2132,7 +2145,7 @@ static const CommandSetT cmdBasic[] = {
   { "D-cmd",           ctype_fn,  .exec.fn = RFM_Menu,        VOID(3),  "Show system status"  },
   { "Version",         ctype_fn,  .exec.fn = RFM_Menu,        VOID(6),  "Show system status"  },
 #endif
-#if DEBUG_FEATURES > 0
+#if DEBUG_FEATURES > 0 && 0
   { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
 #endif

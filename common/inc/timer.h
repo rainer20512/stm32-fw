@@ -19,7 +19,7 @@
 
 #define NO_TIMER_ID     (-1)                     /* Indicator for "no valid timer ID   */
 
-void TimerWatchdogReset(uint16_t waitms);        /* Force reset by watchdog timeout             */
+
 extern uint32_t secsFromStart;
 
 typedef void (*TimerCBT )(uint32_t);

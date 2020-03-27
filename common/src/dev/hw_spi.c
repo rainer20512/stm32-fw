@@ -250,20 +250,13 @@ static void HwSpiDmaChannelInit(SpiDataT *myspi, const HW_DmaType *dma, SpiDmaDi
 {
   DMA_HandleTypeDef *hdma = dma->dmaHandle;
 
-  hdma->Instance                 = dma->dmaChannel;
-  hdma->Parent                   = &myspi->hw.myHalHandle;
-  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma->Init.MemInc              = DMA_MINC_ENABLE;
-  if ( myspi->datasize < 9 ) {
-      hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-      hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-  } else {      
+  HW_DMA_HandleInit(hdma, dma, &myspi->hw.myHalHandle );
+
+  /* Overwrite Alignment, which is initially 'byte', if neccessary */
+  if ( myspi->datasize > 8 ) {
       hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
       hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
   }
-  hdma->Init.Mode                = DMA_NORMAL;
-  hdma->Init.Priority            = DMA_PRIORITY_MEDIUM;
-  hdma->Init.Request             = dma->dmaRequest;
 
   switch ( dmadir ) 
   {

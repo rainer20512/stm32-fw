@@ -54,14 +54,10 @@
         <file file_name="$(ProjectDir)/Inc/encoding.h" />
         <file file_name="$(ProjectDir)/Inc/error.h" />
         <file file_name="$(ProjectDir)/Inc/global_flags.h" />
-        <file file_name="$(ProjectDir)/Inc/rtc.h" />
         <file file_name="$(ProjectDir)/Inc/stm32l4xx_it.h" />
         <file file_name="$(ProjectDir)/Inc/task.h" />
-        <file file_name="$(ProjectDir)/Inc/timer.h" />
         <file file_name="$(ProjectDir)/Inc/wireless.h" />
-        <file file_name="$(ProjectDir)/Inc/cmdline.h" />
         <file file_name="$(ProjectDir)/Inc/interpreters.h" />
-        <file file_name="$(ProjectDir)/Inc/eeprom.h" />
         <folder Name="disp">
           <file file_name="$(ProjectDir)/Inc/disp/epaper.h" />
           <file file_name="$(ProjectDir)/Inc/disp/ssd1606.h" />
@@ -88,7 +84,6 @@
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Inc/debug_gpio_exti.h" />
           <file file_name="$(ProjectDir)/Inc/debug_helper.h" />
-          <file file_name="$(ProjectDir)/Inc/debug_outbuf.h" />
           <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
           <file file_name="$(ProjectDir)/Inc/debug_sram.h" />
         </folder>
@@ -136,14 +131,13 @@
         <folder Name="task">
           <file file_name="$(ProjectDir)/Inc/task/minitask.h" />
         </folder>
+        <file file_name="../common/inc/cmdline.h" />
+        <file file_name="Inc/eeprom.h" />
       </folder>
       <folder Name="Src">
         <file file_name="$(ProjectDir)/Src/com.c" />
         <file file_name="$(ProjectDir)/Src/encoding.c" />
-        <file file_name="$(ProjectDir)/Src/timer.c" />
         <file file_name="$(ProjectDir)/Src/wireless.c" />
-        <file file_name="$(ProjectDir)/Src/cmdline.c" />
-        <file file_name="$(ProjectDir)/Src/rtc.c" />
         <file file_name="$(ProjectDir)/Src/interpreters.c" />
         <file file_name="$(ProjectDir)/Src/fm24v10.c" />
         <file file_name="$(ProjectDir)/Src/main.c">
@@ -164,7 +158,6 @@
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Src/debug_gpio_exti.c" />
           <file file_name="$(ProjectDir)/Src/debug_helper.c" />
-          <file file_name="$(ProjectDir)/Src/debug_outbuf.c" />
           <file file_name="$(ProjectDir)/Src/debug_pwr_rcc.c" />
           <file file_name="$(ProjectDir)/Src/debug_sram.c" />
         </folder>
@@ -180,7 +173,6 @@
         </folder>
         <file file_name="$(ProjectDir)/Src/onewire.c" />
         <file file_name="$(ProjectDir)/Src/ds18xxx20.c" />
-        <file file_name="$(ProjectDir)/Src/eeprom.c" />
         <file file_name="$(ProjectDir)/Src/watch.c" />
         <folder Name="ui">
           <file file_name="$(ProjectDir)/Src/ui/lcd.c" />
@@ -218,6 +210,7 @@
         <folder Name="task">
           <file file_name="$(ProjectDir)/Src/task/minitask.c" />
         </folder>
+        <file file_name="../common/src/cmdline.c" />
       </folder>
     </folder>
     <folder Name="System Files">
@@ -316,6 +309,10 @@
           <file file_name="../common/src/system/periodic.c" />
           <file file_name="../common/src/system/profiling.c" />
         </folder>
+        <file file_name="../common/src/rtc.c" />
+        <file file_name="../common/src/timer.c" />
+        <file file_name="../common/src/debug_outbuf.c" />
+        <file file_name="../common/src/eeprom.c" />
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -343,8 +340,10 @@
         <folder Name="system">
           <file file_name="../common/inc/system/exti_handler.h" />
           <file file_name="../common/inc/system/periodic.h" />
-          <file file_name="../common/inc/system/profiling.h" />
         </folder>
+        <file file_name="../common/inc/rtc.h" />
+        <file file_name="../common/inc/timer.h" />
+        <file file_name="../common/inc/debug_outbuf.h" />
       </folder>
     </folder>
   </project>

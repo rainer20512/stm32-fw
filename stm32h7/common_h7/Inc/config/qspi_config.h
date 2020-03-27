@@ -16,7 +16,7 @@
 #ifndef __QSPI_CONFIG_H
 #define __QSPI_CONFIG_H
 
-#include "stm32l4xx_hal.h"
+#include "hardware.h"
 
 
 /* Exported types ------------------------------------------------------------*/

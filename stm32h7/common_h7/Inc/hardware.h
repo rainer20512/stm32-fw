@@ -20,5 +20,8 @@
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
 
-uint32_t GetAPB1TimerFrequency(void);
-uint32_t GetAPB2TimerFrequency(void);
+
+uint32_t GetAPB1TimerFrequency  (void);
+uint32_t GetAPB2TimerFrequency  (void);
+void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */
+

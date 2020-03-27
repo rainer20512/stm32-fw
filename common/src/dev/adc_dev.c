@@ -216,17 +216,15 @@ static void AdcDmaChannelInit(AdcHandleT *myAdc, const HW_DmaType *dma )
 
   DMA_HandleTypeDef *hdma = dma->dmaHandle;
 
-  hdma->Instance                 = dma->dmaChannel;
-  hdma->Parent                   = &myAdc->hAdc;
-  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma->Init.MemInc              = DMA_MINC_ENABLE;
+  HW_DMA_HandleInit(hdma, dma, &myAdc->hAdc );
+
+  /* Overwrite Data alignment, which is initialized to 'byte' */
   hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
   hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
-  hdma->Init.Mode                = DMA_NORMAL;
-  hdma->Init.Priority            = DMA_PRIORITY_HIGH;
-  hdma->Init.Request             = dma->dmaRequest;
-  hdma->Init.Direction           = DMA_PERIPH_TO_MEMORY;
-      myAdc->hAdc.DMA_Handle     = dma->dmaHandle;
+  
+  hdma->Init.Direction           = DMA_PERIPH_TO_MEMORY;  
+  
+  myAdc->hAdc.DMA_Handle     = dma->dmaHandle;
 
   HAL_DMA_Init(hdma);
 
@@ -291,7 +289,7 @@ void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
     }
 
     myHandle->bSequenceDone = true;
-    TaskNotify(TASK_ADC);
+    TaskNotifyFromISR(TASK_ADC);
 }
 
 void HAL_ADC_ErrorCallback (ADC_HandleTypeDef * hadc)

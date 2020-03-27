@@ -331,8 +331,8 @@
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
     #define USE_LPUART1_DEBUG
-    //#define USE_SPI1
-    // #define SPIDEV1_USE_IRQ
+    // #define USE_SPI1
+    #define SPIDEV1_USE_IRQ
     #define USE_SPIDEV1_ALTN2
     #define SPIDEV1_USE_IRQ
     #define USE_SPI1_BAUDRATE        400000

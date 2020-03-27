@@ -11,14 +11,15 @@
   */
 #include "config/config.h"
 #include "config/devices_config.h"
-#include "system/clockconfig.h"
 #include "system/periodic.h"
 #include "debug_helper.h"
 #include "eeprom.h"
 #include "timer.h"
 
-#include "../modules/eeprom_emul/core/eeprom_emul_conf.h"
-#include "../modules/eeprom_emul/core/eeprom_emul.h"
+#if USE_EEPROM_EMUL > 0
+    #include "../modules/eeprom_emul/core/eeprom_emul_conf.h"
+    #include "../modules/eeprom_emul/core/eeprom_emul.h"
+#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -31,13 +32,16 @@
 const EE_LimitsT eelimits[]= EELIMITS;   /* Array on default, min, max values */
             
 static uint32_t ee_element_num;          /* number of elements in settings array */
-static uint8_t ee_cleanup_required =0;   /* flag for "cleanup is required"       */
 static __IO uint32_t ErasingOnGoing = 0; /* flag for "erase operation in progress" */
 
-/* Private function prototypes -----------------------------------------------*/
-bool eeprom_read_config_byte  (uint8_t cfg_idx, uint8_t *ret);
-bool eeprom_write_config_byte (uint8_t cfg_idx, uint8_t val);
-bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval);
+#if USE_EEPROM_EMUL > 0
+    static uint8_t ee_cleanup_required =  0; /* flag for "cleanup is required"    */
+    bool eeprom_read_config_byte  (uint8_t cfg_idx, uint8_t *ret);
+    bool eeprom_write_config_byte (uint8_t cfg_idx, uint8_t val);
+    bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval);
+#else
+    #define eeprom_update_config_byte(a,b)  false
+#endif
 
 /* Private functions ---------------------------------------------------------*/
 
@@ -114,7 +118,6 @@ static void configCheckForReset ( void *arg )
 static void configInit(void)
 {
   uint32_t i;
-  uint8_t ret;
   /* Check that both limits and settings are of equal size */
   #if DEBUG_MODE > 0
     if ( sizeof(eelimits) / sizeof(EE_LimitsT) != sizeof(config) )
@@ -126,12 +129,17 @@ static void configInit(void)
   for ( i=0; i< ee_element_num; i++ )
     *(config_raw+i) = eelimits[i].deflt;
 
-  /* Read eeprom settings */
-  for ( i=0; i< ee_element_num; i++ )
-    if ( eeprom_read_config_byte(i, &ret ) )
-       *(config_raw+i) = ret;
-
+  #if USE_EEPROM_EMUL > 0
+      uint8_t ret;
+      /* Read eeprom settings */
+      for ( i=0; i< ee_element_num; i++ )
+        if ( eeprom_read_config_byte(i, &ret ) )
+           *(config_raw+i) = ret;
+  #endif  
 }
+
+#if USE_EEPROM_EMUL > 0
+
 /******************************************************************************
  * Before write starts, check for older write errors ( which can occur due to
  * program errors ( when trying to write to flash region ))
@@ -294,77 +302,80 @@ static void PVD_Config(void)
       }
   #endif
 }
+#endif
 
 void Config_Init(void)
 {
 
-  ee_initstatus = EE_OK;
+  #if USE_EEPROM_EMUL > 0
+
+      ee_initstatus = EE_OK;
+      /* Enable and set FLASH Interrupt priority */
+      /* FLASH interrupt is used for the purpose of pages clean up under interrupt */
+      HAL_NVIC_SetPriority(FLASH_IRQn, 0, 0);
+      HAL_NVIC_EnableIRQ(FLASH_IRQn);
 
 
-  /* Enable and set FLASH Interrupt priority */
-  /* FLASH interrupt is used for the purpose of pages clean up under interrupt */
-  HAL_NVIC_SetPriority(FLASH_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(FLASH_IRQn);
-
-
-#if defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx)
-  /* Clear OPTVERR bit and PEMPTY flag if set*/
-  if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET) 
-  {
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR); 
-  }
+    #if defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx)
+      /* Clear OPTVERR bit and PEMPTY flag if set*/
+      if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_OPTVERR) != RESET) 
+      {
+        __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_OPTVERR); 
+      }
   
-  if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_PEMPTY) != RESET) 
-  {
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_PEMPTY); 
-  }
-#endif /* defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx) */
+      if (__HAL_FLASH_GET_FLAG(FLASH_FLAG_PEMPTY) != RESET) 
+      {
+        __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_PEMPTY); 
+      }
+    #endif /* defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx) */
  
-  /* Configure Programmable Voltage Detector (PVD) (optional) */
-  /* PVD interrupt is used to suspend the current application flow in case
-     a power-down is detected, allowing the flash interface to finish any
-     ongoing operation before a reset is triggered. */
-  PVD_Config();
+      /* Configure Programmable Voltage Detector (PVD) (optional) */
+      /* PVD interrupt is used to suspend the current application flow in case
+         a power-down is detected, allowing the flash interface to finish any
+         ongoing operation before a reset is triggered. */
+      PVD_Config();
 
     
-  /* Set user List of Virtual Address variables: 0x0000 and 0xFFFF values are prohibited */
-  for (uint32_t VarValue = 0; VarValue < NB_OF_VARIABLES; VarValue++)
-  {
-    VirtAddVarTab[VarValue] = (uint16_t)(VarValue + 1);
-  }
+      /* Set user List of Virtual Address variables: 0x0000 and 0xFFFF values are prohibited */
+      for (uint32_t VarValue = 0; VarValue < NB_OF_VARIABLES; VarValue++)
+      {
+        VirtAddVarTab[VarValue] = (uint16_t)(VarValue + 1);
+      }
 
-  /* Unlock the Flash Program Erase controller */
-  HAL_FLASH_Unlock();
+      /* Unlock the Flash Program Erase controller */
+      HAL_FLASH_Unlock();
 
-  /* Set EEPROM emulation firmware to erase all potentially incompletely erased
-     pages if the system came from an asynchronous reset. Conditional erase is
-     safe to use if all Flash operations where completed before the system reset */
-  if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) == RESET)
-  {    
-    /* System reset comes from a power-on reset: Forced Erase */
-    /* Initialize EEPROM emulation driver (mandatory) */
-    ee_initstatus = EE_Init(VirtAddVarTab, EE_FORCED_ERASE);
-    if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
-  }
-  else
-  {    
-    /* System reset comes from a STANDBY wakeup: Conditional Erase*/
-    /* Initialize EEPROM emulation driver (mandatory) */
-    ee_initstatus = EE_Init(VirtAddVarTab, EE_CONDITIONAL_ERASE);
-    if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
-  }
+      /* Set EEPROM emulation firmware to erase all potentially incompletely erased
+         pages if the system came from an asynchronous reset. Conditional erase is
+         safe to use if all Flash operations where completed before the system reset */
+      if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) == RESET)
+      {    
+        /* System reset comes from a power-on reset: Forced Erase */
+        /* Initialize EEPROM emulation driver (mandatory) */
+        ee_initstatus = EE_Init(VirtAddVarTab, EE_FORCED_ERASE);
+        if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
+      }
+      else
+      {    
+        /* System reset comes from a STANDBY wakeup: Conditional Erase*/
+        /* Initialize EEPROM emulation driver (mandatory) */
+        ee_initstatus = EE_Init(VirtAddVarTab, EE_CONDITIONAL_ERASE);
+        if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
+      }
   
-  /* Lock the Flash Program Erase controller */
-  HAL_FLASH_Lock();
+      /* Lock the Flash Program Erase controller */
+      HAL_FLASH_Lock();
 
-  /* Init the configuration settings */
-  configInit();
+      /* Schedule a periodic check for eeprom cleanup */
+      AtSecond(29, eeprom_check_cleanup, (void *)0, "EEPROM emul check for cleanup");
+  #endif
 
   /* Schedule the check for an reset request */
   AtSecond(10, configCheckForReset, (void *)0, "Check reset request");
 
-  /* Schedule a periodic check for eeprom cleanup */
-  AtSecond(29, eeprom_check_cleanup, (void *)0, "EEPROM emul check for cleanup");
+  /* Init the configuration settings */
+  configInit();
+
 }
 
 #if DEBUG_EEPROM_EMUL > 0

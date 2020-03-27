@@ -20,7 +20,7 @@
 
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
 
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -30,7 +30,6 @@
 #include "dev/devices.h"
 #include "debug_outbuf.h"
 #include "circbuf.h"
-#include "com.h"
 
 #include "dev/uart_dev.h"
 
@@ -116,7 +115,7 @@ void DebugOutputCompleteCB ( uint32_t size )
   /* If we kept in mind an delayed flush, initiate it now */
   if ( bDelayedFlush ) {
     bDelayedFlush = 0;
-    TaskNotify(TASK_OUT);
+    TaskNotifyFromISR(TASK_OUT);
   }
 
 }
@@ -217,7 +216,7 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
     if ( ch == '\r' ) DEBUG_PUTC('\n');
 
     DEBUG_PUTC(ch);
-    TaskNotify(TASK_OUT);
+    TaskNotifyFromISR(TASK_OUT);
 
     /* Del = remove DEL and last character */
     if ( ch == 0x07f ) { LBUF_DEL(*(uhandle->in));LBUF_DEL(*(uhandle->in)); }
@@ -226,7 +225,7 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
     if ( ch == '\r' || ch == 0x04 ) {
         /* CR(LF) = Remove terminating \r */
         if ( ch == '\r') LBUF_DEL(*(uhandle->in));
-        TaskNotify(TASK_COM);
+        TaskNotifyFromISR(TASK_COM);
     }
 }
 

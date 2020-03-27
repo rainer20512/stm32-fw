@@ -60,9 +60,9 @@
 
   #ifdef QSPI1_USE_DMA
     /* Definition for USART1 TX DMA */
-    #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn 
+    #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn, DMA_PRIORITY_VERY_HIGH 
     #define QSPI1_DMA_IRQHandler           DMA2_Channel7_IRQHandler
-//    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn 
+//    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn, DMA_PRIORITY_VERY_HIGH 
 //    #define QSPI1_DMA_IRQHandler           DMA1_Channel5_IRQHandler
   #endif
 
