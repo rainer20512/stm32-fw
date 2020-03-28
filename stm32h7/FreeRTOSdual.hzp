@@ -161,7 +161,7 @@
       arm_linker_jtag_pad_pre_dr="1"
       arm_linker_jtag_pad_pre_ir="5"
       arm_linker_process_stack_size="0"
-      arm_linker_stack_size="256"
+      arm_linker_stack_size="1024"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
       arm_simulator_memory_simulation_parameter="STM32H745ZI_CM7;0x200000;0x100000"
       arm_target_loader_applicable_loaders="Flash"
@@ -323,6 +323,8 @@
         <folder Name="system">
           <file file_name="../common/src/system/periodic.c" />
           <file file_name="../common/src/system/exti_handler.c" />
+          <file file_name="common_h7/Src/system/error.c" />
+          <file file_name="common_h7/Src/system/tm1637.c" />
         </folder>
         <file file_name="../common/src/rtc.c" />
         <file file_name="../common/src/timer.c" />
@@ -351,6 +353,7 @@
         <folder Name="system">
           <file file_name="../common/inc/system/periodic.h" />
           <file file_name="../common/inc/system/exti_handler.h" />
+          <file file_name="common_h7/Inc/system/tm1637.h" />
         </folder>
         <folder Name="devconfig">
           <file file_name="common_h7/Inc/config/adc_config.h" />

@@ -430,7 +430,9 @@ void HW_InitJtagDebug(void)
     __HAL_RCC_CLEAR_RESET_FLAGS();
 
     /* Stop RTC and Timer clock when core is halted during debug */
-    RTC_DEBUG_STOP(); TMR_DEBUG_STOP();
+  *(__IO uint32_t*)(0x5C001004) |= 0x00700000; // DBGMCU_CR D3DBGCKEN D1DBGCKEN TRACECLKEN
+    RTC_DEBUG_STOP(); 
+    TMR_DEBUG_STOP();
 
 }
 
@@ -443,6 +445,7 @@ static const char *Get_DeviceName ( uint16_t devID )
     switch(devID) {
         case 0x461: return "STM32L496xx/4A6xx";
         case 0x415: return "STM32L475xx/476xx/486xx";
+        case 0x450: return "STM32H745/755/747/757xx";
         default:    return "Unknown Device";
     }
 }
@@ -468,6 +471,8 @@ char Get_RevisionName( uint16_t devID, uint16_t revID)
         case 0x1001 : work = '2'; break;
         case 0x1003 : work = '3'; break;
         case 0x1007 : work = '4'; break;
+        case 0x2001 : work = 'X'; break;
+        case 0x2003 : work = 'V'; break;
         default: return '?';
     }
     if ( devID == 0x461 ) 
@@ -478,20 +483,24 @@ char Get_RevisionName( uint16_t devID, uint16_t revID)
 
 void HW_ReadID(DeviceIdT *id )
 {
+    uint32_t on_bit;
+
     memmove((uint8_t*)id, (uint8_t *)UID_BASE, 12 );
+    
+     /* Get clock status of PWR domain and switch on, if not already on*/
     id->devID = HAL_GetDEVID();
     id->revID = HAL_GetREVID();
     id->flashSize = *(uint16_t*)FLASHSIZE_BASE;
 
      /* Get clock status of PWR domain and switch on, if not already on*/
-    uint32_t syscfg_bit = __HAL_RCC_SYSCFG_IS_CLK_ENABLED();
-    if ( !syscfg_bit ) __HAL_RCC_SYSCFG_CLK_ENABLE();
+    on_bit = __HAL_RCC_SYSCFG_IS_CLK_ENABLED();
+    if ( !on_bit ) __HAL_RCC_SYSCFG_CLK_ENABLE();
 
     /* read package */
     id->package   = SYSCFG->PKGR;
 
     /* restore syscfg clock */
-    if ( !syscfg_bit ) __HAL_RCC_SYSCFG_CLK_DISABLE();
+    if ( !on_bit ) __HAL_RCC_SYSCFG_CLK_DISABLE();
 }
 
 bool HW_DumpID(char *cmdline, size_t len, const void * arg )
@@ -527,4 +536,85 @@ void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *par
   hdma->Init.MemBurst            = DMA_MBURST_INC4;
   hdma->Init.PeriphBurst         = DMA_PBURST_INC4;
 
+}
+
+
+// ST_CP = SCK
+// SH_CP = RCK
+// SDI   = DIO
+// Common anode
+#define DS 10
+#define STCP 11
+#define SHCP 12
+#define SPEED 500
+boolean numbersDef[10][8] =
+{
+  {1,1,1,1,1,1,0}, //zero
+  {0,1,1,0,0,0,0}, //one
+  {1,1,0,1,1,0,1}, //two
+  {1,1,1,1,0,0,1}, //three
+  {0,1,1,0,0,1,1}, //four
+  {1,0,1,1,0,1,1}, //five
+  {1,0,1,1,1,1,1}, //six
+  {1,1,1,0,0,0,0}, //seven
+  {1,1,1,1,1,1,1}, //eight
+  {1,1,1,1,0,1,1}  //nine
+};
+
+boolean digitsTable[8][8] =
+{
+  {0,0,0,0,1,0,0,0}, // first digit
+  {0,0,0,0,0,1,0,0}, // second
+  {0,0,0,0,0,0,1,0}, // third
+  {1,0,0,0,0,0,0,0}, // forth
+  {0,1,0,0,0,0,0,0}, // fifth
+  {0,0,1,0,0,0,0,0}  // sixth  
+};
+
+void setup() {
+  pinMode(DS, OUTPUT);
+  pinMode(STCP, OUTPUT);
+  pinMode(SHCP, OUTPUT);
+  digitalWrite(DS, LOW);
+  digitalWrite(STCP, LOW);
+  digitalWrite(SHCP, LOW);
+}
+
+boolean display_buffer[16];
+void prepareDisplayBuffer(int number, int digit_order, boolean showDot)
+{
+  for(int index=7; index>=0; index--)
+  {
+    display_buffer[index] = digitsTable[digit_order-1][index];
+  }
+  for(int index=14; index>=8; index--)
+  {
+    display_buffer[index] = !numbersDef[number-1][index]; //because logic is sanity, right?
+  }
+  if(showDot == true)
+    display_buffer[15] = 0;
+  else
+    display_buffer[15] = 1;
+}
+
+void writeDigit(int number, int order, bool showDot = false)
+{
+  prepareDisplayBuffer(number, order, showDot);
+  digitalWrite(SHCP, LOW);
+  for(int i=15; i>=0; i--)
+  {
+      digitalWrite(STCP, LOW);
+      digitalWrite(DS, display_buffer[i]); //output LOW - enable segments, HIGH - disable segments
+      digitalWrite(STCP, HIGH);
+   }
+  digitalWrite(SHCP, HIGH);
+}
+
+void loop() {
+  writeDigit(0, 1);
+  writeDigit(2, 2, true);
+  writeDigit(3, 3);
+  writeDigit(4, 4, true);
+  writeDigit(5, 5);
+  writeDigit(6, 6);
 }

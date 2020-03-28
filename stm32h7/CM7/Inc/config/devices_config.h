@@ -44,7 +44,7 @@
  * Maximum config below 
  * choose suitable configs for your platform
  ******************************************************************************/
-#define USE_USART1
+//#define USE_USART1
 //#define USE_USART1_ALTN1
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM1_USE_TX_DMA
@@ -71,7 +71,7 @@
 //#define USE_UART5
 
 
-#define USE_LPUART1
+//#define USE_LPUART1
    /* Alternatives for LPUART1 : 
     * TX:[PB11,PC1,PG7] RX:[PB10,PC0,PG8]
     * ALTN1   TX:PB11 RX:PB10   AF8
@@ -306,7 +306,7 @@
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
     
     #define USE_USART3
-    #define COM3_USE_TX_DMA
+    //#define COM3_USE_TX_DMA
     //#define COM3_USE_RX_DMA
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
     #define USE_USART3_DEBUG

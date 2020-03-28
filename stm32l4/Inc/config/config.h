@@ -42,17 +42,17 @@
  ********************************************************************************
  */ 
 #define USE_RFM12           0
-#define USE_RFM69           1           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
 #define USE_EPAPER          0
-#define USE_ONEWIRE         1
-#define USE_DS18X20         1
+#define USE_ONEWIRE         0
+#define USE_DS18X20         0
 #define USE_EEPROM_EMUL     0
-#define USE_QENCODER        1
-#define USE_DISPLAY         1
-#define USE_DOGM132         1
+#define USE_QENCODER        0
+#define USE_DISPLAY         0
+#define USE_DOGM132         0
 #define USE_SECONDTIMER     1
-#define USE_PWMTIMER        1
+#define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
 #define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 

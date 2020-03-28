@@ -171,9 +171,13 @@ void TaskInitAll ( void )
 void TaskNotify ( uint32_t num )
 {
     if ( tasks[num].TaskID )  {
-        xTaskNotifyGive(tasks[num].TaskID);
+        /* Check for execution out of interrup context */
+        if ( SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk )
+            vTaskNotifyGiveFromISR(tasks[num].TaskID, NULL);
+        else
+            xTaskNotifyGive(tasks[num].TaskID);
     } else {
-        DEBUG_PRINTF("Notifying unset Task #%d\n", num);
+        DEBUG_PRINTF("Notify to unset Task #%d", num);
     }
 }
 
@@ -187,7 +191,7 @@ void TaskNotifyFromISR ( uint32_t num )
     if ( tasks[num].TaskID )  {
         vTaskNotifyGiveFromISR(tasks[num].TaskID, NULL);
     } else {
-        DEBUG_PRINTF("Notifying unset Task #%d\n", num);
+        DEBUG_PRINTF("ISR Notify to unset Task #%d", num);
     }
 }
 

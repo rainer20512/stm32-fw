@@ -34,6 +34,7 @@
 #include "sensors/thp_sensor.h"
 #include "eeprom.h"
 #include "dev/devices.h"
+#include "system/tm1637.h"
 
 #if USE_DS18X20  > 0
     #include "onewire.h"
@@ -295,6 +296,7 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
   size_t wordlen;
   uint8_t idx;
   uint32_t initarg;
+  TM1637PinT dio, clk;
     
   UNUSED(cmdline);UNUSED(len);
 
@@ -330,6 +332,32 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
         DeviceDeInitByIdx(idx);
       }
       break;
+    case 6:
+      clk.gpio = GPIOA; clk.pin = 0;  
+      dio.gpio = GPIOA; dio.pin = 1;  
+      TM1637Display(clk,dio, 100);
+      setBrightness(2,1);
+      break;
+    case 7:
+      if ( CMD_argc() < 1 ) {
+        printf("Usage: 'Display <number>'\n");
+        return false;
+      }
+      CMD_get_one_word( &word, &wordlen );
+      initarg = CMD_to_number ( word, wordlen );
+      clear();
+      showNumberDec(initarg,1,4,0);
+      break;
+    case 8:
+      if ( CMD_argc() < 1 ) {
+        printf("Usage: 'Display <number>'\n");
+        return false;
+      }
+      CMD_get_one_word( &word, &wordlen );
+      initarg = CMD_to_number ( word, wordlen );
+      clear();
+      showNumberDec(initarg,1,4,4);
+      break;
     default:
       DEBUG_PUTS("RFM_Menu: command not implemented");
   } /* end switch */
@@ -355,6 +383,9 @@ static const CommandSetT cmdDevices[] = {
   { "Alter",     ctype_fn, {Toggle_GPIO},     VOID(1), "Alter output value of pin"  },
   { "Pin Init",  ctype_fn, {Init_GPIO},       VOID(0), "Set Output Pin"  },
   { "Pin DeInit",ctype_fn, {Init_GPIO},       VOID(1), "Reset Output Pin"  },
+  { "Disp Init", ctype_fn, {Devices_Menu},    VOID(6), "Init 6 DD"  },
+  { "Disp Num4", ctype_fn, {Devices_Menu},    VOID(7), "Write <num> to 6 DD"  },
+  { "Disp Num6", ctype_fn, {Devices_Menu},    VOID(8), "Write <num> to 6 DD"  },
 };
 ADD_SUBMODULE(Devices);
 

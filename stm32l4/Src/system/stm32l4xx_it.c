@@ -239,7 +239,7 @@ void SysTick_Handler(void)
 }
 
 /******************************************************************************/
-/*                 STM32L0xx Peripherals Interrupt Handlers                   */
+/*                     Peripherals Interrupt Handlers                         */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
 /*  available peripheral interrupt handler's name please refer to the startup */
 /*  file (startup_stm32l0xx.s).                                               */
@@ -440,11 +440,9 @@ void SysTick_Handler(void)
   #endif
 #endif
 
-/**
-  * @brief  This function handles DMA interrupt requests for SPI devices.
-  * @param  None
-  * @retval None
-  */
+/******************************************************************************
+ * SPI Interrupt handlers
+ *****************************************************************************/
 #if defined(SPI1) && defined(USE_SPI1)
     #ifdef SPI1_USE_HW_IRQ
         #if !defined(SPI1_IRQHandler) 
@@ -602,7 +600,7 @@ void SysTick_Handler(void)
     #endif
 #endif
 
-#if defined(USE_QENCODER)
+#if USE_QENCODER > 0
     void QENC1TIM_IRQHandler(void)
     {
       HAL_TIM_IRQHandler(&QEnc1Handle.htim);
