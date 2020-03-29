@@ -51,10 +51,10 @@
 #define USE_QENCODER        0
 #define USE_DISPLAY         0
 #define USE_DOGM132         0
-#define USE_SECONDTIMER     1
+#define USE_SECONDTIMER     0
 #define USE_PWMTIMER        0
-#define USE_BASICTIMER      1
-#define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_BASICTIMER      0
+#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 
 
 #define GENERAL_BAUDRATE    500000

@@ -415,10 +415,10 @@
         #define USE_QENC1_PBTN1
     #endif
 
-  #define USE_ADC1
+  //#define USE_ADC1
   #define ADC1_USE_IRQ
   #define ADC1_USE_DMA 
-  #define USER_ADC      HW_ADC1
+  //#define USER_ADC      HW_ADC1
   
   #if USE_PWMTIMER > 0
       #define USE_TIM3

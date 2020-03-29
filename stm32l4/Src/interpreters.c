@@ -335,18 +335,20 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
     case 6:
       clk.gpio = GPIOA; clk.pin = 0;  
       dio.gpio = GPIOA; dio.pin = 1;  
-      TM1637Display(clk,dio, 100);
-      setBrightness(2,1);
+      TM1637_Init(clk,dio, 100);
       break;
     case 7:
+    case 10:
       if ( CMD_argc() < 1 ) {
         printf("Usage: 'Display <number>'\n");
         return false;
       }
       CMD_get_one_word( &word, &wordlen );
       initarg = CMD_to_number ( word, wordlen );
-      clear();
-      showNumberDec(initarg,1,4,0);
+      if ( (uint32_t)arg == 7 )
+          TM1637_displayInteger(initarg,0, 99);
+      else
+        TM1637_displayHex(initarg,0, 99);
       break;
     case 8:
       if ( CMD_argc() < 1 ) {
@@ -355,8 +357,10 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
       }
       CMD_get_one_word( &word, &wordlen );
       initarg = CMD_to_number ( word, wordlen );
-      clear();
-      showNumberDec(initarg,1,4,4);
+      TM1637_displayInteger(initarg,1, 2);
+      break;
+    case 9:
+      TM1637_clearDisplay();
       break;
     default:
       DEBUG_PUTS("RFM_Menu: command not implemented");
@@ -386,6 +390,8 @@ static const CommandSetT cmdDevices[] = {
   { "Disp Init", ctype_fn, {Devices_Menu},    VOID(6), "Init 6 DD"  },
   { "Disp Num4", ctype_fn, {Devices_Menu},    VOID(7), "Write <num> to 6 DD"  },
   { "Disp Num6", ctype_fn, {Devices_Menu},    VOID(8), "Write <num> to 6 DD"  },
+  { "Disp hex",  ctype_fn, {Devices_Menu},    VOID(10),"Write <hex> to 6 DD"  },
+  { "Disp Clr",  ctype_fn, {Devices_Menu},    VOID(9), "Clear display"  },
 };
 ADD_SUBMODULE(Devices);
 

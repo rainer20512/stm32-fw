@@ -37,7 +37,7 @@ typedef void ( *PeriodicFn ) ( void *arg );
     int32_t AtMinuteShort    ( uint32_t min, PeriodicFn, void *);
     int32_t AtHourShort      ( uint32_t hr,  PeriodicFn, void *);
     #define AddActionListItem(a,b,c)     AddActionListItemShort(a,b)
-    #define AtSecond(a,b,c,d)            AddSecondShort(a,b,c)
+    #define AtSecond(a,b,c,d)            AtSecondShort(a,b,c)
     #define EverySecond(b,c,d)           EverySecondShort(b,c)
     #define AtMinute(a,b,c,d)            AddMinuteShort(a,b,c)
     #define AtHour(a,b,c,d)              AddHourShort(a,b,c)

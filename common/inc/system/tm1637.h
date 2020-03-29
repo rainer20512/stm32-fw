@@ -1,18 +1,35 @@
-//  Author: avishorp@gmail.com
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2.1 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library; if not, write to the Free Software
-//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+/*
+ * TM1637.h
+ * A library for the 6 digit TM1637 based segment display
+ *
+ * Modified for 6 digits and points by: TinyTronics.nl
+ *
+ * Copyright (c) 2012 seeed technology inc.
+ * Website    : www.seeed.cc
+ * Author     : Frankie.Chu
+ * Create Time: 9 April,2012
+ * Change Log :
+ *
+ * The MIT License (MIT)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 #ifndef __TM1637_H__
 #define __TM1637_H__
@@ -25,121 +42,18 @@ typedef struct {
     uint32_t pin;               //!< Pin number 0 .. 15
 } TM1637PinT;
 
-#define SEG_A   0b00000001
-#define SEG_B   0b00000010
-#define SEG_C   0b00000100
-#define SEG_D   0b00001000
-#define SEG_E   0b00010000
-#define SEG_F   0b00100000
-#define SEG_G   0b01000000
-#define SEG_DP  0b10000000
 
-#define DEFAULT_BIT_DELAY  100
+/**************definitions for brightness***********************/
+#define  BRIGHT_DARKEST 0
+#define  BRIGHT_TYPICAL 2
+#define  BRIGHTEST      7
 
-  void TM1637Display(TM1637PinT pinClk, TM1637PinT pinDIO, unsigned int bitDelay);
+#define DELAY_TYPICAL 50
 
-  //! Sets the brightness of the display.
-  //!
-  //! The setting takes effect when a command is given to change the data being
-  //! displayed.
-  //!
-  //! @param brightness A number from 0 (lowes brightness) to 7 (highest brightness)
-  //! @param on Turn display on or off
-  void setBrightness(uint8_t brightness, uint32_t on);
+void TM1637_Init          (TM1637PinT Clk, TM1637PinT Data, unsigned int bitDelay);
+void TM1637_displayInteger(int32_t intdisplay, bool leading_zeros, uint32_t dpAt);
+void TM1637_displayHex    (uint32_t hexval,    bool leading_zeros, uint32_t dpAt);
+void TM1637_clearDisplay  (void);
 
-  //! Display arbitrary data on the module
-  //!
-  //! This function receives raw segment values as input and displays them. The segment data
-  //! is given as a byte array, each byte corresponding to a single digit. Within each byte,
-  //! bit 0 is segment A, bit 1 is segment B etc.
-  //! The function may either set the entire display or any desirable part on its own. The first
-  //! digit is given by the @ref pos argument with 0 being the leftmost digit. The @ref length
-  //! argument is the number of digits to be set. Other digits are not affected.
-  //!
-  //! @param segments An array of size @ref length containing the raw segment values
-  //! @param length The number of digits to be modified
-  //! @param pos The position from which to start the modification (0 - leftmost, 3 - rightmost)
-  // void setSegments(const uint8_t segments[], uint8_t length = 4, uint8_t pos = 0);
-  void setSegments(const uint8_t segments[], uint8_t length, uint8_t pos);
-
-  //! Clear the display
-  void clear();
-
-  //! Display a decimal number
-  //!
-  //! Dispaly the given argument as a decimal number.
-  //!
-  //! @param num The number to be shown
-  //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
-  //!        blank. NOTE: leading zero is not supported with negative numbers.
-  //! @param length The number of digits to set. The user must ensure that the number to be shown
-  //!        fits to the number of digits requested (for example, if two digits are to be displayed,
-  //!        the number must be between 0 to 99)
-  //! @param pos The position of the most significant digit (0 - leftmost, 3 - rightmost)
-  // void showNumberDec(int num, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
-  void showNumberDec(int num, uint32_t leading_zero, uint8_t length, uint8_t pos);
-
-  //! Display a decimal number, with dot control
-  //!
-  //! Dispaly the given argument as a decimal number. The dots between the digits (or colon)
-  //! can be individually controlled.
-  //!
-  //! @param num The number to be shown
-  //! @param dots Dot/Colon enable. The argument is a bitmask, with each bit corresponding to a dot
-  //!        between the digits (or colon mark, as implemented by each module). i.e.
-  //!        For displays with dots between each digit:
-  //!        * 0.000 (0b10000000)
-  //!        * 00.00 (0b01000000)
-  //!        * 000.0 (0b00100000)
-  //!        * 0.0.0.0 (0b11100000)
-  //!        For displays with just a colon:
-  //!        * 00:00 (0b01000000)
-  //!        For displays with dots and colons colon:
-  //!        * 0.0:0.0 (0b11100000)
-  //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
-  //!        blank. NOTE: leading zero is not supported with negative numbers.
-  //! @param length The number of digits to set. The user must ensure that the number to be shown
-  //!        fits to the number of digits requested (for example, if two digits are to be displayed,
-  //!        the number must be between 0 to 99)
-  //! @param pos The position of the most significant digit (0 - leftmost, 3 - rightmost)
-  // void showNumberDecEx(int num, uint8_t dots = 0, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
-  void showNumberDecEx(int num, uint8_t dots, uint32_t leading_zero, uint8_t length, uint8_t pos);
-
-  //! Display a hexadecimal number, with dot control
-  //!
-  //! Dispaly the given argument as a hexadecimal number. The dots between the digits (or colon)
-  //! can be individually controlled.
-  //!
-  //! @param num The number to be shown
-  //! @param dots Dot/Colon enable. The argument is a bitmask, with each bit corresponding to a dot
-  //!        between the digits (or colon mark, as implemented by each module). i.e.
-  //!        For displays with dots between each digit:
-  //!        * 0.000 (0b10000000)
-  //!        * 00.00 (0b01000000)
-  //!        * 000.0 (0b00100000)
-  //!        * 0.0.0.0 (0b11100000)
-  //!        For displays with just a colon:
-  //!        * 00:00 (0b01000000)
-  //!        For displays with dots and colons colon:
-  //!        * 0.0:0.0 (0b11100000)
-  //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
-  //!        blank
-  //! @param length The number of digits to set. The user must ensure that the number to be shown
-  //!        fits to the number of digits requested (for example, if two digits are to be displayed,
-  //!        the number must be between 0 to 99)
-  //! @param pos The position of the most significant digit (0 - leftmost, 3 - rightmost)
-  // void showNumberHexEx(uint16_t num, uint8_t dots = 0, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
-  void showNumberHexEx(uint16_t num, uint8_t dots, uint32_t leading_zero, uint8_t length, uint8_t pos);
-
-  //! Translate a single digit into 7 segment code
-  //!
-  //! The method accepts a number between 0 - 15 and converts it to the
-  //! code required to display the number on a 7 segment display.
-  //! Numbers between 10-15 are converted to hexadecimal digits (A-F)
-  //!
-  //! @param digit A number between 0 to 15
-  //! @return A code representing the 7 segment image of the digit (LSB - segment A;
-  //!         bit 6 - segment G; bit 7 - always zero)
-  uint8_t encodeDigit(uint8_t digit);
 
 #endif // __TM1637_H__

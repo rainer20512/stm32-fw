@@ -23,15 +23,15 @@
 #define DEBUG_DEBUGIO       0
 #define DEBUG_DUMP_RFM      0
 #define DEBUG_DUMP_KEYS     0
-#define DEBUG_RFM_STATUS    1
+#define DEBUG_RFM_STATUS    0
 #define DEBUG_RFM_HARDCORE  0
 // DEBUG_TIMER in timer.c
 // DEBUG_RTC in rtc.c
 // DEBUG_QENC in qencoder.h
 // DEBUG_ADC in adc_dev.c
 // DEBUG_CAN in can_dev.c  
-#define DEBUG_PROFILING     1
-#define DEBUG_PERIODIC      1
+#define DEBUG_PROFILING     0
+#define DEBUG_PERIODIC      0
 #define DEBUG_SLEEP_STOP    0
 #define DEBUG_EPAPER        0
 #define DEBUG_LCD           0

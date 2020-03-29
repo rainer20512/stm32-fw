@@ -10,6 +10,7 @@
 
 #include "config/config.h"
 #include "config/devices_config.h"
+#include "system/profiling.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
@@ -27,6 +28,10 @@
 
 #if USE_ONEWIRE > 0
     #include "onewire.h"
+#endif
+
+#if defined(ADC1) && defined(USE_ADC1)
+    #include "dev/adc_dev.h"
 #endif
 
 
@@ -66,7 +71,7 @@ void Init_DumpAndClearResetSource(void)
 void Init_OtherDevices(void)
 {
   int32_t dev_idx;
-  #if defined(USE_ADC1)
+  #if defined(ADC1) && defined(USE_ADC1)
       dev_idx = AddDevice(&HW_ADC1, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init ADC1-device");
@@ -222,7 +227,11 @@ void Init_DefineTasks(void)
   TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    "Debug output");  
 #endif
   TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, "periodic task");
+
+#if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
   TaskRegisterTask(task_init_adc, task_handle_adc, TASK_ADC,      JOB_ADC,           "ADC task");
+#endif
+
 #if USE_RFM12 > 0 || USE_RFM69 > 0
   TaskRegisterTask(task_init_rfm, task_handle_rfm, TASK_RFM,      JOB_TASK_RFM,      "RFM task");
 #endif

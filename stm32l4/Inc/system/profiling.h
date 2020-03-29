@@ -13,24 +13,12 @@
 
 #include "config/config.h"
 
-#include "dev/timer_dev.h"
 
 #ifdef __cplusplus
  extern "C" {
 #endif
 
-#if DEBUG_PROFILING > 0
-
-  /* Define the timer that will be used as microsecond timer */
-  /* Change all defines, if counter is changed !             */
-  #define MICROCOUNTER_TMR              TIM7
-  #define MICROCOUNTER_TMR_CLK_ENABLE   __HAL_RCC_TIM7_CLK_ENABLE
-  #define MICROCOUNTER_TMR_IRQn         TIM7_IRQn
-  #define MICROCOUNTER_TMR_IRQHandler   TIM7_IRQHandler            
-  // #define MICROCOUNTER_TMR_IRQ_VECTOR   TIM6_DAC_IRQHandler            ; TIM6 and DAC
-
-
-  typedef enum ActiveJobEnum {
+typedef enum ActiveJobEnum {
     JOB_TASK_TMR = 0,
     JOB_TASK_PERIODIC,
     JOB_TASK_RFM,
@@ -65,56 +53,68 @@
     JOB_TASK_PROFILER,
 
     JOB_NROF_ELEMENTS                        /* Keep this element as last entry in enum ! */
-  } ActiveJobEnumType;
+} ActiveJobEnumType;
 
-#define JOBNAMES0 \
-  "TMR",          \
-  "PERIODIC",     \
-  "RFM",        \
-  "DBGIO",       \
-  "RTC",        \
-  "INIT",       \
-  "MAIN",       
+#if DEBUG_PROFILING > 0
+
+#define JOBNAMES0   \
+    "TMR",          \
+    "PERIODIC",     \
+    "RFM",          \
+    "DBGIO",        \
+    "RTC",          \
+    "INIT",         \
+    "MAIN",       
 #if USE_DISPLAY > 0 
-  #define JOBNAMES1 JOBNAMES0 \
-  "LCD",  
+    #define JOBNAMES1 JOBNAMES0 \
+    "LCD",  
 #else
-  #define JOBNAMES1 JOBNAMES0
+    #define JOBNAMES1 JOBNAMES0
 #endif              
 #if USE_EPAPER > 0  
-  #define JOBNAMES2 JOBNAMES1 \
-  "EPD",           
+    #define JOBNAMES2 JOBNAMES1 \
+    "EPD",           
 #else
-  #define JOBNAMES2 JOBNAMES1
+    #define JOBNAMES2 JOBNAMES1
 #endif              
 #if USE_ONEWIRE > 0 
-  #define JOBNAMES3 JOBNAMES2 \
-  "ONEWIRE",
+    #define JOBNAMES3 JOBNAMES2 \
+    "ONEWIRE",
 #else
-  #define JOBNAMES3 JOBNAMES2
+    #define JOBNAMES3 JOBNAMES2
 #endif             
 #if USE_QSPI > 0
-  #define JOBNAMES4 JOBNAMES3 \
-  "QUADSPI",
+    #define JOBNAMES4 JOBNAMES3 \
+    "QUADSPI",
 #else
-  #define JOBNAMES4 JOBNAMES3
+    #define JOBNAMES4 JOBNAMES3
 #endif             
 
 #define JOBNAMES99 \
-  JOBNAMES4     \
-  "ADC",        \
-  "SLEEP",      \
-  "STOP0",      \
-  "STOP1",      \
-  "STOP2",      \
-  "IRQ_UART",   \
-  "IRQ_SPI",    \
-  "IRQ_I2C",    \
-  "IRQ_RTC",    \
-  "IRQ_TMR",    \
-  "IRQ_EXTI",   \
-  "IRQ_PROFILER",\
-  "PROFILER",
+    JOBNAMES4     \
+    "ADC",        \
+    "SLEEP",      \
+    "STOP0",      \
+    "STOP1",      \
+    "STOP2",      \
+    "IRQ_UART",   \
+    "IRQ_SPI",    \
+    "IRQ_I2C",    \
+    "IRQ_RTC",    \
+    "IRQ_TMR",    \
+    "IRQ_EXTI",   \
+    "IRQ_PROFILER",\
+    "PROFILER",
+
+#include "dev/timer_dev.h"
+
+/* Define the timer that will be used as microsecond timer */
+/* Change all defines, if counter is changed !             */
+#define MICROCOUNTER_TMR              TIM7
+#define MICROCOUNTER_TMR_CLK_ENABLE   __HAL_RCC_TIM7_CLK_ENABLE
+#define MICROCOUNTER_TMR_IRQn         TIM7_IRQn
+#define MICROCOUNTER_TMR_IRQHandler   TIM7_IRQHandler            
+// #define MICROCOUNTER_TMR_IRQ_VECTOR   TIM6_DAC_IRQHandler            ; TIM6 and DAC
 
 
   /* Exported variables ------------------------------------------------------------------*/

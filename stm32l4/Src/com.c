@@ -68,7 +68,9 @@ void COM_print_debug(bool rfm_transmit)
           StatusPrintOOKStatus();
     #endif
 
-    DEBUG_PRINTF(" B: %04d ", ADC_GetVdda(&HW_ADC1) );
+    #if defined(USER_ADC)
+        DEBUG_PRINTF(" B: %04d ", ADC_GetVdda(&USER_ADC) );
+    #endif
 
     #if defined(GASSENSOR)
         DEBUG_PRINTF(" V:%04d", pa7_average*2 );
@@ -129,9 +131,14 @@ void COM_print_debug(bool rfm_transmit)
         /* 06 */wireless_putchar(pa7_average >> 7); // Vin * 2 
         /* 07 */wireless_putchar(pa7_average << 1 & 0xff);
     #else
-        uint16_t v = ADC_GetVdda(&HW_ADC1);
-        /* 06 */wireless_putchar(v>>8); 
-        /* 07 */wireless_putchar(v &0xff);
+        #if defined(USER_ADC)
+            uint16_t v = ADC_GetVdda(&USER_ADC);
+            /* 06 */wireless_putchar(v>>8); 
+            /* 07 */wireless_putchar(v &0xff);
+        #else
+            /* 06 */wireless_putchar(0); 
+            /* 07 */wireless_putchar(0);
+        #endif
     #endif
 
     /* 08 */wireless_putchar(time_sync_tmo);

@@ -18,6 +18,7 @@
 #include "config/i2c_config.h"
 #include "config/adc_config.h"
 #include "config/qspi_config.h"
+#include "system/profiling.h"
 
 #if USE_QENCODER > 0
     #include "config/qencode_config.h"

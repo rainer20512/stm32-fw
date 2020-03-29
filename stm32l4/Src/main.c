@@ -47,9 +47,7 @@
 #include "task/minitask.h"
 #include "system/exti_handler.h"
 
-#if DEBUG_PROFILING > 0
-    #include "system/profiling.h"
-#endif
+#include "system/profiling.h"
 
 /* Private typedef -----------------------------------------------------------*/
 

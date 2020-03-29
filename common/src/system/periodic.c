@@ -308,6 +308,11 @@ void task_periodic ( uint32_t arg )
 }
 
 #if DEBUG_MODE > 0
+#if DEBUG_PERIODIC > 0
+    #define GET_NAME(idx)   action[idx].name
+#else
+    #define GET_NAME(idx)   (UNUSED(idx), NULL)
+#endif
 void PeriodicDumpOneList ( PeriodicListItem *list, uint32_t used, char *numericTitle )
 {
     uint32_t idx;
@@ -320,9 +325,9 @@ void PeriodicDumpOneList ( PeriodicListItem *list, uint32_t used, char *numericT
     for ( uint32_t i = 0; i < used; i++ ) {
         idx = list->actionIdx;
         if ( numericTitle )
-            DBG_printf_indent("%3d %s\n", list->atValue, action[idx].name);
+            DBG_printf_indent("%3d %s\n", list->atValue, GET_NAME(idx));
         else
-            DBG_printf_indent(" o  %s\n", action[idx].name);
+            DBG_printf_indent(" o  %s\n", GET_NAME(idx));
         list++;
     }
 

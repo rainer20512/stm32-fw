@@ -51,8 +51,13 @@ static uint32_t watch_map[WATCH_N] = {
 #else
     /* 00 */ WATCH_UNUSED,
 #endif
-    /* 01 */ ((uint32_t) &ADC1Handle.vdda) + B16,				// battery 
-    /* 02 */ ((uint32_t) &uptime_mins) + B16,				// 32bit value LO-Word *** Chng 052 ***
+    #if defined(USE_ADC1)
+        /* 01 */ ((uint32_t) &ADC1Handle.vdda) + B16,				// battery 
+        /* 02 */ ((uint32_t) &uptime_mins) + B16,				// 32bit value LO-Word *** Chng 052 ***
+    #else
+        /* 01 */ WATCH_UNUSED,
+        /* 02 */ WATCH_UNUSED,
+    #endif
     /* 03 */ ((uint32_t) ((char*)(&uptime_mins))+2) + B16,	        // 32bit value Hi-Word *** Chng 052 ***
     /* 04 */ ((uint32_t) &missed_syncs) + B16,				// missed syncs
     /* 05 */ ((uint32_t) &avg_skew_00) + B16,				// Time skew @ Sync Second 0
