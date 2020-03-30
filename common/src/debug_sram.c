@@ -17,7 +17,7 @@
 
 #if DEBUG_FEATURES > 0
 
-#include "stm32l4xx.h"
+#include "hardware.h"
 
 #include <stdarg.h>
 #include <stdio.h>

@@ -15,7 +15,7 @@
 #include "debug_helper.h"
 #include "eeprom.h"
 #include "timer.h"
-#include "system/clockconfig.h"
+// RHB #include "system/clockconfig.h"
 
 #if USE_EEPROM_EMUL > 0
     #include "../modules/eeprom_emul/core/eeprom_emul_conf.h"
@@ -354,14 +354,14 @@ void Config_Init(void)
         /* System reset comes from a power-on reset: Forced Erase */
         /* Initialize EEPROM emulation driver (mandatory) */
         ee_initstatus = EE_Init(VirtAddVarTab, EE_FORCED_ERASE);
-        if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
+        if(ee_initstatus != EE_OK) {Error_Handler_XX(-20, __FILE__, __LINE__);}
       }
       else
       {    
         /* System reset comes from a STANDBY wakeup: Conditional Erase*/
         /* Initialize EEPROM emulation driver (mandatory) */
         ee_initstatus = EE_Init(VirtAddVarTab, EE_CONDITIONAL_ERASE);
-        if(ee_initstatus != EE_OK) {Error_Handler(__FILE__, __LINE__);}
+        if(ee_initstatus != EE_OK) {Error_Handler_XX(-21, __FILE__, __LINE__);}
       }
   
       /* Lock the Flash Program Erase controller */

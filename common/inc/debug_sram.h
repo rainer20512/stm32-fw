@@ -13,16 +13,8 @@
 #define __DEBUG_SRAM_H
 
 #include "config/config.h"
-#include "debug.h"
-
-#include "dev/uart_dev.h"
-
-#ifdef DEBUG_DEBUGIO
-  #include <debugio.h>
-#endif
 
 #include <stdio.h>
-#include "stm32l4xx_hal.h"
 
 #ifdef __cplusplus
  extern "C" {

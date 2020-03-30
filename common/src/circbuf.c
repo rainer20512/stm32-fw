@@ -23,7 +23,7 @@ bool CircBuff_Init(CircBuffT *cbuff, uint32_t size, uint8_t *bufptr )
     cbuff->size = size;
     cbuff->mask = size-1;
     if ( cbuff->size & cbuff->mask ) {
-        Error_Handler(__FILE__, __LINE__);
+        Error_Handler_XX(-10, __FILE__, __LINE__);
         return false;
     }
     cbuff->buf = bufptr;

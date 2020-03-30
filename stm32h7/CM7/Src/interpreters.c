@@ -80,11 +80,13 @@ const InterpreterModuleT mdl##name =  {pmt##name, cmd##name, sizeof(cmd##name) /
 
 /* Private functions ---------------------------------------------------------*/
 
-#if DEBUG_FEATURES > 0 && 0 // RHB todo
+#if DEBUG_FEATURES > 0 
 
 
 #include "debug_sram.h"
 #include "debug_gpio_exti.h"
+
+#if 0 
 #include "debug_pwr_rcc.h"
 
 void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
@@ -173,7 +175,7 @@ static const CommandSetT cmdClkCfg[] = {
   { "MCO output",ctype_fn, {Config_Menu},  VOID(9), "Activate MCO Output PA8" },
 };
 ADD_SUBMODULE(ClkCfg);
-
+#endif
   void DBG_init_pin(char portletter, uint8_t portnum, uint32_t speed, uint32_t pupd_status, uint32_t init);
   void DBG_deinit_pin(char portletter, uint8_t portnum);
 
@@ -304,7 +306,8 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
       DBG_sram();
       break;
     case 1:
-      DBG_dump_exti_config();
+      DBG_dump_exti_config(0);
+      DBG_dump_exti_config(1);
       break;
     case 2:
       DBG_dump_nvic_config();
@@ -2145,8 +2148,8 @@ static const CommandSetT cmdBasic[] = {
   { "D-cmd",           ctype_fn,  .exec.fn = RFM_Menu,        VOID(3),  "Show system status"  },
   { "Version",         ctype_fn,  .exec.fn = RFM_Menu,        VOID(6),  "Show system status"  },
 #endif
-#if DEBUG_FEATURES > 0 && 0
-  { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
+#if DEBUG_FEATURES > 0 
+// RHB toDo  { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
 #endif
 #if USE_RFM12 > 0 || USE_RFM69 > 0

@@ -418,7 +418,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 			} else {
                             RFM_SwitchOff();
                             rfm_basemode = rfm_basemode_txdone;
-                            TaskNotifyFromISR(TASK_RFM); // inform the rfm task about end of transmition
+                            TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
 			    return;
 			}
 			break;
@@ -427,7 +427,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 			if ( !rfm_ReceiveChar(RFM_READ_FIFO()) ) {
                             RFM_SwitchOff();
                             rfm_basemode = rfm_basemode_rxdone;
-                            TaskNotifyFromISR(TASK_RFM); // inform the rfm task about end of transmition
+                            TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
                             return;
 			}
 			break;

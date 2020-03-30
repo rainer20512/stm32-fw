@@ -257,7 +257,7 @@ bool Usart_GPIO_Init(const HW_DeviceType *self)
  *****************************************************************************/
 bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstInit )
 {
-  UART_HandleTypeDef huart;
+  UART_HandleTypeDef huart={0};
   USART_TypeDef *utiny  = myHandle->Instance;
 
   /* keep actual baudrate in mind ( need it if system frequancy changes */
@@ -285,7 +285,7 @@ bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstI
 
   /* Set the UART Communication parameters */
   if (UART_SetConfig(&huart) == HAL_ERROR) {
-      Error_Handler(__FILE__, __LINE__);
+      Error_Handler_XX(-15, __FILE__, __LINE__);
       return false;
   }
 
@@ -330,7 +330,7 @@ static void UART_DMATransmitCplt(DMA_HandleTypeDef *hdma)
     SET_BIT(uhandle->Instance->CR1, USART_CR1_TCIE);
   } else {
     /* DMA Circular mode, not implemented */
-    Error_Handler(__FILE__, __LINE__);
+    Error_Handler_XX(-16, __FILE__, __LINE__);
   }
 }
 
@@ -406,7 +406,7 @@ static void UsartDmaChannelInit(UsartHandleT *uhandle, const HW_DmaType *dma, Us
       uhandle->hTxDma = dma->dmaHandle;
       break;
     default:
-        Error_Handler(__FILE__, __LINE__);
+        Error_Handler_XX(-17, __FILE__, __LINE__);
         return;
   }
   
@@ -427,9 +427,6 @@ static void UsartDmaChannelInit(UsartHandleT *uhandle, const HW_DmaType *dma, Us
       hdma->XferCpltCallback = UART_DMATransmitCplt;   
       hdma->XferErrorCallback = UART_DMAError;
       break;
-    default:
-        Error_Handler(__FILE__, __LINE__);
-        return;
   }
 
   return;

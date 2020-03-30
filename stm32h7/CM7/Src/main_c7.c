@@ -35,6 +35,8 @@
 #include "task/minitask.h"
 #include "debug_helper.h"
 
+#include "system/tm1637.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
 #define HSEM_ID_0 (0U) /* HW semaphore 0*/
@@ -67,6 +69,8 @@ static BaseType_t xAreMessageBufferAMPTasksStillRunning( void );
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 /* Private functions ---------------------------------------------------------*/
 
+
+
 uint32_t LedToggle ( uint32_t duration, uint32_t num )
 {   uint32_t k = 0;
     for ( uint32_t i = 0; i < num; i++ ) {
@@ -89,10 +93,14 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
   * @param  None
   * @retval None
   */
+#define STATUS(i)   TM1637_displayInteger(i,0,99)
 int main(void)
 {
     int32_t timeout;
     BaseType_t x;
+
+    TM1637PinT clk = { GPIOA, 3 };
+    TM1637PinT dio = { GPIOC, 0 };
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
@@ -105,13 +113,14 @@ int main(void)
     BSP_LED_Init(LED2); 
     LedToggle(250,2);
 
+    TM1637_Init( clk, dio, DELAY_TYPICAL);
 
     /* Wait until CPU2 boots and enters in stop mode or timeout*/
-    timeout = 0xFFFF;
+    timeout = 0xFFFFF;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
     if ( timeout < 0 )
     {
-    Error_Handler(__FILE__, __LINE__);
+        Error_Handler_XX(-1, __FILE__, __LINE__);
     }
 
     /* STM32H7xx HAL library initialization:
@@ -125,7 +134,10 @@ int main(void)
        - Set NVIC Group Priority to 4
        - Low Level Initialization
     */
+
     HAL_Init();
+
+    STATUS(0);
 
     /* Configure the system clock to 400 MHz */
     SystemClock_Config();
@@ -138,16 +150,21 @@ int main(void)
         BASTMR_EarlyInit();
     #endif
 
+    STATUS(1);
+
     #if DEBUG_PROFILING > 0
         ProfilerInitTo(JOB_TASK_INIT);
     #endif
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+    STATUS(2);
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
     BasicDevInit();
+    STATUS(3);
     Init_DumpAndClearResetSource();
+    STATUS(4);
 
     /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
     sensitive to rising edge : Configured only once */
@@ -167,15 +184,18 @@ int main(void)
     // RHB todo DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %d\n", HAL_RCC_GetSysClockFreq() ); 
     Init_OtherDevices();
+    STATUS(5);
 
     Init_DefineTasks();
-
+    STATUS(6);
     #if DEBUG_PROFILING > 0
         ProfilerSwitchTo(JOB_TASK_MAIN);  
     #endif
 
     TaskInitAll();
-
+    STATUS(7);
+    
+    TaskNotify(TASK_OUT);
     /* Cortex-M7 will release Cortex-M4  by means of HSEM notification */
     /*HW semaphore Clock enable*/
     __HAL_RCC_HSEM_CLK_ENABLE();
@@ -190,9 +210,9 @@ int main(void)
     /* Start the Core 1 task */
     xTaskCreate( prvCore1Task, "AMPCore1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );		
 
+    STATUS(99);
     /* Start scheduler */
     vTaskStartScheduler();
-
     /* We should never get here as control is now taken by the scheduler */
     for (;;);
 }
@@ -487,53 +507,6 @@ static void MPU_Config(void)
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
 
-uint32_t My_Delay(uint32_t waittime )
-{
-  uint32_t tickstart = 0U;
-  uint32_t upcount = 0;
-  tickstart = HAL_GetTick();
-  while((HAL_GetTick() - tickstart) < waittime) {
-    upcount++;
-  }
-  return upcount;
-}
-
-void Error_Handler(char *file, int line)
-{
-  /* Turn LED2 on */
-  // BSP_LED_On(LED2);
-
-  DEBUG_PRINTF("Error in %s line %d\n", file, line);
-  
-  while(1)
-  {
-    /* Error if LED2 is slowly blinking (1 sec. period) */
-    // BSP_LED_Toggle(LED2); 
-    DEBUG_PRINTF("Increments per second=%u\n",My_Delay(1000)); 
-  }  
-}
-
-
-#ifdef  USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t *file, uint32_t line)
-{ 
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  /* Infinite loop */
-  while (1)
-  {
-  }
-}
-#endif
 
 /**
   * @}

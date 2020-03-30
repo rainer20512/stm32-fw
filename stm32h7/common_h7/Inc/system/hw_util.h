@@ -24,10 +24,7 @@
 #define COMBINE(a,b)    (uint16_t)( (a << 8 ) | b )
 
 typedef struct DeviceIdType {
-        uint16_t waferX;
-        uint16_t waferY;
-        uint8_t  waferNum;
-        char lot[7];
+        uint8_t id[12];
         uint16_t devID;
         uint16_t revID;
         uint16_t flashSize;

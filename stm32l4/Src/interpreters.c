@@ -305,7 +305,7 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
       DBG_sram();
       break;
     case 1:
-      DBG_dump_exti_config();
+      DBG_dump_exti_config(0);
       break;
     case 2:
       DBG_dump_nvic_config();

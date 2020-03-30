@@ -74,6 +74,7 @@ extern uint8_t CTL_error;
 #endif
 
 void Error_Handler(char *file, int line);
+void Error_Handler_XX(int32_t code, char *file, int line);
 
 #define log_error(...)   do { DEBUG_PRINTF("Error: "); DEBUG_PRINTF(__VA_ARGS__ ); CRLF(); } while (0)
 

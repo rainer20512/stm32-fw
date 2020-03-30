@@ -1,80 +1,57 @@
+#include "config/config.h"
+#include "hardware.h"
+#include "debug_helper.h"
+#include "system/tm1637.h"
 
-// ST_CP = SCK
-// SH_CP = RCK
-// SDI   = DIO
-// Common anode
-#define DS 10
-#define STCP 11
-#define SHCP 12
-#define SPEED 500
-boolean numbersDef[10][8] =
+uint32_t My_Delay(uint32_t waittime )
 {
-  {1,1,1,1,1,1,0}, //zero
-  {0,1,1,0,0,0,0}, //one
-  {1,1,0,1,1,0,1}, //two
-  {1,1,1,1,0,0,1}, //three
-  {0,1,1,0,0,1,1}, //four
-  {1,0,1,1,0,1,1}, //five
-  {1,0,1,1,1,1,1}, //six
-  {1,1,1,0,0,0,0}, //seven
-  {1,1,1,1,1,1,1}, //eight
-  {1,1,1,1,0,1,1}  //nine
-};
-
-boolean digitsTable[8][8] =
-{
-  {0,0,0,0,1,0,0,0}, // first digit
-  {0,0,0,0,0,1,0,0}, // second
-  {0,0,0,0,0,0,1,0}, // third
-  {1,0,0,0,0,0,0,0}, // forth
-  {0,1,0,0,0,0,0,0}, // fifth
-  {0,0,1,0,0,0,0,0}  // sixth  
-};
-
-void setup() {
-  pinMode(DS, OUTPUT);
-  pinMode(STCP, OUTPUT);
-  pinMode(SHCP, OUTPUT);
-  digitalWrite(DS, LOW);
-  digitalWrite(STCP, LOW);
-  digitalWrite(SHCP, LOW);
-}
-
-boolean display_buffer[16];
-void prepareDisplayBuffer(int number, int digit_order, boolean showDot)
-{
-  for(int index=7; index>=0; index--)
-  {
-    display_buffer[index] = digitsTable[digit_order-1][index];
+  uint32_t tickstart = 0U;
+  uint32_t upcount = 0;
+  tickstart = HAL_GetTick();
+  while((HAL_GetTick() - tickstart) < waittime) {
+    upcount++;
   }
-  for(int index=14; index>=8; index--)
-  {
-    display_buffer[index] = !numbersDef[number-1][index]; //because logic is sanity, right?
-  }
-  if(showDot == true)
-    display_buffer[15] = 0;
-  else
-    display_buffer[15] = 1;
+  return upcount;
 }
 
-void writeDigit(int number, int order, bool showDot = false)
+void Error_Handler(char *file, int line)
 {
-  prepareDisplayBuffer(number, order, showDot);
-  digitalWrite(SHCP, LOW);
-  for(int i=15; i>=0; i--)
+  /* Turn LED2 on */
+  // BSP_LED_On(LED2);
+
+  DEBUG_PRINTF("Error in %s line %d\n", file, line);
+  
+  while(1)
   {
-      digitalWrite(STCP, LOW);
-      digitalWrite(DS, display_buffer[i]); //output LOW - enable segments, HIGH - disable segments
-      digitalWrite(STCP, HIGH);
-   }
-  digitalWrite(SHCP, HIGH);
+    /* Error if LED2 is slowly blinking (1 sec. period) */
+    // BSP_LED_Toggle(LED2); 
+    DEBUG_PRINTF("Increments per second=%u\n",My_Delay(1000)); 
+  }  
 }
 
-void loop() {
-  writeDigit(0, 1);
-  writeDigit(2, 2, true);
-  writeDigit(3, 3);
-  writeDigit(4, 4, true);
-  writeDigit(5, 5);
-  writeDigit(6, 6);
+void Error_Handler_XX(int32_t code, char *file, int line)
+{
+    TM1637_displayInteger(code,0,99);
+    Error_Handler( file, line );
 }
+
+#ifdef  USE_FULL_ASSERT
+
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{ 
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+  /* Infinite loop */
+  while (1)
+  {
+  }
+}
+#endif

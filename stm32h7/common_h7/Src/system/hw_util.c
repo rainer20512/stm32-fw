@@ -275,7 +275,7 @@ bool HW_GetHWClockStatus ( void *hw )
       p++;
     }
 
-    Error_Handler(__FILE__, __LINE__); 
+    Error_Handler_XX(-7, __FILE__, __LINE__); 
     return NULL;
 }
 
@@ -303,7 +303,7 @@ void HW_SetHWClock( void *hw, bool bOn )
       p++;
     }
 
-    Error_Handler(__FILE__, __LINE__); 
+    Error_Handler_XX(-7, __FILE__, __LINE__); 
 }
 
 /*
@@ -327,7 +327,7 @@ void HW_Reset( void *hw )
     }
     #if DEBUG_MODE > 0
         DEBUG_PRINTF("HW_Reset: Do not know Base Addr %08x\n",(uint32_t)hw);
-        Error_Handler(__FILE__, __LINE__); 
+        Error_Handler_XX(-7, __FILE__, __LINE__); 
     #endif
 }
 
@@ -369,7 +369,7 @@ void HW_SetDmaChClock ( const HW_DmaType *tx, const HW_DmaType *rx)
  */
 uint32_t *    HW_GetPeriphBitBandAddr     ( __IO uint32_t *periphAddr, uint16_t bit_number )
 {
-    assert(false );
+    Error_Handler_XX(-8, __FILE__, __LINE__); 
     return 0;
 }
 
@@ -485,7 +485,7 @@ void HW_ReadID(DeviceIdT *id )
 {
     uint32_t on_bit;
 
-    memmove((uint8_t*)id, (uint8_t *)UID_BASE, 12 );
+    memmove(&id->id, (uint8_t *)UID_BASE, 12 );
     
      /* Get clock status of PWR domain and switch on, if not already on*/
     id->devID = HAL_GetDEVID();
@@ -505,6 +505,8 @@ void HW_ReadID(DeviceIdT *id )
 
 bool HW_DumpID(char *cmdline, size_t len, const void * arg )
 {
+    uint32_t i;
+
     UNUSED(cmdline);UNUSED(len);UNUSED(arg);
     DeviceIdT MyId;
     DeviceIdT *id = &MyId;
@@ -513,9 +515,12 @@ bool HW_DumpID(char *cmdline, size_t len, const void * arg )
     printf("%s Rev.%c %s\n",Get_DeviceName(id->devID), Get_RevisionName(id->devID, id->revID), Get_PackageName(id->package) );
     printf("Flashsize: %d kB\n",id->flashSize);
     printf("UID=");
-    for ( uint8_t i = 0; i < 7; i++ )
-        putchar(id->lot[i]);
-    printf("-%d-(%d,%d)\n",id->waferNum, id->waferX, id->waferY);
+    for ( i = 0; i < 12;  ) {
+        print_hexXX(id->id[i]); 
+        i++;
+        if ( i % 4 == 0 ) putchar(' ');
+    }
+    CRLF();
 
     return true;
 }
@@ -533,88 +538,9 @@ void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *par
   hdma->Init.Request             = dma->dmaRequest;
   hdma->Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
   hdma->Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-  hdma->Init.MemBurst            = DMA_MBURST_INC4;
-  hdma->Init.PeriphBurst         = DMA_PBURST_INC4;
+  hdma->Init.MemBurst            = DMA_MBURST_SINGLE;
+  hdma->Init.PeriphBurst         = DMA_MBURST_SINGLE;
 
 }
 
 
-// ST_CP = SCK
-// SH_CP = RCK
-// SDI   = DIO
-// Common anode
-#define DS 10
-#define STCP 11
-#define SHCP 12
-#define SPEED 500
-boolean numbersDef[10][8] =
-{
-  {1,1,1,1,1,1,0}, //zero
-  {0,1,1,0,0,0,0}, //one
-  {1,1,0,1,1,0,1}, //two
-  {1,1,1,1,0,0,1}, //three
-  {0,1,1,0,0,1,1}, //four
-  {1,0,1,1,0,1,1}, //five
-  {1,0,1,1,1,1,1}, //six
-  {1,1,1,0,0,0,0}, //seven
-  {1,1,1,1,1,1,1}, //eight
-  {1,1,1,1,0,1,1}  //nine
-};
-
-boolean digitsTable[8][8] =
-{
-  {0,0,0,0,1,0,0,0}, // first digit
-  {0,0,0,0,0,1,0,0}, // second
-  {0,0,0,0,0,0,1,0}, // third
-  {1,0,0,0,0,0,0,0}, // forth
-  {0,1,0,0,0,0,0,0}, // fifth
-  {0,0,1,0,0,0,0,0}  // sixth  
-};
-
-void setup() {
-  pinMode(DS, OUTPUT);
-  pinMode(STCP, OUTPUT);
-  pinMode(SHCP, OUTPUT);
-  digitalWrite(DS, LOW);
-  digitalWrite(STCP, LOW);
-  digitalWrite(SHCP, LOW);
-}
-
-boolean display_buffer[16];
-void prepareDisplayBuffer(int number, int digit_order, boolean showDot)
-{
-  for(int index=7; index>=0; index--)
-  {
-    display_buffer[index] = digitsTable[digit_order-1][index];
-  }
-  for(int index=14; index>=8; index--)
-  {
-    display_buffer[index] = !numbersDef[number-1][index]; //because logic is sanity, right?
-  }
-  if(showDot == true)
-    display_buffer[15] = 0;
-  else
-    display_buffer[15] = 1;
-}
-
-void writeDigit(int number, int order, bool showDot = false)
-{
-  prepareDisplayBuffer(number, order, showDot);
-  digitalWrite(SHCP, LOW);
-  for(int i=15; i>=0; i--)
-  {
-      digitalWrite(STCP, LOW);
-      digitalWrite(DS, display_buffer[i]); //output LOW - enable segments, HIGH - disable segments
-      digitalWrite(STCP, HIGH);
-   }
-  digitalWrite(SHCP, HIGH);
-}
-
-void loop() {
-  writeDigit(0, 1);
-  writeDigit(2, 2, true);
-  writeDigit(3, 3);
-  writeDigit(4, 4, true);
-  writeDigit(5, 5);
-  writeDigit(6, 6);
-}

@@ -36,6 +36,7 @@
 #include <inttypes.h>
 
 #include "system/tm1637.h"
+#include "system/hw_util.h"
 
 /* for pinMode, digitalRead and digitalWrite wrappers */
 #define INPUT   1
@@ -52,6 +53,7 @@
 
 static void pinInit ( TM1637PinT pin )
 {
+    HW_SetHWClock(pin.gpio, 1 );
     GPIO_InitTypeDef Init;
     Init.Pin = 1 << pin.pin;
     Init.Speed = GPIO_SPEED_MEDIUM;
@@ -103,12 +105,13 @@ static uint32_t getUs(void)
 
     do {
         ms = HAL_GetTick();
-        cycle_cnt = SysTick->VAL;
+        cycle_cnt = TIM6->CNT;
     } while (ms != HAL_GetTick());
  
     return (ms * 1000) + (usTicks * 1000 - cycle_cnt) / usTicks;
 }
 
+#if 0
 static void delayUs(uint16_t micros) 
 {
     uint32_t start = getUs();
@@ -116,6 +119,18 @@ static void delayUs(uint16_t micros)
         asm("nop");
     }
 }
+#endif
+
+uint32_t delayUs ( uint32_t micros )
+{
+    uint32_t k = 0;
+    for ( uint32_t j=0; j < micros * 150; j++ ) {
+        k += j;
+        asm("nop");
+    }
+    return k;
+}
+
 
 /* End of arduiono wrappers */
 

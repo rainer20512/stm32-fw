@@ -61,10 +61,10 @@ bool TaskIsRunableTask  (void);
     #define TaskRegisterTask(i,r,n,d,a)     TaskRegisterTaskShort(i,r,n,d)
     #define TaskDumpList()
 #endif
-void TaskInitAll                ( void );
-void TaskRunAll                 ( void );
-void TaskNotify                 ( uint32_t num );
-#define TaskNotifyFromISR(a)    TaskNotify(a)
+void TaskInitAll        ( void );
+void TaskRunAll         ( void );
+void TaskNotify         ( uint32_t num );
+
 
 #ifdef __cplusplus
 }

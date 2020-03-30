@@ -535,7 +535,7 @@ static void OnTxComplete (void )
      SpiNSelHigh(mySpi);
       epdCbuf.rdptr = CBUFPTR_INCR(epdCbuf, rdptr, readsize);
       /* Check for more */
-      TaskNotifyFromISR(TASK_EPD);
+      TaskNotify(TASK_EPD);
 }
 #else
     void SSD_AsynchronousWrite(void) {}

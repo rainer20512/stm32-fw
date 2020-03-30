@@ -35,6 +35,7 @@
 #define __TM1637_H__
 
 #include <inttypes.h>
+#include "config/config.h"
 #include "hardware.h"
 
 typedef struct {

@@ -177,7 +177,7 @@ void TaskNotify ( uint32_t num )
         else
             xTaskNotifyGive(tasks[num].TaskID);
     } else {
-        DEBUG_PRINTF("Notify to unset Task #%d", num);
+        // DEBUG_PRINTF("Notify to unset Task #%d", num);
     }
 }
 

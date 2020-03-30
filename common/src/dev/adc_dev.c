@@ -289,7 +289,7 @@ void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
     }
 
     myHandle->bSequenceDone = true;
-    TaskNotifyFromISR(TASK_ADC);
+    TaskNotify(TASK_ADC);
 }
 
 void HAL_ADC_ErrorCallback (ADC_HandleTypeDef * hadc)

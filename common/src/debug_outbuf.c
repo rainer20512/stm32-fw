@@ -115,7 +115,7 @@ void DebugOutputCompleteCB ( uint32_t size )
   /* If we kept in mind an delayed flush, initiate it now */
   if ( bDelayedFlush ) {
     bDelayedFlush = 0;
-    TaskNotifyFromISR(TASK_OUT);
+    TaskNotify(TASK_OUT);
   }
 
 }
@@ -216,7 +216,7 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
     if ( ch == '\r' ) DEBUG_PUTC('\n');
 
     DEBUG_PUTC(ch);
-    TaskNotifyFromISR(TASK_OUT);
+    TaskNotify(TASK_OUT);
 
     /* Del = remove DEL and last character */
     if ( ch == 0x07f ) { LBUF_DEL(*(uhandle->in));LBUF_DEL(*(uhandle->in)); }
@@ -225,7 +225,7 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
     if ( ch == '\r' || ch == 0x04 ) {
         /* CR(LF) = Remove terminating \r */
         if ( ch == '\r') LBUF_DEL(*(uhandle->in));
-        TaskNotifyFromISR(TASK_COM);
+        TaskNotify(TASK_COM);
     }
 }
 

@@ -26,7 +26,8 @@
 //#define STM32L476EVAL
 //#define STM32L476BAREMETAL
 
-
+#define HW_HAS_HSE
+#define HW_HAS_HSE_BYPASS
 /*
  ********************************************************************************
  * Application selection

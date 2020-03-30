@@ -431,8 +431,8 @@ void RTC_AddOneSecond(void)
     void RTC_IncrementSecond ( void )
     {
         RTC_AddOneSecond();
-        TaskNotifyFromISR(TASK_RTC);
-        TaskNotifyFromISR(TASK_PERIODIC);
+        TaskNotify(TASK_RTC);
+        TaskNotify(TASK_PERIODIC);
     }
 
     /*********************************************************************************
@@ -1121,7 +1121,7 @@ bool RTC_StopWatch_InUse(void)
                      if ( tmrcnt != CMP_FORBIDDEN_VALUE + 1 ) {
                             MsTimerHandleCMP(tmrcnt-1 );
                             /* Set Task bit in any case.This is neccessary to compute next timer match */
-                            TaskNotifyFromISR(TASK_TMR);
+                            TaskNotify(TASK_TMR);
                      }
                 }
             // } else {
@@ -1159,8 +1159,8 @@ bool RTC_StopWatch_InUse(void)
   
       /* Alarm A used for secondly ticks */
       if ( RTC->ISR & RTC_ISR_ALRAF ) {
-        TaskNotifyFromISR(TASK_RTC);
-        TaskNotifyFromISR(TASK_PERIODIC);
+        TaskNotify(TASK_RTC);
+        TaskNotify(TASK_PERIODIC);
       }
 
       /* reset all interrupt bits by writing 0 to */
@@ -1188,7 +1188,7 @@ bool RTC_StopWatch_InUse(void)
          DisableTmrIRQ(); 
          DISABLE_WRITE();
          // If there is an matching timer, activate Timer Task
-         if ( MsTimerHandleCMP(RHB todo: Actual timer value) ) TaskNotifyFromISR(TASK_TMR);      
+         if ( MsTimerHandleCMP(RHB todo: Actual timer value) ) TaskNotify(TASK_TMR);      
       }
 
       /* reset all interrupt bits by writing 0 to */

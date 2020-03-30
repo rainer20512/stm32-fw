@@ -82,10 +82,7 @@
           <file file_name="$(ProjectDir)/Inc/config/can_config.h" />
         </folder>
         <folder Name="debug">
-          <file file_name="$(ProjectDir)/Inc/debug_gpio_exti.h" />
-          <file file_name="$(ProjectDir)/Inc/debug_helper.h" />
           <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
-          <file file_name="$(ProjectDir)/Inc/debug_sram.h" />
         </folder>
         <file file_name="$(ProjectDir)/Inc/debug.h" />
         <file file_name="$(ProjectDir)/Inc/onewire.h" />
@@ -156,10 +153,7 @@
           <file file_name="$(ProjectDir)/Src/disp/lcd_fonts.c" />
         </folder>
         <folder Name="debug">
-          <file file_name="$(ProjectDir)/Src/debug_gpio_exti.c" />
-          <file file_name="$(ProjectDir)/Src/debug_helper.c" />
           <file file_name="$(ProjectDir)/Src/debug_pwr_rcc.c" />
-          <file file_name="$(ProjectDir)/Src/debug_sram.c" />
         </folder>
         <folder Name="system">
           <file file_name="$(ProjectDir)/Src/system/clockconfig.c" />
@@ -312,8 +306,13 @@
         </folder>
         <file file_name="../common/src/rtc.c" />
         <file file_name="../common/src/timer.c" />
-        <file file_name="../common/src/debug_outbuf.c" />
         <file file_name="../common/src/eeprom.c" />
+        <folder Name="debug">
+          <file file_name="../common/src/debug_helper.c" />
+          <file file_name="../common/src/debug_outbuf.c" />
+          <file file_name="../common/src/debug_sram.c" />
+          <file file_name="../common/src/debug_gpio_exti.c" />
+        </folder>
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -345,7 +344,12 @@
         </folder>
         <file file_name="../common/inc/rtc.h" />
         <file file_name="../common/inc/timer.h" />
-        <file file_name="../common/inc/debug_outbuf.h" />
+        <folder Name="debug">
+          <file file_name="../common/inc/debug_gpio_exti.h" />
+          <file file_name="../common/inc/debug_helper.h" />
+          <file file_name="../common/inc/debug_outbuf.h" />
+          <file file_name="../common/inc/debug_sram.h" />
+        </folder>
       </folder>
     </folder>
   </project>

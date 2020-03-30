@@ -198,6 +198,7 @@
       <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
         <configuration Name="Common" build_exclude_from_build="Yes" />
       </file>
+      <file file_name="flash_placement.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="src">
@@ -206,13 +207,17 @@
         <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
         <file file_name="CM7/Src/init.c" />
         <file file_name="CM7/Src/interpreters.c" />
-        <file file_name="CM7/Src/hardfault.s" />
+        <folder Name="system">
+          <file file_name="CM7/Src/hardfault.s" />
+          <file file_name="CM7/Src/system/clockconfig.c" />
+        </folder>
       </folder>
       <folder Name="inc">
         <file file_name="CM7/Inc/debug.h" />
         <file file_name="CM7/Inc/error.h" />
         <folder Name="system">
           <file file_name="CM7/Inc/system/profiling.h" />
+          <file file_name="CM7/Inc/system/clockconfig.h" />
         </folder>
       </folder>
       <folder Name="config">
@@ -224,6 +229,7 @@
     </folder>
     <folder Name="Doc">
       <file file_name="$(ProjectDir)readme.txt" />
+      <file file_name="doc/ErrorCodes.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">
@@ -274,7 +280,6 @@
     </folder>
     <folder Name="common_h7">
       <folder Name="src">
-        <file file_name="common_h7/Src/debug_helper.c" />
         <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
         <file file_name="common_h7/Src/hardware.c" />
         <folder Name="system">
@@ -283,7 +288,6 @@
       </folder>
       <folder Name="inc">
         <file file_name="common_h7/Inc/hardware.h" />
-        <file file_name="common_h7/Inc/debug_helper.h" />
         <folder Name="system">
           <file file_name="common_h7/Inc/system/hw_util.h" />
         </folder>
@@ -324,14 +328,20 @@
           <file file_name="../common/src/system/periodic.c" />
           <file file_name="../common/src/system/exti_handler.c" />
           <file file_name="common_h7/Src/system/error.c" />
-          <file file_name="common_h7/Src/system/tm1637.c" />
+          <file file_name="../common/src/system/tm1637.c" />
         </folder>
         <file file_name="../common/src/rtc.c" />
         <file file_name="../common/src/timer.c" />
         <file file_name="../common/src/cmdline.c" />
-        <file file_name="../common/src/debug_outbuf.c" />
         <file file_name="../common/src/eeprom.c" />
         <file file_name="../common/src/circbuf.c" />
+        <folder Name="debug">
+          <file file_name="../common/src/debug_helper.c" />
+          <file file_name="../common/src/debug_outbuf.c" />
+          <file file_name="../common/src/debug_sram.c" />
+          <file file_name="../common/src/debug_gpio_exti.c" />
+          <file file_name="common_h7/Src/debug_pwr_rcc.c" />
+        </folder>
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -353,7 +363,7 @@
         <folder Name="system">
           <file file_name="../common/inc/system/periodic.h" />
           <file file_name="../common/inc/system/exti_handler.h" />
-          <file file_name="common_h7/Inc/system/tm1637.h" />
+          <file file_name="../common/inc/system/tm1637.h" />
         </folder>
         <folder Name="devconfig">
           <file file_name="common_h7/Inc/config/adc_config.h" />
@@ -370,14 +380,20 @@
         <file file_name="../common/inc/timer.h" />
         <file file_name="common_h7/Inc/interpreters.h" />
         <file file_name="../common/inc/cmdline.h" />
-        <file file_name="../common/inc/debug_outbuf.h" />
         <file file_name="../common/inc/circbuf.h" />
+        <folder Name="debug">
+          <file file_name="../common/inc/debug_gpio_exti.h" />
+          <file file_name="../common/inc/debug_helper.h" />
+          <file file_name="../common/inc/debug_outbuf.h" />
+          <file file_name="../common/inc/debug_sram.h" />
+          <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
+        </folder>
       </folder>
     </folder>
   </project>
   <configuration
     Name="Common"
-    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;USE_IOEXPANDER;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1"
+    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
     c_user_include_directories="./../common/inc;./common_h7/inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.6.0" />
 </solution>

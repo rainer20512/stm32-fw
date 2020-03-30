@@ -1,0 +1,18 @@
+6 Digit Display error codes 
+
+CM7
+     -1 : CM4 did not respond before timeout
+     -2 : Illegal system clock value when setting flas waitstates
+     -3 : SYSCLK too high
+     -4 : cannot set PLL as system clock
+     -5 : cannot set HSE as system clock
+     -6 : cannot set HSI as system clock
+     -7 : HW_util: Clock Bit not defined for peripheral
+     -8 : BitBanding not implemented
+     -9 : 
+    -10 : CircBuf: Illegal sizes
+    -15 : UART: cannot set comm params
+    -16 : UART: DMA circular mode not implemented
+    -17 : UART: DMA Init: Illegal direction
+    -20 : EEPROM: forced init failed
+    -21 : EEPROM: conditional init failed

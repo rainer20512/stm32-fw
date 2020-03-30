@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#include "stm32l4xx.h"
+#include "hardware.h"
 #include "debug_helper.h"
 #include "system/exti_handler.h"
 
@@ -29,11 +29,6 @@
  * defines
  *************************************************************
  */
-#define EXTI_MAXNUM           40
-#define EXTI1_IS_GPIO         0b00000000000000001111111111111111
-#define EXTI2_IS_GPIO         0b00000000
-#define EXTI1_IS_CONFIGURABLE 0b00000000011111011111111111111111
-#define EXTI2_IS_CONFIGURABLE 0b01111000
 
 /*
  *************************************************************
@@ -221,7 +216,7 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
     if (bToggleOnce ) {
         DEBUG_PRINTF("Change %c%02d from %s\n", portletter, portnum, gp->ODR & pin_bitmap ? "H to L": "L to H");
         if (gp->ODR & pin_bitmap)
-            gp->BRR = pin_bitmap;
+            gp->BSRR = pin_bitmap<<16;
         else
             gp->BSRR = pin_bitmap;
     } else {
@@ -303,7 +298,7 @@ static void DBG_init_pin_internal(char portletter, uint8_t portnum, bool bDoInit
                 break;
             default:
                 /* Set output pin low */
-                gp->BRR = pin_bitmap;
+                gp->BSRR = pin_bitmap<<16;
         }
        GpioInitHW( gp, &init);
 
@@ -326,7 +321,11 @@ void DBG_deinit_pin(char portletter, uint8_t portnum)
  * Functions to dump EXTI settings
  *************************************************************
  */
+#define EXTI_NAMELEN          12
+
 const char exti_gpio_name[] = "GPIO";
+
+#if defined(STM32L476xx) || defined(STM32L496xx)
 const char * const exti_line_name[]= { 
 /* insert pattern ( max length is 12 ) 
   "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
@@ -335,7 +334,61 @@ const char * const exti_line_name[]= {
   "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "LCD wkup",
   "I2C4 wkup",
 };
+const char * const exti_domain_name[]= { "EXTI   " };
+#define EXTI_MAXNUM             40
+#define EXTI_MAXDOMAIN          1
+#define EXTI1_IS_GPIO           0b00000000000000001111111111111111
+#define EXTI2_IS_GPIO           0b00000000
+#define EXTI1_IS_CONFIGURABLE   0b00000000011111011111111111111111
+#define EXTI2_IS_CONFIGURABLE   0b01111000
+#define EXTI_IS_GPIO(i)         ( i < 16 )
+#define EXTI_IS_CFGABLE(i)      ( i > 31 ? EXTI2_IS_CONFIGURABLE : EXTI1_IS_CONFIGURABLE )
 
+
+#define GET_IMR(d,i)  ( i > 31 ? EXTI->IMR2  : EXTI->IMR1 )
+#define GET_EMR(d,i)  ( i > 31 ? EXTI->EMR2  : EXTI->EMR1 )
+#define GET_PR(d,i)   ( i > 31 ? EXTI->PR2   : EXTI->PR1 )
+#define GET_FTSR(i)   ( i > 31 ? EXTI->FTSR2 : EXTI->FTSR1 )
+#define GET_RTSR(i)   ( i > 31 ? EXTI->RTSR2 : EXTI->RTSR1 )
+
+#elif defined(STM32H745xx)
+const char * const exti_line_name[]= { 
+/* insert pattern ( max length is 12 ) 
+  "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
+  "PVD/AVD",      "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",    "I2C2 wkup",    
+  "I2C3 wkup",    "I2C4 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   
+  "UART7 wkup",   "UART8 wkup",   "LPUART1 rx",   "LPUART1 tx",   "SPI1 wkup",    "SPI2 wkup",    "SPI3 wkup",    "SPI4 wkup",
+  "SPI7 wkup",    "SPI6 wkup",    "MDIO wkup",    "USB1 wkup",    "USB2 wkup",    "resvd",        "DSI wkup",     "LPTIM1 wkup",    
+  "LPTIM2 wkup",  "LPTIM2 outp",  "LPTIM3 wkup",  "LPTIM3 outp",  "LPTIM4 wkup",  "LPTIM5 wkup",  "SWPMI wkup",   "WKUP0 pin", 
+  "WKUP1 pin",    "WKUP2 pin",    "WKUP3 pin",    "WKUP4 pin",    "WKUP5 pin",    "RCC Interr.",  "I2C4 Event",   "I2C4 Error",     
+  "LPUART1 wkup", "SPI6 Interr.", "BDMA CH0 Int", "BDMA CH1 Int", "BDMA CH2 Int", "BDMA CH3 Int", "BDMA CH4 Int", "BDMA CH5 Int", 
+  "BDMA CH6 Int", "BDMA CH7 Int", "DMAMUX2 Int",  "ADC3 Int",     "SAI4 Int",     "HSEM0 Int",    "HSEM1 Int",    "M4 SEV Int",
+  "M7 SEV Int",   "resvd",        "WWDG1 reset",  "resvd",        "WWDG2 reset",  "HDMICEC wkup", "ETHER wkup",   "HSECSS wkup",
+  "resvd", 
+};
+const char * const exti_domain_name[]= { "EXTI_D1", "EXTI_D2", "EXTI_D3" };
+#define EXTI_MAXNUM             88
+#define EXTI_MAXDOMAIN          3
+
+#define EXTI1_IS_CONFIGURABLE   0b00000000001111111111111111111111
+#define EXTI2_IS_CONFIGURABLE   0b00000000000010100000000000000000 
+#define EXTI3_IS_CONFIGURABLE   0b00000000011101000000000000000000 
+#define EXTI_IS_GPIO(i)         ( i < 16 )
+#define EXTI_IS_CFGABLE2(i)     ( i > 63 ? EXTI3_IS_CONFIGURABLE : EXTI2_IS_CONFIGURABLE )
+#define EXTI_IS_CFGABLE(i)      ( i > 31 ? EXTI_IS_CFGABLE2(i)   : EXTI1_IS_CONFIGURABLE )
+
+#define GET_INSTNAME(inst)  ( inst > 1 ? EXTI_D2 : EXTI_D1 )
+#define GET_IMR(inst,num)   ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->IMR3 : GET_INSTNAME(inst)->IMR2  : GET_INSTNAME(inst)->IMR1 )
+#define GET_EMR(inst,num)   ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->EMR3 : GET_INSTNAME(inst)->EMR2  : GET_INSTNAME(inst)->EMR1 )
+#define GET_PR(inst,num)    ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->PR3  : GET_INSTNAME(inst)->PR2   : GET_INSTNAME(inst)->PR1  )
+
+#define GET_FTSR(i)  ( i > 31 ? i > 63 ? EXTI->FTSR3 : EXTI->FTSR2 : EXTI->FTSR1 )
+#define GET_RTSR(i)  ( i > 31 ? i > 63 ? EXTI->RTSR3 : EXTI->RTSR2 : EXTI->RTSR1 )
+
+#else
+    #error "No EXTI Line definitions for current MCU"
+    const char * const exti_line_name[]= {};
+#endif
 /*
  *************************************************************
  * @brief Fill in the EXTI Line name
@@ -391,22 +444,6 @@ static char DBG_get_exti_pinsource(uint32_t pinidx )
 }
 
 
-#define EXTI_MAXNUM           40
-#define EXTI1_IS_GPIO         0b00000000000000001111111111111111
-#define EXTI2_IS_GPIO         0b00000000
-#define EXTI1_IS_CONFIGURABLE 0b00000000011111011111111111111111
-#define EXTI2_IS_CONFIGURABLE 0b01111000
-
-#define EXTI_NAMELEN          12
-
-#define GET_IMR(i)  ( i > 31 ? EXTI->IMR2  : EXTI->IMR1 )
-#define GET_EMR(i)  ( i > 31 ? EXTI->EMR2  : EXTI->EMR1 )
-#define GET_PR(i)   ( i > 31 ? EXTI->PR2   : EXTI->PR1 )
-#define GET_FTSR(i) ( i > 31 ? EXTI->FTSR2 : EXTI->FTSR1 )
-#define GET_RTSR(i) ( i > 31 ? EXTI->RTSR2 : EXTI->RTSR1 )
-
-#define EXTI_IS_GPIO(i)    ( i > 31 ? EXTI2_IS_GPIO : EXTI1_IS_GPIO )
-#define EXTI_IS_CFGABLE(i) ( i > 31 ? EXTI2_IS_CONFIGURABLE : EXTI1_IS_CONFIGURABLE )
 
 static void DBG_n_spaces(uint32_t num )
 {
@@ -416,16 +453,16 @@ static void DBG_n_spaces(uint32_t num )
   }
 }
 
-static void DBG_dump_one_exti(uint32_t idx )
+static void DBG_dump_one_exti(uint32_t domain, uint32_t idx)
 {
   char namebuf[EXTI_NAMELEN+1];
   uint32_t mask = 1 << ( idx & 0x1f );
 
   DBG_get_exti_line_name(idx, namebuf, EXTI_NAMELEN);
   DEBUG_PRINTF("%s",namebuf);
-  if ( ( GET_IMR(idx) | GET_EMR(idx) )  & mask ) {
-    DEBUG_PRINTF(" %s %s", GET_IMR(idx) & mask ? "I" : " ", GET_EMR(idx) & mask ? "E" : " ");
-    DEBUG_PRINTF(" %s", GET_PR(idx) & mask ? "P" : " ");
+  if ( ( GET_IMR(domain,idx) | GET_EMR(domain,idx) )  & mask ) {
+    DEBUG_PRINTF(" %s %s", GET_IMR(domain,idx) & mask ? "I" : " ", GET_EMR(domain,idx) & mask ? "E" : " ");
+    DEBUG_PRINTF(" %s", GET_PR(domain,idx) & mask ? "P" : " ");
     DEBUG_PRINTF(" %s", Exti_Has_Callback(idx) ? "Cb" : "  ");
     if ( mask & EXTI_IS_CFGABLE(idx) ) {
       DEBUG_PRINTF(" %s %s", GET_RTSR(idx) & mask ? "Rise" : "    ", GET_FTSR(idx) & mask ? "Fall" : "    " );
@@ -433,7 +470,7 @@ static void DBG_dump_one_exti(uint32_t idx )
         DBG_n_spaces(10);
     }
 
-    if ( mask & EXTI_IS_GPIO(idx) ) {
+    if ( EXTI_IS_GPIO(idx) ) {
         DEBUG_PRINTF(" P%c",DBG_get_exti_pinsource(idx));
         print_dec_number ( idx, 2, true);
     } else {
@@ -444,18 +481,23 @@ static void DBG_dump_one_exti(uint32_t idx )
 
   }
 }
-
-void DBG_dump_exti_config(void)
+/******************************************************************************
+ * STM32L4xx : Domain  = 0
+ * STM32H7xx : Domain  = 0 .. 2 ( D1, D2 and D3 domains )
+ *****************************************************************************/
+void DBG_dump_exti_config(uint32_t exti_domain)
 {
     uint32_t i;
+    
+    if ( exti_domain >= EXTI_MAXDOMAIN ) return;
 
-    DEBUG_PUTS  ("EXTI Settings ------------------------------------------------------------");
+    DEBUG_PRINTF("%s Settings ---------------------------------------------------------\n", exti_domain_name[exti_domain]);
     int oldIndent = DBG_setIndentRel(+2);
 
     for ( i = 0; i <= EXTI_MAXNUM/2; i++ )
     {
-      DBG_dump_one_exti(i); DEBUG_PRINTF("  |  " );
-      if ( i+EXTI_MAXNUM/2+1 <= EXTI_MAXNUM ) DBG_dump_one_exti(i+EXTI_MAXNUM/2+1); 
+      DBG_dump_one_exti(exti_domain,i); DEBUG_PRINTF("  |  " );
+      if ( i+EXTI_MAXNUM/2+1 <= EXTI_MAXNUM ) DBG_dump_one_exti(exti_domain, i+EXTI_MAXNUM/2+1); 
       DEBUG_PRINTF("\n" );
     }
  
@@ -478,6 +520,7 @@ const char * const sys_nvic_name[]= {
   "",           "",           "",           "SVCall",     "DebugMon",   "",           "PendSV",     "SysTick"
 };
 
+#if defined(STM32L476xx) || defined(STM32L496xx)
 const char * const user_nvic_name[]= { 
 /*.                 .                 .                 .                 .                 .                 .                 . */
   "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
@@ -493,7 +536,33 @@ const char * const user_nvic_name[]= {
   "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "CAN2_TX",        "CAN2_RX0", 
   "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
 };
-
+#elif defined(STM32H745xx)
+const char * const user_nvic_name[]= { 
+/*.                 .                 .                 .                 .                 .                 .                 . */
+  "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+  "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
+  "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
+  "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
+  "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+  "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#4",
+  "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+  "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
+  "M7_SEV",         "M4_SEV",         "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",       "USART6",
+  "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
+  "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
+  "LTDC",           "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",        "I2C4_ER",
+  "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",     "HRTIM1_TIMA",
+  "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   "DFSDM1_FILT2",
+  "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",     "MDIOS", 
+  "JPEG",           "MDMA",           "DSI",            "DSI_WKUP",       "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
+  "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       "BDMA_CH7",
+  "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       "CRS",
+  "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
+};
+#else
+    #error "No NVIC Line definitions for current MCU"
+    const char * const exti_line_name[]= {};
+#endif
 /*
  *************************************************************
  * @brief Fill in the EXTI Line name
