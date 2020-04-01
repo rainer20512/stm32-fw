@@ -116,7 +116,7 @@ int main(void)
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
     /* Wait until CPU2 boots and enters in stop mode or timeout*/
-    timeout = 0xFFFFF;
+    timeout = 0xFFFFFF;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
     if ( timeout < 0 )
     {

@@ -24,7 +24,7 @@
       c_user_include_directories="./CM4/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM4_Peripherals.xml"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM4_MemoryMap.xml"
-      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
+      linker_section_placement_file="$(ProjectDir)/flash_placement_CM4.xml"
       macros="DeviceVectorsFile=STM32H745xx.vec"
       project_directory=""
       project_type="Executable"
@@ -52,6 +52,7 @@
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="CM4/Inc/system/ram_preset.inc" />
+      <file file_name="flash_placement_CM4.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="EWARM">
@@ -172,7 +173,7 @@
       c_user_include_directories="./CM7/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM7_Peripherals.xml"
       linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM7_MemoryMap.xml"
-      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
+      linker_section_placement_file="$(ProjectDir)/flash_placement_CM7.xml"
       macros="DeviceVectorsFile=STM32H745xx.vec"
       project_directory=""
       project_type="Executable"
@@ -195,7 +196,7 @@
     <folder Name="System Files">
       <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
-      <file file_name="flash_placement.xml" />
+      <file file_name="flash_placement_CM7.xml" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
     </folder>
     <folder Name="Application">
