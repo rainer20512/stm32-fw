@@ -124,7 +124,7 @@ static void delayUs(uint16_t micros)
 uint32_t delayUs ( uint32_t micros )
 {
     uint32_t k = 0;
-    for ( uint32_t j=0; j < micros * 150; j++ ) {
+    for ( uint32_t j=0; j < micros * 100; j++ ) {
         k += j;
         asm("nop");
     }

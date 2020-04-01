@@ -15,7 +15,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-//#include "system/clockconfig.h"
+#include "system/clockconfig.h"
 #include "config/devices_config.h"
 #include "interpreters.h"
 #include "debug_helper.h"
@@ -86,10 +86,11 @@ const InterpreterModuleT mdl##name =  {pmt##name, cmd##name, sizeof(cmd##name) /
 #include "debug_sram.h"
 #include "debug_gpio_exti.h"
 
-#if 0 
-#include "debug_pwr_rcc.h"
-
 void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
+
+ 
+// #include "debug_pwr_rcc.h"
+
 
 /*********************************************************************************
   * @brief  Submenu to dump system config
@@ -105,6 +106,7 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
   uint32_t ret;
 
   switch( (uint32_t)arg )  {
+#if 0
     case 0:
       DBG_dump_clocksetting();
       break;
@@ -127,6 +129,7 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
       for ( uint32_t i = 0; i < 5; i++ )
          Config_Menu( cmdline, len, VOID(i) );
       break;
+#endif
     case 7:
       if ( CMD_argc() < 1 ) {
           printf("Usage: 'SetSysClk nn \n");
@@ -142,7 +145,7 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
       break;
     case 9:
       if ( CMD_argc() < 1 ) {
-          printf("Usage:MCO output <n>, 0=Off, 1=SYSCLK, 2=MSI, 3=HSI, 4=HSE, 5=PLL, 6=LSE, 7=LSI");
+          printf("Usage:MCO output <n>, 0=Off, 1=HSI, 2=LSE, 3=HSE, 4=PLL1Q, 5=HSI48");
           return false;
       }
       CMD_get_one_word( &word, &wordlen );
@@ -163,6 +166,7 @@ static const char *pmtClkCfg (void)
 }
 
 static const CommandSetT cmdClkCfg[] = {
+#if 0
   { "Clock",     ctype_fn, {Config_Menu},  VOID(0), "Show clocksettings" },
   { "RTCClock",  ctype_fn, {Config_Menu},  VOID(1), "Show RTC clocksettings" },
   { "Power",     ctype_fn, {Config_Menu},  VOID(2), "Show powersettings" },
@@ -170,12 +174,13 @@ static const CommandSetT cmdClkCfg[] = {
   { "PeriCfg",   ctype_fn, {Config_Menu},  VOID(4), "Show peripheral clock configuration"  },
   { "SleepClk",  ctype_fn, {Config_Menu},  VOID(5), "Show peripheral clock settings in sleep mode"  },
   { "All",       ctype_fn, {Config_Menu},  VOID(6), "Show Items 0) to 4) "  },
+#endif
   { "SetSysClk", ctype_fn, {Config_Menu},  VOID(7), "Set system clock to predefined settings"  },
   { "Calib-HSI", ctype_fn, {Config_Menu},  VOID(8), "Calibrate HSI Clock"  },
   { "MCO output",ctype_fn, {Config_Menu},  VOID(9), "Activate MCO Output PA8" },
 };
 ADD_SUBMODULE(ClkCfg);
-#endif
+
   void DBG_init_pin(char portletter, uint8_t portnum, uint32_t speed, uint32_t pupd_status, uint32_t init);
   void DBG_deinit_pin(char portletter, uint8_t portnum);
 
@@ -2149,7 +2154,7 @@ static const CommandSetT cmdBasic[] = {
   { "Version",         ctype_fn,  .exec.fn = RFM_Menu,        VOID(6),  "Show system status"  },
 #endif
 #if DEBUG_FEATURES > 0 
-// RHB toDo  { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
+  { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
 #endif
 #if USE_RFM12 > 0 || USE_RFM69 > 0

@@ -6,13 +6,38 @@ reset_handler:
 
 // RHB chgd: Preset all RAM with an uniform pattern
 #ifdef DO_RAM_PRESET
+  #include "system/ram_preset.inc"
+#endif
+// end of inserted code
+
+#ifndef __NO_SYSTEM_INIT
+  ldr r0, =__RAM_segment_end__
+  mov sp, r0
+  bl SystemInit
+#endif
+
+Under system/ram_preset.inc a code snippet must be provided, that will do the ram preset for the target processor
+for STM32L4xx eg this could be
+
+8x-----------------------------------------------------------------------------
+/******************************************************************************
+ * code for a RAM preset. this code is included by STM32_Startup.s, so no
+ * section or global definitions are neccessary
+ * 
+ * This file : RAM  preset for STM32L4xx
+ *   - Preset RAM  and SRAM2 
+ *
+ * Store this file under on dir, that is contained in the include search path
+ * with the subpath/name "system/ram_preset.s"
+ * 
+ ******************************************************************************
+ */
 
   movw r2, RAM_PRESET_VALUE & 0xFFFF
   movt r2, RAM_PRESET_VALUE >> 16
 
   ldr r0, =__SRAM2_segment_start__
   ldr r1, =__SRAM2_segment_end__
-
 r00:
   cmp r0, r1
   beq r01
@@ -21,7 +46,7 @@ r00:
   b r00
 
 r01:
-  ldr r0, =___non_init_start__
+  ldr r0, =__non_init_start__
   ldr r1, =__RAM_segment_end__
 
 r02:
@@ -32,14 +57,7 @@ r02:
   b r02
 
 r03:
-#endif
-// end of inserted code
-
-#ifndef __NO_SYSTEM_INIT
-  ldr r0, =__RAM_segment_end__
-  mov sp, r0
-  bl SystemInit
-#endif
+--------------------------------------------------------------------------x8
 
 002: Anderen Target-Prozessor auswählen
 ---------------------------------------

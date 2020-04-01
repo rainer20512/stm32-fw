@@ -28,6 +28,7 @@
 
 #define HW_HAS_HSE
 #define HW_HAS_HSE_BYPASS
+#define HW_HSE_FREQ         8000000
 /*
  ********************************************************************************
  * Application selection
@@ -68,23 +69,26 @@
 #define BBSPI_IRQ_PRIO      0x0c         // Give BBSPI the next lowest
 #define BUTTON_IRQ_PRIO     0x0c         // Give push buttons the same prio as BBSPI input
 #define ADC_IRQ_PRIO        0x08         // ADC also has high prio due to high conversion rates
-#define EXTI_IRQ_PRIO       0x05         // Give Pin Change the third highest
-#define I2C_IRQ_PRIO        0x04         // Give I2C a high prio
-#define CAN_IRQ_PRIO        0x03         // Give CAN a very high prio
-#define RTC_IRQ_PRIO        0x01         // RTC has the next higher prio
-#define BASETIM_IRQ_PRIO    0x00         // Give the base timer the highest possible priority
+#define EXTI_IRQ_PRIO       0x06         // Give Pin Change the third highest
+#define I2C_IRQ_PRIO        0x05         // Give I2C a high prio
+#define CAN_IRQ_PRIO        0x04         // Give CAN a very high prio
+#define RTC_IRQ_PRIO        0x03         // RTC has the next higher prio
+#define BASETIM_IRQ_PRIO    0x02         // Give the base timer the highest possible priority
 
 #define DEFAULT_STOP_MODE   2
 
 #define FSK_CARRIER_FREQUENCY	433.450
 
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG2_08MHZ_1WS   /*  8 MHz, source MSI, Vrange2, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_HSE_VRNG1_08MHZ_0WS   /*  8 MHz, source HSE, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
-#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ_2WS   /* 48 MHz, source MSI, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_08MHZ_0WS    /*   8 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_16MHZ_0WS    /*  16 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_32MHZ_0WS    /*  32 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_64MHZ_1WS    /*  64 MHz, source HSI, VOSrange3, 1 WS */
+#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_100MHZ_1WS   /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_200MHZ_2WS   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_300MHZ_2WS   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_400MHZ_3WS   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG0_480MHZ_4WS   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage */
+//#define USER_CLOCKCONFIG         CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
 
 /******************************************************************************
  * Check and set constraints for Temperarure, Humidity and Pressure sensors

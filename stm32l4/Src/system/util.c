@@ -9,6 +9,7 @@
 
 #include "config/config.h"
 #include "debug_helper.h"
+#include "system/tm1637.h"
 
 /******************************************************************************
  * gleitende Mittelung mit exponentieller Relaxation mit variablem n
@@ -81,6 +82,12 @@ void Error_Handler(char *file, int line)
     // BSP_LED_Toggle(LED2); 
     DEBUG_PRINTF("Increments per second=%u\n",My_Delay(1000)); 
   }  
+}
+
+void Error_Handler_XX(int32_t code, char *file, int line)
+{
+    TM1637_displayInteger(code,0,99);
+    Error_Handler( file, line );
 }
 
 #ifdef  USE_FULL_ASSERT

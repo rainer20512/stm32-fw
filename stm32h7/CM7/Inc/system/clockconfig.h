@@ -6,25 +6,18 @@
   *          frequencies and correct Vcore settings and NVM Wait states
   *
   *          Available configurations
-  *          1.  MSI-Clock based with parameterized clk value between 65kHz
-  *              and 4 MHz, Vcore       Range 3, 0 WS
-  *          2.  HSE Bypass mode, 8MHz, Range 2, 0 WS
+  *          1.  HSI-Clock based with 8,16,32,64 MHZ
+  *              VOS range3        0 WS ( 8,16,32 ) 1 WS(64)
+  *          2.  HSE configurable, Range 3, 0 WS
   *              ( this is specially for Nucleo-Boards ) 
-  *          3a. HSI based, 16MHz,      Range 2, 1 WS
-  *          3b. HSI based, 16MHz,      Range 1, 0 WS
-  *          4.  PLL/HSI based, 32MHz,  Range 1, 1 WS
+  *          4.  PLL/HSI or HSE based, 
+  *              64-480MHz,  Range 0 or 1, 0 .. 5 WS
   *         
-  * @note    In every configuration there are only identical clock values for
-  *          all types of sore clocks ( SYSCLK, HCLK, APB1 and APB2 CLK ) 
+  * @note    As long as SYSCLK is below 120MHz, sysclk and all perpheral clocks are equal
+  *          As long as SYSCLK is below 240MHz, sysclk and AHB clock are equal,
+  *             ABP clocks are Sysclk/2
+  *          When SYSCLK > 240MHz, AHB clocks are SYSCLK/2, APB clocks are SYSCLK/4
   *
-  ******************************************************************************
-  * Coarse Performance estimation
-  * MSI  2MHZ Clocks, Scale 3, 0WS :  63700 Increments per second
-  * MSI  4MHZ Clocks, Scale 3, 0WS : 129200 Increments per second
-  * HSE  8MHZ Clocks, Scale 2, 0WS : 248100 Increments per second
-  * HSI 16MHZ Clocks, Scale 2, 1WS : 430300 Increments per second
-  * HSI 16MHZ Clocks, Scale 1, 0WS : 498000 Increments per second
-  * PLL 32MHZ Clocks, Scale 1, 0WS : 862200 Increments per second
   ******************************************************************************
   */
 
@@ -49,23 +42,23 @@
  ******************************************************************************
  Define some common clock configurations, so all the neccessary clock settings
  can be done by configuration byte
+ Note: Do not use PLL with HSI as input at higher frequencies, this will lead
+       to unpredictable results / hanging system
  ******************************************************************************
  */
 typedef enum {
-  CLK_MSI_VRNG1_08MHZ_0WS =  0, /*  8 MHz, source MSI, Vrange1, 0 WS */
-  CLK_MSI_VRNG2_08MHZ_1WS =  1, /*  8 MHz, source MSI, Vrange2, 1 WS */
-  CLK_HSE_VRNG1_08MHZ_0WS =  2, /*  8 MHz, source HSE, Vrange1, 0 WS */
-  CLK_HSE_VRNG2_08MHZ_1WS =  3, /*  8 MHz, source HSE, Vrange2, 1 WS */
-  CLK_HSI_VRNG1_16MHZ_0WS =  4, /* 16 MHz, source HSI16, Vrange1, 0 WS */
-  CLK_HSI_VRNG2_16MHZ_2WS =  5, /* 16 MHz, source HSI16, Vrange2, 2 WS */
-  CLK_MSI_VRNG1_16MHZ_0WS =  6, /* 16 MHz, source MSI, Vrange1, 0 WS */
-  CLK_MSI_VRNG2_16MHZ_2WS =  7, /* 16 MHz, source MSI, Vrange2, 2 WS */
-  CLK_MSI_VRNG1_24MHZ_1WS =  8, /* 24 MHz, source MSI, Vrange1, 1 WS */
-  CLK_MSI_VRNG2_24MHZ_3WS =  9, /* 24 MHz, source MSI, Vrange2, 3 WS */
-  CLK_MSI_VRNG1_32MHZ_1WS = 10, /* 32 MHz, source MSI, Vrange1, 1 WS */
-  CLK_MSI_VRNG1_48MHZ_2WS = 11, /* 48 MHz, source MSI, Vrange1, 2 WS */
-  CLK_PLL_VRNG1_64MHZ_3WS = 12, /* 64 MHz, source PLL with HSI, Vrange1, 3 WS */
-  CLK_PLL_VRNG1_80MHZ_4WS = 13, /* 48 MHz, source PLL with HSI, Vrange1, 4 WS */
+  CLK_HSI_VRNG3_08MHZ_0WS =  0, /*  8 MHz, source HSI, VOSrange3, 0 WS */
+  CLK_HSI_VRNG3_16MHZ_0WS,      /* 16 MHz, source HSI, VOSrange3, 0 WS */
+  CLK_HSI_VRNG3_32MHZ_0WS,      /* 32 MHz, source HSI, VOSrange3, 0 WS */
+  CLK_HSI_VRNG3_64MHZ_1WS,      /* 64 MHz, source HSI, VOSrange3, 1 WS */
+  CLK_PLL_VRNG1_100MHZ_1WS,     /* 100 MHz,source PLL with HSE, VOSrange1, 1 WS */
+  CLK_PLL_VRNG1_200MHZ_2WS,     /* 200 MHz,source PLL with HSE, VOSrange1, 2 WS */
+  CLK_PLL_VRNG1_300MHZ_2WS,     /* 300 MHz,source PLL with HSE, VOSrange1, 2 WS */
+  CLK_PLL_VRNG1_400MHZ_3WS,     /* 300 MHz,source PLL with HSE, VOSrange1, 3 WS */
+  CLK_PLL_VRNG0_480MHZ_4WS,     /* 480 MHz,source PLL with HSE, VOSrange0, 4 WS */
+#if defined(HW_HAS_HSE)
+  CLK_HSE_VRNG3_xxMHZ_0WS,      /*  xx MHz, source HSE, Vrange1, 0 WS */
+#endif
 
 } CLK_CONFIG_T;
 

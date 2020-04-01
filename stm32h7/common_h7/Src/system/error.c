@@ -2,6 +2,7 @@
 #include "hardware.h"
 #include "debug_helper.h"
 #include "system/tm1637.h"
+#include "FreeRTOSConfig.h"
 
 uint32_t My_Delay(uint32_t waittime )
 {
@@ -54,4 +55,13 @@ void assert_failed(uint8_t *file, uint32_t line)
   {
   }
 }
+#endif
+
+#if configCHECK_FOR_STACK_OVERFLOW > 0 
+    #include "FreeRTOS.h"
+    #include "task.h"
+    void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
+    {
+        Error_Handler_XX(-200, __FILE__, __LINE__ );
+    }
 #endif

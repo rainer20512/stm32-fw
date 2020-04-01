@@ -206,7 +206,7 @@ void task_handle_qspi (uint32_t);
 /* Stack sizes are in 32bit words */
 #define TMR_STACK_SIZE  256
 #define RTC_STACK_SIZE  256
-#define CMD_STACK_SIZE  128
+#define CMD_STACK_SIZE  256
 #define OUT_STACK_SIZE  256
 #define PER_STACK_SIZE  256
 #define ADC_STACK_SIZE  128

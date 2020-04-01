@@ -139,8 +139,21 @@ int main(void)
 
     STATUS(0);
 
+    // Switch LSE Clock on 
+    LSEClockConfig(true, true);
+
+    /* configure "simulated EEPROM" in flash and read config settings */
+    Config_Init();
+
+    /* 
+    * Select clock source as configured in config variable, 
+    * switch off MSI clock if no longer used
+    */
+    SystemClock_SetConfiguredClock();
+    STATUS(11);
+
     /* Configure the system clock to 400 MHz */
-    SystemClock_Config();
+    // SystemClock_Config();
 
     BSP_LED_Init(LED1);
     BSP_LED_Init(LED2);
@@ -156,8 +169,6 @@ int main(void)
         ProfilerInitTo(JOB_TASK_INIT);
     #endif
 
-    /* configure "simulated EEPROM" in flash and read config settings */
-    Config_Init();
     STATUS(2);
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
@@ -182,7 +193,9 @@ int main(void)
     }
 
     // RHB todo DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
-    DEBUG_PRINTF("SYSCLK = %d\n", HAL_RCC_GetSysClockFreq() ); 
+    DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
+    DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
+    DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );
     Init_OtherDevices();
     STATUS(5);
 
