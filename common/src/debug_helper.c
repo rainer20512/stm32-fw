@@ -77,6 +77,17 @@ void DBG_strpadright(const char *text, uint32_t desiredlen, char padchar )
   }
 }
 
+void DBG_strpadright2(const char *text1, const char *text2, uint32_t desiredlen, char padchar )
+{
+  int padlen = desiredlen - strlen(text1) - strlen(text2) - 1;
+  DEBUG_PRINTF("%s %s", text1, text2);
+  if ( padlen > 0 ) {
+    for ( int i=0; i < padlen; i++ )
+      DEBUG_PUTC(padchar);
+  }
+}
+
+
 void DBG_printf_indent(const char *format, ...)
 {
   DBG_do_indent();
@@ -151,6 +162,14 @@ void DBG_dump_bitvalue(const char *text, uint32_t regval, uint32_t bitval )
   DBG_strpadright(text, myDesiredLen, '.');
   DEBUG_PRINTF(" %s\n", regval & bitval ? "Yes" : "No");
 }
+
+void DBG_dump_bitvalue2(const char *text1, const char *text2, uint32_t regval, uint32_t bitval ) 
+{
+  DBG_do_indent();
+  DBG_strpadright2(text1, text2, myDesiredLen, '.');
+  DEBUG_PRINTF(" %s\n", regval & bitval ? "Yes" : "No");
+}
+
 
 void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval ) 
 {

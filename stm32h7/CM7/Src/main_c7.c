@@ -96,14 +96,23 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
 #define STATUS(i)   TM1637_displayInteger(i,0,99)
 int main(void)
 {
+
     int32_t timeout;
     BaseType_t x;
+   
+    /* 
+     * STM32H745 Nucleo does only support SMPS. So select once at startup 
+     * and do not touch again. Due to this, VOS scale0 is inhibited and
+     * max SYSCLK is 400MHZ.
+     */
+    HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
 
     TM1637PinT clk = { GPIOA, 3 };
     TM1637PinT dio = { GPIOC, 0 };
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
+
 
     /* MPU Configuration */
     MPU_Config();
@@ -191,8 +200,7 @@ int main(void)
     xDataMessageBuffers[ x ] = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, &ucStorageBuffer[x][0], &xStreamBufferStruct[x]);
     configASSERT( xDataMessageBuffers[ x ] );
     }
-
-    // RHB todo DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
+    DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
     DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );

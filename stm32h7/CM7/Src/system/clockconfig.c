@@ -103,30 +103,30 @@ void ClockReconfigureAfterStop(void)
  * @note flash_khz is the AXI clock, which is limited to 240MHz
  *******************************************************************************
  */
-static uint32_t GetFlashLatency( uint8_t vrange, uint32_t flash_khz )
+static uint32_t GetFlashLatency( uint32_t vrange, uint32_t flash_khz )
 {  
     uint32_t flash_latency;
 
-    if ( vrange > 0 && flash_khz > 225000 ) {
+    if ( vrange > 0 && flash_khz > 240000 ) {
         Error_Handler_XX(-2, __FILE__, __LINE__); 
         flash_latency = FLASH_LATENCY_4;
     } else {
         switch ( vrange ) {
-        case 0:
-        case 1:
+        case PWR_REGULATOR_VOLTAGE_SCALE0:
+        case PWR_REGULATOR_VOLTAGE_SCALE1:
               if      ( flash_khz > 225000 ) flash_latency = FLASH_LATENCY_4;
               else if ( flash_khz > 210000 ) flash_latency = FLASH_LATENCY_3;
               else if ( flash_khz > 140000 ) flash_latency = FLASH_LATENCY_2;
               else if ( flash_khz > 70000  ) flash_latency = FLASH_LATENCY_1;
               else                     flash_latency = FLASH_LATENCY_0;
             break;
-        case 2:
+        case PWR_REGULATOR_VOLTAGE_SCALE2:
               if      ( flash_khz > 165000 ) flash_latency = FLASH_LATENCY_3;
               else if ( flash_khz > 110000 ) flash_latency = FLASH_LATENCY_2;
               else if ( flash_khz > 55000  ) flash_latency = FLASH_LATENCY_1;
               else                     flash_latency = FLASH_LATENCY_0;
             break;
-        case 3:
+        case PWR_REGULATOR_VOLTAGE_SCALE3:
               if      ( flash_khz > 180000 ) flash_latency = FLASH_LATENCY_4;
               else if ( flash_khz > 135000 ) flash_latency = FLASH_LATENCY_3;
               else if ( flash_khz > 90000  ) flash_latency = FLASH_LATENCY_2;
@@ -217,8 +217,6 @@ static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_C
         switch ( i ) {
            case 1:
               /* Adjust Vcore */
-              /*!< Supply configuration update enable */
-              HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
               __HAL_PWR_VOLTAGESCALING_CONFIG(reg_scale);
               while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY));
               break;
@@ -294,6 +292,35 @@ static void ConfigureHSI(RCC_OscInitTypeDef *RCC_OscInitStruct, uint32_t hsi_khz
     }
 }
 
+/******************************************************************************
+ * Switch HSI clock off
+ *****************************************************************************/
+static void SwitchOffHSI(RCC_OscInitTypeDef *osc)
+{
+    memset(osc, 0, sizeof(RCC_OscInitTypeDef));
+    
+    osc->OscillatorType = RCC_OSCILLATORTYPE_HSI;
+    osc->HSIState = RCC_HSI_OFF;
+    if (HAL_RCC_OscConfig(osc)!= HAL_OK)
+    {
+        Error_Handler_XX(-6, __FILE__, __LINE__ );
+    }
+}
+
+/******************************************************************************
+ * Switch PLL  off
+ *****************************************************************************/
+static void SwitchOffPLL(RCC_OscInitTypeDef *osc)
+{
+    memset(osc, 0, sizeof(RCC_OscInitTypeDef));
+    
+    osc->PLL.PLLState   = RCC_PLL_OFF;
+    if (HAL_RCC_OscConfig(osc)!= HAL_OK)
+    {
+        Error_Handler_XX(-4, __FILE__, __LINE__ );
+    }
+}
+
 
 /* Public functions ---------------------------------------------------------*/
 
@@ -336,7 +363,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
      * At this "low" frequencies AHB clock frq = sysclk, so we can safely use sysclk 
      * as flash clock parameter for GetFlashLatency()
      */
-    uint32_t flash_latency=GetFlashLatency(3, hsi_khz);
+    uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, hsi_khz);
 
     /* configure HSI Oscillator */
     ConfigureHSI(& RCC_OscInitStruct, hsi_khz);
@@ -346,26 +373,15 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
 
     DoClockTransition ( hsi_khz, &RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -6);
   
-    /* Select HSI as WakeUp clock */
+    /* Switch off PLL in any case */
+    SwitchOffPLL(&RCC_OscInitStruct);
+
+   /* Select HSI as WakeUp clock */
     CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 }
 
 
 
-/******************************************************************************
- * Switch MSI clock off
- *****************************************************************************/
-static void SwitchOffHSI(void)
-{
-    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-    RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-    {
-        Error_Handler_XX(-6, __FILE__, __LINE__ );
-    }
-}
 
 /* HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- 
  * The following #ifdef-block requires an HSE oscillator being functional, either
@@ -401,7 +417,7 @@ static void SwitchOffHSI(void)
          Error_Handler_XX(-12, __FILE__, __LINE__); 
 
       if ( bSwitchOffHSI ) {
-        SwitchOffHSI();
+        SwitchOffHSI(&RCC_OscInitStruct);
       }
     }
 
@@ -437,18 +453,21 @@ static void SwitchOffHSI(void)
        * At this "low" frequencies AHB clock frq = sysclk, so we can safely use sysclk 
        * as flash clock parameter for GetFlashLatency()
        */
-      uint32_t flash_latency=GetFlashLatency(3, HW_HSE_FREQ/1000);
+      uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, HW_HSE_FREQ/1000);
       DoClockTransition(HW_HSE_FREQ/1000, &osc, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -5);
 
       /* Disable HSI Oscillator, if desired */
       if ( bSwitchOffHSI ) {
-        SwitchOffHSI();
+        SwitchOffHSI(&osc);
         /* CSI as Wakeup clock */
         SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
       } else {
         /* HSI as Wakeup clock */
         CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
       }
+
+      /* Switch off PLL in any case */
+      SwitchOffPLL(&osc);
 
       /* LSE has to be restored after stop */
       bClockSettingVolatile = true;         
@@ -522,7 +541,7 @@ static void SystemClock_PLL_xxMHz_Vrange_01_restore (uint32_t xxkhz, bool bSwitc
      Error_Handler_XX(-12, __FILE__, __LINE__); 
 
   if ( bSwitchOffHSI ) {
-    SwitchOffHSI();
+    SwitchOffHSI(&RCC_OscInitStruct);
   }
 }
 
@@ -589,7 +608,9 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   uint32_t ahb_clock_khz = SetPredividers( &RCC_ClkInitStruct, pll_khz );
 
   /* Set VOS range to 0 when ahb clock > 225 MHz */
-  uint32_t vosrange = ( ahb_clock_khz > 225000 ? 0 :  1 );
+  /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
+  /* For lower frequencies, select scale 2, scake 1 only for high requencies */
+  uint32_t vosrange = ( ahb_clock_khz > 220000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
 
   /* calculate neccessary minimum flash latency */
   uint32_t flash_latency = GetFlashLatency(vosrange, ahb_clock_khz);
@@ -620,7 +641,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   /* Disable MSI Oscillator, if desired */
   if ( bSwitchOffOther ) {
     if ( bUseHSE ) {
-        SwitchOffHSI();
+        SwitchOffHSI(&RCC_OscInitStruct);
         /* CSI as Wakeup clock */
         SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
     } else {

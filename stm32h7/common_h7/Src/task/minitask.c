@@ -1,7 +1,7 @@
 
 /**
  ******************************************************************************
- * @file    "minitask.v" 
+ * @file    "minitask.c" 
  * @author  Rainer
  * @brief   Primitive Task functions
  * 
@@ -28,7 +28,7 @@
 
 /* the maximum number of task is defined by the number of bits in the 
    following variables. */
-#define MAX_TASK            32
+#define MAX_TASK            16
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct {
@@ -197,27 +197,47 @@ void TaskNotifyFromISR ( uint32_t num )
 
 
 #if DEBUG_MODE > 0
+
+static TaskStatus_t taskstatus[MAX_TASK];
+
+const char * TaskStateTxt[] = { "Running", "Ready  ", "Blocked", "Suspend", "Deleted", "Invalid", };
+static const char* TaskState( uint32_t state )
+{
+    if ( state > sizeof(TaskStateTxt) / sizeof(const char *) ) 
+        return "???????";
+    else
+        return TaskStateTxt[state];
+}
+
 void TaskDumpList(void)
 {
     uint32_t i;
     uint32_t mask;
 
-    DEBUG_PUTS  ("Task List ----------------------------------------------------------------");
+    UBaseType_t num = uxTaskGetNumberOfTasks(  );
 
+    DEBUG_PRINTF  ("Task List (%2d Tasks)----------------------------------------------------\n", num);
+    if ( num > MAX_TASK ) {
+        DEBUG_PUTS("Too many tasks");
+        return;
+    }   
+
+    uxTaskGetSystemState( taskstatus, MAX_TASK, NULL );
     int oldIndent = DBG_setIndentRel(+2);
-    DBG_printf_indent(" ID          Name");
+    DBG_printf_indent(" No Prio St                 Name  HighWaterMark");
     #if DEBUG_PROFILING > 0
         DBG_printf_indent("           Consumed time");
         DBG_setPadLen(20);
     #endif
     DEBUG_PRINTF("\n");
 
-    for ( i = 0, mask=1; i < MAX_TASK; i++, mask <<= 1 ) if ( tasks[i].Run ) {
-        DBG_printf_indent("%3d",i);
+    for ( i = 0; i < num; i++ ) {
+        
+        DBG_printf_indent("%3d %4d %7s",i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState) );
+        DEBUG_PRINTF(" %15s %4d",  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
         #if DEBUG_PROFILING > 0
             ProfilerDumpTime( ProfilerTimes[tasks[i].PrID], (char *)tasks[i].Name);
         #else
-            DBG_printf_indent("   %20s",i, tasks[i].Name);
             DEBUG_PRINTF("\n");
         #endif
     }

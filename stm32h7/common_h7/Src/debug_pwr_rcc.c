@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    debug_util.c
+  * @file    debug_pwr_rcc.c
   * @author  Rainer
   * @brief   Miscellaneous tools for debug output
   *
@@ -15,7 +15,7 @@
 
 #include "debug.h"
 
-#if DEBUG_FEATURES > 0 && 0
+#if DEBUG_FEATURES > 0 
 
 #include "hardware.h"
 
@@ -26,6 +26,9 @@
 #include "debug_helper.h"
 #include "rtc.h"
 
+#define DEBUG_DUMP_PWR      1
+#define DEBUG_DUMP_CLOCK    1
+#define DEBUG_DUMP_PERCLK   0
 
 /*
  *************************************************************
@@ -40,8 +43,8 @@
  *************************************************************
  */
 
-const char * const vos_txt[]={"Illegal","Range 1: 1.2V","Range 2: 1.0V","Illegal"};
-static const char* DBG_get_pwr_cr1_vos_txt(uint32_t sel)
+const char * const vos_txt[]={"Reserved","Scale 3: 0.95V - 1.05V", "Scale 2: 1.05V - 1.15V","Scale 1: 1.15V - 1.26V"};
+static const char* DBG_get_pwr_vos_txt(uint32_t sel)
 {
   if ( sel < sizeof(vos_txt)/sizeof(char *) ) 
     return vos_txt[sel];
@@ -56,9 +59,26 @@ static const char* DBG_get_pwr_cr1_lpms_txt(uint32_t sel)
     
   return lpms_txt[sel];
 }
+const char * als_txt[]={"1.7V", "2.1V", "2.5V", "2.8V" };
+static const char* get_pwr_cr1_als_txt(uint32_t sel)
+{
+  if ( sel < sizeof(als_txt)/sizeof(char *) ) 
+    return als_txt[sel];
+  else
+    return "Illegal";
+}
 
-const char * const pls_txt[]={"2.0V", "2.2V", "2.4V", "2.5V", "2.6V", "2.8V", "2.9V", "PB7 Ain" };
-static const char* DBG_get_pwr_cr2_pls_txt(uint32_t sel)
+const char * svos_txt[]={"Reserved", "Scale5", "Scale4", "Scale3" };
+static const char* get_pwr_cr1_svos_txt(uint32_t sel)
+{
+  if ( sel < sizeof(svos_txt)/sizeof(char *) ) 
+    return svos_txt[sel];
+  else
+    return "Illegal";
+}
+
+const char * const pls_txt[]={"1.95V", "2.1V", "2.25V", "2.4V", "2.55V", "2.7V", "2.85V", "PB7 Ain" };
+static const char* get_pwr_cr1_pls_txt(uint32_t sel)
 {
   if ( sel < sizeof(pls_txt)/sizeof(char *) ) 
     return pls_txt[sel];
@@ -67,109 +87,179 @@ static const char* DBG_get_pwr_cr2_pls_txt(uint32_t sel)
 }
 
 
+#if DEBUG_DUMP_PWR > 0
 static void DBG_dump_pwr_cr1(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_textvalue("LP Run Mode", READ_BIT(PWR->CR1, PWR_CR1_LPR) ? "LowPower Mode" : "Main Mode" );    
-  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt(( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos) );
-  DBG_dump_bitvalue("Disable BkUp Wr Protect ", PWR->CR1, PWR_CR1_DBP);
-  DBG_dump_textvalue("Low power Mode", DBG_get_pwr_cr1_lpms_txt(( PWR->CR1 & PWR_CR1_LPMS_Msk  ) >> PWR_CR1_LPMS_Pos) );
+  DBG_dump_bitvalue("Analog Voltage Det.lvl", PWR->CR1, PWR_CR1_AVDEN);
+  DBG_dump_textvalue("Analog Voltage Level", get_pwr_cr1_als_txt(( PWR->CR1 & PWR_CR1_ALS_Msk  ) >> PWR_CR1_ALS_Pos) );
+  DBG_dump_textvalue("Vscale in StopMode", get_pwr_cr1_svos_txt(( PWR->CR1 & PWR_CR1_SVOS_Msk  ) >> PWR_CR1_SVOS_Pos) );
+  DBG_dump_textvalue("Flash in D1 StopMode ", READ_BIT(PWR->CR1, PWR_CR1_FLPS) ? "LowPower Mode" : "Normal Mode" );
+  DBG_dump_bitvalue("Disable BkUp Wr Protect", PWR->CR1, PWR_CR1_DBP);
+  DBG_dump_bitvalue("Digital Voltage Det.lvl", PWR->CR1, PWR_CR1_PLS);
+  DBG_dump_textvalue("Digital Voltage Level", get_pwr_cr1_pls_txt(( PWR->CR1 & PWR_CR1_PLS_Msk  ) >> PWR_CR1_PLS_Pos) );
+  DBG_dump_textvalue("V.lvl in Stop@SVOS3", READ_BIT(PWR->CR1, PWR_CR1_LPDS) ? "LowPower Mode" : "Main Mode" );
 }
 
-static void DBG_dump_pwr_cr2(void)
+static void DBG_dump_pwr_csr1(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_bitvalue("VddUSB on", PWR->CR2, PWR_CR2_USV);
-  DBG_dump_bitvalue("VddIO2 on", PWR->CR2, PWR_CR2_IOSV);
-  DBG_dump_bitvalue("VddA  2.20V monitor", PWR->CR2, PWR_CR2_PVME4);
-  DBG_dump_bitvalue("VddA  1.62V monitor", PWR->CR2, PWR_CR2_PVME3);
-  DBG_dump_bitvalue("VddIO2 0.9V monitor", PWR->CR2, PWR_CR2_PVME2);
-  DBG_dump_bitvalue("VddUSB 1.2V monitor", PWR->CR2, PWR_CR2_PVME1);
-  DBG_dump_textvalue("Pwr voltage detect lvl", DBG_get_pwr_cr2_pls_txt(( PWR->CR2 & PWR_CR2_PLS_Msk  ) >> PWR_CR2_PLS_Pos) );
-  DBG_dump_bitvalue("Voltage detect enable", PWR->CR2, PWR_CR2_PVDE);
+  DBG_dump_textvalue("Analog Voltage Status", READ_BIT(PWR->CSR1, PWR_CSR1_AVDO) ? "< AV lvl" : ">= AV lvl" );
+  DBG_dump_textvalue("current VOS lvl", DBG_get_pwr_vos_txt((PWR->CSR1 & PWR_CSR1_ACTVOS_Msk) >> PWR_CSR1_ACTVOS_Pos));
+  DBG_dump_bitvalue( "VOS lvl valid ", PWR->CSR1, PWR_CSR1_ACTVOSRDY);
+  DBG_dump_textvalue("Digit. Voltage Status", READ_BIT(PWR->CSR1, PWR_CSR1_PVDO) ? "< V lvl" : ">= V lvl" );
 }
 
 static void DBG_dump_pwr_cr3(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_bitvalue("Internal WakeUp enabled", PWR->CR3, PWR_CR3_EIWUL);
-  DBG_dump_bitvalue("Apply GPIO PU/PD", PWR->CR3, PWR_CR3_APC);
-  DBG_dump_onoffvalue("SRAM2 pwr in Standby", PWR->CR3, PWR_CR3_RRS);
-  DBG_dump_bitvalue("Enable WakeUp Pin5", PWR->CR3, PWR_CR3_EWUP5);
-  DBG_dump_bitvalue("Enable WakeUp Pin4", PWR->CR3, PWR_CR3_EWUP4);
-  DBG_dump_bitvalue("Enable WakeUp Pin3", PWR->CR3, PWR_CR3_EWUP3);
-  DBG_dump_bitvalue("Enable WakeUp Pin2", PWR->CR3, PWR_CR3_EWUP2);
-  DBG_dump_bitvalue("Enable WakeUp Pin1", PWR->CR3, PWR_CR3_EWUP1);
+  DBG_dump_bitvalue("VddUSB rdy", PWR->CR3, PWR_CR3_USB33RDY);
+  DBG_dump_bitvalue("VddUSB Regulator on", PWR->CR3, PWR_CR3_USBREGEN);
+  DBG_dump_bitvalue("VddUSB V. detect on", PWR->CR3, PWR_CR3_USB33DEN);
+  DBG_dump_bitvalue("Ext. SMPS rdy", PWR->CR3, PWR_CR3_SMPSEXTRDY);
+  DBG_dump_textvalue("Vbat chrg resistor", READ_BIT(PWR->CR3, PWR_CR3_VBRS) ? "1k5" : "5k0" );
+  DBG_dump_bitvalue("Vbat chrg enable", PWR->CR3, PWR_CR3_VBE);
+  DBG_dump_bitvalue("SMPS stepdown enable", PWR->CR3, PWR_CR3_SMPSEN);
+  DBG_dump_bitvalue("LDO enable", PWR->CR3, PWR_CR3_LDOEN);
+  DBG_dump_bitvalue("PWR mgmt bypass", PWR->CR3, PWR_CR3_BYPASS);
 }
 
-static void DBG_dump_pwr_cr4(void)
+
+static void DBG_dump_pwr_cpu1cr(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_uint32_hex("PWR->CR4 raw", PWR->CR4);
-}
- 
-static void DBG_dump_pwr_sr1(void)
-{
-  DBG_setPadLen(24);
-  DBG_dump_bitvalue("Wkup Flag Internal", PWR->SR1, PWR_SR1_WUFI);
-  DBG_dump_bitvalue("Standby Flag", PWR->SR1, PWR_SR1_SBF);
-  DBG_dump_bitvalue("Wkup Flag 5", PWR->SR1, PWR_SR1_WUF5);
-  DBG_dump_bitvalue("Wkup Flag 4", PWR->SR1, PWR_SR1_WUF4);
-  DBG_dump_bitvalue("Wkup Flag 3", PWR->SR1, PWR_SR1_WUF3);
-  DBG_dump_bitvalue("Wkup Flag 2", PWR->SR1, PWR_SR1_WUF2);
-  DBG_dump_bitvalue("Wkup Flag 1", PWR->SR1, PWR_SR1_WUF1);
+  DBG_dump_textvalue("D3 Stop", READ_BIT(PWR->CPUCR, PWR_CPUCR_RUN_D3) ? "keep running" : "Stop when D1 stops" );    
+  DBG_dump_bitvalue("Hold CPU2 after Stop", PWR->CPUCR, PWR_CPUCR_HOLD2);
+  DBG_dump_bitvalue("D2 standby flag", PWR->CPUCR, PWR_CPUCR_SBF_D2);
+  DBG_dump_bitvalue("D1 standby flag", PWR->CPUCR, PWR_CPUCR_SBF_D1);
+  DBG_dump_bitvalue("System standby flag", PWR->CPUCR, PWR_CPUCR_SBF);
+  DBG_dump_bitvalue("System stop flag", PWR->CPUCR, PWR_CPUCR_STOPF);
+  DBG_dump_bitvalue("D2 on hold flag", PWR->CPUCR, PWR_CPUCR_HOLD2F);
+  DBG_dump_textvalue("D3 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D3) ? "allow Standby" : "continue StopMode" );    
+  DBG_dump_textvalue("D2 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D2) ? "allow Standby" : "continue StopMode" );    
+  DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
 }
 
-static void DBG_dump_pwr_sr2(void)
+static void DBG_dump_pwr_cpu2cr(void)
 {
   DBG_setPadLen(24);
-  if ( PWR->CR2 & PWR_CR2_PVME4 )   DBG_dump_bitvalue("VddA < 2.20V", PWR->SR2, PWR_SR2_PVMO4);
-  if ( PWR->CR2 & PWR_CR2_PVME3 )   DBG_dump_bitvalue("VddA < 1.62V", PWR->SR2, PWR_SR2_PVMO3);
-  if ( PWR->CR2 & PWR_CR2_PVME2 )   DBG_dump_bitvalue("VddIO2 < 0.9V", PWR->SR2, PWR_SR2_PVMO2);
-  if ( PWR->CR2 & PWR_CR2_PVME1 )   DBG_dump_bitvalue("VddUSB < 1.2V", PWR->SR2, PWR_SR2_PVMO1);
-  if ( PWR->CR2 & PWR_CR2_PVDE )    DBG_dump_bitvalue("Vdd < Threshold", PWR->SR2, PWR_SR2_PVDO);
-  DBG_dump_bitvalue("Vcore reg. in transit", PWR->SR2, PWR_SR2_VOSF);
-  DBG_dump_bitvalue("Vcore reg. LP mode", PWR->SR2, PWR_SR2_REGLPF);
-  DBG_dump_bitvalue("LP reg. ready", PWR->SR2, PWR_SR2_REGLPS);
+  DBG_dump_textvalue("D3 Stop", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_RUN_D3) ? "keep running" : "Stop when D2 stops" );    
+  DBG_dump_bitvalue("Hold CPU1 after Stop", PWR->CPU2CR, PWR_CPU2CR_HOLD1);
+  DBG_dump_bitvalue("D2 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D2);
+  DBG_dump_bitvalue("D1 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D1);
+  DBG_dump_bitvalue("System standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF);
+  DBG_dump_bitvalue("System stop flag", PWR->CPU2CR, PWR_CPU2CR_STOPF);
+  DBG_dump_bitvalue("D1 on hold flag", PWR->CPU2CR, PWR_CPU2CR_HOLD1F);
+  DBG_dump_textvalue("D3 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D3) ? "allow Standby" : "continue StopMode" );    
+  DBG_dump_textvalue("D2 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D2) ? "allow Standby" : "continue StopMode" );    
+  DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
 }
+
+static void DBG_dump_pwr_d3cr(void)
+{
+  DBG_setPadLen(24);
+  DBG_dump_textvalue("current VOS lvl", DBG_get_pwr_vos_txt((PWR->D3CR & PWR_D3CR_VOS_Msk) >> PWR_D3CR_VOS_Pos));
+  DBG_dump_bitvalue("VOS rdy", PWR->D3CR, PWR_D3CR_VOSRDY);
+}
+
+
+static void DBG_dump_pwr_wkupfr(void)
+{
+  DBG_setPadLen(24);
+  DBG_dump_bitvalue("WkUp via WKUP0 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG1);
+  DBG_dump_bitvalue("WkUp via WKUP1 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG2);
+  DBG_dump_bitvalue("WkUp via WKUP2 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG3);
+  DBG_dump_bitvalue("WkUp via WKUP3 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG4);
+  DBG_dump_bitvalue("WkUp via WKUP4 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG5);
+  DBG_dump_bitvalue("WkUp via WKUP5 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG6);
+}
+
+const char * const pupd_txt[]={"NoPull", "PU", "PD", "Resvd" };
+static const char* get_pupd_txt(uint32_t sel)
+{
+  if ( sel < sizeof(pupd_txt)/sizeof(char *) ) 
+    return pupd_txt[sel];
+  else
+    return "Illegal";
+}
+
+static void dump_one_wkup_pin( uint32_t ena, uint32_t pol, uint32_t pupd )
+{
+   DEBUG_PRINTF("%s %s %s\n",
+        ( ena ? "Enabled " : "Disabled" ),
+        ( pol ? "Falling" : "Rising "   ),
+        get_pupd_txt( pupd )
+   );
+}
+static void DBG_dump_pwr_wkupepr(void)
+{
+  DBG_setPadLen(24);
+  uint32_t ena_pos = PWR_WKUPEPR_WKUPEN1;
+  uint32_t pol_pos = PWR_WKUPEPR_WKUPP1;
+  uint32_t pupd_mask = PWR_WKUPEPR_WKUPPUPD1_Msk;
+  uint32_t pupd_pos = PWR_WKUPEPR_WKUPPUPD1_Pos;
+  register uint32_t reg = PWR->WKUPEPR;
+  for ( uint32_t i=0; i<6; i++ ) {
+    DBG_printf_indent("WkUp pin %d config: ",i);
+    dump_one_wkup_pin(reg & ena_pos, reg & pol_pos, (reg & pupd_mask ) >> pupd_pos);
+    ena_pos  <<= 1;
+    pol_pos  <<= 1;
+    pupd_mask <<= 2;
+    pupd_pos += 2;
+  }
+}
+
+#endif
 
 void DBG_dump_powersetting(void)
 {
   DEBUG_PUTS("PWR Settings ------------------------------------" );
   int oldIndent = DBG_setIndentRel(+2);
+  #if DEBUG_DUMP_PWR > 0
+      /********  PWR Control registers *****************/
+      DBG_printf_indent("PWR: Power Control Register 1\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_cr1();
+      DBG_setIndentRel(-2);
 
-  /********  PWR Control registers *****************/
-  DBG_printf_indent("PWR: Power Control Register 1 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_cr1();
-  DBG_setIndentRel(-2);
+      DBG_printf_indent("PWR: Power Control&Status Register 1\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_csr1();
+      DBG_setIndentRel(-2);
 
-  DBG_printf_indent("PWR: Power Control Register 2 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_cr2();
-  DBG_setIndentRel(-2);
+      DBG_printf_indent("PWR: Power Control Register 3 \n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_cr3();
+      DBG_setIndentRel(-2);
 
-  DBG_printf_indent("PWR: Power Control Register 3 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_cr3();
-  DBG_setIndentRel(-2);
-
-  DBG_printf_indent("PWR: Power Control Register 4 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_cr4();
-  DBG_setIndentRel(-2);
-
-  /********  PWR Status registers *****************/
-  DBG_printf_indent("PWR: Power Status Register 1 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_sr1();
-  DBG_setIndentRel(-2);
-
-  DBG_printf_indent("PWR: Power Status Register 2 \n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_pwr_sr2();
-  DBG_setIndentRel(-2);
-
+      DBG_printf_indent("PWR: CPU1 Control Register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_cpu1cr();
+      DBG_setIndentRel(-2);
+ 
+      DBG_printf_indent("PWR: CPU2 Control Register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_cpu2cr();
+      DBG_setIndentRel(-2);
+ 
+      DBG_printf_indent("PWR: D3 Control Register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_d3cr();
+      DBG_setIndentRel(-2);
+ 
+      DBG_printf_indent("PWR: WakeUp Flag Register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_wkupfr();
+      DBG_setIndentRel(-2);
+ 
+      DBG_printf_indent("PWR: WakeUp Enable & Polarity Register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_pwr_wkupepr();
+      DBG_setIndentRel(-2);
+ 
+  #else
+      DBG_printf_indent("Dumping PWR settings configured out \n" );
+  #endif
   DBG_setIndentAbs(oldIndent);
 }
 
@@ -182,65 +272,42 @@ void DBG_dump_powersetting(void)
  */
 
 
-const char * const msirange_txt[]={"100kHz", "200kHz", "400kHz", "800kHz",
-                            "1MHz", "2MHz", "4MHz", "8MHz", "16MHz", "24MHz", "32MHz", "48MHz" };
-static const char* DBG_get_msirange_text ( uint32_t sel, uint32_t msirgsel )
+static void dbg_rcc_on_ready ( const char *instname, uint32_t reg, uint32_t on_bit, uint32_t ready_bit )
 {
-  if ( msirgsel ) {
-    // full range 
-    if ( sel < sizeof(msirange_txt)/sizeof(char *) ) 
-      return msirange_txt[sel];
-    else
-      return "Illegal";
-  } else {
-    // restricted range after Reset/Standby
-    if ( sel >=4 && sel < 8  ) 
-      return msirange_txt[sel];
-    else
-      return "Illegal";
-
-  }
+    DBG_dump_bitvalue2(instname, "on", reg, on_bit);
+    if ( reg & on_bit ) DBG_dump_bitvalue2(instname, "ready", reg, ready_bit);    
 }
 /* ---- RCC CR ---- */
 static void DBG_dump_rcc_cr(void)
 {
   DBG_setPadLen(22);
-  DBG_dump_bitvalue("PLL_SAI2 on", RCC->CR, RCC_CR_PLLSAI2ON );
-  if ( READ_BIT(RCC->CR, RCC_CR_PLLSAI2ON) ) DBG_dump_bitvalue("PLL_SAI2 ready", RCC->CR, RCC_CR_PLLSAI2RDY );
-  DBG_dump_bitvalue("PLL_SAI1 on", RCC->CR, RCC_CR_PLLSAI1ON );
-  if ( READ_BIT(RCC->CR, RCC_CR_PLLSAI1ON) ) DBG_dump_bitvalue("PLL_SAI1 ready", RCC->CR, RCC_CR_PLLSAI1RDY );
+  dbg_rcc_on_ready("PLL3", RCC->CR, RCC_CR_PLL3ON, RCC_CR_PLL2RDY );
+  dbg_rcc_on_ready("PLL2", RCC->CR, RCC_CR_PLL2ON, RCC_CR_PLL2RDY );
+  dbg_rcc_on_ready("PLL1", RCC->CR, RCC_CR_PLL1ON, RCC_CR_PLL1RDY );
 
-  DBG_dump_bitvalue("PLL on", RCC->CR, RCC_CR_PLLON );
-  if ( READ_BIT(RCC->CR, RCC_CR_PLLON) ) DBG_dump_bitvalue("PLL ready", RCC->CR, RCC_CR_PLLRDY );
-
-  DBG_dump_bitvalue("HSE on", RCC->CR, RCC_CR_HSEON );
+  dbg_rcc_on_ready("HSE",  RCC->CR, RCC_CR_HSEON,  RCC_CR_HSERDY );
   if ( READ_BIT( RCC->CR, RCC_CR_HSEON ) ) {
-    DBG_dump_bitvalue("HSE ready", RCC->CR, RCC_CR_HSERDY);
     DBG_dump_bitvalue("HSE bypass", RCC->CR, RCC_CR_HSEBYP);
-    DBG_dump_bitvalue("HSE CSS on", RCC->CR, RCC_CR_CSSON);
+    DBG_dump_bitvalue("HSE CSS on", RCC->CR, RCC_CR_CSSHSEON);
   }
 
-  DBG_dump_bitvalue("HSI Autost. from Stop", RCC->CR, RCC_CR_HSIASFS );
+  DBG_dump_bitvalue("D2 Clock ready", RCC->CR, RCC_CR_D2CKRDY );
+  DBG_dump_bitvalue("D1 Clock ready", RCC->CR, RCC_CR_D1CKRDY );
 
-  DBG_dump_bitvalue("HSI on", RCC->CR, RCC_CR_HSION );
+  dbg_rcc_on_ready("HSI48", RCC->CR, RCC_CR_HSI48ON, RCC_CR_HSI48RDY );
+
+  dbg_rcc_on_ready("CSI", RCC->CR, RCC_CR_CSION, RCC_CR_CSIRDY );
+  DBG_dump_bitvalue("CSI On in STOPmode", RCC->CR, RCC_CR_CSIKERON);
+
+  dbg_rcc_on_ready("HSI", RCC->CR, RCC_CR_HSION, RCC_CR_HSIRDY );
+  DBG_dump_bitvalue("HSI On in STOPmode", RCC->CR, RCC_CR_HSIKERON);
   if ( READ_BIT( RCC->CR, RCC_CR_HSION ) ) {
-    DBG_dump_bitvalue("HSI ready", RCC->CR, RCC_CR_HSIRDY);
-    DBG_dump_bitvalue("HSIKern on", RCC->CR, RCC_CR_HSIKERON );
-  }
-  DBG_dump_bitvalue("MSI on", RCC->CR, RCC_CR_MSION );
-  if ( READ_BIT( RCC->CR, RCC_CR_MSION ) ) {
-    DBG_dump_bitvalue("MSI ready", RCC->CR, RCC_CR_MSIRDY);
-    DBG_dump_bitvalue("MSI PLL enable", RCC->CR, RCC_CR_MSIPLLEN);
-    DBG_dump_textvalue("MSI Range Select", READ_BIT( RCC->CR, RCC_CR_MSIRGSEL ) ? "Normal, full range" : "after StBy/Reset, restricted");
-
-    if ( READ_BIT( RCC->CR, RCC_CR_MSIRGSEL ) ) 
-      DBG_dump_textvalue("MSI Freq.", DBG_get_msirange_text((RCC->CR & RCC_CR_MSIRANGE_Msk)>>RCC_CR_MSIRANGE_Pos, 1) );
-    else  
-      DBG_dump_textvalue("MSI Freq.", DBG_get_msirange_text((RCC->CSR & RCC_CSR_MSISRANGE_Msk) >> RCC_CSR_MSISRANGE_Pos, 0) );
+    DBG_dump_number("HSI Frequency (MHz)", 64 / ((( RCC->CR & RCC_CR_HSIDIV_Msk ) >>  RCC_CR_HSIDIV_Pos ) + 1) );
+    DBG_dump_bitvalue("HSI frac divider", RCC->CR, RCC_CR_HSIDIVF);
   }
 }
 
-const char * const rtcsel_txt[]={"No Clock","LSE","LSI","HSE/32"};
+const char * const rtcsel_txt[]={"No Clock","LSE","LSI","HSE+RTC prediv"};
 static const char* DBG_get_rcc_bdcr_rtcsel_txt(uint32_t sel)
 {
   if ( sel < sizeof(rtcsel_txt)/sizeof(char *) ) 
@@ -253,76 +320,77 @@ static const char* DBG_get_rcc_bdcr_rtcsel_txt(uint32_t sel)
 static void DBG_dump_rcc_bdcr(void)
 {
   DBG_setPadLen(16);
-  DBG_dump_bitvalue("LSCO enable", RCC->BDCR, RCC_BDCR_LSCOEN);
-  if ( READ_BIT( RCC->BDCR, RCC_BDCR_LSCOEN ) ) 
-    DBG_dump_textvalue("LSCO source", READ_BIT(RCC->BDCR, RCC_BDCR_LSCOSEL) ? "LSE" : "LSI" );
 
   DBG_dump_bitvalue("RTC enable", RCC->BDCR, RCC_BDCR_RTCEN );
   if ( READ_BIT(RCC->BDCR, RCC_BDCR_RTCEN) )
     DBG_dump_textvalue("RTC/LCD Clk source", DBG_get_rcc_bdcr_rtcsel_txt((RCC->BDCR & RCC_BDCR_RTCSEL_Msk) >> RCC_BDCR_RTCSEL_Pos));
-  
-  DBG_dump_bitvalue("LSE CSS enable", RCC->BDCR, RCC_BDCR_LSECSSON);
-  if ( READ_BIT(RCC->BDCR, RCC_BDCR_LSECSSON) ) 
-    DBG_dump_bitvalue("LSE Clk failure", RCC->BDCR, RCC_BDCR_LSECSSD);
-    
-  DBG_dump_bitvalue("LSE on", RCC->BDCR, RCC_BDCR_LSEON );
-  if ( READ_BIT(RCC->BDCR, RCC_BDCR_LSEON ) ) {
-    DBG_dump_bitvalue("LSE rdy", RCC->BDCR, RCC_BDCR_LSERDY);
+    if ((RCC->BDCR & RCC_BDCR_RTCSEL_Msk)  == RCC_BDCR_RTCSEL_Msk ) {
+        uint32_t rtc_presc = (RCC->CFGR & RCC_CFGR_RTCPRE_Msk) >> RCC_CFGR_RTCPRE_Pos;
+        if ( rtc_presc < 2 )
+            DBG_dump_textvalue("RTC/HSE prescaler","Disabled");
+        else 
+            DBG_dump_number("RTC/HSE prescaler", rtc_presc);
+    }
+      
+  dbg_rcc_on_ready("LSE",  RCC->BDCR, RCC_BDCR_LSEON,  RCC_BDCR_LSERDY );
+  if ( READ_BIT( RCC->BDCR, RCC_BDCR_LSEON ) ) {
     DBG_dump_bitvalue("LSE bypass", RCC->BDCR, RCC_BDCR_LSEBYP);
+    DBG_dump_bitvalue("LSE CSS on", RCC->BDCR, RCC_BDCR_LSECSSON);
+    DBG_dump_bitvalue("LSE CSS fault", RCC->BDCR, RCC_BDCR_LSECSSD);
     DBG_dump_number("LSE drv strength", (RCC->BDCR & RCC_BDCR_LSEDRV_Msk) >> RCC_BDCR_LSEDRV_Pos);
   }
 }
 
-/* ---- RCC ICSCR ---- */
-static void DBG_dump_rcc_icscr(void)
+/* ---- RCC HSICFGR ---- */
+static void DBG_dump_rcc_hsicfgr(void)
 {
   DBG_setPadLen(16);
-  if ( READ_BIT(RCC->CR, RCC_CR_MSION) ) {
-    DBG_dump_number("MSI Calibration", ( RCC->ICSCR & RCC_ICSCR_MSICAL_Msk ) >> RCC_ICSCR_MSICAL_Pos );
-    DBG_dump_number("MSI Trimming", (RCC->ICSCR & RCC_ICSCR_MSITRIM_Msk ) >> RCC_ICSCR_MSITRIM_Pos );
-  }
   if ( READ_BIT(RCC->CR, RCC_CR_HSION) ) {
-    DBG_dump_number("HSI Calibration", (RCC->ICSCR & RCC_ICSCR_HSICAL_Msk ) >> RCC_ICSCR_HSICAL_Pos );
-    DBG_dump_number("HSI Trimming", (RCC->ICSCR & RCC_ICSCR_HSITRIM_Msk ) >> RCC_ICSCR_HSITRIM_Pos );
+    DBG_dump_number("HSI Calibration", (RCC->HSICFGR & RCC_HSICFGR_HSICAL_Msk ) >> RCC_HSICFGR_HSICAL_Pos );
+    DBG_dump_number("HSI Trimming", (RCC->HSICFGR & RCC_HSICFGR_HSITRIM_Msk ) >> RCC_HSICFGR_HSITRIM_Pos );
   }
 }
 
 /* ---- RCC CFGR ---- */
-const char * const mosel_txt[]={"MCO disabled","SYSCLK","MSI","HSI16","HSE","PLL","LSI","LSE"};
-static const char* DBG_get_rcc_cfgr_mcosel_txt(uint32_t sel)
+const char * const mosel1_txt[]={"HSI","LSE", "HSE","PLL1","HSI48"};
+static const char* DBG_get_rcc_cfgr_mcosel1_txt(uint32_t sel)
 {
-  if ( sel < sizeof(mosel_txt)/sizeof(char *) ) 
-    return mosel_txt[sel];
+  if ( sel < sizeof(mosel1_txt)/sizeof(char *) ) 
+    return mosel1_txt[sel];
   else
     return "Illegal";
 }
 
 /*
- * decode APB1 and APB2 prescaler values, see Ref.man. p 224 
+ * decode prescaler values 
  */
-static int DBG_get_rcc_cfgr_apb_prescaler ( uint32_t inval )
+static uint32_t count_bits_set (uint32_t arg )
 {
-  inval &= 0b111;
-  if ( inval < 4 ) return 1;
-  return 1 << ( inval-3 );
+    uint32_t ret = 0;
+
+    for ( uint32_t i=0; i < 32; i++ ) {
+        if ( arg & 0b1 ) ret++;
+        arg >>= 1;
+    }
+
+    return ret;
 }
 
-/*
- * decode AHB prescaler values, see Ref.man. p 224
- */
-#if 0
-static int DBG_get_rcc_cfgr_ahb_prescaler ( uint32_t inval )
+static uint32_t decode_prescaler ( uint32_t prescaler, uint32_t relevant_bitnum )
 {
-  inval &= 0b1111;
-  if ( inval < 0b1000 ) return 1;
-  if ( inval < 0b1100 ) 
-    return 1 << ( inval - 7 );
-  else
-   return 1 << ( inval - 6 );
-}
-#endif
+    if ( relevant_bitnum == 0 ) return 0;
+    uint32_t msb = 1 << ( relevant_bitnum - 1 );
 
-const char * const sws_txt[]={"MSI","HSI16", "HSE", "PLL"};
+    /* prescaler inactive ( or 1 ) when MSB is reset */
+    if ( ( prescaler & msb ) == 0 ) return 1;
+    
+    /* reset msb */
+    prescaler &= ~msb;
+
+    return 1 << ( prescaler + 1 );
+}
+
+const char * const sws_txt[]={"HSI","CSI", "HSE", "PLL1"};
 static const char* DBG_get_rcc_cfgr_sws_txt(uint32_t sel)
 {
   if ( sel < sizeof(sws_txt)/sizeof(char *) ) 
@@ -333,24 +401,23 @@ static const char* DBG_get_rcc_cfgr_sws_txt(uint32_t sel)
 
 static void DBG_dump_rcc_cfgr(void)
 {
-  DBG_setPadLen(16);
-  uint32_t mcosel = ( RCC->CFGR & RCC_CFGR_MCOSEL_Msk ) >> RCC_CFGR_MCOSEL_Pos;
+  DBG_setPadLen(20);
+  uint32_t mcopre = ( RCC->CFGR & RCC_CFGR_MCO1PRE_Msk ) >> RCC_CFGR_MCO1PRE_Pos;
 
-  if ( mcosel == 0 ) {
+  if ( mcopre == 0 ) {
     DBG_printf_indent("MCO disabled\n" );    
   } else {
-    DBG_dump_po2("MCO prescaler",  (( RCC->CFGR & RCC_CFGR_MCOPRE_Msk ) >> RCC_CFGR_MCOPRE_Pos) );
-    DBG_dump_textvalue("MCO Source", DBG_get_rcc_cfgr_mcosel_txt(( RCC->CFGR & RCC_CFGR_MCOSEL_Msk  ) >> RCC_CFGR_MCOSEL_Pos) );
+    DBG_dump_number("MCO prescaler", mcopre );
+    DBG_dump_textvalue("MCO Source", DBG_get_rcc_cfgr_mcosel1_txt(( RCC->CFGR & RCC_CFGR_MCO1_Msk ) >> RCC_CFGR_MCO1_Pos) );
   }
-  DBG_dump_textvalue("WakeUp Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK) ? "HSI16" : "MSI" );    
-  DBG_dump_number("APB2 Prescale", DBG_get_rcc_cfgr_apb_prescaler(( RCC->CFGR & RCC_CFGR_PPRE2_Msk ) >> RCC_CFGR_PPRE2_Pos) );
-  DBG_dump_number("APB1 Prescale", DBG_get_rcc_cfgr_apb_prescaler(( RCC->CFGR & RCC_CFGR_PPRE1_Msk ) >> RCC_CFGR_PPRE1_Pos) );
-  DBG_dump_number("AHB Prescale", DBG_get_rcc_cfgr_apb_prescaler(( RCC->CFGR & RCC_CFGR_HPRE_Msk ) >> RCC_CFGR_HPRE_Pos) );
+  DBG_dump_textvalue("HRTIM Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_HRTIMSEL)    ? "CM7 Clk" : "APB1 Clk" );    
+  DBG_dump_textvalue("System WkUp Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK)    ? "CSI" : "HSI" );    
+  DBG_dump_textvalue("Kernel WkUp Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_STOPKERWUCK) ? "CSI" : "HSI" );    
   DBG_dump_textvalue("SysClk source", DBG_get_rcc_cfgr_sws_txt(( RCC->CFGR & RCC_CFGR_SWS_Msk  ) >> RCC_CFGR_SWS_Pos) );
 }
 
 /* ---- RCC PLLCFGR ---- */
-const char * const pllsrc_txt[]={"No Clock","MSI", "HSI16", "HSE"};
+const char * const pllsrc_txt[]={"HSI", "CSI", "HSE", "No Clock"};
 static const char* DBG_get_rcc_pllcfgr_pllsrc_txt(uint32_t sel )
 {
   if ( sel < sizeof(pllsrc_txt)/sizeof(char *) ) 
@@ -358,20 +425,93 @@ static const char* DBG_get_rcc_pllcfgr_pllsrc_txt(uint32_t sel )
   else
     return "Illegal";
 }
+static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
+{
+    switch ( pllnum ) {
+        case 1:
+            pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
+            pll->PLLM = (uint32_t) ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> RCC_PLLCKSELR_DIVM1_Pos);
+            pll->PLLN = (uint32_t) ((RCC->PLL1DIVR & RCC_PLL1DIVR_N1)     >> RCC_PLL1DIVR_N1_Pos)+ 1U;
+            pll->PLLR = (uint32_t) ((RCC->PLL1DIVR & RCC_PLL1DIVR_R1)     >> RCC_PLL1DIVR_R1_Pos)+ 1U;
+            pll->PLLP = (uint32_t) ((RCC->PLL1DIVR & RCC_PLL1DIVR_P1)     >> RCC_PLL1DIVR_P1_Pos)+ 1U;
+            pll->PLLQ = (uint32_t) ((RCC->PLL1DIVR & RCC_PLL1DIVR_Q1)     >> RCC_PLL1DIVR_Q1_Pos)+ 1U;
+            pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL1RGE) >> RCC_PLLCFGR_PLL1RGE_Pos);
+            pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL1VCOSEL) >> RCC_PLLCFGR_PLL1VCOSEL_Pos);
+            pll->PLLFRACN = (uint32_t)(((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1) >> RCC_PLL1FRACR_FRACN1_Pos));
+           break;
+        case 2:
+            pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
+            pll->PLLM = (uint32_t)((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM2)>> RCC_PLLCKSELR_DIVM2_Pos);
+            pll->PLLN = (uint32_t)((RCC->PLL2DIVR & RCC_PLL2DIVR_N2) >> RCC_PLL2DIVR_N2_Pos)+ 1U;
+            pll->PLLR = (uint32_t)((RCC->PLL2DIVR & RCC_PLL2DIVR_R2) >> RCC_PLL2DIVR_R2_Pos)+ 1U;
+            pll->PLLP = (uint32_t)((RCC->PLL2DIVR & RCC_PLL2DIVR_P2) >> RCC_PLL2DIVR_P2_Pos)+ 1U;
+            pll->PLLQ = (uint32_t)((RCC->PLL2DIVR & RCC_PLL2DIVR_Q2) >> RCC_PLL2DIVR_Q2_Pos)+ 1U;
+            pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL2RGE) >> RCC_PLLCFGR_PLL2RGE_Pos);
+            pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL2VCOSEL) >> RCC_PLLCFGR_PLL2VCOSEL_Pos);
+            pll->PLLFRACN = (uint32_t)(((RCC->PLL2FRACR & RCC_PLL2FRACR_FRACN2) >> RCC_PLL2FRACR_FRACN2_Pos));
+           break;
+        case 3:
+            pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
+            pll->PLLM = (uint32_t)((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM3)>> RCC_PLLCKSELR_DIVM3_Pos);
+            pll->PLLN = (uint32_t)((RCC->PLL3DIVR & RCC_PLL3DIVR_N3) >> RCC_PLL3DIVR_N3_Pos)+ 1U;
+            pll->PLLR = (uint32_t)((RCC->PLL3DIVR & RCC_PLL3DIVR_R3) >> RCC_PLL3DIVR_R3_Pos)+ 1U;
+            pll->PLLP = (uint32_t)((RCC->PLL3DIVR & RCC_PLL3DIVR_P3) >> RCC_PLL3DIVR_P3_Pos)+ 1U;
+            pll->PLLQ = (uint32_t)((RCC->PLL3DIVR & RCC_PLL3DIVR_Q3) >> RCC_PLL3DIVR_Q3_Pos)+ 1U;
+            pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL3RGE) >> RCC_PLLCFGR_PLL3RGE_Pos);
+            pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL3VCOSEL) >> RCC_PLLCFGR_PLL3VCOSEL_Pos);
+            pll->PLLFRACN = (uint32_t)(((RCC->PLL3FRACR & RCC_PLL3FRACR_FRACN3) >> RCC_PLL3FRACR_FRACN3_Pos));
+           break;
+        default:
+            DBG_printf_indent("Missing decoder for PLL %d\n",pllnum);
+            return false;
+    }
+
+    DBG_printf_indent("PLL%d configuration\n", pllnum );
+    DBG_dump_textvalue("PLL source", DBG_get_rcc_pllcfgr_pllsrc_txt( pll->PLLSource >> RCC_PLLCKSELR_PLLSRC_Pos ) );  
+    DBG_dump_number("PLLM", pll->PLLM );  
+    DBG_dump_number("PLLN", pll->PLLN );  
+    DBG_dump_number("PLLR", pll->PLLR );  
+    DBG_dump_number("PLLQ", pll->PLLQ );  
+    DBG_dump_number("PLLP", pll->PLLP );  
+    DBG_dump_number("PLLRGE", pll->PLLRGE );
+    DBG_dump_number("PLLVCOSEL", pll->PLLVCOSEL );
+    DBG_dump_number("PLLFRACN", pll->PLLFRACN ); 
+    return true;
+} 
+
 static void DBG_dump_rcc_pllcfgr(void)
 {
+  RCC_PLLInitTypeDef pll;
   DBG_setPadLen(20);
-  if ( READ_BIT(RCC->CR, RCC_CR_PLLON ) ) {
-    DBG_dump_bitvalue("PLLCLK out enabled", RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN);
-    DBG_dump_textvalue("PLL source", DBG_get_rcc_pllcfgr_pllsrc_txt(( RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC_Msk  ) >> RCC_PLLCFGR_PLLSRC_Pos) );  
-    DBG_dump_number("PLLM", ( RCC->PLLCFGR & RCC_PLLCFGR_PLLM_Msk ) >> RCC_PLLCFGR_PLLM_Pos );  
-    DBG_dump_number("PLLN", ( RCC->PLLCFGR & RCC_PLLCFGR_PLLN_Msk ) >> RCC_PLLCFGR_PLLN_Pos );  
-    DBG_dump_number("PLLR", ( RCC->PLLCFGR & RCC_PLLCFGR_PLLR_Msk ) >> RCC_PLLCFGR_PLLR_Pos );  
-    DBG_dump_number("PLLQ", ( RCC->PLLCFGR & RCC_PLLCFGR_PLLQ_Msk ) >> RCC_PLLCFGR_PLLQ_Pos );  
-    DBG_dump_number("PLLP", ( RCC->PLLCFGR & RCC_PLLCFGR_PLLP_Msk ) >> RCC_PLLCFGR_PLLP_Pos );  
+
+  if ( READ_BIT(RCC->CR, RCC_CR_PLL1ON ) ) {
+    dump_pllconfig(&pll, 1);
   } else  {
-    DBG_printf_indent("PLL disabled\n" );    
+    DBG_printf_indent("PLL1 disabled\n" );    
   }
+  if ( READ_BIT(RCC->CR, RCC_CR_PLL2ON ) ) {
+    dump_pllconfig(&pll, 2);
+  } else  {
+    DBG_printf_indent("PLL2 disabled\n" );    
+  }
+  if ( READ_BIT(RCC->CR, RCC_CR_PLL3ON ) ) {
+    dump_pllconfig(&pll, 3);
+  } else  {
+    DBG_printf_indent("PLL3 disabled\n" );    
+  }
+}
+
+static void DBG_dump_rcc_prescalers(void)
+{
+  DBG_setPadLen(20);
+  DBG_dump_number("D1Clk prescaler",   decode_prescaler (  (RCC->D1CFGR & RCC_D1CFGR_D1CPRE_Msk) >> RCC_D1CFGR_D1CPRE_Pos, count_bits_set(RCC_D1CFGR_D1CPRE_Msk) ) );
+  DBG_dump_number("AHB Clk prescaler", decode_prescaler (  (RCC->D1CFGR & RCC_D1CFGR_HPRE_Msk  ) >> RCC_D1CFGR_HPRE_Pos,   count_bits_set(RCC_D1CFGR_HPRE_Msk)   ) );
+  DBG_dump_number("APB3 Clk prescaler", decode_prescaler( (RCC->D1CFGR & RCC_D1CFGR_D1PPRE_Msk ) >> RCC_D1CFGR_D1PPRE_Pos, count_bits_set(RCC_D1CFGR_D1PPRE_Msk) ) );
+  DBG_dump_number("APB1 Clk prescaler", decode_prescaler( (RCC->D2CFGR & RCC_D2CFGR_D2PPRE1_Msk) >> RCC_D2CFGR_D2PPRE1_Pos,count_bits_set(RCC_D2CFGR_D2PPRE1_Msk)) );
+  DBG_dump_number("APB2 Clk prescaler", decode_prescaler( (RCC->D2CFGR & RCC_D2CFGR_D2PPRE2_Msk) >> RCC_D2CFGR_D2PPRE2_Pos,count_bits_set(RCC_D2CFGR_D2PPRE2_Msk)) );
+  DBG_dump_number("APB4 Clk prescaler", decode_prescaler( (RCC->D3CFGR & RCC_D3CFGR_D3PPRE_Msk ) >> RCC_D3CFGR_D3PPRE_Pos, count_bits_set(RCC_D3CFGR_D3PPRE_Msk) ) );
+        
+  
 }
 
 static void DBG_dump_clocks(void)
@@ -381,11 +521,11 @@ static void DBG_dump_clocks(void)
 
   DBG_setPadLen(16);
   DBG_dump_number("SYSCLK", HAL_RCC_GetSysClockFreq() );
-  DBG_dump_number("HCLK",  HAL_RCC_GetHCLKFreq());
+  DBG_dump_number("HCLK",   HAL_RCC_GetHCLKFreq());
   DBG_dump_number("PCLK1",  HAL_RCC_GetPCLK1Freq());
   DBG_dump_number("PCLK2",  HAL_RCC_GetPCLK2Freq());
   HAL_RCC_GetClockConfig(&v, &f_latency);
-  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt(( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos) );
+  DBG_dump_textvalue("Vcore value", DBG_get_pwr_vos_txt(( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos) );
   DBG_dump_number("Flash Latency", f_latency);  
 }
 
@@ -408,10 +548,10 @@ void DBG_dump_clocksetting(void)
   DBG_setIndentRel(-2);
 
   /********  MSI/HSI calibration register *****************/
-  if (  READ_BIT(RCC->CR, RCC_CR_MSION) || READ_BIT(RCC->CR, RCC_CR_HSION ) ) {
-    DBG_printf_indent("RCC: MSI/HSI Calibration Register\n" );
+  if (  READ_BIT(RCC->CR, RCC_CR_HSION ) ) {
+    DBG_printf_indent("RCC: HSI Calibration Register\n" );
     DBG_setIndentRel(+2);
-    DBG_dump_rcc_icscr();
+    DBG_dump_rcc_hsicfgr();
     DBG_setIndentRel(-2);
   }
 
@@ -422,11 +562,16 @@ void DBG_dump_clocksetting(void)
   DBG_setIndentRel(-2);
 
   /******** PLL configuration register *****************/
-  DBG_printf_indent("RCC: PLL configuration register\n" );
+  DBG_printf_indent("RCC: PLL configuration\n" );
   DBG_setIndentRel(+2);
   DBG_dump_rcc_pllcfgr();
   DBG_setIndentRel(-2);
 
+  /******** Clock prescaler registers *****************/
+  DBG_printf_indent("RCC: Clock prescalers\n" );
+  DBG_setIndentRel(+2);
+  DBG_dump_rcc_prescalers();
+  DBG_setIndentRel(-2);
 
   /******** System Clocks *****************/
   DBG_printf_indent("Resulting System Clocks\n" );
@@ -443,7 +588,7 @@ void DBG_dump_clocksetting(void)
  * Functions to dump peripheral clock settings
  *************************************************************
  */
-
+#if DEBUG_DUMP_PERCLK > 0
 /*
  *************************************************************
  * The follwowing routines are used to dump ordinary and
@@ -537,37 +682,39 @@ void DBG_dump_rcc_apb2enr(uint32_t reg, uint32_t bSleepRegisters )
   DBG_dump_onoffvalue  ("FW Clock", reg, RCC_APB2ENR_FWEN);  
   DBG_dump_onoffvalue  ("SYSCFG Clock", reg, RCC_APB2ENR_SYSCFGEN);  
 }
-
+#endif /* #if DEBUG_DUMP_PERCLK > 0 */
 
 void DBG_dump_peripheralclocksetting(void)
 {
   DEBUG_PUTS("Peripheral Clock Settings -----------------------" );
   int oldIndent = DBG_setIndentRel(+2);
+  #if DEBUG_DUMP_PERCLK > 0
+      /********  AHB peripheral clock enable register *****************/
+      DBG_printf_indent("AHB peripheral clocks\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_ahbenr(RCC->AHB1ENR, RCC->AHB2ENR, RCC->AHB2ENR, 0);
+      DBG_setIndentRel(-2);
 
-  /********  AHB peripheral clock enable register *****************/
-  DBG_printf_indent("AHB peripheral clocks\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_ahbenr(RCC->AHB1ENR, RCC->AHB2ENR, RCC->AHB2ENR, 0);
-  DBG_setIndentRel(-2);
+      /********  APB1 peripheral clock enable register *****************/
+      DBG_printf_indent("APB1 peripheral clocks\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_apb1enr(RCC->APB1ENR1, RCC->APB1ENR2,0);
+      DBG_setIndentRel(-2);
 
-  /********  APB1 peripheral clock enable register *****************/
-  DBG_printf_indent("APB1 peripheral clocks\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_apb1enr(RCC->APB1ENR1, RCC->APB1ENR2,0);
-  DBG_setIndentRel(-2);
+      /********  APB2 peripheral clock enable register *****************/
+      DBG_printf_indent("APB2 peripheral clocks\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_apb2enr(RCC->APB2ENR,0);
+      DBG_setIndentRel(-2);
 
-  /********  APB2 peripheral clock enable register *****************/
-  DBG_printf_indent("APB2 peripheral clocks\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_apb2enr(RCC->APB2ENR,0);
-  DBG_setIndentRel(-2);
-
-  /********  Backup Domain control register *****************/
-  DBG_printf_indent("Backup Domain / RTC clock\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_bdcr();
-  DBG_setIndentRel(-2);
-
+      /********  Backup Domain control register *****************/
+      DBG_printf_indent("Backup Domain / RTC clock\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_bdcr();
+      DBG_setIndentRel(-2);
+  #else
+      DBG_printf_indent("configured out\n");
+  #endif
   DBG_setIndentAbs(oldIndent);
 }
 
@@ -576,24 +723,27 @@ void DBG_dump_peripheralclocksetting_insleepmode(void)
   DEBUG_PUTS("Peripheral Clock Settings ** IN SLEEP MODE ** ---" );
   int oldIndent = DBG_setIndentRel(+2);
 
-  /********  AHB peripheral clock enable register *****************/
-  DBG_printf_indent("AHB peripheral clocks in SleepMode\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_ahbenr(RCC->AHB1SMENR, RCC->AHB2SMENR, RCC->AHB3SMENR, 1);
-  DBG_setIndentRel(-2);
+  #if DEBUG_DUMP_PERCLK > 0
+      /********  AHB peripheral clock enable register *****************/
+      DBG_printf_indent("AHB peripheral clocks in SleepMode\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_ahbenr(RCC->AHB1SMENR, RCC->AHB2SMENR, RCC->AHB3SMENR, 1);
+      DBG_setIndentRel(-2);
 
-  /********  APB1 peripheral clock enable register *****************/
-  DBG_printf_indent("APB1 peripheral clocks in SleepMode\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_apb1enr(RCC->APB1SMENR1, RCC->APB1SMENR2, 1);
-  DBG_setIndentRel(-2);
+      /********  APB1 peripheral clock enable register *****************/
+      DBG_printf_indent("APB1 peripheral clocks in SleepMode\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_apb1enr(RCC->APB1SMENR1, RCC->APB1SMENR2, 1);
+      DBG_setIndentRel(-2);
 
-  /********  APB2 peripheral clock enable register *****************/
-  DBG_printf_indent("APB2 peripheral clocks in SleepMode\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_apb2enr(RCC->APB2SMENR, 1);
-  DBG_setIndentRel(-2);
-
+      /********  APB2 peripheral clock enable register *****************/
+      DBG_printf_indent("APB2 peripheral clocks in SleepMode\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_apb2enr(RCC->APB2SMENR, 1);
+      DBG_setIndentRel(-2);
+  #else
+      DBG_printf_indent("configured out\n");
+  #endif
   DBG_setIndentAbs(oldIndent);
 }
 
@@ -647,44 +797,48 @@ void DBG_dump_peripheralclockconfig(void)
   int oldIndent = DBG_setIndentRel(+2);
   DBG_setPadLen(18);
 
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN ) )
-    DBG_dump_textvalue("DFSDM1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_DFSDM1SEL) ? "SYSCLK" : "APB2CLK" );    
-  if ( READ_BIT(RCC->APB1ENR2,RCC_APB1ENR2_SWPMI1EN ) )
-    DBG_dump_textvalue("SWPMI1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_SWPMI1SEL) ? "HSI16" : "APB1CLK" );    
-  if ( READ_BIT(RCC->AHB2ENR,RCC_AHB2ENR_ADCEN ) )
-    DBG_dump_textvalue("ADC Clk Source", DBG_get_rcc_ccipr_adcclk_txt((RCC->CCIPR & RCC_CCIPR_ADCSEL_Msk) >> RCC_CCIPR_ADCSEL_Pos) );    
+  #if DEBUG_DUMP_PERCLK > 0
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN ) )
+        DBG_dump_textvalue("DFSDM1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_DFSDM1SEL) ? "SYSCLK" : "APB2CLK" );    
+      if ( READ_BIT(RCC->APB1ENR2,RCC_APB1ENR2_SWPMI1EN ) )
+        DBG_dump_textvalue("SWPMI1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_SWPMI1SEL) ? "HSI16" : "APB1CLK" );    
+      if ( READ_BIT(RCC->AHB2ENR,RCC_AHB2ENR_ADCEN ) )
+        DBG_dump_textvalue("ADC Clk Source", DBG_get_rcc_ccipr_adcclk_txt((RCC->CCIPR & RCC_CCIPR_ADCSEL_Msk) >> RCC_CCIPR_ADCSEL_Pos) );    
 
-  /* CLK48 used by sdmmc, usb and rng */
-  if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->APB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
-    DBG_dump_textvalue("CLK48 Source", DBG_get_rcc_ccipr_clk48_txt((RCC->CCIPR & RCC_CCIPR_CLK48SEL_Msk) >> RCC_CCIPR_CLK48SEL_Pos) );    
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
-    DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI2SEL_Msk) >> RCC_CCIPR_SAI2SEL_Pos) );    
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )
-    DBG_dump_textvalue("SAI1 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI1SEL_Msk) >> RCC_CCIPR_SAI1SEL_Pos) );    
+      /* CLK48 used by sdmmc, usb and rng */
+      if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->APB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
+        DBG_dump_textvalue("CLK48 Source", DBG_get_rcc_ccipr_clk48_txt((RCC->CCIPR & RCC_CCIPR_CLK48SEL_Msk) >> RCC_CCIPR_CLK48SEL_Pos) );    
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
+        DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI2SEL_Msk) >> RCC_CCIPR_SAI2SEL_Pos) );    
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )
+        DBG_dump_textvalue("SAI1 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI1SEL_Msk) >> RCC_CCIPR_SAI1SEL_Pos) );    
 
-  if ( READ_BIT(RCC->APB1ENR2, RCC_APB1ENR2_LPTIM2EN ) )
-       DBG_dump_textvalue("LPTIM2Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPTIM2SEL_Msk) >> RCC_CCIPR_LPTIM2SEL_Pos,1,1) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_LPTIM1EN ) )
-       DBG_dump_textvalue("LPTIM1Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPTIM1SEL_Msk) >> RCC_CCIPR_LPTIM1SEL_Pos,1,1) ); 
+      if ( READ_BIT(RCC->APB1ENR2, RCC_APB1ENR2_LPTIM2EN ) )
+           DBG_dump_textvalue("LPTIM2Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPTIM2SEL_Msk) >> RCC_CCIPR_LPTIM2SEL_Pos,1,1) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_LPTIM1EN ) )
+           DBG_dump_textvalue("LPTIM1Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPTIM1SEL_Msk) >> RCC_CCIPR_LPTIM1SEL_Pos,1,1) ); 
 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C3EN ) )
-       DBG_dump_textvalue("I2C3 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C3SEL_Msk) >> RCC_CCIPR_I2C3SEL_Pos,0,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C2EN ) )
-       DBG_dump_textvalue("I2C2 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C2SEL_Msk) >> RCC_CCIPR_I2C2SEL_Pos,0,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C1EN ) )
-       DBG_dump_textvalue("I2C1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C1SEL_Msk) >> RCC_CCIPR_I2C1SEL_Pos,0,0) ); 
-  if ( READ_BIT(RCC->APB1ENR2, RCC_APB1ENR2_LPUART1EN ) )
-       DBG_dump_textvalue("LPUART1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPUART1SEL_Msk) >> RCC_CCIPR_LPUART1SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART5EN ) )
-       DBG_dump_textvalue("UART5 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART5SEL_Msk) >> RCC_CCIPR_UART5SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART4EN ) )
-       DBG_dump_textvalue("UART4 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART4SEL_Msk) >> RCC_CCIPR_UART4SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART3EN ) )
-       DBG_dump_textvalue("USART3 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART3SEL_Msk) >> RCC_CCIPR_USART3SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART2EN ) )
-       DBG_dump_textvalue("USART2 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART2SEL_Msk) >> RCC_CCIPR_USART2SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN ) )
-       DBG_dump_textvalue("USART1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART1SEL_Msk) >> RCC_CCIPR_USART1SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C3EN ) )
+           DBG_dump_textvalue("I2C3 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C3SEL_Msk) >> RCC_CCIPR_I2C3SEL_Pos,0,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C2EN ) )
+           DBG_dump_textvalue("I2C2 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C2SEL_Msk) >> RCC_CCIPR_I2C2SEL_Pos,0,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_I2C1EN ) )
+           DBG_dump_textvalue("I2C1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C1SEL_Msk) >> RCC_CCIPR_I2C1SEL_Pos,0,0) ); 
+      if ( READ_BIT(RCC->APB1ENR2, RCC_APB1ENR2_LPUART1EN ) )
+           DBG_dump_textvalue("LPUART1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPUART1SEL_Msk) >> RCC_CCIPR_LPUART1SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART5EN ) )
+           DBG_dump_textvalue("UART5 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART5SEL_Msk) >> RCC_CCIPR_UART5SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART4EN ) )
+           DBG_dump_textvalue("UART4 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART4SEL_Msk) >> RCC_CCIPR_UART4SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART3EN ) )
+           DBG_dump_textvalue("USART3 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART3SEL_Msk) >> RCC_CCIPR_USART3SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART2EN ) )
+           DBG_dump_textvalue("USART2 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART2SEL_Msk) >> RCC_CCIPR_USART2SEL_Pos,1,0) ); 
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_USART1EN ) )
+           DBG_dump_textvalue("USART1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART1SEL_Msk) >> RCC_CCIPR_USART1SEL_Pos,1,0) ); 
+  #else
+      DBG_printf_indent("configured out\n");
+  #endif
 
   DBG_setIndentAbs(oldIndent);
 }

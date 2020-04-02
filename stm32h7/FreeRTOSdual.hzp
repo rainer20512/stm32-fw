@@ -286,6 +286,7 @@
         <folder Name="system">
           <file file_name="common_h7/Src/system/hw_util.c" />
         </folder>
+        <file file_name="common_h7/Src/debug_pwr_rcc.c" />
       </folder>
       <folder Name="inc">
         <file file_name="common_h7/Inc/hardware.h" />
@@ -295,6 +296,7 @@
         <folder Name="task">
           <file file_name="common_h7/Inc/task/minitask.h" />
         </folder>
+        <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
       </folder>
       <folder Name="task">
         <file file_name="common_h7/Src/task/minitask.c" />
@@ -341,7 +343,6 @@
           <file file_name="../common/src/debug_outbuf.c" />
           <file file_name="../common/src/debug_sram.c" />
           <file file_name="../common/src/debug_gpio_exti.c" />
-          <file file_name="common_h7/Src/debug_pwr_rcc.c" />
         </folder>
       </folder>
       <folder Name="inc">
@@ -388,7 +389,6 @@
           <file file_name="../common/inc/debug_helper.h" />
           <file file_name="../common/inc/debug_outbuf.h" />
           <file file_name="../common/inc/debug_sram.h" />
-          <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
         </folder>
       </folder>
     </folder>

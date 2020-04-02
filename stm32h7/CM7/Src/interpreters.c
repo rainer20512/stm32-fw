@@ -89,7 +89,7 @@ const InterpreterModuleT mdl##name =  {pmt##name, cmd##name, sizeof(cmd##name) /
 void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
 
  
-// #include "debug_pwr_rcc.h"
+ #include "debug_pwr_rcc.h"
 
 
 /*********************************************************************************
@@ -106,7 +106,6 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
   uint32_t ret;
 
   switch( (uint32_t)arg )  {
-#if 0
     case 0:
       DBG_dump_clocksetting();
       break;
@@ -129,7 +128,6 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
       for ( uint32_t i = 0; i < 5; i++ )
          Config_Menu( cmdline, len, VOID(i) );
       break;
-#endif
     case 7:
       if ( CMD_argc() < 1 ) {
           printf("Usage: 'SetSysClk nn \n");
@@ -166,7 +164,6 @@ static const char *pmtClkCfg (void)
 }
 
 static const CommandSetT cmdClkCfg[] = {
-#if 0
   { "Clock",     ctype_fn, {Config_Menu},  VOID(0), "Show clocksettings" },
   { "RTCClock",  ctype_fn, {Config_Menu},  VOID(1), "Show RTC clocksettings" },
   { "Power",     ctype_fn, {Config_Menu},  VOID(2), "Show powersettings" },
@@ -174,7 +171,6 @@ static const CommandSetT cmdClkCfg[] = {
   { "PeriCfg",   ctype_fn, {Config_Menu},  VOID(4), "Show peripheral clock configuration"  },
   { "SleepClk",  ctype_fn, {Config_Menu},  VOID(5), "Show peripheral clock settings in sleep mode"  },
   { "All",       ctype_fn, {Config_Menu},  VOID(6), "Show Items 0) to 4) "  },
-#endif
   { "SetSysClk", ctype_fn, {Config_Menu},  VOID(7), "Set system clock to predefined settings"  },
   { "Calib-HSI", ctype_fn, {Config_Menu},  VOID(8), "Calibrate HSI Clock"  },
   { "MCO output",ctype_fn, {Config_Menu},  VOID(9), "Activate MCO Output PA8" },
