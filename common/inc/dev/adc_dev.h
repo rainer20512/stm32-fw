@@ -24,7 +24,7 @@
 typedef struct AdcHandleType {
 	ADC_HandleTypeDef hAdc;           /* Embedded HAL ADC_HandleTypedef Structure    */
         uint32_t adc_calfact;             /* dynamic calibration factor (for single ended and differential) */
-        uint16_t dmabuf[17];              /* internal DMA buffer for sequence conversion */
+        uint16_t *dmabuf;                 /* internal DMA buffer for sequence conversion, see note */
         uint16_t chiptemp;                /* actual chiptemp value                       */
         uint16_t vdda;                    /* actual Vref value                           */
         uint8_t bVdda_valid;              /* indicates a valid vref value                */
@@ -34,7 +34,7 @@ typedef struct AdcHandleType {
         uint8_t seqLen;                   /* length of converted sequence (in words)     */
         uint16_t *seqResultPtr;           /* Ptr to array of converted values            */
  } AdcHandleT; 
-
+/* Note: the dmabuf MUST be placed reside in an noncached ram area! */
 
 /* Public functions -------------------------------------------------------------*/
 bool     ADC_Calibrate           (const HW_DeviceType *self);

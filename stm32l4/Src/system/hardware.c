@@ -1,7 +1,9 @@
 /*******************************************************************************
  * @file    hardware.c
  * @author  rainer
- * @brief   implement all hardware specfic things
+ * @brief   implement all hardware specfic things for
+ *
+ *          STM32L4xx
  *
  * This file has to be adopted for different STM32 hardwares. And it should be the
  * only place where hardware adoption takes place
@@ -14,6 +16,9 @@
     #include "debug_helper.h"
 #endif
 
+const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */
+const TIM_TypeDef* apb2_timers[]={TIM1, TIM8,       TIM15, TIM16, TIM17 };   /* Timers clocked by APB2 */
+
 /****************************************************************************** 
  * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 
            from             HCLK, the timer input frequency is twice the 
@@ -22,7 +27,6 @@
  * @param  None
  * @retval Actual APB1 timers input frequency
  *****************************************************************************/
-
 uint32_t GetAPB1TimerFrequency(void)
 {
   uint32_t uPclk1 =  HAL_RCC_GetPCLK1Freq();

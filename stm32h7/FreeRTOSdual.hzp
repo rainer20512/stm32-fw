@@ -202,7 +202,9 @@
     <folder Name="Application">
       <folder Name="src">
         <file file_name="$(ProjectDir)/CM7/Src/main_c7.c" />
-        <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c" />
+        <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_hal_timebase_tim.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
         <file file_name="$(ProjectDir)/CM7/Src/stm32h7xx_it.c" />
         <file file_name="CM7/Src/init.c" />
         <file file_name="CM7/Src/interpreters.c" />
@@ -229,8 +231,8 @@
       </folder>
     </folder>
     <folder Name="Doc">
-      <file file_name="$(ProjectDir)readme.txt" />
       <file file_name="doc/ErrorCodes.txt" />
+      <file file_name="doc/Howto.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">

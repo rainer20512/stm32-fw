@@ -114,9 +114,13 @@ int main(void)
     HW_InitJtagDebug();  
 
 
-    /* MPU Configuration */
+    /* 
+     * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
+     * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
+     */
     MPU_Config();
-    /* Enable the CPU Cache */
+
+    /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
 
     BSP_LED_Init(LED2); 
@@ -144,6 +148,15 @@ int main(void)
        - Low Level Initialization
     */
 
+
+    #if USE_BASICTIMER > 0
+        /* 
+         * Start microsecond counter , must be done before Profiler is initialized 
+         * and before HAL_Init, in case of USE_BASICTIMER_FOR_TICKS == 1
+         */
+        BASTMR_EarlyInit();
+    #endif
+
     HAL_Init();
 
     STATUS(0);
@@ -167,10 +180,6 @@ int main(void)
     BSP_LED_Init(LED1);
     BSP_LED_Init(LED2);
   
-    #if USE_BASICTIMER > 0
-        /* Start microsecond counter , must be done before Profiler is initialized */
-        BASTMR_EarlyInit();
-    #endif
 
     STATUS(1);
 
@@ -490,7 +499,7 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableICache();
 
   /* Enable D-Cache */
-  // SCB_EnableDCache();
+  //SCB_EnableDCache();
 }
 
 /**
@@ -503,14 +512,14 @@ static void CPU_CACHE_Enable(void)
 static void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct;
+  extern uint32_t __SRAM3_segment_start__;
   
   /* Disable the MPU */
   HAL_MPU_Disable();
-
   /* Configure the MPU attributes as WT for SRAM */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.BaseAddress = D3_SRAM_BASE;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_64KB;
+  MPU_InitStruct.BaseAddress = __SRAM3_segment_start__;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;

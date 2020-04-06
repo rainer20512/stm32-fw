@@ -719,6 +719,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
 #endif
     } // Case
 
+    /* Update the system clock variables */
+    SystemCoreClockUpdate();
+
     /* Notice all devices about frequency change                             */
     /* Momentarily, the frq change is not reverted, if any device refuses to */
     /* change frq. this has to be changed for correct implementation         */

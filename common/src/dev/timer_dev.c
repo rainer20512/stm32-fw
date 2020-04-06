@@ -59,6 +59,22 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
 }     
 
 #if USE_BASICTIMER > 0 
+
+    /* 
+     * If Basictimer is used for tick generation, too then set the period to 1ms
+     * Otherwise set the period to maximum to ensure maximum sleep time
+     */
+    #if USE_BASICTIMER_FOR_TICKS > 0
+        #define BASTIMER_UPPER      (1000 - 1)
+    #else
+        #define BASTIMER_UPPER      0xffff
+    #endif
+    /* 
+     * When reading the CNT value near the upper limit, wait for timer reload 
+     * interrupt, because it could be chocked otherwise
+     */
+    #define BASTIMER_HOLDLIMIT      ( BASTIMER_UPPER - 7 )
+
     void BASTMR_IrqHandler( volatile uint32_t *CntHigh, TIM_TypeDef *htim)
     {
       /* Reset interrupt flag by writing 0 to it */
@@ -68,10 +84,18 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
        * Increment has to be done before profiling, because profiling will access
        * the microsecond counter
        */
-      (*CntHigh)++;
+      #if USE_BASICTIMER_FOR_TICKS > 0
+        /* Increment counter by 1000 */
+        (*CntHigh) += 1000;
+      #else
+        /* Increment Counter Hi Word */
+        (*CntHigh)++;
+      #endif
       ProfilerPush(JOB_IRQ_PROFILER);
-      /* Increment Counter Hi Word */
-
+      #if USE_BASICTIMER_FOR_TICKS > 0
+        /* If also used as tick generator, increment system tick, if not inhibited */
+        if (BASTIM_HANDLE.bTicksEnabled ) HAL_IncTick();
+      #endif  
       /* Increment Counter Hi Word */
       ProfilerPop();
     }
@@ -83,7 +107,7 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
         /* Don't use counter values near the upper limit, wait for next period */
         do {  
             cnt = htim->CNT;
-        } while ( cnt >= 0xfff8 );
+        } while ( cnt >= BASTIMER_HOLDLIMIT );
 
         /* 
         * Execute interrupt, if pending. Ths can be the case, when profiler
@@ -106,7 +130,14 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
        * counter high value, thereafter get CounterHigh value
        */
       ret = BASTMR_GetRawValue(hnd);
-      return ret | hnd->MicroCountHigh << 16;
+    
+      #if USE_BASICTIMER_FOR_TICKS > 0
+        /* When using also as tick generator, MicroCountHigh counts in 1000us steps */
+        return ret + hnd->MicroCountHigh;
+      #else
+        /* When using standalone, MicroCountHigh counts 65536 us steps */
+        return ret | hnd->MicroCountHigh << 16;
+      #endif
     }
 
     /**********************************************************************************
@@ -166,12 +197,11 @@ static void TmrHandleInit (TimerHandleT *hnd, const HW_DeviceType *self)
     hnd->use_chX[3]         = 0; 
     hnd->reference_cnt      = 0;
     hnd->MicroCountHigh     = 0;
+    hnd->bTicksEnabled      = 1; /* Only ues, if basetimer is also system tick generator */
 }
 
 
 
-static const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */
-static const TIM_TypeDef* apb2_timers[]={TIM1, TIM8,       TIM15, TIM16, TIM17 };   /* Timers clocked by APB2 */
 /****************************************************************************** 
  * Return a timers input clock frequency. This can either be the APB1 or
  * APB2 clock.
@@ -252,12 +282,12 @@ bool TMR_Init(const HW_DeviceType *self)
     bool ret;
     if ( self->devType == HW_DEVICE_BASETIMER ) {
         /* Initialize TIMx peripheral as follows:
-            + Period             = 65536
+            + Period             = 65536 or 1000, depends from USE_BASTIMER_FOR_TICKS
             + Prescaler          = calculated dynamically to give 1 MHz timer input frequency
             + ClockDivision      = 1
             + Counter direction  = Up
         */
-        myHnd->Init.Period            = 0xffff;
+        myHnd->Init.Period            = BASTIMER_UPPER;
         if (!SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
         myHnd->Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
         myHnd->Init.CounterMode       = TIM_COUNTERMODE_UP;
@@ -578,6 +608,57 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
         .OnWakeUp       = NULL,
     };
 #endif /* TIM3 */
+
+#if USE_BASICTIMER_FOR_TICKS > 0
+    /*
+     * If Basictimer is used for tick generation, the following
+     * functions hasve to be implemented. They are used/called
+     * by the HAL layer
+     */
+    HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority)
+    {
+      RCC_ClkInitTypeDef    clkconfig;
+      uint32_t              uwTimclock, uwAPB1Prescaler;
+      uint32_t              uwPrescalerValue;
+      uint32_t              pFLatency;
+  
+      if (TickPriority < (1UL << __NVIC_PRIO_BITS)) {
+          uwTickPrio = TickPriority;
+      } else {
+          return HAL_ERROR;
+      }
+  
+      /* DeInit and Init Basetimer device */
+      BASTIM_HW.DeInit(&BASTIM_HW );  
+      BASTIM_HW.Init(&BASTIM_HW );  
+
+      return HAL_OK;
+    }
+
+    /**
+      * @brief  Suspend Tick increment.
+      * @note   Disable the tick increment by disabling TIM6 update interrupt.
+      * @param  None
+      * @retval None
+      */
+    void HAL_SuspendTick(void)
+    {
+        /* hold tick counter */
+        BASTIM_HANDLE.bTicksEnabled = false;
+    }
+
+    /**
+      * @brief  Resume Tick increment.
+      * @note   Enable the tick increment by Enabling TIM6 update interrupt.
+      * @param  None
+      * @retval None
+      */
+    void HAL_ResumeTick(void)
+    {
+        /* relese tick counter */
+        BASTIM_HANDLE.bTicksEnabled = true;
+    }
+#endif /* USE_BASICTIMER_FOR_TICK > 0 */
 
 #endif /* USE_PWMTIMER > 0 || USE_BASICTIMER > 0 */
 /**

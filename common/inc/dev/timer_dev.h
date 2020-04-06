@@ -28,6 +28,7 @@ typedef struct TimerHandleType {
     TIM_HandleTypeDef   myHalHnd;             /* my associated HAL Timer handle    */
     volatile uint32_t   MicroCountHigh;       /* extended counter for BaseTimer    */
     int32_t             reference_cnt;        /* counter for active references of BaseTimer */
+    uint32_t            bTicksEnabled;        /* If Bastimer is also tick generator, this flag may inhibit tick generation */
     uint8_t             use_chX[4];           /* flag for "ChannelX is used"       */
 } TimerHandleT;
 

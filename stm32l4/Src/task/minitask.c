@@ -121,9 +121,9 @@ void TaskRunAll ( void )
         if ( taskPendbits & shift ) {
             taskPendbits &= ~shift;
             profID = tasks[i].PrID;
-            if ( profID >= 0 ) ProfilerPush(profID);
+            if ( profID >= 0 ) { ProfilerPush(profID); }
             tasks[i].Run(i);
-            if ( profID >= 0 ) ProfilerPop();
+            if ( profID >= 0 ) { ProfilerPop(); }
         }
         shift <<= 1;
     }

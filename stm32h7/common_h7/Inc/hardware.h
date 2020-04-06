@@ -19,12 +19,15 @@
 #define DMA_Channel_TypeDef             DMAMUX_Channel_TypeDef
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
-
+#define DMAMEM                          __attribute((section(".dmamem")))
 /* --- Type specific setup for ADC ------------------------------------------*/
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC3_BASE )
 #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC3_BASE )
 
-uint32_t GetAPB1TimerFrequency  (void);
-uint32_t GetAPB2TimerFrequency  (void);
+/* --- Type specific setup for Timers ---------------------------------------*/
+extern const TIM_TypeDef* apb1_timers[9];    /* Timers connected to APB1 */
+extern const TIM_TypeDef* apb2_timers[5];    /* Timers connected to APB2 */
+uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
+uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
 void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */
 

@@ -12,7 +12,7 @@
     <ProgramSection alignment="4" load="Yes" runin=".fast_run" name=".fast" />
     <ProgramSection alignment="4" load="Yes" runin=".data_run" name=".data" />
     <ProgramSection alignment="4" load="Yes" runin=".tdata_run" name=".tdata" />
-    <ProgramSection alignment="4" load="Yes" runin=".data_run4" name=".data4" />
+    <ProgramSection alignment="4" load="Yes" runin=".data_run3" name=".data3" />
   </MemorySegment>
   <!-- Use SRAM1 as main RAM /-->
   <MemorySegment name="$(RAM_NAME:SRAM1);RAM;SRAM">
@@ -29,7 +29,7 @@
   </MemorySegment>
   <!-- Use SRAM4 as common RAM /-->
   <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
-    <ProgramSection alignment="4" load="No" name=".data_run4" />
+    <ProgramSection alignment="4" load="No" name=".data_run3" />
     <ProgramSection alignment="4" load="No" name=".RAM_D3_Z1" />
     <ProgramSection alignment="4" load="No" name=".RAM_D3_Z2" />
     <ProgramSection alignment="4" load="No" name=".RAM_D3_Z3" />

@@ -44,6 +44,10 @@
     #error "No setup for ADC sample times"
 #endif
 
+/* My defines -------------------------------------------------------------------*/
+/* Size of requierd DMA buffer for max 8 DMA channels, MUST reside in noncached area! */
+#define ADC_DMABUF_SIZE         17
+
 /* My macros --------------------------------------------------------------------*/
 #define GET_SEQ_LEN(hadc)       ( ( hadc->Instance->SQR1 & ADC_SQR1_L_Msk ) + 1 )
 
@@ -52,6 +56,7 @@
 
 typedef struct {
      AdcHandleT *myAdcHandle;       /* Ptr to my associated handle */
+     uint16_t   *myDmaBuf;          /* Ptr to associated dmabuf    */
 } ADC_AdditionalDataType;
 
 
@@ -689,6 +694,7 @@ bool ADC_Init(const HW_DeviceType *self)
 
     myHandle->bVdda_valid   = false;
     myHandle->bSequence     = false;
+    myHandle->dmabuf        = adt->myDmaBuf;
   
     ADC_ClockInit(self, true);
 
@@ -837,6 +843,7 @@ void task_handle_adc(uint32_t arg)
 
 #if defined(ADC1) && defined(USE_ADC1)
     AdcHandleT ADC1Handle;
+    static uint16_t DMAMEM adc3_dmabuf[ADC_DMABUF_SIZE];
     static DMA_HandleTypeDef hdma_adc1_rx;
     static const HW_DmaType dmarx_adc1 = { &hdma_adc1_rx, ADC1_RX_DMA };
 
@@ -852,6 +859,7 @@ void task_handle_adc(uint32_t arg)
 
     static const ADC_AdditionalDataType additional_adc1 = {
         .myAdcHandle = &ADC1Handle,
+        .myDmaBuf    = adc1_dmabuf,
     };
 
     const HW_IrqList irq_adc1 = {
@@ -891,6 +899,7 @@ void task_handle_adc(uint32_t arg)
 
 #if defined(ADC3) && defined(USE_ADC3)
     AdcHandleT ADC3Handle;
+    static uint16_t DMAMEM adc3_dmabuf[ADC_DMABUF_SIZE];
     static DMA_HandleTypeDef hdma_adc3_rx;
     static const HW_DmaType dmarx_adc3 = { &hdma_adc3_rx, ADC3_RX_DMA };
 
@@ -906,6 +915,7 @@ void task_handle_adc(uint32_t arg)
 
     static const ADC_AdditionalDataType additional_adc3 = {
         .myAdcHandle = &ADC3Handle,
+        .myDmaBuf    = adc3_dmabuf,
     };
 
     const HW_IrqList irq_adc3 = {

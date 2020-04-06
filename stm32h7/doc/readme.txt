@@ -110,5 +110,3 @@ In order to make the program work, you must do the following :
  - Reset the Board so the 2 CPUs start running their respective code.
 
 
- * <h3><center>&copy; COPYRIGHT STMicroelectronics</center></h3>
- */

@@ -1,0 +1,14 @@
+   1. When then STM Cube Directory is changed:
+      THe easiest way is to open the project file as xml file, then search and replace the hard code STM Cube directory 
+
+   2. DMA memory has to reside in an area that is not chaced by D-Cache. To create it, define an power-of-2 sized ram area in SRAM1-4 
+      (not AXISRAM, this cannot be accessed by DMA1 and DMA2) and define it as not cacheable and not bufferable to MPU. All types of
+      DMA memory then sould be allocated (statically or dynamically) only in this area. To ease that in hardware.h
+
+           #define DMAMEM   __attribute((section(".dmamem")))  
+
+      is defined. Also in the flash_placement.xml we added an section
+
+           <ProgramSection alignment="4" load="No" name=".dmamem" />
+
+      in the non cacheable RAM area.

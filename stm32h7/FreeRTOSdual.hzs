@@ -4,6 +4,8 @@
  <Breakpoints groups="Breakpoints;V7M Exceptions" active_group="Breakpoints">
   <BreakpointListItem trigger="Write" line="-1" counter="0" hardwareBreakpoint="Any" isFunctionBreakpoint="false" action="Stop" expression="0x0801E5A4" group="Breakpoints" type="Breakpoint" state="2" filename="" useHWbreakpoint="true"/>
   <BreakpointListItem trigger="" line="-1" counter="0" hardwareBreakpoint="Any" isFunctionBreakpoint="false" action="Stop" expression="0x801E2C0" group="Breakpoints" type="Breakpoint" state="2" filename="" useHWbreakpoint="true"/>
+  <BreakpointListItem trigger="" line="750" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="2" filename="../common/src/dev/adc_dev.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="902" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/src/dev/adc_dev.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="18" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common/src/eeprom.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="53" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="common_h7/Src/system/error.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="330" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="CM7/Src/stm32h7xx_it.c" useHWbreakpoint="false"/>
@@ -18,7 +20,7 @@
  </FrameBufferWindow>
  <Memory1>
   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="16" refreshPeriod="0" name="CM4" radix="16" sizeText="512" addressText="0x200388f4"/>
-  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="16" refreshPeriod="0" name="CM7" radix="16" sizeText="512" addressText="0x24007f35"/>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="16" refreshPeriod="0" name="CM7" radix="16" sizeText="512" addressText="0x24007558"/>
   <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" addressOrder="0" columnsText="16" refreshPeriod="0" name="Executable_1" radix="16" sizeText="512" addressText="0x24007f1c"/>
  </Memory1>
  <Memory2>
@@ -38,6 +40,19 @@
  </Memory4>
  <Project>
   <ProjectSessionItem path="FreeRTOS_Dual"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;User"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;User;CM4"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Doc"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers;BSP"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers;BSP;STM32H745I_Nucleo"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers;STM32H7xx_HAL_Driver"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;FreeRTOS"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Source Files"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;System Files"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;config"/>
@@ -47,6 +62,7 @@
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;src;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;debug"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;dev"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;devconfig"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src"/>
@@ -100,11 +116,17 @@
    <Watchpoint expression="HW_COM3" name="HW_COM3" radix="-1" linenumber="0" filename=""/>
    <Watchpoint expression="HandleCOM3" name="HandleCOM3" radix="-1" linenumber="0" filename=""/>
    <Watchpoint expression=" uhandle" name=" uhandle" radix="-1" linenumber="1053" filename="../common/src/dev/uart_dev.c"/>
-   <Watchpoint expression="uhandle" name="uhandle" radix="-1" linenumber="1051" filename="../common/src/dev/uart_dev.c"/>
+   <Watchpoint expression="uhandle" name="uhandle" radix="16" linenumber="1051" filename="../common/src/dev/uart_dev.c"/>
    <Watchpoint expression="regs_dma" name="regs_dma" radix="-1" linenumber="1182" filename="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c"/>
    <Watchpoint expression="((DMA_Stream_TypeDef   *)hdma->Instance)" name="((DMA_Stream_TypeDef   *)hdma->Instance)" radix="-1" linenumber="1314" filename="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c"/>
-   <Watchpoint expression="hdma" name="hdma" radix="-1" linenumber="1314" filename="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c"/>
    <Watchpoint expression="TIM15" name="TIM15" radix="-1" linenumber="0" filename=""/>
+   <Watchpoint expression="ADC3" name="ADC3" radix="-1" linenumber="0" filename=""/>
+   <Watchpoint expression="hadc" name="hadc" radix="-1" linenumber="0" filename=""/>
+   <Watchpoint expression="ADC3Handle" name="ADC3Handle" radix="-1" linenumber="0" filename=""/>
+   <Watchpoint expression="DMA1_Stream6" name="DMA1_Stream6" radix="-1" linenumber="0" filename=""/>
+   <Watchpoint expression="DMA1" name="DMA1" radix="16" linenumber="0" filename=""/>
+   <Watchpoint expression="hdma" name="hdma" radix="-1" linenumber="252" filename="../common/src/dev/adc_dev.c"/>
+   <Watchpoint expression="pxStreamBuffer" name="pxStreamBuffer" radix="-1" linenumber="729" filename="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -117,32 +139,38 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="73" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="23" y="341" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="378" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/init.c" selected="0" top="51" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="22" y="80" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/debug_outbuf.c" selected="0" top="26" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="150" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="147" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="309" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="255" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="175" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/init.c" selected="0" top="151" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="46" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/debug_outbuf.c" selected="0" top="35" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="977" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/uart_dev.c" selected="0" top="917" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="45" y="1264" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="1221" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="85" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/task/minitask.c" selected="0" top="60" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="1255" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="1248" codecName=""/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/debug_helper.c" selected="0" top="91" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="3373" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="3349" codecName=""/>
   <SessionOpenFile windowGroup="DockEditLeft" x="138" y="546" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/debug_gpio_exti.c" selected="0" top="511" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="2608" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h745xx.h" selected="0" top="2577" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="280" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_it.c" selected="0" top="256" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="63" y="146" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/config/uart_config.h" selected="0" top="114" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/dev/uart_dev.h" selected="0" top="60" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1334" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" selected="0" top="1310" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="375" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/devices.c" selected="0" top="351" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/hardware.c" selected="0" top="21" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="539" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/system/hw_util.c" selected="0" top="498" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1036" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/system/clockconfig.c" selected="0" top="1015" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="87" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/system/timer_handler.c" selected="0" top="45" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="2054" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h745xx.h" selected="0" top="2025" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="617" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_it.c" selected="0" top="586" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="280" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/devices.c" selected="0" top="247" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="19" y="5" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/hardware.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="543" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/system/hw_util.c" selected="0" top="499" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="721" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/system/clockconfig.c" selected="0" top="694" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="116" useTextEdit="1" useBinaryEdit="0" left="0" path="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32H745xx.vec" selected="0" top="92" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="0" top="114" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="941" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/adc_dev.c" selected="1" top="893" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="71" y="24" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/config/adc_config.h" selected="0" top="9" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="25" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/hardware.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="616" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_adc.h" selected="0" top="592" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="161" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="1" top="123" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="32" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/hardware.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="52" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/debug_helper.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="186" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/dev/hw_device.h" selected="0" top="157" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="37" y="505" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/cmdline.c" selected="0" top="484" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1014" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/debug_pwr_rcc.c" selected="0" top="1001" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="29" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/debug_pwr_rcc.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="426" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h" selected="0" top="402" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="27" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/dev/adc_dev.h" selected="0" top="3" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="112" useTextEdit="1" useBinaryEdit="0" left="0" path="doc/readme.txt" selected="0" top="78" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="13" useTextEdit="1" useBinaryEdit="0" left="0" path="doc/Howto.txt" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="60" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/stm32h7xx_it.c" selected="0" top="97" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="17" y="161" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" selected="0" top="133" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="262" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/system_stm32h7xx.c" selected="0" top="221" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="170" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_hal_timebase_tim.c" selected="0" top="55" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="3177" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" selected="0" top="3203" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="172" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/timer_dev.c" selected="0" top="0" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/Src" debugSearchPath="" autoConnectCapabilities="266111"/>
+ <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7/doc" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

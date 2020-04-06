@@ -43,21 +43,21 @@
  * Application tayloring
  ********************************************************************************
  */ 
-#define USE_RFM12           0
-#define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
-#define USE_BMP085          0
-#define USE_EPAPER          0
-#define USE_ONEWIRE         0
-#define USE_DS18X20         0
-#define USE_EEPROM_EMUL     0
-#define USE_QENCODER        0
-#define USE_DISPLAY         0
-#define USE_DOGM132         0
-#define USE_SECONDTIMER     1
-#define USE_PWMTIMER        0
-#define USE_BASICTIMER      1
-#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
-
+#define USE_RFM12                   0
+#define USE_RFM69                   0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_BMP085                  0
+#define USE_EPAPER                  0
+#define USE_ONEWIRE                 0
+#define USE_DS18X20                 0
+#define USE_EEPROM_EMUL             0
+#define USE_QENCODER                0
+#define USE_DISPLAY                 0
+#define USE_DOGM132                 0
+#define USE_SECONDTIMER             1
+#define USE_PWMTIMER                0
+#define USE_BASICTIMER              1
+#define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -152,6 +152,14 @@
 /******************************************************************************
  * Check and set constraints for BaseTimer
  *****************************************************************************/
+#if USE_BASICTIMER_FOR_TICKS > 0
+    #if defined(USE_BASICTIMER) && USE_BASICTIMER < 1
+        #warning "USE_BASICTIMER redefined due to system useage"
+        #undef USE_BASICTIMER
+        #define USE_BASICTIMER 1
+    #endif
+#endif
+
 #if defined(TX18LISTENER) || DEBUG_PROFILING > 0 || USE_BASICTIMER > 0
     #if defined(USE_BASICTIMER) && USE_BASICTIMER < 1
         #warning "USE_BASICTIMER redefined due to system useage"

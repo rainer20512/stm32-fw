@@ -44,8 +44,8 @@ static uint8_t bOngoingTransfer = 0;    /* indicates an ongoing transfer, if != 
 static uint8_t bExpandCrToCrlf = 0;     /* expand LF to CRLF */
 static uint8_t bDelayedFlush = 0;       /* Keep in mind an delayed flush */
 
-static uint8_t outbuf[OUTBUF_SIZE];
-static uint8_t inbuf[INBUF_SIZE];
+static DMAMEM uint8_t outbuf[OUTBUF_SIZE];
+static DMAMEM uint8_t inbuf[INBUF_SIZE];
 static CircBuffT o;
 static LinBuffT i; 
 

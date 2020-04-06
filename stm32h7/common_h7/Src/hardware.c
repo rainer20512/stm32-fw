@@ -3,6 +3,8 @@
  * @author  rainer
  * @brief   implement all hardware specfic things
  *
+ *          STM32H7xx
+ *
  * This file has to be adopted for different STM32 hardwares. And it should be the
  * only place where hardware adoption takes place
  ******************************************************************************/
@@ -13,6 +15,13 @@
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
 #endif
+
+
+/*
+ * Assignment of Timers to busses / clock sources 
+ */
+const TIM_TypeDef* apb1_timers[9]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7, TIM12, TIM13, TIM14  };   /* Timers clocked by APB1 */
+const TIM_TypeDef* apb2_timers[5]={TIM1, TIM8,       TIM15, TIM16, TIM17 };                        /* Timers clocked by APB2 */
 
 /****************************************************************************** 
  * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 
@@ -31,7 +40,7 @@ uint32_t GetAPB1TimerFrequency(void)
   if (uPclk1Prescale==RCC_HCLK_DIV1)
      return uPclk1;
   else 
-     return uPclk1*2;
+     return uPclk1/2;
 }
 
 uint32_t GetAPB2TimerFrequency(void)
@@ -43,7 +52,7 @@ uint32_t GetAPB2TimerFrequency(void)
   if (uPclk2Prescale==RCC_HCLK_DIV1)
      return uPclk2;
   else 
-     return uPclk2*2;
+     return uPclk2/2;
 }
 
 void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD);
@@ -61,3 +70,4 @@ void TimerWatchdogReset(uint16_t num_of_ms)
    TimerWatchdogReset_Internal(num_of_ms, IWDG1);
    TimerWatchdogReset_Internal(num_of_ms, IWDG2);
 }
+
