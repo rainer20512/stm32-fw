@@ -61,10 +61,10 @@
 
 #if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
     /* The following external channels are common to ADC1 .. ADC3 */
-    #define ADC123_CH_1         { ADC_CHANNEL_1,  ADC_SAMPLETIME_12CYCLES_5, GPIOC, GPIO_PIN_0 }
-    #define ADC123_CH_2         { ADC_CHANNEL_2,  ADC_SAMPLETIME_12CYCLES_5, GPIOC, GPIO_PIN_1 }
-    #define ADC123_CH_3         { ADC_CHANNEL_3,  ADC_SAMPLETIME_12CYCLES_5, GPIOC, GPIO_PIN_2 }
-    #define ADC123_CH_4         { ADC_CHANNEL_4,  ADC_SAMPLETIME_12CYCLES_5, GPIOC, GPIO_PIN_3 }
+    #define ADC123_CH_1         { ADC_CHANNEL_1,  ADC_SAMPLETIME_32CYCLES_5, GPIOC, GPIO_PIN_0 }
+    #define ADC123_CH_2         { ADC_CHANNEL_2,  ADC_SAMPLETIME_32CYCLES_5, GPIOC, GPIO_PIN_1 }
+    #define ADC123_CH_3         { ADC_CHANNEL_3,  ADC_SAMPLETIME_32CYCLES_5, GPIOC, GPIO_PIN_2 }
+    #define ADC123_CH_4         { ADC_CHANNEL_4,  ADC_SAMPLETIME_32CYCLES_5, GPIOC, GPIO_PIN_3 }
     #if defined(USE_ADC1) || defined(USE_ADC2)
     /* The following external channels are common to ADC1 and ADC2 */
         #define ADC12_CH_5      { ADC_CHANNEL_5,  ADC_SAMPLETIME_12CYCLES_5, GPIOA, GPIO_PIN_0 }

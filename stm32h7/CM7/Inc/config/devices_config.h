@@ -299,14 +299,15 @@
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
     #endif
 
-    // #define USE_USART2
-    #define USE_USART2_ALTN1
+    #define USE_USART2
+    //#define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     #define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+    //#define USE_USART2_DEBUG
     
     #define USE_USART3
-    //#define COM3_USE_TX_DMA
+    #define COM3_USE_TX_DMA
     //#define COM3_USE_RX_DMA
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
     #define USE_USART3_DEBUG

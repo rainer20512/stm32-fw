@@ -538,8 +538,8 @@ void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *par
   hdma->Init.Request             = dma->dmaRequest;
   hdma->Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
   hdma->Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-  hdma->Init.MemBurst            = DMA_MBURST_SINGLE;
-  hdma->Init.PeriphBurst         = DMA_MBURST_SINGLE;
+  hdma->Init.MemBurst            = DMA_MBURST_INC4;
+  hdma->Init.PeriphBurst         = DMA_MBURST_INC4;
 
 }
 

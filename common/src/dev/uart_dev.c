@@ -1053,7 +1053,7 @@ void UsartStartTx(UsartHandleT *uhandle, uint8_t *data, uint32_t txSize)
   uhandle->TxSize  = txSize; 
   
   /* If we have an DMA-handle, activate DMA transfer */
-  if ( uhandle->hTxDma ) {
+  if ( uhandle->hTxDma) {
     /* Enable the UART transmit DMA channel */
     HAL_DMA_Start_IT(uhandle->hTxDma, (uint32_t)data, (uint32_t)&uhandle->Instance->TDR, txSize);
     

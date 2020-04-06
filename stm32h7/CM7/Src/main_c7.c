@@ -148,9 +148,6 @@ int main(void)
 
     STATUS(0);
 
-    // Switch LSE Clock on 
-    LSEClockConfig(true, true);
-
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
 
@@ -160,6 +157,9 @@ int main(void)
     */
     SystemClock_SetConfiguredClock();
     STATUS(11);
+
+    // Switch LSE Clock on 
+    LSEClockConfig(true, true);
 
     /* Configure the system clock to 400 MHz */
     // SystemClock_Config();
@@ -231,7 +231,7 @@ int main(void)
     /* Start the Core 1 task */
     xTaskCreate( prvCore1Task, "AMPCore1", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL );		
 
-    STATUS(99);
+    STATUS(43);
     /* Start scheduler */
     vTaskStartScheduler();
     /* We should never get here as control is now taken by the scheduler */
@@ -490,7 +490,7 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableICache();
 
   /* Enable D-Cache */
-  SCB_EnableDCache();
+  // SCB_EnableDCache();
 }
 
 /**
@@ -516,6 +516,21 @@ static void MPU_Config(void)
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
   MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
+  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
+  MPU_InitStruct.SubRegionDisable = 0x00;
+  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
+
+  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+
+  /* Configure the MPU attributes as RO for CM7 Flash */
+  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
+  MPU_InitStruct.BaseAddress = FLASH_BANK1_BASE;
+  MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
+  MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO_URO;
+  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
+  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
+  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
+  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
   MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
   MPU_InitStruct.SubRegionDisable = 0x00;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;

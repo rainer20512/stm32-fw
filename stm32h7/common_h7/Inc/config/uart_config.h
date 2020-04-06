@@ -17,6 +17,7 @@
 #define __UART_CONFIG_H
 
 #include "hardware.h"
+#include "config/devices_config.h"
 
 
 /* Exported types ------------------------------------------------------------*/
@@ -160,13 +161,13 @@
 
   #ifdef COM3_USE_TX_DMA
     /* Definition for USART3 TX DMA */
-    #define COM3_TX_DMA                    DMA1_Stream5, DMA_REQUEST_USART3_TX, DMA1_Stream5_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM3_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
+    #define COM3_TX_DMA                    DMA1_Stream4, DMA_REQUEST_USART3_TX, DMA1_Stream4_IRQn, DMA_PRIORITY_MEDIUM 
+    #define COM3_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
   #endif
   #ifdef COM3_USE_RX_DMA
     /* Definition for USART3 RX DMA */
-    #define COM3_RX_DMA                    DMA1_Stream7, DMA_REQUEST_USART3_RX, DMA1_Stream7_IRQn, DMA_PRIORITY_LOW
-    #define COM3_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
+    #define COM3_RX_DMA                    DMA1_Stream6, DMA_REQUEST_USART3_RX, DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
+    #define COM3_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
   #endif
 #endif // COM3
 

@@ -77,6 +77,10 @@ static void Debug_OutputTransfer(uint32_t from, uint32_t to )
   uint32_t transfer_size = to - from;
 
   UsartStartTx(DebugUart, o.buf+o.rdptr, transfer_size);
+  #if defined(USE_USART2) 
+        UsartStartTx(&HandleCOM2, o.buf+o.rdptr, transfer_size);
+  #endif
+
 }
 
 

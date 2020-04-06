@@ -170,12 +170,18 @@ void DBG_dump_bitvalue2(const char *text1, const char *text2, uint32_t regval, u
   DEBUG_PRINTF(" %s\n", regval & bitval ? "Yes" : "No");
 }
 
-
-void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval ) 
+void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval)
 {
   DBG_do_indent();
   DBG_strpadright(text, myDesiredLen, '.');
   DEBUG_PRINTF(" %s\n", regval & bitval ? "On" : "Off");
+}
+
+void DBG_dump_onoffvalue2(const char *text, uint32_t regval, uint32_t bitval, const char *append) 
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(" %s%s\n", regval & bitval ? "On " : "Off",append);
 }
 
 void DBG_dump_setresetvalue(const char *text, uint32_t regval, uint32_t bitval ) 

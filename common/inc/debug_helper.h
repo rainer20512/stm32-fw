@@ -75,7 +75,8 @@ void DBG_dump_section_useage (const char *text, uint32_t used, uint32_t total );
 void DBG_dump_stack_useage( uint32_t act_sp, uint32_t max_useage, uint32_t start, uint32_t end);
 void DBG_dump_bitvalue(const char *text, uint32_t regval, uint32_t bitval ); 
 void DBG_dump_bitvalue2(const char *text1, const char *text2, uint32_t regval, uint32_t bitval ); 
-void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval );
+void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval); 
+void DBG_dump_onoffvalue2(const char *text, uint32_t regval, uint32_t bitval, const char *append); 
 void DBG_dump_setresetvalue(const char *text, uint32_t regval, uint32_t bitval );
 void DBG_dump_po2 (const char *text, uint32_t exp );
 

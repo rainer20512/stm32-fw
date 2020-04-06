@@ -116,17 +116,28 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
       DBG_dump_powersetting();
       break;
     case 3:
-      DBG_dump_peripheralclocksetting();
+      if ( CMD_argc() < 1 ) {
+          printf("Usage: 'PeriClk <0|1> - dump only active or all periph. clk states\n");
+          return false;
+      }
+      CMD_get_one_word( &word, &wordlen );
+      ret = CMD_to_number ( word, wordlen );
+      DBG_dump_peripheralclocksetting(ret!=0);
       break;
     case 4:
       DBG_dump_peripheralclockconfig();
       break;
     case 5:
-      DBG_dump_peripheralclocksetting_insleepmode();
+      if ( CMD_argc() < 1 ) {
+          printf("Usage: 'SleepClk <0|1> - dump only active or all periph. clk states in LP mode\n");
+          return false;
+      }
+      CMD_get_one_word( &word, &wordlen );
+      ret = CMD_to_number ( word, wordlen );
+      DBG_dump_peripheralclocksetting_insleepmode(ret!=0);
       break;
     case 6:
-      for ( uint32_t i = 0; i < 5; i++ )
-         Config_Menu( cmdline, len, VOID(i) );
+      DBG_dump_all_DMA ();
       break;
     case 7:
       if ( CMD_argc() < 1 ) {
@@ -170,7 +181,7 @@ static const CommandSetT cmdClkCfg[] = {
   { "PeriClk",   ctype_fn, {Config_Menu},  VOID(3), "Show peripheral clock settings"  },
   { "PeriCfg",   ctype_fn, {Config_Menu},  VOID(4), "Show peripheral clock configuration"  },
   { "SleepClk",  ctype_fn, {Config_Menu},  VOID(5), "Show peripheral clock settings in sleep mode"  },
-  { "All",       ctype_fn, {Config_Menu},  VOID(6), "Show Items 0) to 4) "  },
+  { "DMA settng",ctype_fn, {Config_Menu},  VOID(6), "Show DAM settings"  },
   { "SetSysClk", ctype_fn, {Config_Menu},  VOID(7), "Set system clock to predefined settings"  },
   { "Calib-HSI", ctype_fn, {Config_Menu},  VOID(8), "Calibrate HSI Clock"  },
   { "MCO output",ctype_fn, {Config_Menu},  VOID(9), "Activate MCO Output PA8" },
@@ -1048,7 +1059,7 @@ static bool Test_Toggle ( char *cmdline, size_t len, const void * arg )
   * @note   will try to read as many parameters as needed
   ********************************************************************************/
 bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval);
-
+static const char usart2[]="The quick brown fox jumps over the lazy dog";
 static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 {
   UNUSED(cmdline);UNUSED(len);
@@ -1111,6 +1122,11 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
        for ( uint32_t i = 0; i < pattern; i++ )
             UsartTxRxOneByteWait   (&HandleCOM9, &c, 3000);
        break;
+#endif
+#if defined(USE_USART2)
+    case 5:
+        UsartStartTx(& HandleCOM2, (uint8_t *)usart2,sizeof(usart2));
+        break;
 #endif
     default:
       DEBUG_PUTS("Test_Menu: command not implemented");
@@ -1180,6 +1196,9 @@ static const CommandSetT cmdTest[] = {
   { "Multi Tmr",       ctype_fn, .exec.fn = Test_TmrMulti,  VOID(0), "Lots of timers" }, 
   { "Kill Tmr",        ctype_fn, .exec.fn = Test_TmrKill,   VOID(0), "Generates Error" }, 
   { "Toggle",          ctype_fn, .exec.fn = Test_Toggle,    VOID(0), "Toggle UserLed2" },
+#if defined(USE_USART2)
+  { "USART2 Out",      ctype_fn, .exec.fn = Test_Menu,      VOID(5), "Output via USART2" },
+#endif
 #if USE_EPAPER > 0
   { "ePaper Test",     ctype_fn, .exec.fn = Test_Menu,      VOID(1), "Test ePaper"}, 
 #endif
@@ -1195,7 +1214,7 @@ static const CommandSetT cmdTest[] = {
 };
 ADD_SUBMODULE(Test);
 
-#if defined(USE_ADC1)
+#if defined(USE_ADC3)
     /*********************************************************************************
       * @brief  Submenu for FM24 Access functions
       *         
@@ -1213,15 +1232,15 @@ ADD_SUBMODULE(Test);
 
       switch((uint32_t)arg) {
         case 0:
-            ADC_Calibrate(&HW_ADC1);
+            ADC_Calibrate(&HW_ADC3);
             /* fall through */
         case 1:
-            ADC_MeasureVdda ((void *)&HW_ADC1);
-            printf("Vdda = %dmV\n", ADC1Handle.vdda); 
+            ADC_MeasureVdda ((void *)&HW_ADC3);
+            printf("Vdda = %dmV\n", ADC3Handle.vdda); 
             break;
         case 2:
-            ADC_MeasureChipTemp(&HW_ADC1);
-            printf("Chip Temp = %d°C\n", ADC1Handle.chiptemp); 
+            ADC_MeasureChipTemp(&HW_ADC3);
+            printf("Chip Temp = %d°C\n", ADC3Handle.chiptemp); 
             break;
         case 3:
             if ( CMD_argc() < 1 ) {
@@ -1230,19 +1249,19 @@ ADD_SUBMODULE(Test);
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
-            ADC_MeasureChannel(&HW_ADC1, ch);
+            ADC_MeasureChannel(&HW_ADC3, ch);
             break;
         case 4:
             puts("Measure group"); 
-            ADC_SetupGroup(&HW_ADC1);
-            ADC_MeasureGroup(&HW_ADC1);
+            ADC_SetupGroup(&HW_ADC3);
+            ADC_MeasureGroup(&HW_ADC3);
             break;
         case 5:
-            ADC_DisableRefintCh(&HW_ADC1);
+            ADC_DisableRefintCh(&HW_ADC3);
             puts("Refint channel disabled"); 
             break;
         case 6:
-            ADC_DisableAllInternalCh(&HW_ADC1);
+            ADC_DisableAllInternalCh(&HW_ADC3);
             puts("Refint channel disabled"); 
             break;
         default:
@@ -1518,7 +1537,7 @@ ADD_SUBMODULE(Test);
 
 
     static const CommandSetT cmd18X20[] = {
-        { "ROM Search",             ctype_fn, .exec.fn = DS_Menu,VOID(0), "Calibrate ADC & Measure Vdda" },
+        { "ROM Search",             ctype_fn, .exec.fn = DS_Menu,VOID(0), "Perform a OW ROM search" },
         { "Measure Temp",           ctype_fn, .exec.fn = DS_Menu,VOID(1), "Initiate temp measurement" },
         { "Read Bitstatus",         ctype_fn, .exec.fn = DS_Menu,VOID(2), "Read Bitstatus" },
         { "Read Scratchpad",        ctype_fn, .exec.fn = DS_Menu,VOID(3), "Read scratchpad" },
@@ -2159,7 +2178,7 @@ static const CommandSetT cmdBasic[] = {
 #if USE_I2C > 0
   { "I2C"    ,         ctype_sub, .exec.sub = &mdlI2C,         0,       "I2C submenu" },
 #endif
-#if defined(USE_ADC1)
+#if defined(USE_ADC3)
   { "ADC"    ,         ctype_sub, .exec.sub = &mdlADC,         0,       "ADC submenu" },
 #endif
 #if USE_DOGM132 > 0

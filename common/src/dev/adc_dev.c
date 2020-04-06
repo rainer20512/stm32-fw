@@ -23,8 +23,7 @@
 #include "system/periodic.h"
 
 
-#define DEBUG_ADC 0
-
+#define DEBUG_ADC 1
 
 #if DEBUG_MODE > 0 && DEBUG_ADC > 0
     #include "debug_helper.h"
@@ -80,6 +79,31 @@ static bool Adc_AssertInitialized(const HW_DeviceType *self)
 }
 
 /******************************************************************************
+ * Check for driver being initialized 
+ *****************************************************************************/
+static bool Adc_AssertRefint(const HW_DeviceType *self)
+{
+    bool ret = ADC_HAS_REFINT(self->devBase);
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0
+        if (!ret ) DEBUG_PRINTF("Error: %s has no Refint capability\n", self->devName);
+    #endif
+    return ret;
+}
+
+/******************************************************************************
+ * Check for driver being initialized 
+ *****************************************************************************/
+static bool Adc_AssertChiptemp(const HW_DeviceType *self)
+{
+    bool ret = ADC_HAS_CHIPTEMP(self->devBase);
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0
+        if (!ret ) DEBUG_PRINTF("Error: %s has no Chip temp capability\n", self->devName);
+    #endif
+    return ret;
+}
+
+
+/******************************************************************************
  * Setup the ADC_InitTypeDef structure for 
  * - 12 bit resolution, 16x oversampling, right aligned result, 
  * - ADC start by software, number of sequencer channels as specified,
@@ -98,18 +122,22 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
      * Do the neccessary ADC settings. Theses settings are done only once and are kept 
      * in Init-Struct as long as the variable is in scope.
      */
-    Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;         /* Synchronous clock mode, input ADC clock divided by 2*/
     Init->Resolution            = ADC_RESOLUTION_12B;               /* 12-bit resolution for converted data */
     Init->OversamplingMode      = ENABLE;                           /* enable oversampling */
     #if defined(STM32L476xx) || defined(STM32L496xx)
+        Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;         /* Synchronous clock mode, input ADC clock divided by 2*/
         Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
         Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
         o->Ratio                    = ADC_OVERSAMPLING_RATIO_16;        /* 16x oversampling */
         o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
     #elif defined(STM32H745xx)
+        Init->ClockPrescaler        = ADC_CLOCK_ASYNC_DIV16;         /* Peripheral clock of 64 MHz divied by 16*/
         o->Ratio                    = 16;                               /* 16x oversampling */
         o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
-        Init->ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;/* ADC DMA for only one sequence */
+        if ( nrofChannels < 2 ) 
+            Init->ConversionDataManagement = ADC_CONVERSIONDATA_DR  ;       /* ADC Data register of inly one channel */
+        else
+            Init->ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;/* ADC DMA for only one sequence */
     #else
         #error "NO ADC setup for selected STM32 type"
     #endif
@@ -167,10 +195,11 @@ static uint32_t Adc_GetRankFromIdx( uint32_t idx )
 
 /******************************************************************************
  * Setup a channel with Rank1 for Vrefint conversion
+ * caller has to make sure, that associated ADC has an refint channel!
  *****************************************************************************/
  static void Adc_SetupVrefintChannel(ADC_ChannelConfTypeDef *c, uint32_t rankidx) 
 {
-    c->Channel      = ADC_CHANNEL_VREFINT;         /* Internal Vrefint channel ( only valid for ADC1 ) */
+    c->Channel      = ADC_CHANNEL_VREFINT;         /* Internal Vrefint channel ( only valid for certain ADC instances ) */
     c->Rank         = Adc_GetRankFromIdx(rankidx); /* Rank of sampled channel number ADCx_CHANNEL */
     c->SamplingTime = ADC_SAMPLETIME_SLOW;         /* Sampling time (number of clock cycles unit), according to datasheet: minimum 4uS */
     c->SingleDiff   = ADC_SINGLE_ENDED;            /* Single-ended input channel */
@@ -261,7 +290,7 @@ static AdcHandleT *Adc_GetMyHandleFromHalHandle(ADC_HandleTypeDef *hadc)
  * Callback for "Conversion of sequence complete"
  * Inform the task scheduler, that ADC actions have to be taken
  *
- * Moreover, ADC1 requires a special handling: 
+ * Moreover, if Refint capability is availabel, it has been added as first channel:
  * As we added measurement of Vrefint in the first position, we will reomve the first
  * result from the sequence here and use it to update the Vdda value
  * 
@@ -269,7 +298,7 @@ static AdcHandleT *Adc_GetMyHandleFromHalHandle(ADC_HandleTypeDef *hadc)
  *************************************************************************************/
 void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
 {   
-    #if DEBUG_MODE > 0 && DEBUG_ADC > 0
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 && DEBUG_PROFILING > 0
         DEBUG_PRINTF("%d>",ProfilerGetMicrosecond());
     #endif
 
@@ -278,7 +307,7 @@ void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
     if (!myHandle ) return;
 
     uint8_t seqlen = GET_SEQ_LEN(hadc);
-    if ( hadc->Instance == ADC1 ) {
+    if ( ADC_HAS_REFINT(hadc->Instance) ) {
         uint32_t raw = myHandle->dmabuf[0];
         Adc_UpdateVdda(myHandle, raw);
         myHandle->seqLen = seqlen-1;
@@ -428,12 +457,15 @@ static bool Adc_MeasureVdda (const HW_DeviceType *self)
     /* make sure that the handle is initialized */
     if (!Adc_AssertInitialized(self) ) return false;
 
+    /* make sure that the ADXC has a REFINT channel */
+    if (!Adc_AssertRefint(self) ) return false;
+
     ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
     uint32_t raw;
 
-    /* Vrefint can be measured via ADC1 only */
-    if ( self->devBase != (void *)ADC1_BASE ) return false;
+    /* Vrefint can be measured via specific only */
+    if ( !ADC_HAS_REFINT(self->devBase) ) return false;
 
     /* Check for single channel being initialized */
     if ( adt->myAdcHandle->bSequence ) Adc_SetupInit(self, 1);
@@ -485,18 +517,18 @@ bool ADC_MeasureChipTemp (const HW_DeviceType *self)
     /* make sure that the handle is initialized */
     if (!Adc_AssertInitialized(self) ) return false;
 
+    /* make sure that the ADC is capable of measuring Chip temp */
+    if (!Adc_AssertChiptemp(self) ) return false;
+
     ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
     uint32_t raw;
-
-    /* Chiptemp can be measured via ADC1 or ADC3 */
-    if ( self->devBase != (void *)ADC1_BASE && self->devBase != (void *)ADC3_BASE ) return false;
 
     /* Check for single channel being initialized */
     if ( adt->myAdcHandle->bSequence ) Adc_SetupInit(self, 1);
     
     ADC_ChannelConfTypeDef c;  
-    c.Channel      = ADC_CHANNEL_TEMPSENSOR;      /* Internal TempSensor ch. ( valid for ADC1/ADC3 ) */
+    c.Channel      = ADC_CHANNEL_TEMPSENSOR;      /* Internal TempSensor ch. ( valid for certain channels ) */
     c.Rank         = ADC_REGULAR_RANK_1;          /* Rank of sampled channel number ADCx_CHANNEL */
     c.SamplingTime = ADC_SAMPLETIME_FAST;         /* Sampling time (number of clock cycles unit) */
     c.SingleDiff   = ADC_SINGLE_ENDED;            /* Single-ended input channel */
@@ -511,13 +543,13 @@ bool ADC_MeasureChipTemp (const HW_DeviceType *self)
         return false;
     }
   
-    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 && DEBUG_PROFILING > 0
         DEBUG_PRINTF(">%d",ProfilerGetMicrosecond());
     #endif
     
     if ( !ADC_SingleConversion(hAdc, &raw) ) return false;
     
-    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 && DEBUG_PROFILING > 0 
         DEBUG_PRINTF(",%d>\n",ProfilerGetMicrosecond());
     #endif
 
@@ -554,11 +586,13 @@ void ADC_SetupGroup (const HW_DeviceType *self)
     }
 
     uint8_t nrofch = gpioadclist->num; 
-    if ( hAdc->Instance == ADC1 ) nrofch++;
+
+    /* if Instance has Refint channel, it is always inserted as the first channel */
+    if ( ADC_HAS_REFINT(hAdc->Instance) ) nrofch++;
     Adc_SetupInit(self, nrofch);
 
-    /* if Instance is ADC1, the Vrefint channel is always inserted as the first channel */
-    if ( hAdc->Instance == ADC1 ) {
+    /* if Instance has Refint channel, it is always inserted as the first channel */
+    if ( ADC_HAS_REFINT(hAdc->Instance) ) {
         Adc_SetupVrefintChannel(&c, rank);
         /* Configure channel */
         if (HAL_ADC_ConfigChannel(hAdc, &c) != HAL_OK) {
@@ -609,7 +643,7 @@ bool ADC_MeasureGroup(const HW_DeviceType *self)
   
     /* Invalidate old results */
     adt->myAdcHandle->bSequenceDone = false;
-    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+    #if DEBUG_MODE > 0 && DEBUG_ADC > 0 && DEBUG_PROFILING > 0 
         DEBUG_PRINTF(">%d",ProfilerGetMicrosecond());
     #endif
     uint32_t length = GET_SEQ_LEN(hAdc);
@@ -640,6 +674,7 @@ static void ADC_ClockInit (const HW_DeviceType *self, bool bIsInit)
 
     /* enable ADC clock */
     HW_SetHWClock((void *)self->devBase, 1);
+
 }
 
 
@@ -682,7 +717,7 @@ bool ADC_Init(const HW_DeviceType *self)
         return false;
     }
     
-    if ( self->devBase == (void *)ADC1_BASE ) ADC_MeasureVdda((void *)self);
+    if ( ADC_HAS_REFINT(self->devBase) ) ADC_MeasureVdda((void *)self);
 
     const HW_IrqType *irq;
     const HW_DmaType *dma;
@@ -864,8 +899,8 @@ void task_handle_adc(uint32_t arg)
         .gpio = { 
             ADC3CH_REFINT,
             ADC3CH_TEMPSENSOR,
-// example  ADC323_CH_3,
-// example  ADC323_CH_4,
+/*example */  ADC123_CH_3,
+/*example */  ADC123_CH_4,
         }
     };
 

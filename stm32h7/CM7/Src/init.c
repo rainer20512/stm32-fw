@@ -57,10 +57,10 @@ void Init_DumpAndClearResetSource(void)
 void Init_OtherDevices(void)
 {
   int32_t dev_idx;
-  #if defined(USE_ADC1)
-      dev_idx = AddDevice(&HW_ADC1, NULL, NULL);
+  #if defined(USE_ADC3)
+      dev_idx = AddDevice(&HW_ADC3, NULL, NULL);
       if ( dev_idx < 0 ) {
-        DEBUG_PUTS("Failed to init ADC1-device");
+        DEBUG_PUTS("Failed to init ADC3-device");
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }
@@ -70,6 +70,15 @@ void Init_OtherDevices(void)
       dev_idx = AddDevice(&HW_COM1, NULL, NULL );
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init USART-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+
+  #endif
+  #if defined(USE_USART2)
+      dev_idx = AddDevice(&HW_COM2, NULL, NULL );
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init USART2-device");
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }

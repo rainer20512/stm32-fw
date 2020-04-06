@@ -537,27 +537,27 @@ const char * const user_nvic_name[]= {
   "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
 };
 #elif defined(STM32H745xx)
-const char * const user_nvic_name[]= { 
+const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
 /*.                 .                 .                 .                 .                 .                 .                 . */
   "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
   "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
   "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
   "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
   "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
-  "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#4",
+  "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
   "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
   "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
   "M7_SEV",         "M4_SEV",         "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",       "USART6",
   "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
   "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
-  "LTDC",           "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",        "I2C4_ER",
-  "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",     "HRTIM1_TIMA",
-  "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   "DFSDM1_FILT2",
-  "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",     "MDIOS", 
-  "JPEG",           "MDMA",           "DSI",            "DSI_WKUP",       "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
-  "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       "BDMA_CH7",
-  "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       "CRS",
-  "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
+  "LTDC",           "LTDC_ER",        "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",
+  "I2C4_ER",        "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",
+  "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
+  "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
+  "MDIOS",          "JPEG",           "MDMA",           "DSI(WKUP)",      "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
+  "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
+  "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
+  "CRS",            "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
 };
 #else
     #error "No NVIC Line definitions for current MCU"

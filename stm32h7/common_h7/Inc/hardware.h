@@ -20,6 +20,9 @@
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
 
+/* --- Type specific setup for ADC ------------------------------------------*/
+#define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC3_BASE )
+#define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC3_BASE )
 
 uint32_t GetAPB1TimerFrequency  (void);
 uint32_t GetAPB2TimerFrequency  (void);

@@ -731,7 +731,8 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
 
     #if DEBUG_MODE > 0
         DEBUG_PRINTF("SYSCLK nom. %d\n", HAL_RCC_GetSysClockFreq());
-        DEBUG_PRINTF("SYSCLK real  %d\n",Get_SysClockFrequency());
+        uint32_t sysclk = Get_SysClockFrequency();
+        DEBUG_PRINTF("SYSCLK real  %d.%06d\n",sysclk/1000000,sysclk%1000000);
     #endif
 }
 
@@ -785,9 +786,9 @@ void HSIClockConfig(bool bHSIon)
 
 
 /******************************************************************************
- * Do a Calibration of the HSI16 clock 
+ * Do a Calibration of the HSI clock 
  * To do this, the LSE clock has to be on. SYSCLK will be switched to
- * HSI16 temporarily
+ * HSI temporarily
  * TMR15 is used to perform the calibration
  *****************************************************************************/
 
@@ -839,7 +840,7 @@ uint32_t            IC1ReadValue1 = 0, IC1ReadValue2 = 0;
   * @param  None
   * @retval None
   ****************************************************************************/
-void TIM1_BRK_TIM15_IRQHandler(void)
+void TIM15_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&TimHandle);
 }
@@ -1047,7 +1048,8 @@ static void HSI_TIMx_ConfigForCalibration(void)
   HAL_TIM_IC_DeInit(&TimHandle);
 
     /* Connect LSE clock to TIMx Input Capture 1 */
-    HAL_TIMEx_RemapConfig(&TimHandle, TIM_TIMx_LSE);     
+    //HAL_TIMEx_RemapConfig(&TimHandle, TIM_TIMx_LSE);     
+    HAL_TIMEx_TISelection(&TimHandle, TIM_TIMx_LSE, TIM_CHANNEL_y);
 
   /* Initialize TIMx peripheral as follows:
        + Period = 0xFFFF
@@ -1121,8 +1123,8 @@ bool HSIClockCalibrate ( void )
     if ( (RCC->BDCR & ( RCC_BDCR_LSEON_Msk | RCC_BDCR_LSERDY_Msk ) ) != ( RCC_BDCR_LSEON_Msk | RCC_BDCR_LSERDY_Msk ) ) 
       return false;
 
-    /* switch to HSI16, Vrange1, 0 WS*/
-    SystemClock_Set(CLK_HSI_VRNG3_16MHZ_0WS, false);
+    /* switch to HSI 64MHz, Vrange1, 1 WS*/
+    SystemClock_Set(CLK_HSI_VRNG3_64MHZ_1WS, false);
 
     /* Prepare TIM15 for calibration */
     HSI_TIMx_ConfigForCalibration();

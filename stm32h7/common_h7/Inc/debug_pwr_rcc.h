@@ -22,10 +22,11 @@
 #if DEBUG_FEATURES > 0
   void DBG_dump_clocksetting(void);
   void DBG_dump_powersetting(void);
-  void DBG_dump_peripheralclocksetting(void);
-  void DBG_dump_peripheralclocksetting_insleepmode(void);
+  void DBG_dump_peripheralclocksetting(bool bDumpAll);
+  void DBG_dump_peripheralclocksetting_insleepmode(bool bDumpAll);
   void DBG_dump_peripheralclockconfig(void);
   void DBG_dump_rtcclockconfig(void);
+  void DBG_dump_all_DMA (void );
 #endif
 
 
