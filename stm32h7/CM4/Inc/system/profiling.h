@@ -13,7 +13,6 @@
 
 #include "config/config.h"
 
-#include "dev/timer_dev.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -66,6 +65,8 @@
   } ActiveJobEnumType;
 
 #if DEBUG_PROFILING > 0
+
+#include "dev/timer_dev.h"
 
 #define JOBNAMES0 \
   "TMR",          \

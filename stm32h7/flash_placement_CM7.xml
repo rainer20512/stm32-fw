@@ -15,8 +15,10 @@
     <ProgramSection alignment="4" load="Yes" runin=".data_run2" name=".data2" />
     <ProgramSection alignment="4" load="Yes" runin=".data_run3" name=".data3" />
   </MemorySegment>
-  <!-- Use 128kB AXISRAM as main RAM /-->
   <MemorySegment name="$(RAM_NAME:AXISRAM);SRAMA;RAMA">
+  </MemorySegment>
+  <!-- Use 128kB DTCM RAM as main RAM /-->
+  <MemorySegment name="$(RAM_NAME:DTCM);RAMDTCM">
     <ProgramSection alignment="0x100" load="No" name=".vectors_ram" start="$(RAM_START:$(SRAM_START:))" />
     <ProgramSection alignment="4" load="No" name=".fast_run" />
     <ProgramSection alignment="4" load="No" name=".data_run" />
@@ -27,8 +29,6 @@
     <ProgramSection alignment="4" size="__HEAPSIZE__" load="No" name=".heap" />
     <ProgramSection alignment="8" size="__STACKSIZE__" load="No" name=".stack" />
     <ProgramSection alignment="8" size="__STACKSIZE_PROCESS__" load="No" name=".stack_process" />
-  </MemorySegment>
-  <MemorySegment name="$(RAM_NAME:DTCM);RAMDTCM">
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
     <ProgramSection alignment="4" load="No" name=".RAM_D3_Z1" />

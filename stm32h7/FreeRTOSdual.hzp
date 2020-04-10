@@ -51,7 +51,6 @@
       <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
-      <file file_name="CM4/Inc/system/ram_preset.inc" />
       <file file_name="flash_placement_CM4.xml" />
     </folder>
     <folder Name="Application">
@@ -60,11 +59,26 @@
           <configuration Name="Common" build_exclude_from_build="Yes" />
         </file>
       </folder>
-      <folder Name="User">
-        <folder Name="CM4">
-          <file file_name="$(ProjectDir)/CM4/Src/stm32h7xx_it.c" />
-          <file file_name="$(ProjectDir)/CM4/Src/main_c4.c" />
+      <folder Name="src">
+        <file file_name="$(ProjectDir)/CM4/Src/main_c4.c" />
+        <file file_name="CM4/Src/hardfault.s" />
+        <file file_name="CM4/Src/init_c4.c" />
+        <file file_name="CM4/Src/interpreters_c4.c" />
+        <file file_name="CM4/Src/stm32h7xx_it_c4.c" />
+      </folder>
+      <folder Name="inc">
+        <folder Name="system">
+          <file file_name="CM4/Inc/system/ram_preset.inc" />
         </folder>
+        <file file_name="CM4/Inc/debug.h" />
+        <file file_name="CM4/Inc/error.h" />
+        <file file_name="CM4/Inc/eeprom.h" />
+        <file file_name="CM4/Inc/global_flags.h" />
+      </folder>
+      <folder Name="config">
+        <file file_name="CM4/Inc/config/config.h" />
+        <file file_name="CM4/Inc/config/devices_config.h" />
+        <file file_name="CM4/Inc/stm32h7xx_hal_conf.h" />
       </folder>
     </folder>
     <folder Name="Doc">
@@ -121,6 +135,58 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.6.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+      </folder>
+    </folder>
+    <folder Name="common">
+      <folder Name="src">
+        <file file_name="../common/src/circbuf.c" />
+        <file file_name="../common/src/cmdline.c" />
+        <file file_name="../common/src/eeprom.c" />
+        <file file_name="../common/src/rtc.c" />
+        <file file_name="../common/src/timer.c" />
+        <folder Name="debug">
+          <file file_name="../common/src/debug_gpio_exti.c" />
+          <file file_name="../common/src/debug_helper.c" />
+          <file file_name="../common/src/debug_outbuf.c" />
+          <file file_name="../common/src/debug_sram.c" />
+        </folder>
+        <folder Name="dev">
+          <file file_name="../common/src/dev/adc_dev.c" />
+          <file file_name="../common/src/dev/devices.c" />
+          <file file_name="../common/src/dev/hw_device.c" />
+          <file file_name="../common/src/dev/io_dev.c" />
+          <file file_name="../common/src/dev/timer_dev.c" />
+          <file file_name="../common/src/dev/uart_dev.c" />
+        </folder>
+      </folder>
+      <folder Name="inc">
+        <folder Name="dev">
+          <file file_name="../common/inc/dev/adc_dev.h" />
+          <file file_name="../common/inc/dev/devices.h" />
+          <file file_name="../common/inc/dev/hw_device.h" />
+          <file file_name="../common/inc/dev/i2c_abstract.h" />
+          <file file_name="../common/inc/dev/i2c_dev.h" />
+          <file file_name="../common/inc/dev/io_dev.h" />
+          <file file_name="../common/inc/dev/lcd.h" />
+          <file file_name="../common/inc/dev/qencode.h" />
+          <file file_name="../common/inc/dev/qspi_dev.h" />
+          <file file_name="../common/inc/dev/spi.h" />
+          <file file_name="../common/inc/dev/spi_dev.h" />
+          <file file_name="../common/inc/dev/timer_dev.h" />
+          <file file_name="../common/inc/dev/uart_dev.h" />
+        </folder>
+      </folder>
+    </folder>
+    <folder Name="common_h7">
+      <folder Name="inc">
+        <folder Name="task">
+          <file file_name="common_h7/Inc/task/minitask.h" />
+        </folder>
+      </folder>
+      <folder Name="src">
+        <folder Name="task">
+          <file file_name="common_h7/Src/task/minitask.c" />
+        </folder>
       </folder>
     </folder>
   </project>
@@ -334,6 +400,7 @@
           <file file_name="../common/src/system/exti_handler.c" />
           <file file_name="../common/src/system/tm1637.c" />
           <file file_name="../common/src/system/timer_handler.c" />
+          <file file_name="../common/src/system/profiling.c" />
         </folder>
         <file file_name="../common/src/rtc.c" />
         <file file_name="../common/src/timer.c" />
@@ -392,6 +459,7 @@
           <file file_name="../common/inc/debug_outbuf.h" />
           <file file_name="../common/inc/debug_sram.h" />
         </folder>
+        <file file_name="CM7/Inc/global_flags.h" />
       </folder>
     </folder>
   </project>

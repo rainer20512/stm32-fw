@@ -136,7 +136,7 @@
 #endif /* TIM7 */
 
 #if defined(USE_TIM6) && defined(TIM6)
-    #define TIM6_IRQ                            { TIM6_IRQn, BASETIM_IRQ_PRIO, 0 }
+    #define TIM6_IRQ                            { TIM6_DAC_IRQn, BASETIM_IRQ_PRIO, 0 }
     #define TIM6_IRQHandler                     TIM6_DAC_IRQHandler 
 #endif /* TIM7 */
 

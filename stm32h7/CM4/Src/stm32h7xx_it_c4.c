@@ -41,6 +41,53 @@
 /*            Cortex-M4 Processor Exceptions Handlers                         */
 /******************************************************************************/
 
+// RHB chnged: Handcrafted HardFault Handler 
+
+// From Joseph Yiu, minor edits by FVH
+// hard fault handler in C,
+// with stack frame location as input parameter
+// called from HardFault_Handler in file xxx.s
+void hard_fault_handler_c (unsigned int * hardfault_args)
+{
+  unsigned int stacked_r0;
+  unsigned int stacked_r1;
+  unsigned int stacked_r2;
+  unsigned int stacked_r3;
+  unsigned int stacked_r12;
+  unsigned int stacked_lr;
+  unsigned int stacked_pc;
+  unsigned int stacked_psr;
+ 
+  stacked_r0 = ((unsigned long) hardfault_args[0]);
+  stacked_r1 = ((unsigned long) hardfault_args[1]);
+  stacked_r2 = ((unsigned long) hardfault_args[2]);
+  stacked_r3 = ((unsigned long) hardfault_args[3]);
+ 
+  stacked_r12 = ((unsigned long) hardfault_args[4]);
+  stacked_lr = ((unsigned long) hardfault_args[5]);
+  stacked_pc = ((unsigned long) hardfault_args[6]);
+  stacked_psr = ((unsigned long) hardfault_args[7]);
+ 
+  debug_printf ("\n\n[Hard fault handler - all numbers in hex]\n");
+  debug_printf ("R0       = %08x\n", stacked_r0);
+  debug_printf ("R1       = %08x\n", stacked_r1);
+  debug_printf ("R2       = %08x\n", stacked_r2);
+  debug_printf ("R3       = %08x\n", stacked_r3);
+  debug_printf ("R12      = %08x\n", stacked_r12);
+  debug_printf ("LR [R14] = %08x  subroutine call return address\n", stacked_lr);
+  debug_printf ("PC [R15] = %08x  program counter\n", stacked_pc);
+  debug_printf ("PSR      = %08x\n", stacked_psr);
+  debug_printf ("BFAR     = %08x\n", (*((volatile unsigned long *)(0xE000ED38))));
+  debug_printf ("CFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED28))));
+  debug_printf ("HFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED2C))));
+  debug_printf ("DFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED30))));
+  debug_printf ("AFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED3C))));
+  debug_printf ("SCB_SHCSR= %08x\n", SCB->SHCSR);
+ 
+  while (1);
+}
+
+
 /**
   * @brief  This function handles NMI exception.
   * @param  None
@@ -50,18 +97,6 @@ void NMI_Handler(void)
 {
 }
 
-/**
-  * @brief  This function handles Hard Fault exception.
-  * @param  None
-  * @retval None
-  */
-void HardFault_Handler(void)
-{
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1)
-  {
-  }
-}
 
 /**
   * @brief  This function handles Memory Manage exception.

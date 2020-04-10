@@ -180,7 +180,7 @@
 
 /* The BBSPI configuration is hardware dependent */
 
-#if defined(STM32L476NUCLEO) || defined(STM32L476BAREMETAL)
+#if defined(STM32H745NUCLEO) 
 
     /*
      * We use BBSPI2 for RFM communication. RFM12 and RFM69 are tested and working
@@ -239,32 +239,6 @@
           #endif
         #endif
     #endif
-
-#elif defined(STM32L476EVAL)
-
-#elif defined(BL475IOT)
-
-  #define BBSPI1_MOSI                           { GPIO_PIN_15, GPIOB, 0, GPIO_NOPULL }
-  #define BBSPI1_SCK                            { GPIO_PIN_13, GPIOB, 0, GPIO_NOPULL }
-  #define BBSPI1_NSEL                           { GPIO_PIN_12, GPIOB, 0, GPIO_NOPULL }
-  #ifdef BBSPI1_USE_MISO 
-      #define BBSPI1_MISO                       { GPIO_PIN_9 , GPIOB, 0, GPIO_PULLUP }
-      #ifdef BBSPI1_USE_MISO_IRQ
-        #define BBSPI1_MISO_IRQ                      { EXTI9_5_IRQn, BBSPI_IRQ_PRIO, 0 }
-      #endif
-  #endif
-
-#elif defined(DRAGONFLY476)
-
-  #define BBSPI1_MOSI                           { GPIO_PIN_2 , GPIOC, 0, GPIO_NOPULL }
-  #define BBSPI1_SCK                            { GPIO_PIN_3 , GPIOC, 0, GPIO_NOPULL }
-  #define BBSPI1_NSEL                           { GPIO_PIN_7 , GPIOC, 0, GPIO_NOPULL }
-  #ifdef BBSPI1_USE_MISO 
-      #define BBSPI1_MISO                       { GPIO_PIN_6 , GPIOC, 0, GPIO_PULLUP }
-      #ifdef BBSPI1_USE_MISO_IRQ
-        #define BBSPI1_MISO_IRQ                      { EXTI9_5_IRQn, BBSPI_IRQ_PRIO, 0 }
-      #endif
-  #endif
 
 #else
   #error "No valid device configuration in devices_config.h"

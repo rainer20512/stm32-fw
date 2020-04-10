@@ -51,10 +51,6 @@
     #include "system/profiling.h"
 #endif
 
-/* Can we use an LSE Clock */
-#if defined(HW_HAS_LSE_CRYSTAL) || defined(HW_HAS_LSE_BYPASS)
-    #define HW_HAS_LSE
-#endif
 
 /*
  *************************************************************************************
@@ -251,12 +247,12 @@ static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_C
     {
       /* Enable HSE Oscillator */
       RCC_OscInitStruct->OscillatorType = RCC_OSCILLATORTYPE_HSE;
-      #if defined(HW_HAS_JSE_CRYSTAL)
+      #if defined(HW_HAS_HSE_CRYSTAL)
         RCC_OscInitStruct->HSEState = RCC_HSE_ON;
       #elif defined(HW_HAS_HSE_BYPASS)
         RCC_OscInitStruct->HSEState = RCC_HSE_BYPASS;
       #else
-        #error "Undefined LSE oscillator type"
+        #error "Undefined HSE oscillator type"
       #endif
       RCC_OscInitStruct->PLL.PLLState = RCC_PLL_NONE;
     }
@@ -446,15 +442,15 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
 
       ConfigureHSE(&osc);
 
-      SetPredividers( &RCC_ClkInitStruct, HW_HSE_FREQ/1000 );
+      SetPredividers( &RCC_ClkInitStruct, HW_HSE_FREQUENCY/1000 );
       RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
 
       /* 
        * At this "low" frequencies AHB clock frq = sysclk, so we can safely use sysclk 
        * as flash clock parameter for GetFlashLatency()
        */
-      uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, HW_HSE_FREQ/1000);
-      DoClockTransition(HW_HSE_FREQ/1000, &osc, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -5);
+      uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, HW_HSE_FREQUENCY/1000);
+      DoClockTransition(HW_HSE_FREQUENCY/1000, &osc, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -5);
 
       /* Disable HSI Oscillator, if desired */
       if ( bSwitchOffHSI ) {
@@ -471,7 +467,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
 
       /* LSE has to be restored after stop */
       bClockSettingVolatile = true;         
-      saved_khz             = HW_HSE_FREQ/1000;
+      saved_khz             = HW_HSE_FREQUENCY/1000;
       saved_latency         = flash_latency;
       saved_vosrange        = 3;
       RestoreFn             = SystemClock_HSE_xxMHz_VOSrange_3_0WS_restore;
@@ -621,7 +617,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
         /* Don't set base clock again, if already set */
         if (!bBaseClkSet) ConfigureHSE(&RCC_OscInitStruct);
         RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-        pll_inp_khz = HW_HSE_FREQ / 1000;
+        pll_inp_khz = HW_HSE_FREQUENCY / 1000;
     #else
         Error_Handler_XX(-5, __FILE__, __LINE__);       
     #endif    
@@ -748,6 +744,12 @@ void SystemClock_SetConfiguredClock(void)
   SystemClock_Set(config.clk_config, true );
 }
 
+/* LSE --- LSE --- LSE --- LSE --- LSE --- LSE --- LSE --- LSE --- LSE --- LS*/
+ /*****************************************************************************
+  * @brief  Configure LSE
+  * @param  bLSEon - switch LSE on or off
+  * @param  bUseAsRTCClock - configure RTC to use LSE as clocksource
+  ****************************************************************************/
 void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
 {
   RCC_OscInitTypeDef        RCC_OscInitStruct;

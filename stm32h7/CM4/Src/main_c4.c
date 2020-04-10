@@ -22,12 +22,19 @@
 /* Standard includes. */
 #include "stdio.h"
 #include "string.h"
+#include "task/minitask.h"
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "task.h"
 #include "message_buffer.h"
 #include "MessageBufferAMP.h"
+
+#include "eeprom.h"
+#include "dev/devices.h"
+#include "task/minitask.h"
+#include "debug_helper.h"
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -39,9 +46,14 @@
 that something might be wrong. */
 BaseType_t xDemoStatus = pdPASS;
 
+/* Forward declarations for external initialization functions -----------------*/
+void Init_DumpAndClearResetSource(void);
+void Init_OtherDevices(void);
+void Init_DefineTasks(void);
+
 /* Private function prototypes -----------------------------------------------*/
+
 /* Private functions ---------------------------------------------------------*/
-static void Error_Handler(void);
 static void prvCore2Tasks( void *pvParameters );
 static void prvCore2InterruptHandler( void );
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
@@ -72,57 +84,91 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
   */
 int main(void)
 {
-  BaseType_t x;
-  BSP_LED_Init(LED1);
-  LedToggle(250, 2);  
+    BaseType_t x;
+    BSP_LED_Init(LED1);
+    LedToggle(250, 2);  
 
- /*HW semaphore Clock enable*/
-  __HAL_RCC_HSEM_CLK_ENABLE();
- 
- /* Activate HSEM notification for Cortex-M4*/
-  HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
-  
-  /* 
-    Domain D2 goes to STOP mode (Cortex-M4 in deep-sleep) waiting for Cortex-M7 to
-    perform system initialization (system clock config, external memory configuration.. )   
-  */
-  HAL_PWREx_ClearPendingEvent();
-  HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
+    /*HW semaphore Clock enable*/
+    __HAL_RCC_HSEM_CLK_ENABLE();
 
-  /* Clear HSEM flag */
-  __HAL_HSEM_CLEAR_FLAG(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+    /* Activate HSEM notification for Cortex-M4*/
+    HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 
- /* STM32H7xx HAL library initialization:
-       - Systick timer is configured by default as source of time base, but user 
-         can eventually implement his proper time base source (a general purpose 
-         timer for example or other time source), keeping in mind that Time base 
-         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
-         handled in milliseconds basis.
-       - Set NVIC Group Priority to 4
-       - Low Level Initialization
+    /* 
+     * Domain D2 goes to STOP mode (Cortex-M4 in deep-sleep) waiting for Cortex-M7 to
+     * perform system initialization (system clock config, external memory configuration.. )   
      */
-  HAL_Init();
- 
-  HAL_NVIC_SetPriority(EXTI0_IRQn, 0xFU, 0U);
-  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-  
-  if (( xControlMessageBuffer == NULL )|( xDataMessageBuffers[0] == NULL ) | ( xDataMessageBuffers[1] == NULL ))
-  {
-    Error_Handler();
-  }
+    HAL_PWREx_ClearPendingEvent();
+    HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-  for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
-  {    
-    /* Pass the loop counter into the created task using the task's
-    parameter.  The task then uses the value as an index into the
-    ulCycleCounters and xDataMessageBuffers arrays. */
-    xTaskCreate( prvCore2Tasks,
-                "AMPCore2",
-                configMINIMAL_STACK_SIZE,
-                ( void * ) x,
-                tskIDLE_PRIORITY + 1,
-                NULL );
-  }
+    /* Clear HSEM flag */
+    __HAL_HSEM_CLEAR_FLAG(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+
+    /* STM32H7xx HAL library initialization:
+        - Systick timer is configured by default as source of time base, but user 
+        can eventually implement his proper time base source (a general purpose 
+        timer for example or other time source), keeping in mind that Time base 
+        duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
+        handled in milliseconds basis.
+        - Set NVIC Group Priority to 4
+        - Low Level Initialization
+    */
+
+    #if USE_BASICTIMER > 0
+        /* 
+         * Start microsecond counter , must be done before Profiler is initialized 
+         * and before HAL_Init, in case of USE_BASICTIMER_FOR_TICKS == 1
+         */
+        BASTMR_EarlyInit();
+    #endif
+
+
+
+    HAL_Init();
+
+    /* configure "simulated EEPROM" in flash and read config settings */
+    Config_Init();
+
+    /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
+    BasicDevInit();
+    Init_DumpAndClearResetSource();
+ 
+    HAL_NVIC_SetPriority(EXTI0_IRQn, 0xFU, 0U);
+    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+    DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
+    DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
+    DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
+    DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );
+    Init_OtherDevices();
+  
+    Init_DefineTasks();
+    #if DEBUG_PROFILING > 0
+        ProfilerSwitchTo(JOB_TASK_MAIN);  
+    #endif
+
+    TaskInitAll();
+    
+    TaskNotify(TASK_OUT);
+    if (( xControlMessageBuffer == NULL )|( xDataMessageBuffers[0] == NULL ) | ( xDataMessageBuffers[1] == NULL )) {
+        Error_Handler(__FILE__, __LINE__);
+    }
+
+
+
+    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {    
+        /* 
+         * Pass the loop counter into the created task using the task's
+         * parameter.  The task then uses the value as an index into the
+         * ulCycleCounters and xDataMessageBuffers arrays. 
+         */
+        xTaskCreate( prvCore2Tasks,
+                    "AMPCore2",
+                    configMINIMAL_STACK_SIZE,
+                    ( void * ) x,
+                    tskIDLE_PRIORITY + 1,
+                    NULL );
+    }
    
   /* Start scheduler */
   vTaskStartScheduler();
@@ -209,18 +255,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   HAL_EXTI_D2_ClearFlag(EXTI_LINE0);
 }
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @param  None
-  * @retval None
-  */
-static void Error_Handler(void)
-{
-  /* User may add here some code to deal with this error */
-  while(1)
-  {
-  }
-}
 /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
 used by the Idle task. */

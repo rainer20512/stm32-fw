@@ -19,7 +19,13 @@
 #define DMA_Channel_TypeDef             DMAMUX_Channel_TypeDef
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
-#define DMAMEM                          __attribute((section(".dmamem")))
+
+#if defined(CORE_CM7)
+    #define DMAMEM                      __attribute((section(".dmamem")))
+#else
+    #define DMAMEM                          
+#endif
+
 /* --- Type specific setup for ADC ------------------------------------------*/
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC3_BASE )
 #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC3_BASE )

@@ -28,6 +28,7 @@
 #include "dev/i2c_dev.h"
 #include "dev/io_dev.h"
 #include "dev/spi_dev.h"
+#include "dev/timer_dev.h"
 #if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
     #include "dev/adc_dev.h"
 #endif
@@ -37,8 +38,9 @@
 #if USE_QSPI > 0 
     #include "dev/qspi_dev.h"
 #endif
-#include "dev/timer_dev.h"
-#include "dev/can_dev.h"
+#if USE_CAN > 0
+    #include "dev/can_dev.h"
+#endif
 
 /* Exported types ------------------------------------------------------------*/
 

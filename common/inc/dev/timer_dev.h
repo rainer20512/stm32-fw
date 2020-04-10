@@ -49,7 +49,6 @@ typedef struct TimerHandleType {
     extern const HW_DeviceType  HW_TIM6;
     extern TimerHandleT         TIM6Handle;
 #endif
-
 #if defined(TIM7) && defined(USE_TIM7)
     extern const HW_DeviceType  HW_TIM7;
     extern TimerHandleT         TIM7Handle;

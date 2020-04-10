@@ -30,6 +30,7 @@
 #include "message_buffer.h"
 #include "MessageBufferAMP.h"
 #include "system/hw_util.h"
+#include "system/clockconfig.h"
 #include "eeprom.h"
 #include "dev/devices.h"
 #include "task/minitask.h"

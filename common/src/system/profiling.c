@@ -28,8 +28,7 @@
 #include "debug_helper.h"
 #include "system/profiling.h"
 
-#include "stm32l4xx_hal.h"
-#include "stm32l4xx_nucleo.h"
+#include "hardware.h"
 
 
 /* Private typedef --------------------------------------------------------------*/

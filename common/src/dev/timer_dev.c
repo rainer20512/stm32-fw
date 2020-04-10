@@ -495,7 +495,41 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     return ret;
 }
 
-// RHB todo TIM6 as basetimer in analogy to TIM7
+#if defined(USE_TIM6) && defined(TIM6)
+    /**************************************************************************
+     * This timer is primarily used for Profilimg and pulse capture of OOK
+     * sequencer. Its timer frequency is fixed to exactly 1 MHz
+     *************************************************************************/
+    TimerHandleT         TIM6Handle;
+
+    static const TMR_AdditionalDataType additional_tim6 = {
+        .myTmrHandle = &TIM6Handle,
+        .base_frq   = 1000000,          // Base Timers always run with 1MHz
+    };
+
+    const HW_IrqList irq_tim6 = {
+        .num = 1,
+        .irq = { TIM6_IRQ },
+    };
+
+    const HW_DeviceType HW_TIM6 = {
+        .devName        = "BASETIM6",
+        .devBase        = TIM6,
+        .devGpioAF      = NULL,
+        .devGpioIO      = NULL,
+        .devType        = HW_DEVICE_BASETIMER,
+        .devData        = &additional_tim6,
+        .devIrqList     = &irq_tim6,
+        .devDmaTx       = NULL,
+        .devDmaRx       = NULL,
+        .Init           = TMR_Init,
+        .DeInit         = TMR_DeInit,
+        .OnFrqChange    = TMR_OnFrqChange,
+        .AllowStop      = TMR_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif /* TIM6 */
 
 #if defined(USE_TIM7) && defined(TIM7)
     /**************************************************************************

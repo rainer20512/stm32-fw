@@ -15,24 +15,18 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include "system/clockconfig.h"
 #include "config/devices_config.h"
 #include "interpreters.h"
 #include "debug_helper.h"
-#include "system/profiling.h"
-//#include "system/util.h"
-//#include "wireless.h"
+#if DEBUG_PROFILING > 0
+    #include "system/profiling.h"
+#endif
 #include "timer.h"
-//#include "rfm/rfm_packets.h"
 #include "task/minitask.h"
-//#include "com.h"
 #include "rtc.h"
 #include "dev/i2c_dev.h"
-//#include "system/status.h"
 #include "system/hw_util.h"
 #include "cmdline.h"
-//#include "sensors/thp_sensor.h"
-//#include "eeprom.h"
 #include "dev/devices.h"
 
 #if USE_DS18X20  > 0
@@ -42,9 +36,6 @@
 
 #if USE_QENCODER
     #include "dev/qencode.h"
-#endif
-#if USE_THPSENSOR > 0
-    #include "sensors/thp_sensor.h"
 #endif
 
 /** @addtogroup CmdLine
@@ -79,11 +70,8 @@ const InterpreterModuleT mdl##name =  {pmt##name, cmd##name, sizeof(cmd##name) /
 
 #include "debug_sram.h"
 #include "debug_gpio_exti.h"
-
-void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
-
  
- #include "debug_pwr_rcc.h"
+#include "debug_pwr_rcc.h"
 
 
 /*********************************************************************************
@@ -133,31 +121,8 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
     case 6:
       DBG_dump_all_DMA ();
       break;
-    case 7:
-      if ( CMD_argc() < 1 ) {
-          printf("Usage: 'SetSysClk nn \n");
-          return false;
-      }
-      CMD_get_one_word( &word, &wordlen );
-      ret = CMD_to_number ( word, wordlen );
-      SystemClock_Set(ret, true);
-      break;
-    case 8:
-      DEBUG_PUTS("Calibrating HSI clock");
-      HSIClockCalibrate();
-      break;
-    case 9:
-      if ( CMD_argc() < 1 ) {
-          printf("Usage:MCO output <n>, 0=Off, 1=HSI, 2=LSE, 3=HSE, 4=PLL1Q, 5=HSI48");
-          return false;
-      }
-      CMD_get_one_word( &word, &wordlen );
-      ret = CMD_to_number ( word, wordlen );
-      DEBUG_PRINTF("MCO Source %d\n", ret );
-      EnableMCO ( ret );
-      break;
     default:
-      DEBUG_PUTS("RFM_Menu: command not implemented");
+      DEBUG_PUTS("Clock Menu: command not implemented");
   } /* end switch */
 
   return true;
@@ -175,10 +140,6 @@ static const CommandSetT cmdClkCfg[] = {
   { "PeriClk",   ctype_fn, {Config_Menu},  VOID(3), "Show peripheral clock settings"  },
   { "PeriCfg",   ctype_fn, {Config_Menu},  VOID(4), "Show peripheral clock configuration"  },
   { "SleepClk",  ctype_fn, {Config_Menu},  VOID(5), "Show peripheral clock settings in sleep mode"  },
-  { "DMA settng",ctype_fn, {Config_Menu},  VOID(6), "Show DAM settings"  },
-  { "SetSysClk", ctype_fn, {Config_Menu},  VOID(7), "Set system clock to predefined settings"  },
-  { "Calib-HSI", ctype_fn, {Config_Menu},  VOID(8), "Calibrate HSI Clock"  },
-  { "MCO output",ctype_fn, {Config_Menu},  VOID(9), "Activate MCO Output PA8" },
 };
 ADD_SUBMODULE(ClkCfg);
 
@@ -371,234 +332,6 @@ ADD_SUBMODULE(Devices);
 
 #endif  // DEBUG_FEATURES >0
 
-
-#if USE_I2C > 0
-    #if USE_THPSENSOR > 0
-        /*********************************************************************************
-          * @brief  Submenu for Sensor access functions
-          *         
-          * @retval true on success, false otherwise
-          *
-          * @note   will try to read as many parameters as needed
-          ********************************************************************************/
-        static bool Sensor_Menu ( char *cmdline, size_t len, const void * arg )
-        {
-          const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
-          int32_t work;
-          UNUSED(cmdline);UNUSED(len);
-          switch((uint32_t)arg) {
-            case 0:
-              DEBUG_PUTS("Sensor init...");  
-              THPSENSOR_Init(&Init);
-              break;
-            case 1:
-              DEBUG_PUTS("Measure pressure...");  
-              THPSENSOR_Measure(THPSENSOR_HAS_P);
-              break;
-            case 2:
-              DEBUG_PUTS("Measure all...");  
-              THPSENSOR_Measure(ALL_SENSOR_CHANNELS);
-              break;
-            case 3:
-              break;
-            case 4:
-              break;
-            case 99:
-                DEBUG_PUTS("All sensor data:");  
-                if ( THPSENSOR_HAS_T & THPSENSOR_GetCapability() ) {
-                    work = THPSENSOR_GetT();
-                    DEBUG_PRINTF("Temp=%d.%1d\n",work/10, work%10);
-                }
-                if ( THPSENSOR_HAS_H & THPSENSOR_GetCapability() ) {
-                    work = THPSENSOR_GetH();
-                    DEBUG_PRINTF("Hum= %d.%1d\n",work/10, work%10);
-                }
-                if ( THPSENSOR_HAS_P & THPSENSOR_GetCapability() ) {
-                    work = THPSENSOR_GetP();
-                    DEBUG_PRINTF("Pres=%d.%1d\n",work/10, work%10);
-                }
-                break;
-            default:
-              DEBUG_PUTS("Sensor_Menu: command not implemented");
-          } /* end switch */
-
-          return true;
-
-    } /* Sensor_Menu */
-    #endif
-
-#include "ext_eeprom.h"
-  #define MAX_BUFSIZE   8192
-  static uint8_t buffer[MAX_BUFSIZE];
-  static EEPROM_InitTypeDef t = {0};
-  extern EEPROM_DrvTypeDef FM24V10_EEPROM;
-  static EEPROM_DrvTypeDef *e = &FM24V10_EEPROM;
-/*********************************************************************************
-  * @brief  Submenu for FM24 Access functions
-  *         
-  * @retval true on success, false otherwise
-  *
-  * @note   will try to read as many parameters as needed
-  ********************************************************************************/
-static bool FM24_Menu ( char *cmdline, size_t len, const void * arg )
-{
-  UNUSED(cmdline);UNUSED(len);
-  uint16_t i;
-  uint8_t actlen;
-  uint32_t addr;
-  uint16_t size;
-  uint32_t tstart, tend;
-  char *word;
-  size_t wordlen;
-  uint32_t ret;
-
-  switch((uint32_t)arg) {
-    case 0:
-      if (e->Init(FM24V10_I2C_ADDR, &t) != EEPROM_OK ) {
-        puts("EEPROM Init failed");
-      }
-      break;
-    case 1:
-      if ( e->GetID(buffer, &actlen, 255 ) != EEPROM_OK ) {
-        puts("EEPROM Read ID failed");
-      } else {
-          for ( i=0; i< actlen; i++) 
-             printf("%02x", buffer[i]);
-          printf("\n");
-      }
-      break;
-    case 2:
-      if ( CMD_argc() < 2 ) {
-          printf("Usage: 'Write <addr> <numBtyes> \n");
-          return false;
-      }
-     CMD_get_one_word( &word, &wordlen );
-     addr = CMD_to_number ( word, wordlen );
-     CMD_get_one_word( &word, &wordlen );
-     size = CMD_to_number ( word, wordlen );
-     if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
-
-      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)i; 
-      tstart = ProfilerGetMicrosecond();
-      ret = e->WriteBuffer(addr, buffer, size);
-      tend = ProfilerGetMicrosecond();
-      if ( ret != EEPROM_OK ) {
-        puts("EEPROM Write failed");
-      } else {
-        printf("Exected in %d microsecs\n", tend-tstart);
-      }
-      break;
-    case 3:
-      if ( CMD_argc() < 2 ) {
-          printf("Usage: 'Read <addr> <numBtyes> \n");
-          return false;
-      }
-     CMD_get_one_word( &word, &wordlen );
-     addr = CMD_to_number ( word, wordlen );
-     CMD_get_one_word( &word, &wordlen );
-     size = CMD_to_number ( word, wordlen );
-     if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
-      if ( e->ReadBuffer(addr, buffer, size ) != EEPROM_OK ) {
-        puts("EEPROM Read failed");
-      }
-      for ( i=0; i< size; i++) 
-         printf("%02x ", buffer[i]);
-      printf("\n");
-      break;
-    case 4:
-      if ( CMD_argc() < 3 ) {
-          printf("Usage: 'Fill <addr> <numBtyes> <fillbyte>\n");
-          return false;
-      }
-     CMD_get_one_word( &word, &wordlen );
-     addr = CMD_to_number ( word, wordlen );
-     CMD_get_one_word( &word, &wordlen );
-     size = CMD_to_number ( word, wordlen );
-     if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
-     CMD_get_one_word( &word, &wordlen );
-     actlen = CMD_to_number ( word, wordlen );
-
-      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)actlen;  
-      if ( e->WriteBuffer(addr, buffer, size ) != EEPROM_OK ) {
-        puts("EEPROM  Fill failed");
-      }
-      break;
-    case 5:
-      if ( CMD_argc() < 2 ) {
-          printf("Usage: 'WriteIT <addr> <numBtyes> \n");
-          return false;
-      }
-     CMD_get_one_word( &word, &wordlen );
-     addr = CMD_to_number ( word, wordlen );
-     CMD_get_one_word( &word, &wordlen );
-     size = CMD_to_number ( word, wordlen );
-     if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
-
-      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)i; 
-      tstart = ProfilerGetMicrosecond();
-      ret = e->WriteBufferIT(addr, buffer, size);
-      tend = ProfilerGetMicrosecond();
-      if ( ret != EEPROM_OK ) {
-        puts("EEPROM Write failed");
-      } else {
-        printf("Exected in %d microsecs\n", tend-tstart);
-      }
-      break;
-    case 6:
-      if ( CMD_argc() < 2 ) {
-          printf("Usage: 'WriteDMA <addr> <numBtyes> \n");
-          return false;
-      }
-     CMD_get_one_word( &word, &wordlen );
-     addr = CMD_to_number ( word, wordlen );
-     CMD_get_one_word( &word, &wordlen );
-     size = CMD_to_number ( word, wordlen );
-     if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
-
-      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)i; 
-      tstart = ProfilerGetMicrosecond();
-      ret = e->WriteBufferDMA(addr, buffer, size);
-      tend = ProfilerGetMicrosecond();
-      if ( ret != EEPROM_OK ) {
-        puts("EEPROM Write failed");
-      } else {
-        printf("Exected in %d microsecs\n", tend-tstart);
-      }
-      break;
-    default:
-      DEBUG_PUTS("Test_Menu: command not implemented");
-  } /* end switch */
-
-  return true;
-
-} /* FM24_Menu */
-#endif
-
-#if USE_I2C > 0
-    static const char *pmtI2C (void)
-    {
-      return "I2C";
-    }
-
-    static const CommandSetT cmdI2C[] = {
-      { "Scan"          ,ctype_fn, .exec.fn = Scan_I2c,     VOID(0), "Scan I2C2 bus" },
-      #if USE_THPSENSOR > 0
-          { "Sensor Init"    ,ctype_fn, .exec.fn = Sensor_Menu,  VOID(0),  "Sensor Init" },
-          { "Meas Pressure"  ,ctype_fn, .exec.fn = Sensor_Menu,  VOID(1),  "Trigger Pressure Measure" },
-          { "Meas Pressure"  ,ctype_fn, .exec.fn = Sensor_Menu,  VOID(2),  "Measure all channels" },
-          { "Display Data"   ,ctype_fn, .exec.fn = Sensor_Menu,  VOID(99), "Display all supported data" },
-      #endif
-      { "FM24V10 Init"  ,ctype_fn, .exec.fn =FM24_Menu,     VOID(0), "FM24V10 Init" },
-      { "FM24V10 Read ID",ctype_fn, .exec.fn =FM24_Menu,  VOID(1), "FM24V10 Read ID" },
-      { "FM24V10 Write" ,ctype_fn, .exec.fn =FM24_Menu,   VOID(2), "FM24V10 Write <addr> <len>" },
-      { "FM24V10 Read"  ,ctype_fn, .exec.fn =FM24_Menu,   VOID(3), "FM24V10 Read  <addr> <len>" },
-      { "FM24V10 Fill"  ,ctype_fn, .exec.fn =FM24_Menu,   VOID(4), "FM24V10 Fill <addr> <len> <byte>" },
-      { "FM24V10 WrIT"  ,ctype_fn, .exec.fn =FM24_Menu,   VOID(5), "FM24V10 WriteIT <addr> <len>" },
-      { "FM24V10 WrDMA" ,ctype_fn, .exec.fn =FM24_Menu,   VOID(6), "FM24V10 WriteDMA <addr> <len>" },
-
-    };
-    ADD_SUBMODULE(I2C);
-#endif
 
 
 static bool Test_WD_reset ( char *cmdline, size_t len, const void * arg )
@@ -857,20 +590,6 @@ static bool Test_Toggle ( char *cmdline, size_t len, const void * arg )
 }
 
 #if USE_QENCODER > 0 || 1
-  #if USE_QENCODER > 0
-      static void TestOnRotate(int32_t delta )
-      {
-          DEBUG_PRINTF("TestOnRotate, Delta=%d\n", delta);
-      }
-      static void TestOnClick(void)
-      {
-          COM_print_time('t',false);DEBUG_PUTS(" TestOnClick");
-      }
-      static void TestOnDblClick(void)
-      {
-          COM_print_time('T',false);DEBUG_PUTS(" TestOnDblClick");
-      }
-  #endif
 /*********************************************************************************
   * @brief  Submenu for FM24 Access functions
   *         
@@ -1004,12 +723,6 @@ static const CommandSetT cmdTest[] = {
   { "Multi Tmr",       ctype_fn, .exec.fn = Test_TmrMulti,  VOID(0), "Lots of timers" }, 
   { "Kill Tmr",        ctype_fn, .exec.fn = Test_TmrKill,   VOID(0), "Generates Error" }, 
   { "Toggle",          ctype_fn, .exec.fn = Test_Toggle,    VOID(0), "Toggle UserLed2" },
-#if defined(USE_USART2)
-  { "USART2 Out",      ctype_fn, .exec.fn = Test_Menu,      VOID(5), "Output via USART2" },
-#endif
-#if USE_QENCODER > 0
-  { "QEncoder test",   ctype_fn, .exec.fn = Test_Menu,      VOID(2), "Test quadrature encoder"}, 
-#endif
 #if defined(USE_LPUART1) 
   { "LPUART1 test",     ctype_fn, .exec.fn = Test_Menu,     VOID(4), "Test LPUART1"}, 
 #endif
@@ -1019,274 +732,10 @@ static const CommandSetT cmdTest[] = {
 };
 ADD_SUBMODULE(Test);
 
-#if defined(USE_ADC3)
-    /*********************************************************************************
-      * @brief  Submenu for FM24 Access functions
-      *         
-      * @retval true on success, false otherwise
-      *
-      * @note   will try to read as many parameters as needed
-      ********************************************************************************/
-    static bool ADC_Menu ( char *cmdline, size_t len, const void * arg )
-    {
-      char *word;
-      size_t wordlen;
-      uint8_t ch;
-
-      UNUSED(cmdline);UNUSED(len);
-
-      switch((uint32_t)arg) {
-        case 0:
-            ADC_Calibrate(&HW_ADC3);
-            /* fall through */
-        case 1:
-            ADC_MeasureVdda ((void *)&HW_ADC3);
-            printf("Vdda = %dmV\n", ADC3Handle.vdda); 
-            break;
-        case 2:
-            ADC_MeasureChipTemp(&HW_ADC3);
-            printf("Chip Temp = %d°C\n", ADC3Handle.chiptemp); 
-            break;
-        case 3:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'ADC channel <num> \n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            ADC_MeasureChannel(&HW_ADC3, ch);
-            break;
-        case 4:
-            puts("Measure group"); 
-            ADC_SetupGroup(&HW_ADC3);
-            ADC_MeasureGroup(&HW_ADC3);
-            break;
-        case 5:
-            ADC_DisableRefintCh(&HW_ADC3);
-            puts("Refint channel disabled"); 
-            break;
-        case 6:
-            ADC_DisableAllInternalCh(&HW_ADC3);
-            puts("Refint channel disabled"); 
-            break;
-        default:
-          DEBUG_PUTS("Test_Menu: command not implemented");
-      } /* end switch */
-
-      return true;
-    }
-
-    static const char *pmtADC (void)
-    {
-      return "ADC";
-    }
-
-
-    static const CommandSetT cmdADC[] = {
-        { "Measure Vdda+Calibrate", ctype_fn, .exec.fn = ADC_Menu,VOID(0), "Calibrate ADC & Measure Vdda" },
-        { "Measure Vdda",           ctype_fn, .exec.fn = ADC_Menu,VOID(1), "Measure Vdda w/o Calibration" },
-        { "Measure Temp",           ctype_fn, .exec.fn = ADC_Menu,VOID(2), "Measure Chip temperature" },
-        { "Measure channel",        ctype_fn, .exec.fn = ADC_Menu,VOID(3), "Measure channel <n>" },
-        { "Measure group",          ctype_fn, .exec.fn = ADC_Menu,VOID(4), "Measure whole sequence" },
-        { "Refint disable",         ctype_fn, .exec.fn = ADC_Menu,VOID(5), "Disable Refint ADC channel" },
-        { "All int. Ch. Disable",   ctype_fn, .exec.fn = ADC_Menu,VOID(6), "Disable all internal ADC channels" },
-    };
-    ADD_SUBMODULE(ADC);
-#endif
 
 
 
-#if USE_DS18X20 > 0
-    /*********************************************************************************
-      * @brief  Submenu for DS18X20/OneWire Access 
-      *         
-      * @retval true on success, false otherwise
-      *
-      * @note  will try to read as many parameters as needed
-      ********************************************************************************/
-    static bool DS_Menu ( char *cmdline, size_t len, const void * arg )
-    {
-      char *word;
-      size_t wordlen;
-      uint8_t ch;
-      int16_t t;
-      
-      UNUSED(cmdline);UNUSED(len);
 
-      switch((uint32_t)arg) {
-        case 0:
-            puts("Perform a OneWire ROM Search");
-            if ( ow_rom_search() == 0 ) {
-                    DEBUG_PUTS("No OneWire devices found!");
-            } else {
-                ow_dump_rom();
-                DS18X20_Init();
-            }
-            break;
-        case 1:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'Measure  0|1 (one sensor/all sensors)\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            DS18X20_start_meas(ch != 0);
-            break;
-        case 2:
-            puts("DS18X20 read BitStatus");
-            DS18X20_read_bitstatus();
-            break;
-        case 3:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'Read SP  0|1 (one sensor/all sensors)\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            DS18X20_read_scratchpad(ch != 0);
-            break;
-        case 4:
-            t = DS18X20_GetTemp();
-            printf("Temp=%d.%ddegC\n",t/10,t%10);
-            break;
-        case 5:
-            printf("Successful=%d, BadVal=%d, Errors=%d\n", ds_ok_cnt, ds_bad_cnt, ds_err_cnt );
-            break;
-#if OW_TEST > 0
-        case 6:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'Test <vector len>\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            test_write_buffer_with_cb(ch);
-            break;
-#endif
-        default:
-          DEBUG_PUTS("DS_Menu: command not implemented");
-      } /* end switch */
-
-      return true;
-    }
-
-    static const char *pmt18X20 (void)
-    {
-      return "DS18X20";
-    }
-
-
-    static const CommandSetT cmd18X20[] = {
-        { "ROM Search",             ctype_fn, .exec.fn = DS_Menu,VOID(0), "Perform a OW ROM search" },
-        { "Measure Temp",           ctype_fn, .exec.fn = DS_Menu,VOID(1), "Initiate temp measurement" },
-        { "Read Bitstatus",         ctype_fn, .exec.fn = DS_Menu,VOID(2), "Read Bitstatus" },
-        { "Read Scratchpad",        ctype_fn, .exec.fn = DS_Menu,VOID(3), "Read scratchpad" },
-        { "Get Temperature",        ctype_fn, .exec.fn = DS_Menu,VOID(4), "Get last temperature" },
-        { "Get Stat. Count",        ctype_fn, .exec.fn = DS_Menu,VOID(5), "Show Status Counter" },
-#if OW_TEST > 0
-        { "Test U(S)ART",           ctype_fn, .exec.fn = DS_Menu,VOID(6), "Loopback test" },
-#endif
-    };
-    ADD_SUBMODULE(18X20);
-#endif
-
-#if USE_PWMTIMER > 0
-    /*********************************************************************************
-      * @brief  Submenu for PWM 
-      *         
-      * @retval true on success, false otherwise
-      *
-      * @note  will try to read as many parameters as needed
-      ********************************************************************************/
-    static bool PWM_Menu ( char *cmdline, size_t len, const void * arg )
-    {
-      char *word;
-      size_t wordlen;
-      uint32_t num;
-      uint32_t ch;
-      bool ret;
-      
-      UNUSED(cmdline);UNUSED(len);
-
-      switch((uint32_t)arg) {
-        case 0:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'Frequency  <frq>\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            ret = TMR_SetPWMFrq(&HW_PWMTIMER, num );
-            DEBUG_PRINTF("Setting PWM frq to %d - %s\n", num, ret ? "ok" : "fail");
-            break;
-        case 1:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: 'Init <ch> <mode>\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            ret = TMR_InitPWMCh(&HW_PWMTIMER, ch, num!=0); 
-            DEBUG_PRINTF("Init PWM ch %d - %s\n", ch, ret ? "ok" : "fail");
-            break;
-        case 2:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: 'Start Promille <ch> <promille>");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChPromille (&HW_PWMTIMER, ch, num); 
-            DEBUG_PRINTF("Start PWM ch %d w. %d/1000\n", ch, num);
-            break;
-        case 3:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: 'Start S256 <ch> <s256>");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChS256(&HW_PWMTIMER, ch, num); 
-            DEBUG_PRINTF("Start PWM ch %d w. %d/256\n", ch, num);
-            break;
-        case 4:
-            if ( CMD_argc() < 1) {
-              printf("Usage: 'Stop PWM <ch>");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ch = CMD_to_number ( word, wordlen );
-            TMR_StopPWMCh(&HW_PWMTIMER, ch); 
-            DEBUG_PRINTF("Stop PWM ch %d\n", ch);
-            break;
-        default:
-          DEBUG_PUTS("PM_Menu: command not implemented");
-      } /* end switch */
-
-      return true;
-    }
-
-    static const char *pmtPWM (void)
-    {
-      return "PWM";
-    }
-
-
-    static const CommandSetT cmdPWM[] = {
-        { "Frequency",              ctype_fn, .exec.fn = PWM_Menu,VOID(0), "Set PWM frequency" },
-        { "Init PWM Ch",            ctype_fn, .exec.fn = PWM_Menu,VOID(1), "Init PWM Ch <x> to normal/invert (0|1)" },
-        { "Start Promille",         ctype_fn, .exec.fn = PWM_Menu,VOID(2), "Start PWM Ch <x> w. duty cycle of <y>/1000" },
-        { "Start S256",             ctype_fn, .exec.fn = PWM_Menu,VOID(3), "Start PWM Ch <x> w. duty cycle of <y>/256" },
-        { "Stop PWM ch",            ctype_fn, .exec.fn = PWM_Menu,VOID(4), "Stop PWM ch <x>" },
-    };
-    ADD_SUBMODULE(PWM);
-#endif
 
 #if USE_QSPI > 0
 
@@ -1557,177 +1006,6 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(QSPI);
 #endif
 
-#if USE_CAN > 0
-
-    #include "dev/can_dev.h"
-    /*********************************************************************************
-     * @brief  Submenu for Can test functions
-     *         
-     * @retval true on success, false otherwise
-     *
-     * @note  will try to read as many parameters as needed
-     ********************************************************************************/
-
-    static void OnCanRx(uint32_t fifonum, CanTxRxDataT *rx)
-    {
-        DEBUG_PRINTF("Received by Fifo#%d with %s Id, Type=%s :\n", fifonum, rx->IDE ? "Extended" : "Standard", rx->RTR ? "Remote Req" : "Data");
-        DEBUG_PRINTF("ID=0x%08x Len=%d, Data=[",rx->Id, rx->DLC);
-        uint8_t *ptr = rx->data;
-        for ( uint32_t i = 0; i < rx->DLC; i++) {
-            DEBUG_PUTC(' ');print_hexXX(*(ptr++));
-        }
-        DEBUG_PUTS("]");
-    }
-
-    uint32_t ID;
-    CanTxRxDataT tx;
-    uint8_t txdata[8];
-    static void Can_Transmit(uint32_t num, uint32_t size ) {
-        uint32_t ticks;
-        CanTxMboxNum mbxnum;
-        if ( size > 8 ) size = 8;
-        tx.DLC = size;
-        tx.IDE = ( ID > 0x7FF );
-        tx.Id  = ID;
-        tx.RTR = 0;
-        tx.data = txdata;
-        for ( uint32_t i=0; i < num; i++ ) {
-            for ( uint32_t j = 0; j<size; j++ ) 
-                txdata[j]='a'+i+j;
-            ticks = HAL_GetTick();
-            while(!CAN_IsTxMboxFree(&CAN1Handle) );
-            DEBUG_PRINTF("Packet %2d - Waited %d ticks - ",i, HAL_GetTick() - ticks);
-            if ( mbxnum=CAN_Transmit(&CAN1Handle, &tx), !num ) 
-                DEBUG_PRINTF("Xmit failed\n");
-            else
-                DEBUG_PRINTF("Mbox#%d\n",mbxnum);
-        }
-    }
-
-
-    static bool CAN_Menu ( char *cmdline, size_t len, const void * arg )
-    {
-      char *word;
-      size_t wordlen;
-      uint32_t num;
-      uint32_t addr;
-      CanFilterT flt;
-      bool ret;
-      
-      UNUSED(cmdline);UNUSED(len);
-
-      switch((uint32_t)arg) {
-        case 0:
-            CAN_DumpCan(CAN1);
-            break;
-        case 1:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: Baudrate <idx> - Set CAN baudrate\n");
-              printf("       0-1000k, 1-500, 2-250, 3-200, 4=125, 5=100, 6=50, 7=20, 8=10\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            ret = CAN_ChangeBaudrate(&CAN1Handle, num);
-            printf("Can baudrate change %s\n", ret ? "ok" : "failed");
-            break;
-        case 2:
-            /* Match every Std Frame */
-            CAN_Setup16BitFilter0( &flt, 0, 0, 0, 1, false, false, 0);
-            /* Match every remote transm. Frame */
-            CAN_Setup16BitFilter1( &flt, 0, 1, 0, 1, false, false, 0);
-            // CAN_Setup16BitFilter1( &flt, addr+1, 0, 0x7FF, 1, false, false, 0);
-            ret = CAN_SetFilter(CAN1, &flt, 13, true);
-            puts("Setting filter 14 to match every data frame");
-            break;
-        case 3:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: Set Filter <no> to <id> \n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            addr = CMD_to_number ( word, wordlen );
-            CAN_Setup16BitFilter0( &flt, addr,   0, 0x7FF, 1, false, false, 0);
-            CAN_Setup16BitFilter1( &flt, addr+1, 0, 0x7FF, 1, false, false, 0);
-            ret = CAN_SetFilter(CAN1, &flt, num, true);
-            printf("Setting filter %d to id 0x%03x %s\n", num, addr, ret ? "ok" : "failed");
-            break;
-        case 4:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: Set Filter <no> to <eid> \n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            addr = CMD_to_number ( word, wordlen );
-            CAN_Setup32BitFilter(&flt, addr, 0, 0XFFFFFFFF, 1, false, true, 1 );
-            ret = CAN_SetFilter(CAN1, &flt, num, true);
-            printf("Setting filter %d to id 0x%08x %s\n", num, addr, ret ? "ok" : "failed");
-            break;
-        case 5:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: Tx ID <n> <m> : Set Tx msg ID to <n>\n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            ID = CMD_to_number ( word, wordlen );
-            break;
-        case 6:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: Tx  <n> <m> : Transmit <n> msgs of len <m> \n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            CMD_get_one_word( &word, &wordlen );
-            addr = CMD_to_number ( word, wordlen );
-            printf("Transmitting %d msgs of size %d with ID 0x%x\n", num, addr, ID);
-            Can_Transmit(num, addr);
-            break;
-        case 9:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: Start/Stop [0|1] CAN \n");
-              return false;
-            }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            if ( num ) {
-                CAN_RegisterCallbacks(&CAN1Handle, OnCanRx, NULL, NULL);
-                ret = CAN_Start(&CAN1Handle);
-            } else {
-                CAN_RegisterCallbacks(&CAN1Handle, NULL, NULL, NULL);
-                ret = CAN_Stop(&CAN1Handle);
-            }
-            DEBUG_PRINTF("CAN1 %s %s\n", num ? "started" : "stopped", ret ? "ok" : "with error");
-            break;
-        default:
-          DEBUG_PUTS("CAN_Menu: command not implemented");
-      } /* end switch */
-
-      return true;
-    }
-
-    static const char *pmtCAN (void)
-    {
-      return "Can";
-    }
-
-
-    static const CommandSetT cmdCAN[] = {
-        { "Dump",                     ctype_fn, .exec.fn = CAN_Menu, VOID(0), "Dump Can Settings" },
-        { "Baudrate <idx>",           ctype_fn, .exec.fn = CAN_Menu, VOID(1), "Set Can Baudrate " },
-        { "Set Filter @all",          ctype_fn, .exec.fn = CAN_Menu, VOID(2), "Set filter to match all" },
-        { "Set Std Filter",           ctype_fn, .exec.fn = CAN_Menu, VOID(3), "Set 11 bit filter id" },
-        { "Set Ext Filter",           ctype_fn, .exec.fn = CAN_Menu, VOID(4), "Set 28 bit filter id" },
-        { "Set Tx ID",                ctype_fn, .exec.fn = CAN_Menu, VOID(5), "Set Msg ID for Xmit" },
-        { "Tx <n> Len <m>",           ctype_fn, .exec.fn = CAN_Menu, VOID(6), "Tx <n> Msg of Len <m>" },
-        { "Start/Stop CAN",           ctype_fn, .exec.fn = CAN_Menu, VOID(9), "Start(1) /Stop(0) CAN" },
-    };
-    ADD_SUBMODULE(CAN);
-#endif
 
 #include "eeprom.h"
 
@@ -1811,27 +1089,12 @@ static const CommandSetT cmdBasic[] = {
 #if USE_I2C > 0
   { "I2C"    ,         ctype_sub, .exec.sub = &mdlI2C,         0,       "I2C submenu" },
 #endif
-#if defined(USE_ADC3)
-  { "ADC"    ,         ctype_sub, .exec.sub = &mdlADC,         0,       "ADC submenu" },
-#endif
-#if USE_PWMTIMER > 0
-  { "PWM"    ,         ctype_sub, .exec.sub = &mdlPWM,         0,       "PWM Timer submenu" },
-#endif
-#if USE_DS18X20 > 0
-  { "DS18X20"    ,     ctype_sub, .exec.sub = &mdl18X20,       0,       "Dallas 18X20 submenu" },
-#endif
 #if DEBUG_PROFILING > 0
   { "Profile",         ctype_fn,  .exec.fn = ProfilerDump,     VOID(0), "Dump profiling info" },
 #endif
   { "Test&System",     ctype_sub, .exec.sub = &mdlTest,        0,       "Test & System submenu" },
-#if USE_PWMTTIMER > 0
-  { "PWM test",        ctype_sub, .exec.sub = &mdlPWM,         0,       "Test PWM functions" },
-#endif
 #if USE_QSPI > 0
   { "QSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test QuadSpi functions" },
-#endif
-#if USE_CAN > 0
-  { "CAN test",        ctype_sub, .exec.sub = &mdlCAN,        0,       "Test CAN functions" },
 #endif
 };
 ADD_SUBMODULE(Basic);

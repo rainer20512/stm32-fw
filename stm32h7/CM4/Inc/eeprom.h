@@ -76,7 +76,7 @@ extern const EE_LimitsT eelimits[];
     /* 1a */ {                 1,   0,   1, "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
     /* 1b */ {                 1,   0,   1, "Allow StopMode\n(0=no, 1=yes)" },                         \
     /* 1c */ { DEFAULT_STOP_MODE,   0,   2, "StopMode to enter on stop" },                             \
-    /* 1d */ { USER_CLOCKCONFIG ,    0,  15, "Clock configuration to use" },                           \
+    /* 1d */ {                 0 ,  0,  15, "Unused 1d" },                                             \
     /* 1e */ {                 0,   0, 255, "Unused 1e" },                                             \
     /* 1f */ {                 0,   0, 255, "Unused 1f" },                                             \
 
@@ -115,7 +115,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1a */ uint8_t SleepIndicator;      //!< Use Led as Sleep Indicator ( 0 = no, 1 = yes )
     /* 1b */ uint8_t allow_Stop;          //!< Allow Stop-Mode
     /* 1c */ uint8_t StopMode;            //!< Stop Mode to enter on stop 
-    /* 1d */ uint8_t clk_config;          //!< clock configuration to use
+    /* 1d */ uint8_t unused_1d;          //!< clock configuration to use
     /* 1e */ uint8_t unused_1e;           //!< Unused
     /* 1f */ uint8_t unused_1f;           //!< Unused
 } EE_ConfigT;

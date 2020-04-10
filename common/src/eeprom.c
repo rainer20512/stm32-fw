@@ -15,7 +15,9 @@
 #include "debug_helper.h"
 #include "eeprom.h"
 #include "timer.h"
-#include "system/clockconfig.h"
+#if defined(USER_CLOCKCONFIG)
+    #include "system/clockconfig.h"
+#endif
 
 #if USE_EEPROM_EMUL > 0
     #include "../modules/eeprom_emul/core/eeprom_emul_conf.h"

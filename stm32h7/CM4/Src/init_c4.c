@@ -1,6 +1,6 @@
 /**
  ******************************************************************************
- * @file    init_c4.c
+ * @file    INIT.c
  * @author  rainer
  * @brief   Initialization and configuration tasks
  *          exclusively called by main
@@ -50,15 +50,6 @@ void Init_DumpAndClearResetSource(void)
 void Init_OtherDevices(void)
 {
   int32_t dev_idx;
-  #if defined(USE_ADC3)
-      dev_idx = AddDevice(&HW_ADC3, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PUTS("Failed to init ADC3-device");
-      } else {
-        DeviceInitByIdx(dev_idx, NULL);
-      }
-       
-  #endif
   #if defined(USE_USART1)
       dev_idx = AddDevice(&HW_COM1, NULL, NULL );
       if ( dev_idx < 0 ) {
@@ -76,45 +67,6 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL);
       }
 
-  #endif
-  #if USE_QENCODER > 0
-      /* Do this before Display Init */  
-      dev_idx = AddDevice(&QENC_DEV, NULL , NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init Quadrature Decoder-device %s\n", QENC_DEV.devName );
-      } else {
-        /* Init device */
-        DeviceInitByIdx(dev_idx, NULL );
-      }
-  #endif
-  #if USE_PWMTIMER > 0
-      /* Do this before Display Init */  
-     dev_idx = AddDevice(&HW_PWMTIMER, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init Timer-device %s\n",HW_PWMTIMER.devName );
-      } else {
-        DeviceInitByIdx(dev_idx, NULL );
-      }
-      /* Assign PWM device and channel to LCD */
-      LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
-  #endif
-  #if USE_DISPLAY > 0
-      dev_idx = AddDevice(&EPAPER_DEV, LCD_PostInit, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init LCD-device %s\n", EPAPER_DEV.devName );
-      } else {
-        /* Landscape mode */
-        DeviceInitByIdx(dev_idx, (void *)1 );
-      }
-  #endif
-  #if USE_ONEWIRE > 0
-      dev_idx = AddDevice(&ONEWIRE_DEV, OW_PostInit, OW_PreDeInit);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init OneWire-device %s\n", ONEWIRE_DEV.devName );
-      } else {
-        /* Init Oowire device */
-        DeviceInitByIdx(dev_idx, NULL );
-      }
   #endif
   #if USE_QSPI > 0
       dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
@@ -135,17 +87,6 @@ void Init_OtherDevices(void)
             SENSOR_IO_Init(&USER_I2C_HANDLE, NULL);
       }
   #endif
-  #if defined(USE_CAN1)
-      dev_idx = AddDevice(&HW_CAN1, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to add CAN device %s\n", HW_CAN1.devName );
-      } else {
-        /* Init I2c device */
-        if ( !DeviceInitByIdx(dev_idx, NULL ) ) 
-            DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
-      }
-  #endif
-
 }
 
 #include "task/minitask.h"
@@ -203,20 +144,4 @@ void Init_DefineTasks(void)
   TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
   TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
-  TaskRegisterTask(task_init_adc, task_handle_adc, TASK_ADC,      JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
-#if USE_THPSENSOR > 0
-  TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
-#endif
-#if USE_DISPLAY > 0
-  TaskRegisterTask(task_init_lcd, task_handle_lcd, TASK_LCD,      JOB_TASK_LCD,      "LCD task");
-#endif
-#if USE_DS18X20 > 0
-  TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
-#endif
-#if USE_QSPI > 0
-  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,    JOB_TASK_QSPI,     "QSPI task");
-#endif
-#if USE_DS18X20 > 0
-    AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");
-#endif
 }
