@@ -29,6 +29,7 @@
 #include "task.h"
 #include "message_buffer.h"
 #include "MessageBufferAMP.h"
+#include "ipc.h"
 
 #include "eeprom.h"
 #include "dev/devices.h"
@@ -41,6 +42,16 @@
 #define HSEM_ID_0 (0U) /* HW semaphore 0*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+
+/* Exported variables --------------------------------------------------------*/
+uint32_t gflags;
+
+/* Ptr to the AMP control block, allocated by CM/ core and passed as reference to CM4 */
+AMP_Ctrl_ptr AMPCtrl_Ptr;
+
+#if DEBUG_MODE 
+  uint32_t debuglevel;
+#endif
 
 /* Set to pdFALSE if any errors are detected.  Used to inform the check task
 that something might be wrong. */
@@ -87,6 +98,7 @@ int main(void)
     BaseType_t x;
     BSP_LED_Init(LED1);
     LedToggle(250, 2);  
+    AMPCtrl_t *ref;
 
     /*HW semaphore Clock enable*/
     __HAL_RCC_HSEM_CLK_ENABLE();
@@ -103,6 +115,15 @@ int main(void)
 
     /* Clear HSEM flag */
     __HAL_HSEM_CLEAR_FLAG(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+
+
+    /* 
+     * Get the adress of the control message buffer. It has been written to RCT Bkup ram 
+     * offset 0 by CM7 before waking up this core
+     */
+    CTRL_HOOK_ENABLE_ACCESS();
+    AMPCtrl_Ptr = CTRL_BLOCK_HOOK_GET();
+    CTRL_HOOK_DISABLE_ACCESS();
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 
@@ -136,8 +157,7 @@ int main(void)
     HAL_NVIC_SetPriority(EXTI0_IRQn, 0xFU, 0U);
     HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 
-    DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
-    DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
+    DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
     DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );
     Init_OtherDevices();
@@ -150,8 +170,13 @@ int main(void)
     TaskInitAll();
     
     TaskNotify(TASK_OUT);
-    if (( xControlMessageBuffer == NULL )|( xDataMessageBuffers[0] == NULL ) | ( xDataMessageBuffers[1] == NULL )) {
-        Error_Handler(__FILE__, __LINE__);
+
+    if ( AMPCtrl_Ptr->ID != AMP_ID ) {
+        DEBUG_PUTS("AMP Control Block invalid");
+    }
+
+    if (( ControlMessageBufferRef == NULL )|( DataMessageBufferRef(0) == NULL ) | ( DataMessageBufferRef(1) == NULL )) {
+        DEBUG_PUTS("One or more IPC message buffers could not be allocated");
     }
 
 
@@ -198,7 +223,7 @@ static void prvCore2Tasks( void *pvParameters )
     
     /* Wait to receive the next message from core 1. */
     memset( cReceivedString, 0x00, sizeof( cReceivedString ) );
-    xReceivedBytes = xMessageBufferReceive( xDataMessageBuffers[ x ],
+    xReceivedBytes = xMessageBufferReceive( DataMessageBufferRef( x ),
                                             cReceivedString,
                                             sizeof( cReceivedString ),
                                             portMAX_DELAY );
@@ -230,7 +255,7 @@ static void prvCore2InterruptHandler( void )
   
   /* xControlMessageBuffer contains the handle of the message buffer that
   contains data. */
-  if( xMessageBufferReceiveFromISR( xControlMessageBuffer,
+  if( xMessageBufferReceiveFromISR( ControlMessageBufferRef,
                                    &xUpdatedMessageBuffer,
                                    sizeof( xUpdatedMessageBuffer ),
                                    &xHigherPriorityTaskWoken ) == sizeof( xUpdatedMessageBuffer ) )

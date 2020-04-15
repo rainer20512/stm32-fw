@@ -13,7 +13,7 @@
 #ifndef __RTC_H
 #define __RTC_H
 
-#include "config/config.h"
+#include "config/devices_config.h"
 
 #include "hardware.h"
 

@@ -29,6 +29,7 @@
 #include "task.h"
 #include "message_buffer.h"
 #include "MessageBufferAMP.h"
+#include "ipc.h"
 #include "system/hw_util.h"
 #include "system/clockconfig.h"
 #include "eeprom.h"
@@ -44,6 +45,7 @@
 #define mainCHECK_TASK_PRIORITY			( configMAX_PRIORITIES - 2 )
 
 /* Private variables ---------------------------------------------------------*/
+static IPCMEM uint8_t StorageBuffer_data[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ];
 
 /* Exported variables --------------------------------------------------------*/
 uint32_t gflags;
@@ -200,15 +202,13 @@ int main(void)
     sensitive to rising edge : Configured only once */
     HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
 
-
+    Ipc_Init();
 
     /* Create control message buffer */
-    xControlMessageBuffer = xMessageBufferCreateStatic( mbaCONTROL_MESSAGE_BUFFER_SIZE,ucStorageBuffer_ctr ,&xStreamBufferStruct_ctrl);  
     /* Create data message buffer */
-    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
-    {
-    xDataMessageBuffers[ x ] = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, &ucStorageBuffer[x][0], &xStreamBufferStruct[x]);
-    configASSERT( xDataMessageBuffers[ x ] );
+    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {
+        DataMessageBuffer(x) = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, StorageBuffer_data[x], &DataStreamBuffer(x));
+        configASSERT( DataMessageBuffer(x) );
     }
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
@@ -227,13 +227,17 @@ int main(void)
     STATUS(7);
     
     TaskNotify(TASK_OUT);
-    /* Cortex-M7 will release Cortex-M4  by means of HSEM notification */
-    /*HW semaphore Clock enable*/
-    __HAL_RCC_HSEM_CLK_ENABLE();
-    /*Take HSEM */
-    HAL_HSEM_FastTake(HSEM_ID_0);
-    /*Release HSEM in order to wakeup the CPU2(CM4) from stop mode*/
-    HAL_HSEM_Release(HSEM_ID_0,0);
+    
+    /* 
+     * Write address of control message buffer to RTC backup ram address 0 
+     * from there it will be read upon startup from M4 core 
+     */
+    CTRL_HOOK_ENABLE_ACCESS();
+    CTRL_BLOCK_HOOK_PUT(AMPCtrl_Block);
+    CTRL_HOOK_DISABLE_ACCESS();
+
+    /* Wake up CM4 from initial stop */
+    WakeUp_CM4 ();
 
     /* Start the check task */
     xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
@@ -274,7 +278,7 @@ static void prvCore1Task( void *pvParameters )
     in core 2. */
     for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
     {
-      xMessageBufferSend( xDataMessageBuffers[ x ], 
+      xMessageBufferSend( DataMessageBuffer(x), 
                          ( void * ) cString,
                          strlen( cString ),
                          mbaDONT_BLOCK );
@@ -287,34 +291,6 @@ static void prvCore1Task( void *pvParameters )
   }
 }
 
-/*-----------------------------------------------------------*/
-
-/* Reimplementation of sbSEND_COMPLETED(), defined as follows in FreeRTOSConfig.h:
-   #define sbSEND_COMPLETED( pxStreamBuffer ) vGenerateCore2Interrupt( pxStreamBuffer )
-
-  Called from within xMessageBufferSend().  As this function also calls
-  xMessageBufferSend() itself it is necessary to guard against a recursive
-  call.  If the message buffer just updated is the message buffer written to
-  by this function, then this is a recursive call, and the function can just
-  exit without taking further action.
-*/
-void vGenerateCore2Interrupt( void * xUpdatedMessageBuffer )
-{
-  MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
-  
-  if( xUpdatedBuffer != xControlMessageBuffer )
-  {
-    /* Use xControlMessageBuffer to pass the handle of the message buffer
-    written to by core 1 to the interrupt handler about to be generated in
-    core 2. */
-    xMessageBufferSend( xControlMessageBuffer, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
-    
-    /* This is where the interrupt would be generated. */
-    HAL_EXTI_D1_EventInputConfig(EXTI_LINE0 , EXTI_MODE_IT,  DISABLE);
-    HAL_EXTI_D2_EventInputConfig(EXTI_LINE0 , EXTI_MODE_IT,  ENABLE);
-    HAL_EXTI_GenerateSWInterrupt(EXTI_LINE0);
-  }
-}
 
 /* 
   Check if the application still running

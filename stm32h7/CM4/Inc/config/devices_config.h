@@ -186,18 +186,22 @@
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
     #endif
 
-    // #define USE_USART2
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM4
+    #define RTCTIMER_IRQn           LPTIM4_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM4_IRQHandler
+
+    #define USE_USART2
     //#define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
-    #define COM2_USE_RX_DMA
+    // #define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    //#define USE_USART2_DEBUG
+    #define USE_USART2_DEBUG
     
-    #define USE_USART3
+    // #define USE_USART3
     #define COM3_USE_TX_DMA
     //#define COM3_USE_RX_DMA
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
-    #define USE_USART3_DEBUG
  
     // #define USE_UART4
     #define COM4_USE_TX_DMA
@@ -247,11 +251,6 @@
         #define USE_QENC1_IRQ
         #define USE_QENC1_PBTN1
     #endif
-
-  #define USE_ADC3
-  #define ADC3_USE_IRQ
-  #define ADC3_USE_DMA 
-  #define USER_ADC      HW_ADC3
 
   #if USE_PWMTIMER > 0
       #define USE_TIM3

@@ -30,11 +30,13 @@ void Error_Handler(char *file, int line)
   }  
 }
 
-void Error_Handler_XX(int32_t code, char *file, int line)
-{
-    TM1637_displayInteger(code,0,99);
-    Error_Handler( file, line );
-}
+#if defined(CORE_CM7)
+    void Error_Handler_XX(int32_t code, char *file, int line)
+    {
+        TM1637_displayInteger(code,0,99);
+        Error_Handler( file, line );
+    }
+#endif
 
 #ifdef  USE_FULL_ASSERT
 

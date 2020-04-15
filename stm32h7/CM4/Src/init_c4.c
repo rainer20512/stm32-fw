@@ -59,15 +59,6 @@ void Init_OtherDevices(void)
       }
 
   #endif
-  #if defined(USE_USART2)
-      dev_idx = AddDevice(&HW_COM2, NULL, NULL );
-      if ( dev_idx < 0 ) {
-        DEBUG_PUTS("Failed to init USART2-device");
-      } else {
-        DeviceInitByIdx(dev_idx, NULL);
-      }
-
-  #endif
   #if USE_QSPI > 0
       dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
       if ( dev_idx < 0 ) {

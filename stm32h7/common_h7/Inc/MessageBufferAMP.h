@@ -22,6 +22,7 @@
  *
  * http://www.FreeRTOS.org
  * http://aws.amazon.com/freertos
+
  *
  * 1 tab == 4 spaces!
  */
@@ -38,52 +39,65 @@
 overhead of message buffers. */
 #define mbaTASK_MESSAGE_BUFFER_SIZE ( 60 )
 
-#define mbaCONTROL_MESSAGE_BUFFER_SIZE ( 24 )
 
 /* The number of instances of prvCoreBTasks that are created. */
 #define mbaNUMBER_OF_CORE_2_TASKS	2
 
 /* A block time of 0 simply means, don't block. */
-#define mbaDONT_BLOCK				0
 #if defined ( __ICCARM__ )
-#pragma location = 0x38000000
-MessageBufferHandle_t xControlMessageBuffer;
-#pragma location = 0x38000004
-MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ];
-#pragma location = 0x3800000C
-static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ];
-/* The variable used to hold the stream buffer structure.*/
-#pragma location = 0x38000050
-StaticStreamBuffer_t xStreamBufferStruct_ctrl;
-#pragma location = 0x380000A0
-StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS];
-/* Used to dimension the array used to hold the streams.*/
-/* Defines the memory that will actually hold the streams within the stream buffer.*/
-#pragma location = 0x38000100
-static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ];
-#pragma location = 0x38000200
-static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ];
-#elif defined ( __CC_ARM )
-MessageBufferHandle_t xControlMessageBuffer __attribute__((at(0x38000000)));
-MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ]__attribute__((at(0x38000004)));
-static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ]__attribute__((at(0x3800000C)));
-/* The variable used to hold the stream buffer structure.*/
-StaticStreamBuffer_t xStreamBufferStruct_ctrl __attribute__((at(0x38000050)));
-StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS]__attribute__((at(0x380000A0)));
-/* Used to dimension the array used to hold the streams.*/
-/* Defines the memory that will actually hold the streams within the stream buffer.*/
-static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ]__attribute__((at(0x38000100)));
-static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ]__attribute__((at(0x38000200)));
+    #pragma location = 0x38000000
+    MessageBufferHandle_t xControlMessageBuffer;
+    #pragma location = 0x38000004
+    MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ];
+    #pragma location = 0x3800000C
+    static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ];
+    /* The variable used to hold the stream buffer structure.*/
+    #pragma location = 0x38000050
+    StaticStreamBuffer_t xStreamBufferStruct_ctrl;
+    #pragma location = 0x380000A0
+    StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS];
+    /* Used to dimension the array used to hold the streams.*/
+    /* Defines the memory that will actually hold the streams within the stream buffer.*/
+    #pragma location = 0x38000100
+    static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ];
+    #pragma location = 0x38000200
+    static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ];
+    #elif defined ( __CC_ARM )
+    MessageBufferHandle_t xControlMessageBuffer __attribute__((at(0x38000000)));
+    MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ]__attribute__((at(0x38000004)));
+    static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ]__attribute__((at(0x3800000C)));
+    /* The variable used to hold the stream buffer structure.*/
+    StaticStreamBuffer_t xStreamBufferStruct_ctrl __attribute__((at(0x38000050)));
+    StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS]__attribute__((at(0x380000A0)));
+    /* Used to dimension the array used to hold the streams.*/
+    /* Defines the memory that will actually hold the streams within the stream buffer.*/
+    static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ]__attribute__((at(0x38000100)));
+    static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ]__attribute__((at(0x38000200)));
 #elif defined ( __GNUC__ )
-MessageBufferHandle_t xControlMessageBuffer __attribute__((section(".RAM_D3_Z1")));
-MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z2")));
-static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z3")));
-/* The variable used to hold the stream buffer structure.*/
-StaticStreamBuffer_t xStreamBufferStruct_ctrl  __attribute__ ((section (".RAM_D3_Z4")));
-StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS] __attribute__ ((section (".RAM_D3_Z5")));
-/* Used to dimension the array used to hold the streams.*/
-/* Defines the memory that will actually hold the streams within the stream buffer.*/
-static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ] __attribute__ ((section (".RAM_D3_Z6")));
-static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ] __attribute__ ((section (".RAM_D3_Z7")));
+    /* 
+     * Macros to read and write the address of the control block to RTC-BKP0R
+     * and to enable/disable RTC clock
+     * as the access functions are executed early at program start, we can safely 
+     * assume, that RTC clock is not activated yet.
+     */
+    #define CTRL_HOOK_ENABLE_ACCESS()      __HAL_RCC_RTC_CLK_ENABLE()
+    #define CTRL_HOOK_DISABLE_ACCESS()      __HAL_RCC_RTC_CLK_DISABLE()
+    #define CTRL_BLOCK_HOOK_GET()           ((AMPCtrl_t* )RTC->BKP0R)
+    #define CTRL_BLOCK_HOOK_PUT(ctrl)       RTC->BKP0R = (uint32_t)(&ctrl)
+
+
+    static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z3")));
+#if 0
+    MessageBufferHandle_t xControlMessageBuffer __attribute__((section(".RAM_D3_Z1")));
+    MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z2")));
+    /* The variable used to hold the stream buffer structure.*/
+    StaticStreamBuffer_t xStreamBufferStruct_ctrl  __attribute__ ((section (".RAM_D3_Z4")));
+    StaticStreamBuffer_t xStreamBufferStruct[mbaNUMBER_OF_CORE_2_TASKS] __attribute__ ((section (".RAM_D3_Z5")));
+    /* Used to dimension the array used to hold the streams.*/
+    /* Defines the memory that will actually hold the streams within the stream buffer.*/
+    static uint8_t ucStorageBuffer_ctr[ mbaCONTROL_MESSAGE_BUFFER_SIZE ] __attribute__ ((section (".RAM_D3_Z6")));
+    static uint8_t ucStorageBuffer[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ] __attribute__ ((section (".RAM_D3_Z7")));
+#endif
 #endif
 #endif /* MESSAGE_BUFFER_AMP_H */
+

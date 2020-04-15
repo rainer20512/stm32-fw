@@ -116,8 +116,10 @@ static void DBG_dump_sram_areas(void)
 static void DBG_dump_sram_areas(void)
 {
   DBG_setPadLen(8);
-  DO_DUMP_RAMAREA("DTCM",__DTCM_segment);
-  DO_DUMP_RAMAREA("AXISRAM",__AXISRAM_segment);
+#if defined(CORE_CM7)
+      DO_DUMP_RAMAREA("DTCM",__DTCM_segment);
+      DO_DUMP_RAMAREA("AXISRAM",__AXISRAM_segment);
+#endif
   DO_DUMP_RAMAREA("SRAM1",__SRAM1_segment);
   DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
   DO_DUMP_RAMAREA("SRAM3",__SRAM3_segment);

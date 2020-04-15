@@ -9,7 +9,7 @@
   * @addtogroup RTC
   * @{
   */
-#include "config/config.h"
+#include "config/devices_config.h"
 #include "error.h"
 #include "debug_helper.h"
 #include "system/profiling.h"
@@ -28,6 +28,12 @@
 /* Private define ------------------------------------------------------------*/
 
 /* Some checks */
+
+#if USE_TIMER > 0
+    #if !defined(RTCTIMER)
+        #error "RTCTIMER not defined"
+    #endif 
+#endif
 
 #if ( TIMR_SUBSEC_MAX & (TIMR_SUBSEC_MAX-1) ) != 0
     #error TIMR_SUBSEC_MAX must be a power of 2
@@ -474,8 +480,8 @@ void RTC_AddOneSecond(void)
           return;
         }
 
-        /* Temporarily disable LPTIM1 interrupts */
-        HAL_NVIC_DisableIRQ(LPTIM1_IRQn);
+        /* Temporarily disable RTCTIMER interrupts */
+        HAL_NVIC_DisableIRQ(RTCTIMER_IRQn);
 
         if ( delta < 0 ) {
           /* 
@@ -504,7 +510,7 @@ void RTC_AddOneSecond(void)
           /* Check for unused comparator ( ARR=CMP ) and preserve this state */
           /* CMP must not be greater than ARR, so increase ARR first         */
           /* (When correcting, ARR is always greater than standard ARR )     */
-           LPTIM1->ARR = SUBS256_TO_TIMERUNIT(delta);
+           RTCTIMER->ARR = SUBS256_TO_TIMERUNIT(delta);
 
            SetFlagBit(gflags, GFLAG_TIMECORR_BIT);
            #if DEBUG_RTC > 0
@@ -512,8 +518,8 @@ void RTC_AddOneSecond(void)
            #endif
         }
 
-        /* Reenable LPTIM1 interrupts */
-        HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+        /* Reenable RTCTIMER interrupts */
+        HAL_NVIC_EnableIRQ(RTCTIMER_IRQn);
 
     }
     /*********************************************************************************
@@ -531,8 +537,8 @@ void RTC_AddOneSecond(void)
        register uint32_t c1;
        register uint32_t c2;
        do {
-        c1 = LPTIM1->CNT;
-        c2 = LPTIM1->CNT;
+        c1 = RTCTIMER->CNT;
+        c2 = RTCTIMER->CNT;
        } while ( c1 != c2 );
        return (uint16_t)c1;
     }
@@ -767,15 +773,15 @@ void RTC_SetDateTime(uint8_t dd, uint8_t mm, uint8_t yy, uint8_t hr, uint8_t mi,
         return false;
       }
         
-      if ( (LPTIM1->ISR & LPTIM_ISR_CMPOK_Msk) == 0 ) {
+      if ( (RTCTIMER->ISR & LPTIM_ISR_CMPOK_Msk) == 0 ) {
         log_error( "Cmp register not ready");
         return false;
       }
 
-      LPTIM1->CMP=value;
+      RTCTIMER->CMP=value;
       #if DEBUG_RTC > 0
           uint16_t c = RTC_GetTimer();
-          DEBUG_PRINTF("@%04x: LPTIM1->CNT=%04x,LPTIM1->CMP=%04x\n",c, c, LPTIM1->CMP);
+          DEBUG_PRINTF("@%04x: RTCTIMER->CNT=%04x,RTCTIMER->CMP=%04x\n",c, c, RTCTIMER->CMP);
       #endif      
       return true;
 
@@ -946,7 +952,7 @@ bool RTC_StopWatch_InUse(void)
 
 #if USE_TIMER > 0
     /******************************************************************************
-     * @brief  Initialize LPTIM1 as asynchronous counter clocked by LSE
+     * @brief  Initialize RTCTIMER as asynchronous counter clocked by LSE
      *         ARR is set in that way, that exactly every second an overflow
      *         occurs.
      ******************************************************************************/
@@ -956,36 +962,59 @@ bool RTC_StopWatch_InUse(void)
 
       PeriphClkInit.PeriphClockSelection = 0;
 
-      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LPTIM1; 
-      PeriphClkInit.Lptim1ClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
-
-      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        DEBUG_PUTS("Failed to set LPTIM1-Clock\n");
+      if ( RTCTIMER == LPTIM1 ) {
+          PeriphClkInit.PeriphClockSelection   = RCC_PERIPHCLK_LPTIM1; 
+          PeriphClkInit.Lptim1ClockSelection   = RCC_LPTIM1CLKSOURCE_LSE;
+      } else if ( RTCTIMER == LPTIM2 ) {
+          PeriphClkInit.PeriphClockSelection   = RCC_PERIPHCLK_LPTIM2; 
+          PeriphClkInit.Lptim2ClockSelection   = RCC_LPTIM2CLKSOURCE_LSE;
+      #if defined( LPTIM3 )
+      } else if ( RTCTIMER == LPTIM3 ) {
+          PeriphClkInit.PeriphClockSelection   = RCC_PERIPHCLK_LPTIM3; 
+          PeriphClkInit.Lptim345ClockSelection = RCC_LPTIM3CLKSOURCE_LSE;
+      #endif
+      #if defined( LPTIM4 )
+      } else if ( RTCTIMER == LPTIM4 ) {
+          PeriphClkInit.PeriphClockSelection   = RCC_PERIPHCLK_LPTIM4; 
+          PeriphClkInit.Lptim345ClockSelection = RCC_LPTIM4CLKSOURCE_LSE;
+      #endif
+      #if defined( LPTIM5 )
+      } else if ( RTCTIMER == LPTIM5 ) {
+          PeriphClkInit.PeriphClockSelection   = RCC_PERIPHCLK_LPTIM5; 
+          PeriphClkInit.Lptim345ClockSelection = RCC_LPTIM5CLKSOURCE_LSE;
+      #endif 
+      } else {
+        DEBUG_PUTS("Error: No clock assignment for RTC timer");
         return;
       }
 
-      __HAL_RCC_LPTIM1_CLK_ENABLE();
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PUTS("Failed to set LPTIMx-Clock\n");
+        return;
+      }
+
+      HW_SetHWClock(RTCTIMER, true);
 
       /* Enable compare match and overrun interrupt*/
-      LPTIM1->IER = LPTIM_IER_CMPMIE | LPTIM_IER_ARRMIE;
-      // for tests: LPTIM1->IER = 0;
+      RTCTIMER->IER = LPTIM_IER_CMPMIE | LPTIM_IER_ARRMIE;
+      // for tests: RTCTIMER->IER = 0;
     
       /* Set prescaler in CFGR, everything else in CFGR is ok */
-      MODIFY_REG(LPTIM1->CFGR, LPTIM_CFGR_PRESC_Msk, (HW_GetLn2(TIMR_PREDIV_VALUE) << LPTIM_CFGR_PRESC_Pos) );
+      MODIFY_REG(RTCTIMER->CFGR, LPTIM_CFGR_PRESC_Msk, (HW_GetLn2(TIMR_PREDIV_VALUE) << LPTIM_CFGR_PRESC_Pos) );
 
 
       /* Preset ARR to cycle within exactly one second, timer must be enabled to set ARR */
-      LPTIM1->CR = LPTIM_CR_ENABLE; 
-      LPTIM1->ARR = TIMR_SUBSEC_MAX-1;
+      RTCTIMER->CR = LPTIM_CR_ENABLE; 
+      RTCTIMER->ARR = TIMR_SUBSEC_MAX-1;
       /* Prest CMP with "unused" */
       DisableTmrIRQ();
 
-      /* Enable LPTIM1 global interrupt */
-      HAL_NVIC_SetPriority(LPTIM1_IRQn, RTC_IRQ_PRIO, 0);
-      HAL_NVIC_EnableIRQ(LPTIM1_IRQn);
+      /* Enable RTCTIMER global interrupt */
+      HAL_NVIC_SetPriority(RTCTIMER_IRQn, RTC_IRQ_PRIO, 0);
+      HAL_NVIC_EnableIRQ(RTCTIMER_IRQn);
 
       /* Start timer */
-      SET_BIT(LPTIM1->CR, LPTIM_CR_CNTSTRT);
+      SET_BIT(RTCTIMER->CR, LPTIM_CR_CNTSTRT);
     }
 #elif USE_RTC > 0
     /******************************************************************************
@@ -1071,7 +1100,7 @@ bool RTC_StopWatch_InUse(void)
 /* ---------------------------------------------------------------------------*/
 #if USE_TIMER > 0
     /*********************************************************************************
-     * @brief  LPTIM1 global interrupt, only Compare match is enabled
+     * @brief  RTCTIMER global interrupt, only Compare match is enabled
      *         Used by the system for all millisecond-timers 
      *
      * @see    timer.c         
@@ -1081,12 +1110,12 @@ bool RTC_StopWatch_InUse(void)
      * @retval None
      *
      ********************************************************************************/
-    void LPTIM1_IRQHandler(void)
+    void RTCTIMER_IRQHandler(void)
     {
         uint16_t tmrcnt;
         ProfilerPush(JOB_IRQ_RTC);
  
-        if ( LPTIM1->ISR & LPTIM_ISR_ARRM) {
+        if ( RTCTIMER->ISR & LPTIM_ISR_ARRM) {
             /* Overflow -> RTC second ticks */
             /* 
              * Adding one Second must be done in interrupt, because immediately after 
@@ -1097,25 +1126,25 @@ bool RTC_StopWatch_InUse(void)
             RTC_IncrementSecond();
             /* if time correction was performed, reset ARR to default value */
             if ( IsFlagBitSet(gflags, GFLAG_TIMECORR_BIT) ) {
-                LPTIM1->ARR = TIMR_SUBSEC_MAX-1;
+                RTCTIMER->ARR = TIMR_SUBSEC_MAX-1;
                 ClearFlagBit(gflags, GFLAG_TIMECORR_BIT);
             }
-            LPTIM1->ICR = LPTIM_ICR_ARRMCF;
+            RTCTIMER->ICR = LPTIM_ICR_ARRMCF;
         }
     
         /* Comparator is always on, we have an "unused" comparator value, that signals */
         /* that comparator is currently unused: Interrupt is triggered nevertheless    */
         /* This is due to changing the CMPIE bit would require starting and stopping   */
         /* the timer, which would infer some time skew                                 */
-        if ( LPTIM1->ISR & LPTIM_ISR_CMPM) {
+        if ( RTCTIMER->ISR & LPTIM_ISR_CMPM) {
             tmrcnt = RTC_GetTimer();
             ProfilerSwitchTo(JOB_IRQ_TMR);
-            // uint16_t cmp = LPTIM1->CNT - 1;
-            LPTIM1->ICR = LPTIM_ICR_CMPMCF;
+            // uint16_t cmp = RTCTIMER->CNT - 1;
+            RTCTIMER->ICR = LPTIM_ICR_CMPMCF;
             // if ( (cmp & 0xf0ff) != 0 ) {
                 if ( TmrIrqIsEnabled() ) {
                      #if DEBUG_RTC > 1
-                         DEBUG_PRINTF("Tmr CMP IRQ CMP=%04x, CNT=%04x  \n", LPTIM1->CMP, tmrcnt);
+                         DEBUG_PRINTF("Tmr CMP IRQ CMP=%04x, CNT=%04x  \n", RTCTIMER->CMP, tmrcnt);
                      #endif
                      /* Ignore pending interrupts from previous "unused" value */
                      if ( tmrcnt != CMP_FORBIDDEN_VALUE + 1 ) {
@@ -1125,7 +1154,7 @@ bool RTC_StopWatch_InUse(void)
                      }
                 }
             // } else {
-            //    LPTIM1->CMP += TIMR_SUBSEC_MAX / 4;
+            //    RTCTIMER->CMP += TIMR_SUBSEC_MAX / 4;
             // }
         }
 
@@ -1219,7 +1248,7 @@ void task_handle_rtc(uint32_t arg)
     #endif
     
     #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS > 0
-        // COM_print_time('+', true); // print_hexXXXX(LPTIM1->CNT); CRLF();
+        // COM_print_time('+', true); // print_hexXXXX(RTCTIMER->CNT); CRLF();
     #endif
 
     handle_sectimer_periodic();

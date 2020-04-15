@@ -19,8 +19,13 @@
 
 /* Stop rtc when either M7 or M4 is in debug mode */
 #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;   DBGMCU->APB4FZ2 |=  DBGMCU_APB4FZ2_DBG_RTC;      } while (0)
-/* Stop lptim1 when either M7 or M4 is in debug mode */
-#define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1; DBGMCU->APB1LFZ2 |= DBGMCU_APB1LFZ2_DBG_LPTIM1; } while (0)
+/* Stop LPTIMERS when either M7 or M4 is in debug mode */
+#define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1; DBGMCU->APB1LFZ2 |= DBGMCU_APB1LFZ2_DBG_LPTIM1; \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM2;  \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM3;  \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM4;  \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM5;  \
+                                         } while (0)
 
 
 
@@ -218,16 +223,14 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(LPTIM2) 
    { LPTIM2, &RCC->APB4ENR, RCC_APB4ENR_LPTIM2EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM2RST_Pos, COMBINE('T', 22) },
 #endif
-#if 0 /* LPTIM3,4,5 not coded */
-    #if defined(LPTIM3) 
-       { LPTIM3, &RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM3RST_Pos, COMBINE('T', 23) },
-    #endif
-    #if defined(LPTIM4) 
-       { LPTIM4, &RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM4RST_Pos, COMBINE('T', 24) },
-    #endif
-    #if defined(LPTIM5) 
-       { LPTIM5, &RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM5RST_Pos, COMBINE('T', 25) },
-    #endif
+#if defined(LPTIM3) 
+   { LPTIM3, &RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM3RST_Pos, COMBINE('T', 23) },
+#endif
+#if defined(LPTIM4) 
+   { LPTIM4, &RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM4RST_Pos, COMBINE('T', 24) },
+#endif
+#if defined(LPTIM5) 
+   { LPTIM5, &RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM5RST_Pos, COMBINE('T', 25) },
 #endif
 
 /* QUADSPI  --------------------------------------------------------------------------------------------------------------- */

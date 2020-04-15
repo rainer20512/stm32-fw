@@ -89,7 +89,7 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
 
   switch( (uint32_t)arg )  {
     case 0:
-      DBG_dump_clocksetting();
+      DEBUG_PUTS("Not implemented here");
       break;
     case 1:
       DBG_dump_rtcclockconfig();

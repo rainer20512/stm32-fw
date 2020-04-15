@@ -527,7 +527,7 @@ uint32_t MsTimerHandleCMP(uint16_t matchvalue)
         */
         if ( myMsTimers[i].uTime == matchvalue ) {
             #if DEBUG_TIMER > 0
-                DEBUG_PRINTF("Match TmrID %d, TMR=%04x, CMP=%04x\n", i, RTC_GetTimer(), LPTIM1->CMP );
+                DEBUG_PRINTF("Match TmrID %d, TMR=%04x, CMP=%04x\n", i, RTC_GetTimer(), RTCTIMER->CMP );
             #endif
             mask |= ( 1 << i );
         }

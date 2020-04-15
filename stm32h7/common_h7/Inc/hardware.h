@@ -22,6 +22,7 @@
 
 #if defined(CORE_CM7)
     #define DMAMEM                      __attribute((section(".dmamem")))
+    #define IPCMEM                      __attribute((section(".ipcmem")))
 #else
     #define DMAMEM                          
 #endif

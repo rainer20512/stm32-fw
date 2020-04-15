@@ -819,6 +819,10 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 }
 #endif /* #if DEBUG_DUMP_PERCLK > 0 */
 
+
+
+#define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
+
 void DBG_dump_peripheralclocksetting(bool bDumpAll)
 {
 
@@ -830,20 +834,20 @@ void DBG_dump_peripheralclocksetting(bool bDumpAll)
       /********  AHB peripheral clock enable register *****************/
       DBG_printf_indent("AHB devices state\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_ahb1enr(RCC->AHB1ENR, RCC_C1->AHB1ENR,  RCC_C2->AHB1ENR, 0);
-      DBG_dump_rcc_ahb2enr(RCC->AHB2ENR, RCC_C1->AHB2ENR,  RCC_C2->AHB2ENR, 0);
-      DBG_dump_rcc_ahb3enr(RCC->AHB3ENR, RCC_C1->AHB3ENR,  RCC_C2->AHB3ENR, 0);
-      DBG_dump_rcc_ahb4enr(RCC->AHB4ENR, RCC_C1->AHB4ENR,  RCC_C2->AHB4ENR, 0);
+      DBG_dump_rcc_ahb1enr(MK_3ARGS(AHB1ENR), 0);
+      DBG_dump_rcc_ahb2enr(MK_3ARGS(AHB2ENR), 0);
+      DBG_dump_rcc_ahb3enr(MK_3ARGS(AHB3ENR), 0);
+      DBG_dump_rcc_ahb4enr(MK_3ARGS(AHB4ENR), 0);
       DBG_setIndentRel(-2);
 
       /********  APB peripheral clock enable register *****************/
       DBG_printf_indent("APB devices state\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_apb1henr(RCC->APB1HENR, RCC_C1->APB1HENR,  RCC_C2->APB1HENR, 0);
-      DBG_dump_rcc_apb1lenr(RCC->APB1LENR, RCC_C1->APB1LENR,  RCC_C2->APB1LENR, 0);
-      DBG_dump_rcc_apb2enr (RCC->APB2ENR,  RCC_C1->APB2ENR,   RCC_C2->APB2ENR, 0);
-      DBG_dump_rcc_apb3enr (RCC->APB3ENR,  RCC_C1->APB3ENR,   RCC_C2->APB3ENR, 0);
-      DBG_dump_rcc_apb4enr (RCC->APB4ENR,  RCC_C1->APB4ENR,   RCC_C2->APB4ENR, 0);
+      DBG_dump_rcc_apb1henr(MK_3ARGS(APB1HENR), 0);
+      DBG_dump_rcc_apb1lenr(MK_3ARGS(APB1LENR), 0);
+      DBG_dump_rcc_apb2enr (MK_3ARGS(APB2ENR) , 0);
+      DBG_dump_rcc_apb3enr (MK_3ARGS(APB3ENR) , 0);
+      DBG_dump_rcc_apb4enr (MK_3ARGS(APB4ENR) , 0);
       DBG_setIndentRel(-2);
 
       /********  Backup Domain control register *****************/

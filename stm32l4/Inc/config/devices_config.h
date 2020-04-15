@@ -307,6 +307,11 @@
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
     #endif
 
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM1
+    #define RTCTIMER_IRQn           LPTIM1_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
+
     #define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
