@@ -194,6 +194,17 @@
         </folder>
         <file file_name="common_h7/Inc/ipc.h" />
         <file file_name="common_h7/Inc/MessageBufferAMP.h" />
+        <folder Name="devconfig">
+          <file file_name="common_h7/Inc/config/adc_config.h" />
+          <file file_name="common_h7/Inc/config/can_config.h" />
+          <file file_name="common_h7/Inc/config/gpio_config.h" />
+          <file file_name="common_h7/Inc/config/i2c_config.h" />
+          <file file_name="common_h7/Inc/config/qencode_config.h" />
+          <file file_name="common_h7/Inc/config/qspi_config.h" />
+          <file file_name="common_h7/Inc/config/spi_config.h" />
+          <file file_name="common_h7/Inc/config/timer_config.h" />
+          <file file_name="common_h7/Inc/config/uart_config.h" />
+        </folder>
       </folder>
       <folder Name="src">
         <folder Name="task">
@@ -205,6 +216,7 @@
           <file file_name="common_h7/Src/system/hw_util.c" />
           <file file_name="../common/src/system/exti_handler.c" />
         </folder>
+        <file file_name="common_h7/Src/ipc.c" />
       </folder>
     </folder>
   </project>
@@ -306,7 +318,6 @@
             <file file_name="CM7/Inc/system/ram_preset.inc" />
           </folder>
         </folder>
-        <file file_name="CM7/Src/ipc.c" />
       </folder>
       <folder Name="config">
         <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
@@ -378,6 +389,7 @@
           <file file_name="common_h7/Src/system/hw_util.c" />
         </folder>
         <file file_name="common_h7/Src/debug_pwr_rcc.c" />
+        <file file_name="common_h7/Src/ipc.c" />
       </folder>
       <folder Name="inc">
         <file file_name="common_h7/Inc/hardware.h" />
@@ -389,6 +401,17 @@
         </folder>
         <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
         <file file_name="common_h7/Inc/ipc.h" />
+        <folder Name="devconfig">
+          <file file_name="common_h7/Inc/config/adc_config.h" />
+          <file file_name="common_h7/Inc/config/can_config.h" />
+          <file file_name="common_h7/Inc/config/gpio_config.h" />
+          <file file_name="common_h7/Inc/config/i2c_config.h" />
+          <file file_name="common_h7/Inc/config/qencode_config.h" />
+          <file file_name="common_h7/Inc/config/qspi_config.h" />
+          <file file_name="common_h7/Inc/config/spi_config.h" />
+          <file file_name="common_h7/Inc/config/timer_config.h" />
+          <file file_name="common_h7/Inc/config/uart_config.h" />
+        </folder>
       </folder>
       <folder Name="task">
         <file file_name="common_h7/Src/task/minitask.c" />
@@ -460,17 +483,6 @@
           <file file_name="../common/inc/system/exti_handler.h" />
           <file file_name="../common/inc/system/tm1637.h" />
           <file file_name="../common/inc/system/timer_handler.h" />
-        </folder>
-        <folder Name="devconfig">
-          <file file_name="common_h7/Inc/config/adc_config.h" />
-          <file file_name="common_h7/Inc/config/can_config.h" />
-          <file file_name="common_h7/Inc/config/gpio_config.h" />
-          <file file_name="common_h7/Inc/config/i2c_config.h" />
-          <file file_name="common_h7/Inc/config/qencode_config.h" />
-          <file file_name="common_h7/Inc/config/qspi_config.h" />
-          <file file_name="common_h7/Inc/config/spi_config.h" />
-          <file file_name="common_h7/Inc/config/timer_config.h" />
-          <file file_name="common_h7/Inc/config/uart_config.h" />
         </folder>
         <file file_name="../common/inc/rtc.h" />
         <file file_name="../common/inc/timer.h" />

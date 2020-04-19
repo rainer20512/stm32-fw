@@ -76,18 +76,43 @@ static const HW_Gpio_IO_Type *GetGpioFromLedIdx( uint8_t idx )
     return IO_GetGpio(&HW_IO, pinidx);
 }
 
+typedef enum { 
+    InputPin  = 0,
+    OutputPin = 1,
+    IrqPin    = 2,
+} PinSearchEnum;
+
 /*******************************************************************************************
- * Find the HW_Gpio_IO_Type record, that is associated with "pin"
+ * Find the HW_Gpio_IO_Type record, that is associated with "pin" and is Input, Output ir IRQ pin
  ******************************************************************************************/
-static const HW_Gpio_IO_Type *IO_FindPin(const HW_DeviceType *self, uint16_t pin)
+static const HW_Gpio_IO_Type *IO_FindPinInternal(const HW_DeviceType *self, uint16_t pin, PinSearchEnum SearchMode)
 {
    assert ( self->devType == HW_DEVICE_IO );
    const HW_GpioList_IO *list = self->devGpioIO;
    for ( uint32_t i = 0; i < list->num; i++ ) 
-     if ( list->gpio[i].pin == pin ) return &list->gpio[i];
+     if ( list->gpio[i].pin == pin ) {
+        switch ( SearchMode ) {
+            case InputPin:
+                /* check for input pin */
+                if ( list->gpio[i].gpio_mode == GPIO_MODE_INPUT ) return &list->gpio[i];
+                break;
+            /* check for output pin */
+            case OutputPin:
+                if ( list->gpio[i].gpio_mode == GPIO_MODE_OUTPUT_PP || list->gpio[i].gpio_mode == GPIO_MODE_OUTPUT_OD ) return &list->gpio[i];
+                break;
+            /* check for output pin */
+            case IrqPin:
+                if ( HW_IsIrqMode(list->gpio[i].gpio_mode) ) return &list->gpio[i];
+                break;
+        }
+     } 
 
    return NULL;
 }
+
+#define IO_FindInputPin(self, pin)          IO_FindPinInternal(self, pin, InputPin)
+#define IO_FindOutputPin(self, pin)         IO_FindPinInternal(self, pin, OutputPin)
+#define IO_FindIRQPin(self, pin)            IO_FindPinInternal(self, pin, IrqPin)
 
 /*******************************************************************************************
  * Set an output pin to active High
@@ -135,24 +160,17 @@ void IO_DeInit(const HW_DeviceType *self)
  ******************************************************************************************/
 void IO_AssignInterrupt(uint16_t pin, ExtIrqCB cb )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindPin(&HW_IO, pin);
+    const HW_Gpio_IO_Type *gpio = IO_FindIRQPin(&HW_IO, pin);
     if ( gpio ) {
-        if (HW_IsIrqMode(gpio->gpio_mode) ) {
-            if ( cb ) {
-                Exti_Register_Callback(pin, &gpio->gpio->IDR, cb, NULL);    
-            } else {
-                Exti_UnRegister_Callback(pin);    
-            }
+        if ( cb ) {
+            Exti_Register_Callback(pin, &gpio->gpio->IDR, cb, NULL);    
         } else {
-            /* No interrupt mode */
-            #if DEBUG_MODE > 0
-                DEBUG_PRINTF("Cannot assign exti interrupt to no-interrupt pin %d\n", HW_GetIdxFromPin(pin));
-            #endif
+            Exti_UnRegister_Callback(pin);    
         }
     } else {
-        /* Undefined IO pin */
+        /* No Interrupt or undefined IO pin */
         #if DEBUG_MODE > 0
-            DEBUG_PRINTF("Cannot assign exti interrupt to unused pin %d\n", HW_GetIdxFromPin(pin));
+            DEBUG_PRINTF("Cannot assign exti interrupt to no-interrupt pin %d\n", HW_GetIdxFromPin(pin));
         #endif
     }
 }
@@ -169,7 +187,7 @@ uint8_t IO_UseLedGetNum( void )
 
 void IO_OutputHigh( uint16_t pinnum )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindPin(&HW_IO, pinnum);
+    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
     #if DEBUG_MODE > 0 
         if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
             DEBUG_PUTS("Error: Illegal Pin number");
@@ -182,7 +200,7 @@ void IO_OutputHigh( uint16_t pinnum )
 
 void IO_OutputLow ( uint16_t pinnum )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindPin(&HW_IO, pinnum);
+    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
     #if DEBUG_MODE > 0 
         if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
             DEBUG_PUTS("Error: Illegal Pin number");
@@ -195,7 +213,7 @@ void IO_OutputLow ( uint16_t pinnum )
 
 void IO_OutputToggle ( uint16_t pinnum )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindPin(&HW_IO, pinnum);
+    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
     #if DEBUG_MODE > 0 
         if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
             DEBUG_PUTS("Error: Illegal Pin number");

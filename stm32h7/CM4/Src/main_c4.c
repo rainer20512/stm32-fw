@@ -171,14 +171,8 @@ int main(void)
     
     TaskNotify(TASK_OUT);
 
-    if ( AMPCtrl_Ptr->ID != AMP_ID ) {
-        DEBUG_PUTS("AMP Control Block invalid");
-    }
-
-    if (( ControlMessageBufferRef == NULL )|( DataMessageBufferRef(0) == NULL ) | ( DataMessageBufferRef(1) == NULL )) {
-        DEBUG_PUTS("One or more IPC message buffers could not be allocated");
-    }
-
+    Ipc_Check();
+    
 
 
     for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {    
@@ -189,7 +183,7 @@ int main(void)
          */
         xTaskCreate( prvCore2Tasks,
                     "AMPCore2",
-                    configMINIMAL_STACK_SIZE,
+                    256,
                     ( void * ) x,
                     tskIDLE_PRIORITY + 1,
                     NULL );
@@ -208,6 +202,7 @@ static void prvCore2Tasks( void *pvParameters )
   BaseType_t x;
   size_t xReceivedBytes;
   uint32_t ulNextValue = 0;
+  uint32_t retval;
   char cExpectedString[ 15 ];
   char cReceivedString[ 15 ];
   
@@ -229,56 +224,30 @@ static void prvCore2Tasks( void *pvParameters )
                                             portMAX_DELAY );
     
     /* Check the number of bytes received was as expected. */
-    configASSERT( xReceivedBytes == strlen( cExpectedString ) );
-    
-    /* If the received string matches that expected then increment the loop
-    counter so the check task knows this task is still running. */
-    if( strcmp( cReceivedString, cExpectedString ) == 0 )
-    {
-      ( ulCycleCounters[ x ] )++;
+    if ( xReceivedBytes != strlen( cExpectedString ) ) {
+        DEBUG_PRINTF("wrong str: expected:%s, got:%s\n", cExpectedString, cReceivedString);
+        xDemoStatus = pdFAIL;
+    } else {
+        /* If the received string matches that expected then increment the loop
+        counter so the check task knows this task is still running. */
+        if( strcmp( cReceivedString, cExpectedString ) == 0 ) {
+            DEBUG_PRINTF("Ok %d\n", ulNextValue);
+            retval = 42+x;
+            xMessageBufferSend( DataMessageBufferRef(2), 
+                         ( void * )&retval,
+                         sizeof(uint32_t),
+                         mbaDONT_BLOCK );
+
+        } else {
+          DEBUG_PRINTF("Fail %d\n", ulNextValue);
+          xDemoStatus = pdFAIL;
+        }
     }
-    else
-    {
-      xDemoStatus = pdFAIL;
-    }
-    
     /* Expect the next string in sequence the next time around. */
     ulNextValue++;
   }
 }
 
-/* Handler for the interrupts that are triggered on core 1 but execute on core 2. */
-static void prvCore2InterruptHandler( void )
-{
-  MessageBufferHandle_t xUpdatedMessageBuffer;
-  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  
-  /* xControlMessageBuffer contains the handle of the message buffer that
-  contains data. */
-  if( xMessageBufferReceiveFromISR( ControlMessageBufferRef,
-                                   &xUpdatedMessageBuffer,
-                                   sizeof( xUpdatedMessageBuffer ),
-                                   &xHigherPriorityTaskWoken ) == sizeof( xUpdatedMessageBuffer ) )
-  {
-    /* Call the API function that sends a notification to any task that is
-    blocked on the xUpdatedMessageBuffer message buffer waiting for data to
-    arrive. */
-    xMessageBufferSendCompletedFromISR( xUpdatedMessageBuffer, &xHigherPriorityTaskWoken );
-  }
-  
-  /* Normal FreeRTOS yield from interrupt semantics, where
-  xHigherPriorityTaskWoken is initialzed to pdFALSE and will then get set to
-  pdTRUE if the interrupt safe API unblocks a task that has a priority above
-  that of the currently executing task. */
-  portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-}
-
-/* */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-  prvCore2InterruptHandler();
-  HAL_EXTI_D2_ClearFlag(EXTI_LINE0);
-}
 
 /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is

@@ -129,5 +129,7 @@ header file. */
 #define xPortPendSVHandler PendSV_Handler
 #define xPortSysTickHandler SysTick_Handler 
 
+#define sbSEND_COMPLETED( pxStreamBuffer ) vGenerateCore1Interrupt( pxStreamBuffer )
+
 #endif /* FREERTOS_CONFIG_H */
 
