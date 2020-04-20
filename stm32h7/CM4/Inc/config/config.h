@@ -55,10 +55,11 @@
 #define SPI_IRQ_PRIO        0x0d         // Give the SPI the next lowest priority
 #define BBSPI_IRQ_PRIO      0x0c         // Give BBSPI the next lowest
 #define BUTTON_IRQ_PRIO     0x0c         // Give push buttons the same prio as BBSPI input
-#define ADC_IRQ_PRIO        0x08         // ADC also has high prio due to high conversion rates
-#define EXTI_IRQ_PRIO       0x06         // Give Pin Change the third highest
-#define I2C_IRQ_PRIO        0x05         // Give I2C a high prio
-#define CAN_IRQ_PRIO        0x04         // Give CAN a very high prio
+#define ADC_IRQ_PRIO        0x09         // ADC also has high prio due to high conversion rates
+#define EXTI_IRQ_PRIO       0x07         // Give Pin Change the third highest
+#define I2C_IRQ_PRIO        0x06         // Give I2C a high prio
+#define CAN_IRQ_PRIO        0x05         // Give CAN a very high prio
+#define IPC_IRQ_PRIO        0x04         // IPC comes next
 #define RTC_IRQ_PRIO        0x03         // RTC has the next higher prio
 #define BASETIM_IRQ_PRIO    0x02         // Give the base timer the highest possible priority
 

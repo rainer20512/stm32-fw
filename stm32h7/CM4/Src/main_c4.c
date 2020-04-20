@@ -39,7 +39,7 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define HSEM_ID_0 (0U) /* HW semaphore 0*/
+#define HSEM_CM4_WKUP (0U) /* HW semaphore 0*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 
@@ -100,11 +100,8 @@ int main(void)
     LedToggle(250, 2);  
     AMPCtrl_t *ref;
 
-    /*HW semaphore Clock enable*/
-    __HAL_RCC_HSEM_CLK_ENABLE();
-
-    /* Activate HSEM notification for Cortex-M4*/
-    HAL_HSEM_ActivateNotification(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
+    /* Activate wakeup from CM7 */
+    Ipc_CM4_Init(INIT_RESTRICTED);
 
     /* 
      * Domain D2 goes to STOP mode (Cortex-M4 in deep-sleep) waiting for Cortex-M7 to
@@ -113,17 +110,7 @@ int main(void)
     HAL_PWREx_ClearPendingEvent();
     HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-    /* Clear HSEM flag */
-    __HAL_HSEM_CLEAR_FLAG(__HAL_HSEM_SEMID_TO_MASK(HSEM_ID_0));
 
-
-    /* 
-     * Get the adress of the control message buffer. It has been written to RCT Bkup ram 
-     * offset 0 by CM7 before waking up this core
-     */
-    CTRL_HOOK_ENABLE_ACCESS();
-    AMPCtrl_Ptr = CTRL_BLOCK_HOOK_GET();
-    CTRL_HOOK_DISABLE_ACCESS();
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 
@@ -171,9 +158,9 @@ int main(void)
     
     TaskNotify(TASK_OUT);
 
-    Ipc_Check();
+    /* initialize the ipc communication */
+    Ipc_CM4_Init(INIT_FULLY);
     
-
 
     for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {    
         /* 

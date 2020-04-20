@@ -10,17 +10,28 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
+#include "config/config.h"
 #include "hardware.h"
+
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "message_buffer.h"
 #include "ipc.h"
 
+#if defined(CORE_CM4)
+    #include "MessageBufferAMP.h"
+#endif
+
 #include "debug_helper.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
-#define HSEM_ID_0               (0U)            /* HW semaphore 0*/
+#define HSEM_CM7_to_CM4_Send        (0U)            /* HW semaphore 0 - signal incoming msg from CM7 to CM4  */
+#define HSEM_CM7_to_CM4_Recvd       (1U)            /* HW semaphore 1 - signal msg reception from CM7 to CM4 */
+#define HSEM_CM7_to_CM4_Wkup        (2U)            /* HW semaphore 2 - used to wake up CM4 */
+#define HSEM_CM4_to_CM7_Send        (3U)            /* HW semaphore 3 - signal incoming msg from CM4 to CM7  */
+#define HSEM_CM4_to_CM7_Recvd       (4U)            /* HW semaphore 4 - signal msg reception from CM4 to CM7 */
+
 #define CM7_TO_CM4_LINE         EXTI_LINE0      /* Signaling CM7 to CM4 */
 #define CM4_TO_CM7_LINE         EXTI_LINE1      /* Signaling CM7 to CM4 */
   
@@ -39,8 +50,16 @@ overhead of message buffers. */
     static IPCMEM uint8_t StorageBuffer_ctrl47 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
 #endif
 
-#if defined(CORE_CM4)
-#endif
+
+/******************************************************************************
+ * inter-CPU signaling by taking and releasing a semaphore, this will raise an
+ * interrupt on the other CPU
+ *****************************************************************************/
+static void IPC_Signal( uint32_t HW_sem )
+{
+    HAL_HSEM_FastTake(HW_sem);
+    HAL_HSEM_Release(HW_sem,0);
+}
 
 /* Used to dimension the array used to hold the streams.*/
 /* Defines the memory that will actually hold the streams within the stream buffer.*/
@@ -49,56 +68,55 @@ overhead of message buffers. */
      * Initialize the IPC buffer and allocate the Control message buffer 
      * This is done by CM7 core
      *************************************************************************/
-    void Ipc_Init ( void )
+    void Ipc_CM7_Init ( void )
     {
+        /*HW semaphore Clock enable*/
+        __HAL_RCC_HSEM_CLK_ENABLE();
+
+        /* Enable HSEM interrupts */
+        HAL_NVIC_SetPriority( HSEM1_IRQn, IPC_IRQ_PRIO, 0);
+        HAL_NVIC_EnableIRQ( HSEM1_IRQn);
+
         memset(&AMPCtrl_Block, 0, sizeof(AMPCtrl_t));
         AMPCtrl_Block.ID = 0x4354524C;
         DEBUG_PRINTF("IPC control block of size %d initialized\n", sizeof(AMPCtrl_t) );
 
         /* Create control message buffer and buffer semaphore for CM7 to CM4 communication */
         Control74MessageBuffer = xMessageBufferCreateStatic( CONTROL_MESSAGE_BUFFER_SIZE,StorageBuffer_ctrl74 ,&Control74StreamBuffer);  
-#if USE_SEMAPHORES > 0
         Control74Sem           = xSemaphoreCreateBinaryStatic( &AMPCtrl_Block.ctrl_cm7_sem_buf );
         xSemaphoreGive(Control74Sem);
-#endif
         
         /* Create control message buffer and buffer semaphore for CM4 to CM7 communication*/
         Control47MessageBuffer = xMessageBufferCreateStatic( CONTROL_MESSAGE_BUFFER_SIZE,StorageBuffer_ctrl47 ,&Control47StreamBuffer);  
-#if USE_SEMAPHORES > 0
         Control47Sem           = xSemaphoreCreateBinaryStatic( &AMPCtrl_Block.ctrl_cm4_sem_buf );
         xSemaphoreGive(Control47Sem);
-#endif
 
-#if USE_SEMAPHORES > 0
         /* create all data buffer semaphores */
         for ( uint32_t i = 0; i < MAX_AMP_CTRL; i++ ) {
             DataMessageSem(i) = xSemaphoreCreateBinaryStatic( &AMPCtrl_Block.xfersem_buf[i] );
             xSemaphoreGive(DataMessageSem(i));
 
         }
-#endif
+
+        /* Activate notification on all messages from CM4 */
+        HSEM->C1IER |= (1 << HSEM_CM4_to_CM7_Send) | (1 << HSEM_CM4_to_CM7_Recvd );
     }
 
 
     /**************************************************************************
-     * CM4 goes waits for Semaphore 0 and to sleep after reset
+     * CM4 goes to sleep after reset and waits for Semaphore HSEM_CM4_WKUP 
      * This CM7 routine is used to start CM4 again
      *************************************************************************/
-    void WakeUp_CM4 ( void )
+    void Ipc_CM7_WakeUp_CM4 ( void )
     {
         /* Cortex-M7 will release Cortex-M4  by means of HSEM notification */
-        /*HW semaphore Clock enable*/
-        __HAL_RCC_HSEM_CLK_ENABLE();
-        /*Take HSEM */
-        HAL_HSEM_FastTake(HSEM_ID_0);
-        /*Release HSEM in order to wakeup the CPU2(CM4) from stop mode*/
-        HAL_HSEM_Release(HSEM_ID_0,0);
+        IPC_Signal(HSEM_CM7_to_CM4_Wkup);
     }
 
 
     /**************************************************************************
      * Reimplementation of sbSEND_COMPLETED(), defined as follows in FreeRTOSConfig.h:
-     * #define sbSEND_COMPLETED( pxStreamBuffer ) vGenerateCore2Interrupt( pxStreamBuffer )
+     * #define sbSEND_COMPLETED( pxStreamBuffer ) vCore1GenerateCore2Interrupt( pxStreamBuffer )
      * This is the implementation on the CM7 core 
      *
      * Called from within xMessageBufferSend().  As this function also calls
@@ -107,7 +125,7 @@ overhead of message buffers. */
      * by this function, then this is a recursive call, and the function can just
      * exit without taking further action.
      *************************************************************************/
-    void vGenerateCore2Interrupt( void * xUpdatedMessageBuffer )
+    void vCore1GenerateCore2Interrupt( void * xUpdatedMessageBuffer )
     {
       MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
   
@@ -118,10 +136,8 @@ overhead of message buffers. */
         core 2. */
         xMessageBufferSend( Control74MessageBuffer, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
     
-        /* Signal core2 by Software interrupt on Core2. */
-        HAL_EXTI_D1_EventInputConfig(CM7_TO_CM4_LINE , EXTI_MODE_IT,  DISABLE);
-        HAL_EXTI_D2_EventInputConfig(CM7_TO_CM4_LINE , EXTI_MODE_IT,  ENABLE);
-        HAL_EXTI_GenerateSWInterrupt(CM7_TO_CM4_LINE);
+        /* Signal core2 */
+        IPC_Signal(HSEM_CM7_to_CM4_Send);
       }
     }
 
@@ -132,7 +148,7 @@ overhead of message buffers. */
      * So unpack the control buffer and deliver the message buffer to
      * the corresponding core1 task
      *************************************************************************/
-    static void prvCore1InterruptHandler( void )
+    static void prvCore1ReceiveHandler( void )
     {
       MessageBufferHandle_t xUpdatedMessageBuffer;
       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -158,15 +174,30 @@ overhead of message buffers. */
     }
 
     /**************************************************************************
-     * Interrupt hander for the software interrupt from core1
-     * see prvCore2InterruptHandler
+     * A control buffer reception has been acknowledged by CM4
+     * So release the control buffer semaphore
      *************************************************************************/
-    void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+    static void prvCore1SendAckHandler( void )
     {
-      prvCore1InterruptHandler();
-      HAL_EXTI_D1_ClearFlag(CM4_TO_CM7_LINE);
     }
 
+    /**************************************************************************
+     * Semaphore free handler for CM7
+     * It has to react on incoming messages from CM4
+     * and on receive acknowledge from CM4 as reaction on CM7 data sent
+     *************************************************************************/
+    void HSEM1_IRQHandler ( void )
+    {
+        /* Get activated Interrupt bits */
+        uint32_t SemMask = HSEM->C1ISR & HSEM->C1IER;
+        
+        /*Clear all activated bits */
+        HSEM->C1ICR = SemMask;
+
+        /* Handle all "free" interrupts */
+        if ( SemMask & (1 << HSEM_CM4_to_CM7_Send ) ) prvCore1ReceiveHandler();
+        if ( SemMask & (1 << HSEM_CM4_to_CM7_Recvd) ) prvCore1SendAckHandler();
+    }
 
 #endif /* CORE_CM7 */
 
@@ -177,7 +208,7 @@ overhead of message buffers. */
     /**************************************************************************
      * Check IPC block for proper initialization by CM7 core
      *************************************************************************/
-    void Ipc_Check(void)
+    void Ipc_CM4_Check(void)
     {
         bool bNullPtr;
 
@@ -196,13 +227,48 @@ overhead of message buffers. */
     }
 
     /**************************************************************************
+     * Initialize the IPC buffer and allocate the Control message buffer 
+     * This is done by CM7 core
+     *************************************************************************/
+    void Ipc_CM4_Init ( uint32_t uRestricted )
+    {
+        /*HW semaphore Clock enable*/
+        __HAL_RCC_HSEM_CLK_ENABLE();
+
+        HAL_NVIC_SetPriority( HSEM2_IRQn, IPC_IRQ_PRIO, 0);
+        HAL_NVIC_EnableIRQ( HSEM2_IRQn);
+
+        /* in first phase, only allow wakeup from CM7 */
+        if ( uRestricted==INIT_RESTRICTED) {
+            /* Activate notification on only Wakepu */
+            HSEM->C2IER = 1 << HSEM_CM7_to_CM4_Wkup;
+            return;
+        }
+
+        /* 
+         * Normal Init: Get the adress of the control message buffer. It has been written 
+         * to RCT Bkup ram offset 0 by CM7 before waking up this core
+         */
+        CTRL_HOOK_ENABLE_ACCESS();
+        AMPCtrl_Ptr = CTRL_BLOCK_HOOK_GET();
+        CTRL_HOOK_DISABLE_ACCESS();
+
+        /* Check consitency of AMP control block */
+        Ipc_CM4_Check();
+
+        /* finally activate notification on all messages from CM4 */
+        HSEM->C2IER |= ( (1 << HSEM_CM7_to_CM4_Wkup) | (1 << HSEM_CM7_to_CM4_Send) | ( 1 << HSEM_CM7_to_CM4_Recvd) );
+    }
+
+
+    /**************************************************************************
      * Interrupt hander for the software interrupt from core1
      * A message buffer for core2 has been delivered from core1
      * The message buffer is passed within the control buffer.
      * So unpack the control buffer and deliver the message buffer to
      * the corresponding core2 task
      *************************************************************************/
-    static void prvCore2InterruptHandler( void )
+    static void prvCore2ReceiveHandler( void )
     {
       MessageBufferHandle_t xUpdatedMessageBuffer;
       BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -228,16 +294,6 @@ overhead of message buffers. */
     }
 
     /**************************************************************************
-     * Interrupt hander for the software interrupt from core1
-     * see prvCore2InterruptHandler
-     *************************************************************************/
-    void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-    {
-      prvCore2InterruptHandler();
-      HAL_EXTI_D2_ClearFlag(CM7_TO_CM4_LINE);
-    }
-
-    /**************************************************************************
      * Reimplementation of sbSEND_COMPLETED(), defined as follows in FreeRTOSConfig.h:
      * #define sbSEND_COMPLETED( pxStreamBuffer ) vGenerateCore2Interrupt( pxStreamBuffer )
      * This is the implementation on the CM4 core 
@@ -248,7 +304,7 @@ overhead of message buffers. */
      * by this function, then this is a recursive call, and the function can just
      * exit without taking further action.
      *************************************************************************/
-    void vGenerateCore1Interrupt( void * xUpdatedMessageBuffer )
+    void vCore2GenerateCore1Interrupt( void * xUpdatedMessageBuffer )
     {
       MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
   
@@ -259,10 +315,29 @@ overhead of message buffers. */
         core 2. */
         xMessageBufferSend( Control47MessageBufferRef, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
     
-        /* Signal core2 by Software interrupt on Core2. */
-        HAL_EXTI_D2_EventInputConfig(CM4_TO_CM7_LINE , EXTI_MODE_IT,  DISABLE);
-        HAL_EXTI_D1_EventInputConfig(CM4_TO_CM7_LINE , EXTI_MODE_IT,  ENABLE);
-        HAL_EXTI_GenerateSWInterrupt(CM4_TO_CM7_LINE);
+        /* Signal core1  */
+        IPC_Signal(HSEM_CM4_to_CM7_Send);
       }
+    }
+
+    /**************************************************************************
+     * A control buffer reception has been acknowledged by CM4
+     * So release the control buffer semaphore
+     *************************************************************************/
+    static void prvCore2SendAckHandler( void )
+    {
+    }
+
+    void HSEM2_IRQHandler ( void )
+    {
+        /* Get activated Interrupt bits */
+        uint32_t SemMask = HSEM->C2ISR & HSEM->C2IER;
+        
+        /*Clear all activated bits */
+        HSEM->C2ICR = SemMask;
+
+        /* Handle all "free" interrupts */
+        if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Send) )  prvCore2ReceiveHandler();
+        if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Recvd) ) prvCore2SendAckHandler();
     }
 #endif

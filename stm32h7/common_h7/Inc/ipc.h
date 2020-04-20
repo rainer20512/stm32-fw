@@ -17,7 +17,6 @@
 #include "semphr.h"
 
 #define mbaDONT_BLOCK				0
-#define USE_SEMAPHORES                          1
 
 /* Number of different message buffer paths between CM7 and CM4 */
 
@@ -28,24 +27,18 @@ typedef struct {
     uint32_t ID;
     MessageBufferHandle_t ctrl_cm7;
     StaticStreamBuffer_t  ctrl_cm7_stream;
-#if USE_SEMAPHORES > 0
     SemaphoreHandle_t     ctrl_cm7_sem;
     StaticSemaphore_t     ctrl_cm7_sem_buf;
-#endif
     MessageBufferHandle_t ctrl_cm4;
     StaticStreamBuffer_t  ctrl_cm4_stream;
-#if USE_SEMAPHORES > 0
     SemaphoreHandle_t     ctrl_cm4_sem;
     StaticSemaphore_t     ctrl_cm4_sem_buf;
-#endif
 
     uint32_t num_xfer_used;
     MessageBufferHandle_t xfer       [MAX_AMP_CTRL];
     StaticStreamBuffer_t  xfer_stream[MAX_AMP_CTRL];
-#if USE_SEMAPHORES > 0
     SemaphoreHandle_t     xfersem    [MAX_AMP_CTRL];
     StaticSemaphore_t     xfersem_buf[MAX_AMP_CTRL];
-#endif
 } AMPCtrl_t;
 
 
@@ -84,12 +77,14 @@ extern  AMP_Ctrl_ptr    AMPCtrl_Ptr;
 #define DataMessageSemRef(i)         (AMPCtrl_Ptr->xfersem[i]) 
 
 #if defined(CORE_CM7)
-    void WakeUp_CM4  ( void );
-    void Ipc_Init    ( void );
+    void Ipc_CM7_WakeUp_CM4     ( void );
+    void Ipc_CM7_Init           ( void );
 #endif
 
 #if defined(CORE_CM4)
-    void Ipc_Check(void);
+    #define INIT_RESTRICTED 1
+    #define INIT_FULLY      0
+    void Ipc_CM4_Init ( uint32_t  bRestricted );   
 #endif
 
 #endif /* __IPC_H__ */

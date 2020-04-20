@@ -43,7 +43,6 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
-#define HSEM_ID_0 (0U) /* HW semaphore 0*/
 #define mainCHECK_TASK_PRIORITY			( configMAX_PRIORITIES - 2 )
 
 /* Private variables ---------------------------------------------------------*/
@@ -213,6 +212,7 @@ int main(void)
     Init_DumpAndClearResetSource();
     STATUS(4);
 
+#if 0
     /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
     sensitive to rising edge : Configured only once */
     HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
@@ -220,6 +220,7 @@ int main(void)
 
     HAL_NVIC_SetPriority(EXTI1_IRQn, 0xFU, 0U);
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+#endif
     
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
@@ -268,7 +269,7 @@ static void prvCore1InitTask( void *pvParameters )
   
     UNUSED(pvParameters);
 
-    Ipc_Init();
+    Ipc_CM7_Init();
 
     /* Create control message buffer */
     /* Create data message buffer */
@@ -289,7 +290,7 @@ static void prvCore1InitTask( void *pvParameters )
     TaskNotify(TASK_OUT);
 
     /* Wake up CM4 from initial stop */
-    WakeUp_CM4 ();
+    Ipc_CM7_WakeUp_CM4 ();
 
     /* Start the check task */
     xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
@@ -307,6 +308,52 @@ static void prvCore1InitTask( void *pvParameters )
 /* This task will periodically send data to tasks running on Core 2
    via message buffers. */
 static void prvCore1Task( void *pvParameters )
+{
+  BaseType_t x;
+  uint32_t ulNextValue = 0;
+  const TickType_t xDelay = pdMS_TO_TICKS( 250 );
+  char cString[ 15 ];
+  
+  /* Remove warning about unused parameters. */
+  ( void ) pvParameters;
+
+  for( ;; )
+  {
+    /* Create the next string to send.  The value is incremented on each
+    loop iteration, and the length of the string changes as the number of
+    digits in the value increases. */
+    sprintf( cString, "%lu", ( unsigned long ) ulNextValue );
+
+    /* Send the value from this Core to the tasks on the Core 2 via the message 
+    buffers.  This will result in sbSEND_COMPLETED()
+    being executed, which in turn will write the handle of the message
+    buffer written to into xControlMessageBuffer then generate an interrupt
+    in core 2. */
+    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
+    {
+      DEBUG_PRINTF("Send %d on task#%d\n", ulNextValue, x);
+      if ( xSemaphoreTake(DataMessageSem(x), pdMS_TO_TICKS(100000)) == pdTRUE ) {
+          xMessageBufferSend( DataMessageBuffer(x), 
+                             ( void * ) cString,
+                             strlen( cString ),
+                             mbaDONT_BLOCK );
+          xSemaphoreGive(DataMessageSem(x));
+      } else {
+          DEBUG_PRINTF("Failed to obtain DataSemaphore %d\n", x );
+      }
+      /* Delay before repeating */
+      vTaskDelay( xDelay );
+    }
+
+    ulNextValue++;
+    DEBUG_PRINTF("Send packet %d\n", ulNextValue);
+  }
+}
+
+
+/* This task will periodically send data to tasks running on Core 2
+   via message buffers. */
+static void prvCore1ModifiedTask( void *pvParameters )
 {
   BaseType_t x;
   uint32_t ulNextValue = 0;
