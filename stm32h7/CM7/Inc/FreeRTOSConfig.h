@@ -46,7 +46,7 @@
  #include <stdint.h>
  extern uint32_t SystemCoreClock;
 
-void vCore1GenerateCore2Interrupt( void * xUpdatedMessageBuffer );
+void vCore1SignalControlBufToSend( void * xUpdatedMessageBuffer );
 #endif
 
 #define configUSE_PREEMPTION                    1
@@ -132,7 +132,7 @@ header file. */
 
 
 
-#define sbSEND_COMPLETED( pxStreamBuffer ) vCore1GenerateCore2Interrupt( pxStreamBuffer )
+#define sbSEND_COMPLETED( pxStreamBuffer )      vCore1SignalControlBufToSend( pxStreamBuffer )
 
 #endif /* FREERTOS_CONFIG_H */
 

@@ -116,7 +116,7 @@ static void IPC_Signal( uint32_t HW_sem )
 
     /**************************************************************************
      * Reimplementation of sbSEND_COMPLETED(), defined as follows in FreeRTOSConfig.h:
-     * #define sbSEND_COMPLETED( pxStreamBuffer ) vCore1GenerateCore2Interrupt( pxStreamBuffer )
+     * #define sbSEND_COMPLETED( pxStreamBuffer ) vCore1SignalControlBufToSend( pxStreamBuffer )
      * This is the implementation on the CM7 core 
      *
      * Called from within xMessageBufferSend().  As this function also calls
@@ -125,20 +125,22 @@ static void IPC_Signal( uint32_t HW_sem )
      * by this function, then this is a recursive call, and the function can just
      * exit without taking further action.
      *************************************************************************/
-    void vCore1GenerateCore2Interrupt( void * xUpdatedMessageBuffer )
+    void vCore1SignalControlBufToSend( void * xUpdatedMessageBuffer )
     {
-      MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
-  
-      if( xUpdatedBuffer != Control74MessageBuffer )
-      {
-        /* Use xControlMessageBuffer to pass the handle of the message buffer
-        written to by core 1 to the interrupt handler about to be generated in
-        core 2. */
-        xMessageBufferSend( Control74MessageBuffer, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
-    
-        /* Signal core2 */
-        IPC_Signal(HSEM_CM7_to_CM4_Send);
-      }
+        MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
+
+        if( xUpdatedBuffer != Control74MessageBuffer ) {
+            /* Use xControlMessageBuffer to pass the handle of the message buffer
+            written to by core 1 to the interrupt handler about to be generated in
+            core 2. */
+            if ( xSemaphoreTake(Control74Sem, pdMS_TO_TICKS(10000)) == pdTRUE ) {
+                xMessageBufferSend( Control74MessageBuffer, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
+                /* Signal core2 */
+                IPC_Signal(HSEM_CM7_to_CM4_Send);
+            } else {
+                DEBUG_PUTS("Cannot allocate ctrl74");
+            }
+        }
     }
 
     /**************************************************************************
@@ -147,6 +149,7 @@ static void IPC_Signal( uint32_t HW_sem )
      * The message buffer is passed within the control buffer.
      * So unpack the control buffer and deliver the message buffer to
      * the corresponding core1 task
+     * Note: Routine is called in ISR context only!
      *************************************************************************/
     static void prvCore1ReceiveHandler( void )
     {
@@ -166,6 +169,9 @@ static void IPC_Signal( uint32_t HW_sem )
         xMessageBufferSendCompletedFromISR( xUpdatedMessageBuffer, &xHigherPriorityTaskWoken );
       }
   
+      /* Signal reception to core2 */
+      IPC_Signal(HSEM_CM7_to_CM4_Recvd);
+
       /* Normal FreeRTOS yield from interrupt semantics, where
       xHigherPriorityTaskWoken is initialzed to pdFALSE and will then get set to
       pdTRUE if the interrupt safe API unblocks a task that has a priority above
@@ -176,9 +182,13 @@ static void IPC_Signal( uint32_t HW_sem )
     /**************************************************************************
      * A control buffer reception has been acknowledged by CM4
      * So release the control buffer semaphore
+     * Note: Routine is called in ISR context only!
      *************************************************************************/
     static void prvCore1SendAckHandler( void )
     {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(Control74Sem, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 
     /**************************************************************************
@@ -286,6 +296,9 @@ static void IPC_Signal( uint32_t HW_sem )
         xMessageBufferSendCompletedFromISR( xUpdatedMessageBuffer, &xHigherPriorityTaskWoken );
       }
   
+      /* Signal reception to core1  */
+      IPC_Signal(HSEM_CM4_to_CM7_Recvd);
+
       /* Normal FreeRTOS yield from interrupt semantics, where
       xHigherPriorityTaskWoken is initialzed to pdFALSE and will then get set to
       pdTRUE if the interrupt safe API unblocks a task that has a priority above
@@ -304,20 +317,22 @@ static void IPC_Signal( uint32_t HW_sem )
      * by this function, then this is a recursive call, and the function can just
      * exit without taking further action.
      *************************************************************************/
-    void vCore2GenerateCore1Interrupt( void * xUpdatedMessageBuffer )
+    void vCore2SignalControlBufToSend( void * xUpdatedMessageBuffer )
     {
-      MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
-  
-      if( xUpdatedBuffer != Control47MessageBufferRef )
-      {
-        /* Use xControlMessageBuffer to pass the handle of the message buffer
-        written to by core 1 to the interrupt handler about to be generated in
-        core 2. */
-        xMessageBufferSend( Control47MessageBufferRef, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
-    
-        /* Signal core1  */
-        IPC_Signal(HSEM_CM4_to_CM7_Send);
-      }
+        MessageBufferHandle_t xUpdatedBuffer = ( MessageBufferHandle_t ) xUpdatedMessageBuffer;
+
+        if( xUpdatedBuffer != Control47MessageBufferRef ) {
+            /* Use xControlMessageBuffer to pass the handle of the message buffer
+            written to by core 1 to the interrupt handler about to be generated in
+            core 2. */
+            if ( xSemaphoreTake(Control47SemRef, pdMS_TO_TICKS(10000)) == pdTRUE ) {
+                xMessageBufferSend( Control47MessageBufferRef, &xUpdatedBuffer, sizeof( xUpdatedBuffer ), mbaDONT_BLOCK );
+                /* Signal core1 */
+                IPC_Signal(HSEM_CM4_to_CM7_Send);
+            } else {
+                DEBUG_PUTS("Cannot allocate ctrl47");
+            }
+        }
     }
 
     /**************************************************************************
@@ -326,6 +341,9 @@ static void IPC_Signal( uint32_t HW_sem )
      *************************************************************************/
     static void prvCore2SendAckHandler( void )
     {
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(Control47SemRef, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 
     void HSEM2_IRQHandler ( void )

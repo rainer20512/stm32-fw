@@ -651,8 +651,12 @@ void DBG_dump_rcc_ahb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DBG_dump_when_on ("SRAM1 Clk",   d1, c1, c2, RCC_AHB2ENR_SRAM1EN);  
   DBG_dump_when_on ("SDMMC2 Clk",  d1, c1, c2, RCC_AHB2ENR_SDMMC2EN);  
   DBG_dump_when_on ("RNG Clk",     d1, c1, c2, RCC_AHB2ENR_RNGEN);  
+#if defined(HASH)
   DBG_dump_when_on ("HASH Clk",    d1, c1, c2, RCC_AHB2ENR_HASHEN);  
+#endif
+#if defined(CRYP)
   DBG_dump_when_on ("CRYPT Clk",   d1, c1, c2, RCC_AHB2ENR_CRYPEN);  
+#endif
   DBG_dump_when_on ("DCMI Clk",    d1, c1, c2, RCC_AHB2ENR_DCMIEN);  
   DEBUG_PRINTF("\n");
 }

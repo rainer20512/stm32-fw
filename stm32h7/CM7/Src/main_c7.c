@@ -67,11 +67,13 @@ void HW_InitJtagDebug(void);
 void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
+void LwIP_Start ( void );
 
 static void prvCheck2Task   ( void *pvParameters );
 static void prvCore1Task    ( void *pvParameters );
 static void prvCheckTask    ( void *pvParameters );
 static void prvCore1InitTask( void *pvParameters );
+static void prvCore1ModifiedTask( void *pvParameters );
 
 static BaseType_t xAreMessageBufferAMPTasksStillRunning( void );
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
@@ -135,7 +137,7 @@ int main(void)
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
      */
-    MPU_Config();
+    // MPU_Config();
 
     /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
@@ -263,6 +265,12 @@ int main(void)
     for (;;);
 }
 
+/**
+  * @brief  BSP Configuration
+  * @param  None
+  * @retval None
+  */
+
 /* Initialization of CM7 Tasks and RTOS environment */
 static void prvCore1InitTask( void *pvParameters )
 {
@@ -289,6 +297,7 @@ static void prvCore1InitTask( void *pvParameters )
     
     TaskNotify(TASK_OUT);
 
+    #if 0
     /* Wake up CM4 from initial stop */
     Ipc_CM7_WakeUp_CM4 ();
 
@@ -301,7 +310,15 @@ static void prvCore1InitTask( void *pvParameters )
     /* Start the Core 1 task */
     xTaskCreate( prvCore1Task, "AMPCore1", 256, NULL, tskIDLE_PRIORITY, NULL );		
 
+    /* Start the Modified Core 1 task */
+    xTaskCreate( prvCore1ModifiedTask, "Mod1", 256, NULL, tskIDLE_PRIORITY, NULL );		
+    #endif
+
     STATUS(43);
+
+    LwIP_Start();
+    STATUS(44);
+
     /* Terminate initialization task */ 
     vTaskDelete(NULL);
 }

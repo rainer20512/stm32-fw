@@ -677,15 +677,15 @@ void DebugMon_Handler(void)
     #endif
 #endif
 
+extern ETH_HandleTypeDef EthHandle;
 /**
-  * @brief  This function handles EXTI1 interrupt request. This IRQ is used
-  *         for IPC from CM4 To CM7
+  * @brief  This function handles Ethernet interrupt request.
   * @param  None
   * @retval None
   */
-void EXTI1_IRQHandler( void )
+void ETH_IRQHandler(void)
 {
- HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_1);
+  HAL_ETH_IRQHandler(&EthHandle);
 }
 
 /******************************************************************************/
