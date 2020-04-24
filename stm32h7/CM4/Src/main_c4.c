@@ -61,6 +61,7 @@ BaseType_t xDemoStatus = pdPASS;
 void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
+void LwIP_Start ( void );
 
 /* Private function prototypes -----------------------------------------------*/
 
@@ -162,6 +163,8 @@ int main(void)
     Ipc_CM4_Init(INIT_FULLY);
     
 
+    LwIP_Start();
+
     for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {    
         /* 
          * Pass the loop counter into the created task using the task's
@@ -176,6 +179,8 @@ int main(void)
                     NULL );
     }
    
+    
+
   /* Start scheduler */
   vTaskStartScheduler();
 

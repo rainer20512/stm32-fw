@@ -20,7 +20,8 @@
 #include "lwip/opt.h"
 #include "main.h"
 #if LWIP_DHCP
-#include "lwip/dhcp.h"
+    #include "lwip/dhcp.h"
+    #include "ip_addr.h"
 #endif
 #include "app_ethernet.h"
 #include "ethernetif.h"

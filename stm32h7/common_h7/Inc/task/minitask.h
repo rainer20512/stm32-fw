@@ -57,6 +57,9 @@ bool TaskIsRunableTask  (void);
 
 #if DEBUG_MODE > 0
     void TaskRegisterTask ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name );
+    uint32_t TaskGetTasks( void);
+    void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint32_t i );
+    void TaskFormatLine( char* buffer, size_t buflen, const char *prefixstr, uint32_t i );
     void TaskDumpList     (void);
     extern bool bAllowStop;         /* flag variable to inhibit stop by command ( only in debug mode ) */
 #else

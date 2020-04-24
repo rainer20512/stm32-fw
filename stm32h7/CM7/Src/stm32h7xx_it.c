@@ -677,16 +677,6 @@ void DebugMon_Handler(void)
     #endif
 #endif
 
-extern ETH_HandleTypeDef EthHandle;
-/**
-  * @brief  This function handles Ethernet interrupt request.
-  * @param  None
-  * @retval None
-  */
-void ETH_IRQHandler(void)
-{
-  HAL_ETH_IRQHandler(&EthHandle);
-}
 
 /******************************************************************************/
 /*                 STM32H7xx Peripherals Interrupt Handlers                   */

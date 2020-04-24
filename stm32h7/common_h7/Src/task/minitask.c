@@ -199,47 +199,79 @@ void TaskNotifyFromISR ( uint32_t num )
 #if DEBUG_MODE > 0
 
 static TaskStatus_t taskstatus[MAX_TASK];
+static UBaseType_t nroftasks;
 
-const char * TaskStateTxt[] = { "Running", "Ready  ", "Blocked", "Suspend", "Deleted", "Invalid", };
+const char * TaskStateTxt[] = { "A", "R", "B", "S", "D", "I", };
 static const char* TaskState( uint32_t state )
 {
     if ( state > sizeof(TaskStateTxt) / sizeof(const char *) ) 
-        return "???????";
+        return "?";
     else
         return TaskStateTxt[state];
+}
+
+
+/* Fill "taskstatus" array and return the number of entries ( number of tasks ) */
+/* 0 is returned in case of more than MAX_TASK                                 */
+uint32_t TaskGetTasks( void) 
+{
+    nroftasks = uxTaskGetNumberOfTasks();
+    if ( nroftasks > MAX_TASK ) {
+        DEBUG_PUTS("Too many tasks");
+        return 0;
+    }   
+    uxTaskGetSystemState( taskstatus, MAX_TASK, NULL );
+    return nroftasks;
+}
+
+void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint32_t i )
+{
+    switch ( i ) {
+        case 0:
+            snprintf(buffer ,buflen, "%sTask List (%2d Tasks)----------------------------------------------------", prefixstr, nroftasks);
+            break;
+        case 1:
+            #if DEBUG_PROFILING > 0
+                snprintf(buffer ,buflen, "%s No Prio St Name  HighWaterMark           Consumed time",prefixstr);
+            #else
+                snprintf(buffer ,buflen, "%s No Prio St            Name  HighWaterMark",prefixstr);
+            #endif
+            break;
+        default:
+            *buffer='\0';
+    }
+}
+
+void TaskFormatLine( char* buffer, size_t buflen, const char *prefixstr, uint32_t i )
+{
+    #if DEBUG_PROFILING > 0
+        snprintf(buffer, buflen,"%s%3d %4d %7s %15s %4d",
+                 prefixstr, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
+    #else
+        snprintf(buffer, buflen,"%s%3d %4d %2s %15s %4d",
+                 prefixstr, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
+    #endif   
 }
 
 void TaskDumpList(void)
 {
     uint32_t i;
     uint32_t mask;
+    char line[80];
 
-    UBaseType_t num = uxTaskGetNumberOfTasks(  );
+    TaskGetTasks(  );
 
-    DEBUG_PRINTF  ("Task List (%2d Tasks)----------------------------------------------------\n", num);
-    if ( num > MAX_TASK ) {
-        DEBUG_PUTS("Too many tasks");
-        return;
-    }   
+    TaskFormatHeader(line, 80, "", 0);
+    DBG_printf_indent("%s\n",line);
 
-    uxTaskGetSystemState( taskstatus, MAX_TASK, NULL );
     int oldIndent = DBG_setIndentRel(+2);
-    DBG_printf_indent(" No Prio St                 Name  HighWaterMark");
-    #if DEBUG_PROFILING > 0
-        DBG_printf_indent("           Consumed time");
-        DBG_setPadLen(20);
-    #endif
-    DEBUG_PRINTF("\n");
+    for ( i=1; TaskFormatHeader(line, 80, "",i), *line; i++) {
+        DBG_printf_indent("%s\n",line);
+    }
 
-    for ( i = 0; i < num; i++ ) {
-        
-        DBG_printf_indent("%3d %4d %7s",i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState) );
-        DEBUG_PRINTF(" %15s %4d",  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
-        #if DEBUG_PROFILING > 0
-            ProfilerDumpTime( ProfilerTimes[tasks[i].PrID], (char *)tasks[i].Name);
-        #else
-            DEBUG_PRINTF("\n");
-        #endif
+    for ( i = 0; i < nroftasks; i++ ) {
+        TaskFormatLine(line, 80, "", i );
+        DBG_printf_indent("%s\n",line);
     }
  
     DBG_setIndentAbs(oldIndent);

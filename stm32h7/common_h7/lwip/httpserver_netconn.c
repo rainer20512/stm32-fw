@@ -279,28 +279,47 @@ void http_server_netconn_init()
   * @param  conn pointer on connection structure 
   * @retval None
   */
+#define MAXLEN      120
+#include "task/minitask.h"
 void DynWebPage(struct netconn *conn)
 {
-  portCHAR PAGE_BODY[512];
-  portCHAR pagehits[10] = {0};
-
-  memset(PAGE_BODY, 0,512);
+  portCHAR line[MAXLEN];
 
   /* Update the hit count */
   nPageHits++;
-  sprintf(pagehits, "%d", (int)nPageHits);
-  strcat(PAGE_BODY, pagehits);
-  strcat((char *)PAGE_BODY, "<pre><br>Name          State  Priority  Stack   Num" );
-  strcat((char *)PAGE_BODY, "<br>---------------------------------------------<br>");
+
+  uint32_t nroftasks = TaskGetTasks(  );
+
+  /* Header and hit counter */
+  snprintf(line, MAXLEN, "%d", (int)nPageHits);
+  netconn_write(conn, PAGE_START, strlen((char*)PAGE_START), NETCONN_COPY);
+  netconn_write(conn, line, strlen(line), NETCONN_COPY);
+
+  /* Table Header */
+    TaskFormatHeader(line, MAXLEN, "<pre><br>",0);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+
+    for ( uint32_t i=1; TaskFormatHeader(line, MAXLEN, "<br>", i), *line; i++) {
+        netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    }
+ 
+    /* table content */
+    for ( uint32_t i = 0; i < nroftasks; i++ ) {
+        TaskFormatLine(line, MAXLEN, "<br>", i );
+        netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    }
+
     
   /* The list of tasks and their status */
-  osThreadList((unsigned char *)(PAGE_BODY + strlen(PAGE_BODY)));
-  strcat((char *)PAGE_BODY, "<br><br>---------------------------------------------");
-  strcat((char *)PAGE_BODY, "<br>B : Blocked, R : Ready, D : Deleted, S : Suspended<br>");
+  osThreadList((unsigned char *)(line + strlen(line)));
+
+  /* footer */
+  snprintf(line, MAXLEN, "<br>---------------------------------------------");
+  netconn_write(conn, line, strlen(line), NETCONN_COPY);
+  snprintf(line, MAXLEN, "<br>A: Running, B : Blocked, R : Ready, D : Deleted, S : Suspended, I : Invalid<br>");
+  netconn_write(conn, line, strlen(line), NETCONN_COPY);
 
   /* Send the dynamically generated page */
-  netconn_write(conn, PAGE_START, strlen((char*)PAGE_START), NETCONN_COPY);
-  netconn_write(conn, PAGE_BODY, strlen(PAGE_BODY), NETCONN_COPY);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

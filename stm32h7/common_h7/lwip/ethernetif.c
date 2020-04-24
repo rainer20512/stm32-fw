@@ -29,6 +29,9 @@
 #include "../Components/lan8742/lan8742.h"
 #include <string.h>
 
+// RHB Added
+#include "debug_helper.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* The time to block waiting for input. */
@@ -180,11 +183,13 @@ static void low_level_init(struct netif *netif)
   osThreadDef(EthIf, ethernetif_input, osPriorityRealtime, 0, INTERFACE_THREAD_STACK_SIZE);
   osThreadCreate (osThread(EthIf), netif);
   
+  DEBUG_PUTS("8742 Init Start\n");
   /* Set PHY IO functions */
   LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
   
   /* Initialize the LAN8742 ETH PHY */
   LAN8742_Init(&LAN8742);
+  DEBUG_PUTS("8742 Init Done\n");
   
   PHYLinkState = LAN8742_GetLinkState(&LAN8742);
   
@@ -219,7 +224,7 @@ static void low_level_init(struct netif *netif)
       speed = ETH_SPEED_100M;
       break;      
     }
-    
+     
     /* Get MAC Config MAC */
     HAL_ETH_GetMACConfig(&EthHandle, &MACConf); 
     MACConf.DuplexMode = duplex;
@@ -246,6 +251,7 @@ static void low_level_init(struct netif *netif)
   *       to become available since the stack doesn't retry to send a packet
   *       dropped because of memory failure (except for the TCP timers).
   */
+#include "debug_helper.h"
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
   uint32_t i=0, framelen = 0;
@@ -262,8 +268,17 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
     
     Txbuffer[i].buffer = q->payload;
     Txbuffer[i].len = q->len;
+
     framelen += q->len;
     
+#if 0
+    DEBUG_PRINTF("out %d len=%d:", i, q->len);
+    for ( uint32_t kk = 0; kk < q->len; kk++ ) {
+        DEBUG_PRINTF("%02x", ((uint8_t*)(q->payload))[kk]);
+    }
+    DEBUG_PRINTF("\n");
+#endif
+
     if(i>0)
     {
       Txbuffer[i-1].next = &Txbuffer[i];
@@ -280,8 +295,15 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
   TxConfig.Length = framelen;
   TxConfig.TxBuffer = Txbuffer;
 
-  HAL_ETH_Transmit(&EthHandle, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
-  
+  /* RHB added Synchronzize data */
+  // __DSB();
+
+  i = HAL_ETH_Transmit(&EthHandle, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
+  if ( i != HAL_OK ) {
+    DEBUG_PRINTF("ETH Tx Err %d, Code=%d\n", i, EthHandle.ErrorCode );
+  }
+  DEBUG_PRINTF("DMACSR=0x%08x\n", EthHandle.Instance->DMACSR);
+
   return errval;
 }
 
@@ -307,8 +329,10 @@ static struct pbuf * low_level_input(struct netif *netif)
     /* Build Rx descriptor to be ready for next data reception */
     HAL_ETH_BuildRxDescriptors(&EthHandle);
 
+#if defined(CORE_CM7)
     /* Invalidate data cache for ETH Rx Buffers */
     SCB_InvalidateDCache_by_Addr((uint32_t *)RxBuff.buffer, framelength);
+#endif
     
     custom_pbuf  = (struct pbuf_custom*)LWIP_MEMPOOL_ALLOC(RX_POOL);
     custom_pbuf->custom_free_function = pbuf_free_custom;
@@ -410,8 +434,10 @@ err_t ethernetif_init(struct netif *netif)
 void pbuf_free_custom(struct pbuf *p)
 {
   struct pbuf_custom* custom_pbuf = (struct pbuf_custom*)p;
+#if defined(CORE_CM7)
   /* invalidate data cache: lwIP and/or application may have written into buffer */
   SCB_InvalidateDCache_by_Addr((uint32_t *)p->payload, p->tot_len);
+#endif
   LWIP_MEMPOOL_FREE(RX_POOL, custom_pbuf);
 }
 
@@ -478,8 +504,8 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
   GPIO_InitStructure.Pin = GPIO_PIN_1 | GPIO_PIN_4 | GPIO_PIN_5; 
   HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);	
   
-  /* Enable the Ethernet global Interrupt */
-  HAL_NVIC_SetPriority(ETH_IRQn, 0x7, 0);
+  /* Enable the Ethernet global Interrupt with a very high prio*/
+  HAL_NVIC_SetPriority(ETH_IRQn, 0x2, 0);
   HAL_NVIC_EnableIRQ(ETH_IRQn);
   
   /* Enable Ethernet clocks */
@@ -637,6 +663,27 @@ void ethernet_link_thread( void const * argument )
     
     osDelay(100);
   }
+}
+
+void HAL_ETH_TxCpltCallback(ETH_HandleTypeDef *heth)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(heth);
+  DEBUG_PRINTF("ETH TxCplt\n");    
+}
+
+void HAL_ETH_DMAErrorCallback(ETH_HandleTypeDef *heth)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(heth);
+  DEBUG_PRINTF("ETH DMA err\n");    
+}
+
+void HAL_ETH_MACErrorCallback(ETH_HandleTypeDef *heth)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(heth);
+  DEBUG_PRINTF("ETH MAC err\n");    
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

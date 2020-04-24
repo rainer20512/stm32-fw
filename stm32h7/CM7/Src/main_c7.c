@@ -67,7 +67,7 @@ void HW_InitJtagDebug(void);
 void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
-void LwIP_Start ( void );
+
 
 static void prvCheck2Task   ( void *pvParameters );
 static void prvCore1Task    ( void *pvParameters );
@@ -137,7 +137,7 @@ int main(void)
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
      */
-    // MPU_Config();
+    MPU_Config();
 
     /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
@@ -147,6 +147,7 @@ int main(void)
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
+
     /* Wait until CPU2 boots and enters in stop mode or timeout*/
     timeout = 0xFFFFFF;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
@@ -154,6 +155,7 @@ int main(void)
     {
         Error_Handler_XX(-1, __FILE__, __LINE__);
     }
+
 
     /* STM32H7xx HAL library initialization:
        - TIM6 timer is configured by default as source of HAL time base, but user
@@ -297,10 +299,10 @@ static void prvCore1InitTask( void *pvParameters )
     
     TaskNotify(TASK_OUT);
 
-    #if 0
     /* Wake up CM4 from initial stop */
     Ipc_CM7_WakeUp_CM4 ();
 
+#if 0
     /* Start the check task */
     xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
 
@@ -312,11 +314,8 @@ static void prvCore1InitTask( void *pvParameters )
 
     /* Start the Modified Core 1 task */
     xTaskCreate( prvCore1ModifiedTask, "Mod1", 256, NULL, tskIDLE_PRIORITY, NULL );		
-    #endif
+#endif
 
-    STATUS(43);
-
-    LwIP_Start();
     STATUS(44);
 
     /* Terminate initialization task */ 
@@ -557,6 +556,7 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
   * @param  None
   * @retval None
   */
+#if 0
 static void SystemClock_Config(void)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
@@ -623,7 +623,7 @@ static void SystemClock_Config(void)
   HAL_EnableCompensationCell();
 
 }
-
+#endif
 /**
 * @brief  CPU L1-Cache enable.
 * @param  None
@@ -635,7 +635,7 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableICache();
 
   /* Enable D-Cache */
-  //SCB_EnableDCache();
+  // SCB_EnableDCache();
 }
 
 /**

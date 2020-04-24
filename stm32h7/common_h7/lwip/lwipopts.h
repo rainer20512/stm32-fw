@@ -51,7 +51,9 @@ a lot of data that needs to be copied, this should be set high. */
 #define MEM_SIZE                (10*1024)
 
 /* Relocate the LwIP RAM heap pointer */
-#define LWIP_RAM_HEAP_POINTER    (0x30045000)
+// RHB changed to linker allocated memory block instead of hardcoded mem address */
+extern unsigned char mem_heap[];
+#define LWIP_RAM_HEAP_POINTER    (mem_heap)
 
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
@@ -116,7 +118,7 @@ a lot of data that needs to be copied, this should be set high. */
 
 
 /* ---------- DHCP options ---------- */
-#define LWIP_DHCP               0
+#define LWIP_DHCP                       0
 
 
 /* ---------- UDP options ---------- */
@@ -185,7 +187,25 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
   #define CHECKSUM_CHECK_ICMP             1
 #endif
 
-#define LWIP_DEBUG
+#define LWIP_DEBUG                      1
+#define TCP_DEBUG                       LWIP_DBG_OFF
+#define ETHARP_DEBUG                    LWIP_DBG_OFF
+#define PBUF_DEBUG                      LWIP_DBG_OFF
+#define IP_DEBUG                        LWIP_DBG_OFF
+#define INET_DEBUG                      LWIP_DBG_ON
+#define TCPIP_DEBUG                     LWIP_DBG_OFF
+#define DHCP_DEBUG                      LWIP_DBG_ON
+#define UDP_DEBUG                       LWIP_DBG_OFF
+#define ICMP_DEBUG                      LWIP_DBG_ON
+#define RAW_DEBUG                       LWIP_DBG_ON
+#define NETIF_DEBUG                     LWIP_DBG_OFF
+#define API_LIB_DEBUG                   LWIP_DBG_OFF
+#define API_MSG_DEBUG                   LWIP_DBG_OFF
+#define SOCKETS_DEBUG                   LWIP_DBG_OFF
+#define RAW_DEBUG                       LWIP_DBG_ON
+#define SYS_DEBUG                       LWIP_DBG_ON
+
+
 
 /*
    ----------------------------------------------
