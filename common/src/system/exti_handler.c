@@ -245,8 +245,8 @@ void EXTI##num##_IRQHandler(void)   \
   ProfilerPop();                    \
 }
 
-//RHB todo EXTI_IRQ(0)
-//RHB todo EXTI_IRQ(1)
+EXTI_IRQ(0)
+EXTI_IRQ(1)
 EXTI_IRQ(2)
 EXTI_IRQ(3)
 EXTI_IRQ(4)

@@ -111,7 +111,7 @@ int main(void)
     HAL_PWREx_ClearPendingEvent();
     HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-
+    vTasklist(NULL);
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 
@@ -142,9 +142,6 @@ int main(void)
     BasicDevInit();
     Init_DumpAndClearResetSource();
  
-    HAL_NVIC_SetPriority(EXTI0_IRQn, 0xFU, 0U);
-    HAL_NVIC_EnableIRQ(EXTI0_IRQn);
-
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
     DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );

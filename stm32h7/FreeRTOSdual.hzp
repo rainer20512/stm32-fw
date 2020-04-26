@@ -227,6 +227,7 @@
         </folder>
         <folder Name="system">
           <file file_name="../common/src/system/periodic.c" />
+          <file file_name="../common/src/system/exti_handler.c" />
         </folder>
       </folder>
       <folder Name="inc">
@@ -282,7 +283,6 @@
         <file file_name="common_h7/Src/hardware.c" />
         <folder Name="system">
           <file file_name="common_h7/Src/system/hw_util.c" />
-          <file file_name="../common/src/system/exti_handler.c" />
         </folder>
         <file file_name="common_h7/Src/ipc.c" />
       </folder>
