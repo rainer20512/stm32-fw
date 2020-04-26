@@ -111,7 +111,6 @@ int main(void)
     HAL_PWREx_ClearPendingEvent();
     HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-    vTasklist(NULL);
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 

@@ -14,9 +14,9 @@
 
 #if defined(STM32H745NUCLEO)
   // LEDs  
-  #define IO_00                             { GPIO_PIN_0,  GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
-  #define IO_01                             { GPIO_PIN_1,  GPIOE, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,   IO_NO_IRQ }
-  #define IO_02                             { GPIO_PIN_14, GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,   IO_NO_IRQ }
+  #define IO_00                             { GPIO_PIN_0,  GPIOB, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,   IO_NO_IRQ, "UserLed gn" }
+  #define IO_01                             { GPIO_PIN_1,  GPIOE, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,   IO_NO_IRQ, "UserLed ye" }
+  #define IO_02                             { GPIO_PIN_14, GPIOB, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,   IO_NO_IRQ, "UserLed rd" }
 //  #define IO_01                             { GPIO_PIN_10, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
 //  #define IO_02                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
   #define USERLEDNUM                        3
@@ -24,7 +24,7 @@
   // Blue pushbutton, assigned only ot CM7 core
 #if defined(CORE_CM7)
   #define IO_03_IRQ                         { BUTTON_IRQ_PRIO, 0 }
-  #define IO_03                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL,   HW_INPUT,         IO_03_IRQ }
+  #define IO_03                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_03_IRQ, "Blue PushBtn" }
   #define IO_NUM                            4
 #else
   #define IO_NUM                            3

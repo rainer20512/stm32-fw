@@ -16,8 +16,8 @@
     #include "debug_helper.h"
 #endif
 
-const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */
-const TIM_TypeDef* apb2_timers[]={TIM1, TIM8,       TIM15, TIM16, TIM17 };   /* Timers clocked by APB2 */
+const TIM_TypeDef* apb1_timers[6]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */
+const TIM_TypeDef* apb2_timers[5]={TIM1, TIM8,       TIM15, TIM16, TIM17 };   /* Timers clocked by APB2 */
 
 /****************************************************************************** 
  * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 

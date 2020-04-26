@@ -39,6 +39,7 @@ typedef struct  HWDTS HW_DeviceType;
 #define     HW_DEVICE_BASETIMER   10
 #define     HW_DEVICE_QSPI        11
 #define     HW_DEVICE_CAN         12
+#define     HW_DEVICE_ETH         13
 
 
 /******************************************************************************
@@ -96,6 +97,7 @@ typedef struct {
     HW_PinDrvEnum drv;          //!< on output: drive normal or inverted, ignored on input
     HW_PinOutInitial initial;   //!< Initial output value, ignored on input
     GPIO_IrqType gpio_irq;      //!< associated interrupt ( in case of input pin with irq )
+    const char *dbg_name;       //!< Pin function ( for debug purposes only )
 } HW_Gpio_IO_Type;
 
 /******************************************************************************
@@ -106,6 +108,7 @@ typedef struct {
     uint32_t sampleTime;        //!< ADC channel Sample time
     GPIO_TypeDef *gpio;         //!< GPIO-Port ( GPIOA ... GPIOx ), NULL for internal channels
     uint16_t pin;               //!< associated Pin number as defined in ..._hal_gpio.h
+    const char *dbg_name;       //!< Pin function ( for debug purposes only )
 } HW_Gpio_ADC_Type;
 
 
@@ -117,6 +120,7 @@ typedef struct {
     GPIO_TypeDef *gpio;         //!< GPIO-Port ( GPIOA ... GPIOx )
     uint8_t af_mode;            //!< Alternate function as defined in ..._hal_gpio-h
     uint8_t  pull;              //!< pull as defined in ..._hal_gpio.h
+    const char *dbg_name;           //!< Pin function ( for debug purposes only )
 } HW_Gpio_AF_Type;
 
 

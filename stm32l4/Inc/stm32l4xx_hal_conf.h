@@ -21,8 +21,6 @@
 #ifndef __STM32L4xx_HAL_CONF_H
 #define __STM32L4xx_HAL_CONF_H
 
-#include "config/devices_config.h"
-
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -35,12 +33,8 @@
   * @brief This is the list of modules to be used in the HAL driver
   */
 #define HAL_MODULE_ENABLED
-#define HAL_ADC_MODULE_ENABLED */
-
-#if defined(USE_CAN)
-    #define HAL_CAN_MODULE_ENABLED
-#endif
-
+#define HAL_ADC_MODULE_ENABLED 
+/* #define HAL_CAN_MODULE_ENABLED */
 /* #define HAL_CAN_LEGACY_MODULE_ENABLED */
 /* #define HAL_COMP_MODULE_ENABLED */
 #define HAL_CORTEX_MODULE_ENABLED

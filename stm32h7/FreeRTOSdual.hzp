@@ -482,6 +482,7 @@
           <file file_name="common_h7/Inc/config/spi_config.h" />
           <file file_name="common_h7/Inc/config/timer_config.h" />
           <file file_name="common_h7/Inc/config/uart_config.h" />
+          <file file_name="common_h7/Inc/config/eth_config.h" />
         </folder>
       </folder>
       <folder Name="task">
@@ -512,6 +513,7 @@
             </file>
             <file file_name="../common/src/dev/qspi/mx25r6435f.h" />
           </folder>
+          <file file_name="../common/src/dev/eth_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../common/src/system/periodic.c" />
@@ -548,6 +550,7 @@
           <file file_name="../common/inc/dev/spi_dev.h" />
           <file file_name="../common/inc/dev/timer_dev.h" />
           <file file_name="../common/inc/dev/uart_dev.h" />
+          <file file_name="../common/inc/dev/eth_dev.h" />
         </folder>
         <folder Name="system">
           <file file_name="../common/inc/system/periodic.h" />

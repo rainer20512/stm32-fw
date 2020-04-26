@@ -56,6 +56,10 @@ static uint32_t             act_devices     = 0;
 /* --------------------------------------------------------------------------------------*/
 
 
+#define PRINTNAME(a)     ( a ? a : "" )
+#define PRINTCOLON(a)    ( a ? " : " : "" )
+
+
 void DBG_dump_devices(bool bLong)
 {
     const HW_DeviceType *dev;
@@ -77,17 +81,23 @@ void DBG_dump_devices(bool bLong)
             if ( gpioaf ) 
                 for ( uint8_t j = 0; j < gpioaf->num; j++ ) {
                     if ( gpioaf->gpio[j].gpio )
-                        DBG_printf_indent("AF  %c%d\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin));
+                        DBG_printf_indent("  AF  %c%02d%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
+                                          ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)                                 
+                        );
                 }
             if ( gpioio ) 
                 for ( uint8_t j = 0; j < gpioio->num; j++ ) {
                     if ( gpioio->gpio[j].gpio )
-                        DBG_printf_indent("IO  %c%d\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin));
+                        DBG_printf_indent("  IO  %c%02d%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
+                                          ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)                                 
+                        );
                 }
             if ( gpioadc ) 
                 for ( uint8_t j = 0; j < gpioadc->num; j++ ) {
                     if ( gpioadc->gpio[j].gpio )
-                        DBG_printf_indent("ADC %c%d\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin));
+                        DBG_printf_indent("  ADC %c%02d%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
+                                          ,PRINTCOLON(gpioadc->gpio[j].dbg_name), PRINTNAME(gpioadc->gpio[j].dbg_name)
+                        );
                 }
           
             DBG_setIndentRel(-4);

@@ -45,6 +45,7 @@
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
+#define USE_ETH                     1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate

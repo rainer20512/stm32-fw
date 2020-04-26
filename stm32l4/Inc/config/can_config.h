@@ -25,16 +25,16 @@
    */
   #if defined(USE_CANDEV1_ALTN1)
     /* ALTN1 PB8, PB9 */
-    #define CAN1_RX_PIN                     { GPIO_PIN_8,   GPIOB, GPIO_AF9_CAN1, GPIO_PULLUP } 
-    #define CAN1_TX_PIN                     { GPIO_PIN_9,   GPIOB, GPIO_AF9_CAN1, GPIO_PULLUP } 
+    #define CAN1_RX_PIN                     { GPIO_PIN_8,   GPIOB, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Rx" } 
+    #define CAN1_TX_PIN                     { GPIO_PIN_9,   GPIOB, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Tx" } 
   #elif defined(USE_CANDEV1_ALTN2)
     /* ALTN2 PD0, PD1 */
-    #define CAN1_RX_PIN                     { GPIO_PIN_0,   GPIOD, GPIO_AF9_CAN1, GPIO_PULLUP } 
-    #define CAN1_TX_PIN                     { GPIO_PIN_1,   GPIOD, GPIO_AF9_CAN1, GPIO_PULLUP } 
+    #define CAN1_RX_PIN                     { GPIO_PIN_0,   GPIOD, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Rx" } 
+    #define CAN1_TX_PIN                     { GPIO_PIN_1,   GPIOD, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Tx" } 
   #else
     /* default PA11, PA12 */
-    #define CAN1_RX_PIN                     { GPIO_PIN_11,  GPIOA, GPIO_AF9_CAN1, GPIO_PULLUP } 
-    #define CAN1_TX_PIN                     { GPIO_PIN_12,  GPIOA, GPIO_AF9_CAN1, GPIO_PULLUP } 
+    #define CAN1_RX_PIN                     { GPIO_PIN_11,  GPIOA, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Rx" } 
+    #define CAN1_TX_PIN                     { GPIO_PIN_12,  GPIOA, GPIO_AF9_CAN1, GPIO_PULLUP, "Can1_Tx" } 
   #endif
 
   /* Definition for CAN Interrupts */

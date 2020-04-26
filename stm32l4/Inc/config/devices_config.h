@@ -312,12 +312,12 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    #define USE_USART2
+    //#define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     //#define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    #define USE_USART2_DEBUG
+    //#define USE_USART2_DEBUG
 
     // #define USE_USART3
     #define COM3_USE_TX_DMA
@@ -332,12 +332,12 @@
     #define COM5_USE_RX_DMA
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
-    //#define USE_LPUART1
+    #define USE_LPUART1
     #define COM9_USE_TX_DMA
     //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
-    //#define USE_LPUART1_DEBUG
+    #define USE_LPUART1_DEBUG
  
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ
@@ -345,7 +345,8 @@
     #define SPIDEV1_USE_IRQ
     #define USE_SPI1_BAUDRATE        400000
     #define USE_SPI1_MASTER
-    // #define USE_SPI2
+    
+    //#define USE_SPI2
     #define SPIDEV2_USE_IRQ
     #define SPIDEV2_USE_DMA
     #define USE_SPIDEV2_ALTN1
@@ -420,10 +421,10 @@
         #define USE_QENC1_PBTN1
     #endif
 
-  //#define USE_ADC1
+  #define USE_ADC1
   #define ADC1_USE_IRQ
   #define ADC1_USE_DMA 
-  //#define USER_ADC      HW_ADC1
+  #define USER_ADC      HW_ADC1
   
   #if USE_PWMTIMER > 0
       #define USE_TIM3
@@ -439,6 +440,10 @@
       #define USE_QSPI1_ALTN1
       #define QSPI1_USE_IRQ
       #define QSPI1_USE_DMA
+  #endif
+
+  #if USE_CAN > 0
+    #define USE_CAN1
   #endif
 
   #define DEFAULT_STOP_MODE                2

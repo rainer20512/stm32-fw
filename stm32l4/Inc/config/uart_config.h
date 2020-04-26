@@ -46,12 +46,12 @@
 
   #ifdef USE_USART1_ALTN1
     /* PA9/PA10 with AF7 */
-    #define COM1_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF7_USART1, GPIO_PULLUP }
-    #define COM1_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF7_USART1, GPIO_PULLUP }
+    #define COM1_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF7_USART1, GPIO_PULLUP, "USART1_Tx" }
+    #define COM1_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF7_USART1, GPIO_PULLUP, "USART1_Rx" }
   #else
     /* PB6/PB7 with AF7 */
-    #define COM1_TX                        { GPIO_PIN_6, GPIOB, GPIO_AF7_USART1, GPIO_PULLUP }
-    #define COM1_RX                        { GPIO_PIN_7, GPIOB, GPIO_AF7_USART1, GPIO_PULLUP }
+    #define COM1_TX                        { GPIO_PIN_6, GPIOB, GPIO_AF7_USART1, GPIO_PULLUP, "USART1_Tx" }
+    #define COM1_RX                        { GPIO_PIN_7, GPIOB, GPIO_AF7_USART1, GPIO_PULLUP, "USART1_Rx" }
   #endif
 
   /* Definition for COM1's NVIC */
@@ -89,12 +89,12 @@
    */
   #ifdef USE_USART2_ALTN1
     /* PA2/PA3 with AF7 */
-    #define COM2_TX                        { GPIO_PIN_2, GPIOA, GPIO_AF7_USART2, GPIO_PULLUP }
-    #define COM2_RX                        { GPIO_PIN_3, GPIOA, GPIO_AF7_USART2, GPIO_PULLUP }
+    #define COM2_TX                        { GPIO_PIN_2, GPIOA, GPIO_AF7_USART2, GPIO_PULLUP, "USART2_Tx" }
+    #define COM2_RX                        { GPIO_PIN_3, GPIOA, GPIO_AF7_USART2, GPIO_PULLUP, "USART2_Rx" }
   #else
     /* PD5/PD6 with AF7 */
-    #define COM2_TX                        { GPIO_PIN_5, GPIOD, GPIO_AF7_USART2, GPIO_PULLUP }
-    #define COM2_RX                        { GPIO_PIN_6, GPIOD, GPIO_AF7_USART2, GPIO_PULLUP }
+    #define COM2_TX                        { GPIO_PIN_5, GPIOD, GPIO_AF7_USART2, GPIO_PULLUP, "USART2_Tx" }
+    #define COM2_RX                        { GPIO_PIN_6, GPIOD, GPIO_AF7_USART2, GPIO_PULLUP, "USART2_Rx" }
   #endif
 
   /* Definition for COM2's NVIC */
@@ -134,20 +134,20 @@
    */
   #if defined(USE_USART3_ALTN1)
     /* PB10/PB11 with AF7 */
-    #define COM3_TX                        { GPIO_PIN_10, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP }
-    #define COM3_RX                        { GPIO_PIN_11, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP }
+    #define COM3_TX                        { GPIO_PIN_10, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+    #define COM3_RX                        { GPIO_PIN_11, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
   #elif defined(USE_USART3_ALTN2)
     /* PC3/PC4 with AF7 */
-    #define COM3_TX                        { GPIO_PIN_3, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP }
-    #define COM3_RX                        { GPIO_PIN_4, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP }
+    #define COM3_TX                        { GPIO_PIN_3, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+    #define COM3_RX                        { GPIO_PIN_4, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
   #elif defined(USE_USART3_ALTN3)
     /* PC10/PC11 with AF7 */
-    #define COM3_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP }
-    #define COM3_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP }
+    #define COM3_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+    #define COM3_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
   #else
     /* PD8/PD9 with AF7 */
-    #define COM3_TX                        { GPIO_PIN_8, GPIOD, GPIO_AF7_USART3, GPIO_PULLUP }
-    #define COM3_RX                        { GPIO_PIN_9, GPIOD, GPIO_AF7_USART3, GPIO_PULLUP }
+    #define COM3_TX                        { GPIO_PIN_8, GPIOD, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+    #define COM3_RX                        { GPIO_PIN_9, GPIOD, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
   #endif
 
   /* Definition for COM3's NVIC */
@@ -187,12 +187,12 @@
    */
   #ifdef USE_UART4_ALTN1
     /* ALTN1 TX:PC10 RX:PC11 with AF8  */
-    #define COM4_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP }
-    #define COM4_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP }
+    #define COM4_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "UART4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "UART4_Rx" }
   #else
     /* DEFAULT TX:PA0  RX:PA1 with AF8 */
-    #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP }
-    #define COM4_RX                        { GPIO_PIN_1, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP }
+    #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "UART4_RT" }
+    #define COM4_RX                        { GPIO_PIN_1, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "UART4_Rx" }
   #endif
   
   /* Definition for COM4's NVIC */
@@ -228,8 +228,8 @@
    */
 
   /* Only choice: TX:PC12 RX:PD2 with AF8 */
-  #define COM5_TX                        { GPIO_PIN_12, GPIOC, GPIO_AF8_UART5, GPIO_PULLUP }
-  #define COM5_RX                        { GPIO_PIN_2,  GPIOD, GPIO_AF8_UART5, GPIO_PULLUP }
+  #define COM5_TX                        { GPIO_PIN_12, GPIOC, GPIO_AF8_UART5, GPIO_PULLUP, "UART5_Tx" }
+  #define COM5_RX                        { GPIO_PIN_2,  GPIOD, GPIO_AF8_UART5, GPIO_PULLUP, "UART5_Rx" }
   
   /* Definition for COM5's NVIC */
   #if defined(USE_UART5_DEBUG)
@@ -268,16 +268,16 @@
    */
   #ifdef USE_LPUART1_ALTN1
     /* PB11/PB10 with AF8 */
-    #define COM9_TX                        { GPIO_PIN_11, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM9_RX                        { GPIO_PIN_10, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_11, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
+    #define COM9_RX                        { GPIO_PIN_10, GPIOB, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
   #elif defined(USE_LPUART1_ALTN2)
     /* PC1/PC0 with AF8 */
-    #define COM9_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM9_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
+    #define COM9_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
   #else
     /* Default TX:PG7 RX:G8 with AF8  */
-    #define COM9_TX                        { GPIO_PIN_7, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
-    #define COM9_RX                        { GPIO_PIN_8, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP }
+    #define COM9_TX                        { GPIO_PIN_7, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
+    #define COM9_RX                        { GPIO_PIN_8, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
   #endif
 
   #ifdef COM9_USE_TX_DMA

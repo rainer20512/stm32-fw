@@ -15,6 +15,7 @@
 
 #if USE_CAN > 0 
 
+#include "hardware.h"
 #include "hw_device.h"
 #include "config/devices_config.h"
 #include "devices.h"

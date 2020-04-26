@@ -34,20 +34,20 @@
 #ifdef USE_QSPI1
   #if defined(USE_QSPI1_ALTN1)
     /* PA9/PA10 with AF7 */
-    #define QSPI1_NCS                       { GPIO_PIN_11, GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_CLK                       { GPIO_PIN_10, GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SI_SIO0                   { GPIO_PIN_1,  GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SO_SIO1                   { GPIO_PIN_0,  GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SIO2                      { GPIO_PIN_7,  GPIOA, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SIO3                      { GPIO_PIN_6,  GPIOA, GPIO_AF10_QUADSPI, GPIO_NOPULL }
+    #define QSPI1_NCS                       { GPIO_PIN_11, GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi nCS"  }
+    #define QSPI1_CLK                       { GPIO_PIN_10, GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi Clk"  }
+    #define QSPI1_SI_SIO0                   { GPIO_PIN_1,  GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO0" }
+    #define QSPI1_SO_SIO1                   { GPIO_PIN_0,  GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO1" }
+    #define QSPI1_SIO2                      { GPIO_PIN_7,  GPIOA, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO2" }
+    #define QSPI1_SIO3                      { GPIO_PIN_6,  GPIOA, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO3" }
   #elif defined(USE_QSPI1_ALTN2)
     /* PA9/PA10 with AF7 */
-    #define QSPI1_NCS                       { GPIO_PIN_11, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_CLK                       { GPIO_PIN_10, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SI_SIO0                   { GPIO_PIN_12, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SO_SIO1                   { GPIO_PIN_13, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SIO2                      { GPIO_PIN_14, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL }
-    #define QSPI1_SIO3                      { GPIO_PIN_15, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL } 
+    #define QSPI1_NCS                       { GPIO_PIN_11, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi nCS"  }
+    #define QSPI1_CLK                       { GPIO_PIN_10, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi Clk"  }
+    #define QSPI1_SI_SIO0                   { GPIO_PIN_12, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO0" }
+    #define QSPI1_SO_SIO1                   { GPIO_PIN_13, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO1" }
+    #define QSPI1_SIO2                      { GPIO_PIN_14, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO2" }
+    #define QSPI1_SIO3                      { GPIO_PIN_15, GPIOE, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO3" } 
   #else
     #error "No Pin definition for QSP1"
   #endif
@@ -60,9 +60,9 @@
 
   #ifdef QSPI1_USE_DMA
     /* Definition for USART1 TX DMA */
-    #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn 
+    #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn, DMA_PRIORITY_VERY_HIGH 
     #define QSPI1_DMA_IRQHandler           DMA2_Channel7_IRQHandler
-//    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn 
+//    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn, DMA_PRIORITY_VERY_HIGH 
 //    #define QSPI1_DMA_IRQHandler           DMA1_Channel5_IRQHandler
   #endif
 

@@ -843,7 +843,7 @@ void task_handle_adc(uint32_t arg)
 
 #if defined(ADC1) && defined(USE_ADC1)
     AdcHandleT ADC1Handle;
-    static uint16_t DMAMEM adc3_dmabuf[ADC_DMABUF_SIZE];
+    static uint16_t DMAMEM adc1_dmabuf[ADC_DMABUF_SIZE];
     static DMA_HandleTypeDef hdma_adc1_rx;
     static const HW_DmaType dmarx_adc1 = { &hdma_adc1_rx, ADC1_RX_DMA };
 
@@ -852,8 +852,8 @@ void task_handle_adc(uint32_t arg)
         .gpio = { 
             ADC1CH_REFINT,
             ADC1CH_TEMPSENSOR,
-// example  ADC123_CH_3,
-// example  ADC123_CH_4,
+/* example ADC123_CH_3, */
+/* example ADC123_CH_4, */
         }
     };
 

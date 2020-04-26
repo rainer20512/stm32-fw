@@ -11,7 +11,7 @@
 #ifndef __HARDWARE_H__
 #define  __HARDWARE_H__
 /*
- * customization for STM32H7xx
+ * customization for STM32H4xx
  */
 #include "stm32l4xx.h"
 #include "stm32l4xx_hal.h"
@@ -26,8 +26,8 @@
 
 
 /* --- Type specific setup for Timers ---------------------------------------*/
-extern const TIM_TypeDef* apb1_timers[];    /* Timers connected to APB1 */
-extern const TIM_TypeDef* apb2_timers[];    /* Timers connected to APB2 */
+extern const TIM_TypeDef* apb1_timers[6];    /* Timers connected to APB1 */
+extern const TIM_TypeDef* apb2_timers[5];    /* Timers connected to APB2 */
 uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
 uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
 void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */

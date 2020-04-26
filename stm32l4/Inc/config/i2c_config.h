@@ -38,16 +38,16 @@
    */
   #if defined(USE_I2CDEV1_ALTN1)
     /* PB8, PB9 */
-    #define I2C1_SCL_PIN                     { GPIO_PIN_8,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP } 
-    #define I2C1_SDA_PIN                     { GPIO_PIN_9,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP } 
+    #define I2C1_SCL_PIN                     { GPIO_PIN_8,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Scl" } 
+    #define I2C1_SDA_PIN                     { GPIO_PIN_9,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Sda" } 
   #elif defined(USE_I2CDEV1_ALTN2)
     /* PG14, PG13 */
-    #define I2C1_SCL_PIN                     { GPIO_PIN_14, GPIOG, GPIO_AF4_I2C1, GPIO_PULLUP } 
-    #define I2C1_SDA_PIN                     { GPIO_PIN_13, GPIOG, GPIO_AF4_I2C1, GPIO_PULLUP } 
+    #define I2C1_SCL_PIN                     { GPIO_PIN_14, GPIOG, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Scl" } 
+    #define I2C1_SDA_PIN                     { GPIO_PIN_13, GPIOG, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Sda" } 
   #else
     /* default PB6, PB7 */
-    #define I2C1_SCL_PIN                     { GPIO_PIN_6,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP } 
-    #define I2C1_SDA_PIN                     { GPIO_PIN_7,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP } 
+    #define I2C1_SCL_PIN                     { GPIO_PIN_6,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Scl" } 
+    #define I2C1_SDA_PIN                     { GPIO_PIN_7,  GPIOB, GPIO_AF4_I2C1, GPIO_PULLUP, "I2c1_Sda" } 
   #endif
 
   /* Definition for I2C1's NVIC, only used, if no DMA for both directions is configured */
@@ -82,16 +82,16 @@
    */
   #if defined(USE_I2CDEV2_ALTN1)
     /* PB13, PB14 */
-    #define I2C2_SCL_PIN                     { GPIO_PIN_13, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP } 
-    #define I2C2_SDA_PIN                     { GPIO_PIN_14, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP } 
+    #define I2C2_SCL_PIN                     { GPIO_PIN_13, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Scl" } 
+    #define I2C2_SDA_PIN                     { GPIO_PIN_14, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Sda" } 
   #elif defined(USE_I2CDEV2_ALTN2)
     /* PF1, PF0 */
-    #define I2C2_SCL_PIN                     { GPIO_PIN_0,  GPIOF, GPIO_AF4_I2C2, GPIO_PULLUP } 
-    #define I2C2_SDA_PIN                     { GPIO_PIN_1,  GPIOF, GPIO_AF4_I2C2, GPIO_PULLUP } 
+    #define I2C2_SCL_PIN                     { GPIO_PIN_0,  GPIOF, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Scl" } 
+    #define I2C2_SDA_PIN                     { GPIO_PIN_1,  GPIOF, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Sda" } 
   #else
     /* default PB10, PB11 */
-    #define I2C2_SCL_PIN                     { GPIO_PIN_10, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP } 
-    #define I2C2_SDA_PIN                     { GPIO_PIN_11, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP } 
+    #define I2C2_SCL_PIN                     { GPIO_PIN_10, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Scl" } 
+    #define I2C2_SDA_PIN                     { GPIO_PIN_11, GPIOB, GPIO_AF4_I2C2, GPIO_PULLUP, "I2c2_Sda" } 
   #endif
 
   /* Definition for I2C2's NVIC, only used, if no DMA for both directions is configured */
