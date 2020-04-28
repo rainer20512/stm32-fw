@@ -274,6 +274,11 @@
       #define QSPI1_USE_DMA
   #endif
 
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_DEV             HW_ETH
+  #endif
+
   #define DEFAULT_STOP_MODE                2
 
   #if USE_THPSENSOR > 0  

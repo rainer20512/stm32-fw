@@ -46,9 +46,6 @@
 /* Exported variables --------------------------------------------------------*/
 uint32_t gflags;
 
-/* Ptr to the AMP control block, allocated by CM/ core and passed as reference to CM4 */
-AMP_Ctrl_ptr AMPCtrl_Ptr;
-
 #if DEBUG_MODE 
   uint32_t debuglevel;
 #endif
@@ -122,6 +119,9 @@ int main(void)
         - Low Level Initialization
     */
 
+    /* initialize the ipc communication */
+    Ipc_CM4_Init(INIT_FULLY);
+
     #if USE_BASICTIMER > 0
         /* 
          * Start microsecond counter , must be done before Profiler is initialized 
@@ -136,6 +136,7 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
     BasicDevInit();
@@ -153,11 +154,7 @@ int main(void)
 
     TaskInitAll();
     
-    TaskNotify(TASK_OUT);
-
-    /* initialize the ipc communication */
-    Ipc_CM4_Init(INIT_FULLY);
-    
+    TaskNotify(TASK_OUT);    
 
     LwIP_Start();
 

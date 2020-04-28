@@ -78,6 +78,16 @@ void Init_OtherDevices(void)
             SENSOR_IO_Init(&USER_I2C_HANDLE, NULL);
       }
   #endif
+  #if defined (USE_ETH)
+      dev_idx = AddDevice(&ETH_DEV, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to add ETH device %s\n", ETH_DEV.devName );
+      } else {
+        /* Init ETH device */
+        if ( ! DeviceInitByIdx(dev_idx, NULL ) )
+            DEBUG_PRINTF("Failed to init ETH device %s\n", ETH_DEV.devName );
+      }
+  #endif
 }
 
 #include "task/minitask.h"

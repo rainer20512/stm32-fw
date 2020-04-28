@@ -14,7 +14,7 @@
       arm_linker_jtag_pad_pre_dr="1"
       arm_linker_jtag_pad_pre_ir="5"
       arm_linker_process_stack_size="0"
-      arm_linker_stack_size="256"
+      arm_linker_stack_size="1024"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
       arm_simulator_memory_simulation_parameter="STM32H745ZI_CM4;0x200000;0x100000"
       arm_target_loader_applicable_loaders="Flash"
@@ -63,6 +63,10 @@
         <file file_name="CM4/Src/interpreters_c4.c" />
         <file file_name="CM4/Src/stm32h7xx_it_c4.c" />
         <file file_name="common_h7/Src/system/error.c" />
+        <folder Name="system">
+          <file file_name="CM4/Src/system/devices_cm4.c" />
+        </folder>
+        <file file_name="CM4/Src/msg_direct_c4.c" />
       </folder>
       <folder Name="inc">
         <folder Name="system">
@@ -219,11 +223,13 @@
         </folder>
         <folder Name="dev">
           <file file_name="../common/src/dev/adc_dev.c" />
-          <file file_name="../common/src/dev/devices.c" />
           <file file_name="../common/src/dev/hw_device.c" />
           <file file_name="../common/src/dev/io_dev.c" />
           <file file_name="../common/src/dev/timer_dev.c" />
           <file file_name="../common/src/dev/uart_dev.c" />
+          <file file_name="../common/src/dev/eth_dev.c">
+            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+          </file>
         </folder>
         <folder Name="system">
           <file file_name="../common/src/system/periodic.c" />
@@ -245,6 +251,7 @@
           <file file_name="../common/inc/dev/spi_dev.h" />
           <file file_name="../common/inc/dev/timer_dev.h" />
           <file file_name="../common/inc/dev/uart_dev.h" />
+          <file file_name="../common/inc/dev/eth_dev.h" />
         </folder>
         <file file_name="../common/inc/timer.h" />
         <folder Name="system">
@@ -274,6 +281,7 @@
           <file file_name="common_h7/Inc/config/timer_config.h" />
           <file file_name="common_h7/Inc/config/uart_config.h" />
         </folder>
+        <file file_name="common_h7/Inc/msg_direct.h" />
       </folder>
       <folder Name="src">
         <folder Name="task">
@@ -378,17 +386,10 @@
           <file file_name="CM7/Src/hardfault.s" />
           <file file_name="CM7/Src/system/clockconfig.c" />
           <file file_name="common_h7/Src/system/error.c" />
-        </folder>
-        <folder Name="inc">
-          <file file_name="CM7/Inc/debug.h" />
-          <file file_name="CM7/Inc/error.h" />
-          <folder Name="system">
-            <file file_name="CM7/Inc/system/profiling.h" />
-            <file file_name="CM7/Inc/system/clockconfig.h" />
-            <file file_name="CM7/Inc/system/ram_preset.inc" />
-          </folder>
+          <file file_name="CM7/Src/system/devices_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
+        <file file_name="CM7/Src/msg_direct_c7.c" />
       </folder>
       <folder Name="config">
         <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
@@ -399,6 +400,13 @@
       </folder>
       <folder Name="inc">
         <file file_name="CM7/Inc/main.h" />
+        <folder Name="system">
+          <file file_name="CM7/Inc/system/profiling.h" />
+          <file file_name="CM7/Inc/system/clockconfig.h" />
+          <file file_name="CM7/Inc/system/ram_preset.inc" />
+        </folder>
+        <file file_name="CM7/Inc/debug.h" />
+        <file file_name="CM7/Inc/error.h" />
       </folder>
     </folder>
     <folder Name="Doc">
@@ -484,6 +492,7 @@
           <file file_name="common_h7/Inc/config/uart_config.h" />
           <file file_name="common_h7/Inc/config/eth_config.h" />
         </folder>
+        <file file_name="common_h7/Inc/msg_direct.h" />
       </folder>
       <folder Name="task">
         <file file_name="common_h7/Src/task/minitask.c" />
@@ -496,7 +505,6 @@
           <file file_name="../common/src/dev/bitbang_spi.c" />
           <file file_name="../common/src/dev/can_dev.c" />
           <file file_name="../common/src/dev/common_spi.c" />
-          <file file_name="../common/src/dev/devices.c" />
           <file file_name="../common/src/dev/hw_device.c" />
           <file file_name="../common/src/dev/hw_spi.c" />
           <file file_name="../common/src/dev/i2c_abstract.c" />

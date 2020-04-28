@@ -228,7 +228,7 @@ static void http_server_serve(struct netconn *conn)
   * @param arg: pointer on argument(not used here) 
   * @retval None
   */
-static void http_server_netconn_thread(void *arg)
+static void http_server_netconn_thread8088(void *arg)
 { 
   struct netconn *conn, *newconn;
   err_t err, accept_err;
@@ -239,7 +239,42 @@ static void http_server_netconn_thread(void *arg)
   if (conn!= NULL)
   {
     /* Bind to port 80 (HTTP) with default IP address */
-    err = netconn_bind(conn, NULL, 80);
+    err = netconn_bind(conn, NULL, 8088);
+    
+    if (err == ERR_OK)
+    {
+      /* Put the connection into LISTEN state */
+      netconn_listen(conn);
+  
+      while(1) 
+      {
+        /* accept any icoming connection */
+        accept_err = netconn_accept(conn, &newconn);
+        if(accept_err == ERR_OK)
+        {
+          /* serve connection */
+          http_server_serve(newconn);
+
+          /* delete connection */
+          netconn_delete(newconn);
+        }
+      }
+    }
+  }
+}
+
+static void http_server_netconn_thread80(void *arg)
+{ 
+  struct netconn *conn, *newconn;
+  err_t err, accept_err;
+  
+  /* Create a new TCP connection handle */
+  conn = netconn_new(NETCONN_TCP);
+  
+  if (conn!= NULL)
+  {
+    /* Bind to port 80 (HTTP) with default IP address */
+    err = netconn_bind(conn, NULL, HTTPD_SERVER_PORT);
     
     if (err == ERR_OK)
     {
@@ -270,7 +305,8 @@ static void http_server_netconn_thread(void *arg)
   */
 void http_server_netconn_init()
 {
-  sys_thread_new("HTTP", http_server_netconn_thread, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
+  sys_thread_new("HTTP80", http_server_netconn_thread80, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
+  sys_thread_new("HTTP8088", http_server_netconn_thread8088, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
 }
 
 /**
@@ -281,6 +317,44 @@ void http_server_netconn_init()
   */
 #define MAXLEN      120
 #include "task/minitask.h"
+#include "msg_direct.h"
+void DynWebPage(struct netconn *conn)
+{
+    portCHAR line[MAXLEN];
+    int32_t i;
+    char *ret;
+
+    const char prefix[] = "<br>";
+
+    /* Update the hit count */
+    nPageHits++;
+
+    /* Header and hit counter */
+    snprintf(line, MAXLEN, "%d", (int)nPageHits);
+    netconn_write(conn, PAGE_START, strlen((char*)PAGE_START), NETCONN_COPY);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+
+    /* Task List */
+    netconn_write(conn, "<pre>", 5, NETCONN_COPY);
+    TaskSetListStartStop(LISTMODE_HEADER, LISTMODE_BODY);
+
+    /* local tasks */
+    i = ACTIONID_INIT;
+    while ( i = TaskIterateList ( i, line, 80, prefix ), i >= 0 ) {
+        netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    }
+
+    /* remote tasks */
+    MSGD_GetTasklistLine(true, prefix);
+    ret = MSGD_WaitForTasklistLine();
+    while ( ret ) {
+        netconn_write(conn, ret, strlen(ret), NETCONN_COPY);
+        MSGD_GetTasklistLine(false, prefix);
+        ret = MSGD_WaitForTasklistLine();
+    }
+}
+
+#if 0
 void DynWebPage(struct netconn *conn)
 {
   portCHAR line[MAXLEN];
@@ -305,21 +379,26 @@ void DynWebPage(struct netconn *conn)
  
     /* table content */
     for ( uint32_t i = 0; i < nroftasks; i++ ) {
-        TaskFormatLine(line, MAXLEN, "<br>", i );
+        #if defined(CORE_CM7)
+            TaskFormatLine(line, MAXLEN, "<br>", i, "CM7" );
+        #else
+            TaskFormatBody(line, MAXLEN, "<br>", i, "CM4" );
+        #endif
         netconn_write(conn, line, strlen(line), NETCONN_COPY);
     }
 
     
+  #if 0
   /* The list of tasks and their status */
   osThreadList((unsigned char *)(line + strlen(line)));
-
+  #endif 
   /* footer */
-  snprintf(line, MAXLEN, "<br>---------------------------------------------");
+  snprintf(line, MAXLEN, "<br>-------------------------------------------------------------------------");
   netconn_write(conn, line, strlen(line), NETCONN_COPY);
   snprintf(line, MAXLEN, "<br>A: Running, B : Blocked, R : Ready, D : Deleted, S : Suspended, I : Invalid<br>");
   netconn_write(conn, line, strlen(line), NETCONN_COPY);
 
   /* Send the dynamically generated page */
 }
-
+#endif
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

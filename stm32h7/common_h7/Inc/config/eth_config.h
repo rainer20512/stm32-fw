@@ -10,7 +10,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
-#define ETH_USE_RMII 
+ 
 /******************************************************************************
  * ETH 
  *****************************************************************************/
@@ -56,38 +56,56 @@
 
 
   #if defined(ETH_USE_RMII)
-    #define ETH_REF_CLK      { GPIO_PIN_1  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Ref Clk" }
-    #define ETH_TX0	     { GPIO_PIN_12 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     } 
-    //altn    #define ETH_TX0          { GPIO_PIN_13 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     }
-    #define ETH_TX1	     { GPIO_PIN_13 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
-    //altn    #define ETH_TX1          { GPIO_PIN_13 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
-    //altn    #define ETH_TX1          { GPIO_PIN_14 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
-    #define ETH_TX_EN	     { GPIO_PIN_11 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
-    //altn    #define ETH_TX_EN        { GPIO_PIN_11 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
-    #define ETH_RX0          { GPIO_PIN_4  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx0"     }
-    #define ETH_RX1          { GPIO_PIN_5  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx1"     }
-    #define ETH_CRS_DV	     { GPIO_PIN_7  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Crs/Dv"  }
-    #define ETH_MDC          { GPIO_PIN_1  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "MDc"     }
-    #define ETH_MDIO	     { GPIO_PIN_2  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "MDio"    }
+    #define ETH_REF_CLK             { GPIO_PIN_1  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Ref Clk" }
+    #define ETH_RX0                 { GPIO_PIN_4  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx0"     }
+    #define ETH_RX1                 { GPIO_PIN_5  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx1"     }
+    #define ETH_CRS_DV              { GPIO_PIN_7  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Crs/Dv"  }
+    #define ETH_MDC                 { GPIO_PIN_1  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "MDc"     }
+    #define ETH_MDIO                { GPIO_PIN_2  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "MDio"    }
+    #if defined(STM32H745NUCLEO)
+        // altn  #define ETH_TX0             { GPIO_PIN_12 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     } 
+        #define ETH_TX0             { GPIO_PIN_13 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     }
+        #define ETH_TX1             { GPIO_PIN_13 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        //altn    #define ETH_TX1          { GPIO_PIN_13 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        //altn    #define ETH_TX1          { GPIO_PIN_14 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        //altn    #define ETH_TX_EN	   { GPIO_PIN_11 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
+        #define ETH_TX_EN           { GPIO_PIN_11 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
+    #else
+        #error "No Ethernet RMII config for selected board"
+    #endif
   #elif defined(ETH_USE_MII)
+    #define ETH_COL                 { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_CRS                 { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX_CLK              { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX[0]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX[1]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX[2]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX[3]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX_DV               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_RX_ER               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX_CLK              { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX[0]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+//altn    #define ETH_TX[0]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX[1]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }   
+//altn    #define ETH_TX[1]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+//altn    #define ETH_TX[1]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX[2]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX[3]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+//altn    #define ETH_TX[3]               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX_EN               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+//altn    #define ETH_TX_EN               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_TX_ER               { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_MDC                 { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
+    #define ETH_MDIO                { GPIO_PIN_ ,GPIO, GPIO_AF11_ETH, GPIO_NOPULL, ""    }
   #else
     #error "You must select either MII or RMII interface for ETH"
   #endif
 
-  /* Definition for CAN Interrupts */
+  /* Definition for ETH Interrupts */
   #ifdef  ETH_USE_IRQ
-      #define CAN1_TX_IRQ                   { CAN1_TX_IRQn,  CAN_IRQ_PRIO, 0 }
-      #define CAN1_RX0_IRQ                  { CAN1_RX0_IRQn, CAN_IRQ_PRIO, 0 }
-      #define CAN1_RX1_IRQ                  { CAN1_RX1_IRQn, CAN_IRQ_PRIO, 0 }
-      #define CAN1_SCE_IRQ                  { CAN1_SCE_IRQn, CAN_IRQ_PRIO, 0 }
+      #define ETH_IRQ                       { ETH_IRQn,      ETH_IRQ_PRIO, 0 }
+      #define ETH_WKUP_IRQ                  { ETH_WKUP_IRQn, ETH_IRQ_PRIO, 0 }
   #endif
-/******************************************
- Interrupt routine names are
-           CAN1_TX_IRQHandler
-           CAN1_RX0_IRQHandler
-           CAN1_RX1_IRQHandler
-           CAN1_SCE_IRQHandler
- *****************************************/
 #endif // USE_ETH > 0
 
 

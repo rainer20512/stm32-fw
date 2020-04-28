@@ -47,6 +47,7 @@
     JOB_TASK_QSPI,
 #endif
     JOB_ADC,
+    JOB_REMOTE,
     JOB_SLEEP,
     JOB_STOP0,
     JOB_STOP1,
@@ -97,6 +98,7 @@
 #define JOBNAMES99 \
   JOBNAMES4     \
   "ADC",        \
+  "REMOTE",     \
   "SLEEP",      \
   "STOP0",      \
   "STOP1",      \

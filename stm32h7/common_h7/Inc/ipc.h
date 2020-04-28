@@ -12,14 +12,24 @@
 #ifndef __IPC_H__
 #define __IPC_H__
 
+#include "msg_direct.h"
 #include "message_buffer.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
 
 #define mbaDONT_BLOCK				0
 
-/* Number of different message buffer paths between CM7 and CM4 */
+/* Initial transfer on Control block and direct message buffer */
+#define CTRL_HOOK_ENABLE_ACCESS()      __HAL_RCC_RTC_CLK_ENABLE()
+#define CTRL_HOOK_DISABLE_ACCESS()      __HAL_RCC_RTC_CLK_DISABLE()
+#define CTRL_BLOCK_HOOK_GET()           ((AMPCtrl_t* )RTC->BKP0R)
+#define MSGBUF_HOOK_GET()               ((AMPDctBuf_t* )RTC->BKP1R)
+#define CTRL_BLOCK_HOOK_PUT(ctrl)       RTC->BKP0R = (uint32_t)(&ctrl)
+#define MSGBUF_HOOK_PUT(msgbuf)         RTC->BKP1R = (uint32_t)(&msgbuf)
 
+
+
+/* Number of different message buffer paths between CM7 and CM4 */
 #define MAX_AMP_CTRL                            8
 #define AMP_ID                                  0x4354524C
 
@@ -45,6 +55,7 @@ typedef struct {
 /* Used by CM7 */
 extern AMPCtrl_t AMPCtrl_Block;
 
+
 /* CM7 to CM4 */
 #define Control74MessageBuffer    (AMPCtrl_Block.ctrl_cm7)
 #define Control74StreamBuffer     (AMPCtrl_Block.ctrl_cm7_stream)
@@ -60,10 +71,11 @@ extern AMPCtrl_t AMPCtrl_Block;
 #define DataMessageSem(i)         (AMPCtrl_Block.xfersem[i]) 
 
 /* Used by CM4 */
-typedef AMPCtrl_t *      AMP_Ctrl_ptr;
-extern  AMP_Ctrl_ptr    AMPCtrl_Ptr;
+typedef AMPCtrl_t *         AMP_Ctrl_ptr;
+extern  AMP_Ctrl_ptr        AMPCtrl_Ptr;
 
 /* CM7 to CM4 */
+
 #define Control74MessageBufferRef    (AMPCtrl_Ptr->ctrl_cm7)
 #define Control74StreamBufferRef     (AMPCtrl_Ptr->ctrl_cm7_stream)
 #define Control74SemRef              (AMPCtrl_Ptr->ctrl_cm4_sem)
@@ -77,6 +89,7 @@ extern  AMP_Ctrl_ptr    AMPCtrl_Ptr;
 #define DataMessageSemRef(i)         (AMPCtrl_Ptr->xfersem[i]) 
 
 #if defined(CORE_CM7)
+    void Ipc_CM7_SendDirect     ( void );
     void Ipc_CM7_WakeUp_CM4     ( void );
     void Ipc_CM7_Init           ( void );
 #endif
@@ -85,6 +98,8 @@ extern  AMP_Ctrl_ptr    AMPCtrl_Ptr;
     #define INIT_RESTRICTED 1
     #define INIT_FULLY      0
     void Ipc_CM4_Init ( uint32_t  bRestricted );   
+    void Ipc_CM4_SendDirect     ( void );
 #endif
+
 
 #endif /* __IPC_H__ */

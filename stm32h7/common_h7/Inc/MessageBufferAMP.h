@@ -80,11 +80,6 @@ overhead of message buffers. */
      * as the access functions are executed early at program start, we can safely 
      * assume, that RTC clock is not activated yet.
      */
-    #define CTRL_HOOK_ENABLE_ACCESS()      __HAL_RCC_RTC_CLK_ENABLE()
-    #define CTRL_HOOK_DISABLE_ACCESS()      __HAL_RCC_RTC_CLK_DISABLE()
-    #define CTRL_BLOCK_HOOK_GET()           ((AMPCtrl_t* )RTC->BKP0R)
-    #define CTRL_BLOCK_HOOK_PUT(ctrl)       RTC->BKP0R = (uint32_t)(&ctrl)
-
 
     static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z3")));
 #if 0

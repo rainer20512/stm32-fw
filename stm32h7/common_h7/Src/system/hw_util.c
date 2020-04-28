@@ -153,11 +153,6 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
    { I2C4, &RCC->APB4ENR, RCC_APB4ENR_I2C4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_I2C4RST_Pos, COMBINE('I', 4) },
 #endif
 
-#define USE_ADC1
-#define USE_ADC2
-#define USE_ADC3
-
-
 /* ADC     - All ADC share ONE clock enable and ONE reset bit  -------------------------------------------------------------- */
 #if defined(ADC1) && defined(USE_ADC1)
    { ADC1, &RCC->AHB1ENR, RCC_AHB1ENR_ADC12EN_Pos,   &RCC->AHB1RSTR, RCC_AHB1RSTR_ADC12RST_Pos,    COMBINE('A', 1) },
@@ -241,6 +236,10 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 /* CAN1  ------------------------------------------------------------------------------------------------------------------ */
 #if defined(FDCAN1) && defined(USE_CAN1) 
    { FDCAN1, &RCC->APB1HENR, RCC_APB1HENR_FDCANEN_Pos, &RCC->APB1HRSTR, RCC_APB1HRSTR_FDCANRST_Pos, COMBINE('C', 1) },
+#endif
+/* ETH ---------------------------------------------------------------------------------------------------------------------- */
+#if defined(USE_ETH) && defined(ETH)
+   { ETH, &RCC->APB1HENR, RCC_AHB1ENR_ETH1MACEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_ETH1MACRST_Pos, COMBINE('E', 1) },
 #endif
 
 };

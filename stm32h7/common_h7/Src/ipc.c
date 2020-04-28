@@ -12,11 +12,13 @@
 #include <string.h>
 #include "config/config.h"
 #include "hardware.h"
+#include "task/minitask.h"
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "message_buffer.h"
 #include "ipc.h"
+#include "msg_direct.h"
 
 #if defined(CORE_CM4)
     #include "MessageBufferAMP.h"
@@ -32,9 +34,9 @@
 #define HSEM_CM4_to_CM7_Send        (3U)            /* HW semaphore 3 - signal incoming msg from CM4 to CM7  */
 #define HSEM_CM4_to_CM7_Recvd       (4U)            /* HW semaphore 4 - signal msg reception from CM4 to CM7 */
 
-#define CM7_TO_CM4_LINE         EXTI_LINE0      /* Signaling CM7 to CM4 */
-#define CM4_TO_CM7_LINE         EXTI_LINE1      /* Signaling CM7 to CM4 */
-  
+#define HSEM_CM7_to_CM4_Msg         (5U)            /* HW sem. 5 - direct CM7 to CM4 messaging ( w/o RTOS )  */
+#define HSEM_CM4_to_CM7_Msg         (6U)            /* HW sem. 6 - direct CM4 to CM7 messaging ( w/o RTOS )  */
+ 
 /* The static message buffer size for the ctrl buffer
 overhead of message buffers. */
 #define CONTROL_MESSAGE_BUFFER_SIZE         24
@@ -48,6 +50,8 @@ overhead of message buffers. */
     IPCMEM AMPCtrl_t AMPCtrl_Block;
     static IPCMEM uint8_t StorageBuffer_ctrl74 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
     static IPCMEM uint8_t StorageBuffer_ctrl47 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
+    IPCMEM AMPDctBuf_t AMP_DirectBuffer;
+
 #endif
 
 
@@ -81,6 +85,12 @@ static void IPC_Signal( uint32_t HW_sem )
         AMPCtrl_Block.ID = 0x4354524C;
         DEBUG_PRINTF("IPC control block of size %d initialized\n", sizeof(AMPCtrl_t) );
 
+        /* Create and initialize direct message buffer */
+        memset(&AMP_DirectBuffer, 0, sizeof(AMPDctBuf_t));
+        AMP_DirectBuffer.id = DIRECTMSG_ID;
+        DEBUG_PRINTF("IPC direct msg buffer of size %d initialized\n", sizeof(AMPDctBuf_t) );
+
+
         /* Create control message buffer and buffer semaphore for CM7 to CM4 communication */
         Control74MessageBuffer = xMessageBufferCreateStatic( CONTROL_MESSAGE_BUFFER_SIZE,StorageBuffer_ctrl74 ,&Control74StreamBuffer);  
         Control74Sem           = xSemaphoreCreateBinaryStatic( &AMPCtrl_Block.ctrl_cm7_sem_buf );
@@ -99,7 +109,7 @@ static void IPC_Signal( uint32_t HW_sem )
         }
 
         /* Activate notification on all messages from CM4 */
-        HSEM->C1IER |= (1 << HSEM_CM4_to_CM7_Send) | (1 << HSEM_CM4_to_CM7_Recvd );
+        HSEM->C1IER |= (1 << HSEM_CM4_to_CM7_Send) | (1 << HSEM_CM4_to_CM7_Recvd ) | ( 1 << HSEM_CM4_to_CM7_Msg ) ;
     }
 
 
@@ -192,6 +202,16 @@ static void IPC_Signal( uint32_t HW_sem )
     }
 
     /**************************************************************************
+     * Send a direct message ( w/o RTOS ) to CM4 core
+     * Message must have been setup before in AMP_DirectBuffer
+     *************************************************************************/
+    void Ipc_CM7_SendDirect( void )
+    {
+        IPC_Signal(HSEM_CM7_to_CM4_Msg);
+    }
+
+
+    /**************************************************************************
      * Semaphore free handler for CM7
      * It has to react on incoming messages from CM4
      * and on receive acknowledge from CM4 as reaction on CM7 data sent
@@ -207,6 +227,8 @@ static void IPC_Signal( uint32_t HW_sem )
         /* Handle all "free" interrupts */
         if ( SemMask & (1 << HSEM_CM4_to_CM7_Send ) ) prvCore1ReceiveHandler();
         if ( SemMask & (1 << HSEM_CM4_to_CM7_Recvd) ) prvCore1SendAckHandler();
+        if ( SemMask & (1 << HSEM_CM4_to_CM7_Msg  ) ) TaskNotify(TASK_REMOTE);
+
     }
 
 #endif /* CORE_CM7 */
@@ -214,6 +236,9 @@ static void IPC_Signal( uint32_t HW_sem )
 #if defined(CORE_CM4)
     
     #include "debug_helper.h"
+
+    /* Ptr to the AMP control block, allocated by CM/ core and passed as reference to CM4 */
+    AMP_Ctrl_ptr AMPCtrl_Ptr;
 
     /**************************************************************************
      * Check IPC block for proper initialization by CM7 core
@@ -224,6 +249,10 @@ static void IPC_Signal( uint32_t HW_sem )
 
         if ( AMPCtrl_Ptr->ID != AMP_ID ) {
             DEBUG_PUTS("AMP Control Block invalid");
+        }
+
+        if ( AMP_DctBuf_Ptr->id != DIRECTMSG_ID ) {
+            DEBUG_PUTS("AMP direct message buffer invalid");
         }
 
         
@@ -260,14 +289,15 @@ static void IPC_Signal( uint32_t HW_sem )
          * to RCT Bkup ram offset 0 by CM7 before waking up this core
          */
         CTRL_HOOK_ENABLE_ACCESS();
-        AMPCtrl_Ptr = CTRL_BLOCK_HOOK_GET();
+        AMPCtrl_Ptr     = CTRL_BLOCK_HOOK_GET();
+        AMP_DctBuf_Ptr  = MSGBUF_HOOK_GET(); 
         CTRL_HOOK_DISABLE_ACCESS();
 
         /* Check consitency of AMP control block */
         Ipc_CM4_Check();
 
         /* finally activate notification on all messages from CM4 */
-        HSEM->C2IER |= ( (1 << HSEM_CM7_to_CM4_Wkup) | (1 << HSEM_CM7_to_CM4_Send) | ( 1 << HSEM_CM7_to_CM4_Recvd) );
+        HSEM->C2IER |= ( (1 << HSEM_CM7_to_CM4_Wkup) | (1 << HSEM_CM7_to_CM4_Send) | ( 1 << HSEM_CM7_to_CM4_Recvd) | (1 << HSEM_CM7_to_CM4_Msg) );
     }
 
 
@@ -346,6 +376,15 @@ static void IPC_Signal( uint32_t HW_sem )
         portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
     }
 
+    /**************************************************************************
+     * Send a direct message ( w/o RTOS ) to CM7 core
+     * Message must have been setup before in AMP_DirectBuffer
+     *************************************************************************/
+    void Ipc_CM4_SendDirect( void )
+    {
+        IPC_Signal(HSEM_CM4_to_CM7_Msg);
+    }
+
     void HSEM2_IRQHandler ( void )
     {
         /* Get activated Interrupt bits */
@@ -357,5 +396,6 @@ static void IPC_Signal( uint32_t HW_sem )
         /* Handle all "free" interrupts */
         if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Send) )  prvCore2ReceiveHandler();
         if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Recvd) ) prvCore2SendAckHandler();
+        if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Msg) )   cm4_msg_direct_received();
     }
 #endif

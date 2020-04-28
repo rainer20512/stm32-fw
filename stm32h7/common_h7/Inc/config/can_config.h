@@ -5,7 +5,7 @@
 #pragma once 
 
 #include "config/config.h"
-#include "stm32l4xx_hal.h"
+#include "hardware_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

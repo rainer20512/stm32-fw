@@ -245,6 +245,12 @@
     #define I2C2_USE_IRQ
     #define I2C2_USE_DMA
 
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_USE_IRQ
+    #define ETH_DEV             HW_ETH
+  #endif
+
     #if USE_QENCODER > 0
         #define QENC_DEV        HW_QENC1
         #define USE_QENC1_TIM2

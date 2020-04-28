@@ -246,6 +246,7 @@ int main(void)
      */
     CTRL_HOOK_ENABLE_ACCESS();
     CTRL_BLOCK_HOOK_PUT(AMPCtrl_Block);
+    MSGBUF_HOOK_PUT(AMP_DirectBuffer);
     CTRL_HOOK_DISABLE_ACCESS();
 
     /* Define used semaphore */

@@ -43,6 +43,7 @@
 #define TASK_ADC              8
 #define TASK_LCD              9
 #define TASK_QSPI             10
+#define TASK_REMOTE           11
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30
@@ -54,23 +55,34 @@ typedef void ( *MiniTaskRunFn  ) ( uint32_t );
 
 /* public functions ---------------------------------------------------------*/
 bool TaskIsRunableTask  (void);
+void TaskInitAll        ( void );
+void TaskRunAll         ( void );
+void TaskNotify         ( uint32_t num );
+void TaskNotifyFromISR  ( uint32_t num );
 
 #if DEBUG_MODE > 0
-    void TaskRegisterTask ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name );
-    uint32_t TaskGetTasks( void);
-    void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint32_t i );
-    void TaskFormatLine( char* buffer, size_t buflen, const char *prefixstr, uint32_t i );
-    void TaskDumpList     (void);
+    void TaskRegisterTask   ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name );
+#if 0
+    uint32_t TaskGetTasks   (void);
+    void TaskFormatHeader   ( char* buffer, size_t buflen, const char *prefixstr, uint32_t i );
+    void TaskFormatLine     ( char* buffer, size_t buflen, const char *prefixstr, uint32_t i, const char *corename);
+#endif
+    void TaskDumpList       (void);
     extern bool bAllowStop;         /* flag variable to inhibit stop by command ( only in debug mode ) */
+
+    #define LISTMODE_HEADER         0
+    #define LISTMODE_BODY           1
+    #define LISTMODE_FOOTER         2
+    #define ACTIONID_INIT           0
+    #define ACTIONID_ITERATE        1
+
+    void TaskSetListStartStop( uint8_t uStart, uint8_t uStop );
+    int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const char *prefixstr );
 #else
     void TaskRegisterTaskShort ( MiniTaskInitFn, MiniTaskRunFn, uint32_t num, int32_t PrID, StackType_t* stackMem, uint32_t ulStackDepth);
     #define TaskRegisterTask(i,r,n,d,a)     TaskRegisterTaskShort(i,r,n,d)
     #define TaskDumpList()
 #endif
-void TaskInitAll        ( void );
-void TaskRunAll         ( void );
-void TaskNotify         ( uint32_t num );
-void TaskNotifyFromISR  ( uint32_t num );
 
 
 #ifdef __cplusplus

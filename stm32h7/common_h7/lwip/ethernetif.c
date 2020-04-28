@@ -90,7 +90,9 @@ uint8_t Rx_Buff[ETH_RX_DESC_CNT][ETH_RX_BUFFER_SIZE] __attribute__((section(".un
 
 #endif
 
-ETH_HandleTypeDef EthHandle;
+/* RHB chngd: EthHandle is defined in eth_dev */
+extern ETH_HandleTypeDef EthHandle;
+
 ETH_TxPacketConfig TxConfig; 
 
 lan8742_Object_t LAN8742;
@@ -460,6 +462,8 @@ u32_t sys_now(void)
   * @param  heth: ETH handle
   * @retval None
 */
+// RHB chngd: hardware initialization id done in eth_dev 
+#if 0
 void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
 {
   GPIO_InitTypeDef GPIO_InitStructure;	
@@ -519,6 +523,7 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef *heth)
   * @param  heth: ETH handle
   * @retval None
   */
+#endif 
 void HAL_ETH_RxCpltCallback(ETH_HandleTypeDef *heth)
 {
   osSemaphoreRelease(RxPktSemaphore);

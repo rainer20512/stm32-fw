@@ -638,6 +638,7 @@ void ETH_IRQHandler(void)
   HAL_ETH_IRQHandler(&EthHandle);
 }
 
+
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

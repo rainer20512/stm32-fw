@@ -71,7 +71,6 @@ bool TaskIsRunableTask(void)
  *****************************************************************************/
 void TaskRTOSWrapper ( void *taskArg ) {
     uint32_t myTaskID = (uint32_t)taskArg;
-    uint32_t sema;
     assert( myTaskID < MAX_TASK );
     #if DEBUG_PROFILING >  0
         /* Accounting to the specified ID, or to main, if nothing specified */
@@ -213,7 +212,7 @@ static const char* TaskState( uint32_t state )
 
 /* Fill "taskstatus" array and return the number of entries ( number of tasks ) */
 /* 0 is returned in case of more than MAX_TASK                                 */
-uint32_t TaskGetTasks( void) 
+uint32_t TaskGetTasks(void) 
 {
     nroftasks = uxTaskGetNumberOfTasks();
     if ( nroftasks > MAX_TASK ) {
@@ -224,6 +223,7 @@ uint32_t TaskGetTasks( void)
     return nroftasks;
 }
 
+
 void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint32_t i )
 {
     switch ( i ) {
@@ -232,9 +232,9 @@ void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint3
             break;
         case 1:
             #if DEBUG_PROFILING > 0
-                snprintf(buffer ,buflen, "%s No Prio St Name  HighWaterMark           Consumed time",prefixstr);
+                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  HighWaterMark           Consumed time",prefixstr);
             #else
-                snprintf(buffer ,buflen, "%s No Prio St            Name  HighWaterMark",prefixstr);
+                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  HighWaterMark",prefixstr);
             #endif
             break;
         default:
@@ -242,38 +242,123 @@ void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint3
     }
 }
 
-void TaskFormatLine( char* buffer, size_t buflen, const char *prefixstr, uint32_t i )
+void TaskFormatBody( char* buffer, size_t buflen, const char *prefixstr, uint32_t i, const char *corename )
 {
-    #if DEBUG_PROFILING > 0
-        snprintf(buffer, buflen,"%s%3d %4d %7s %15s %4d",
-                 prefixstr, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
-    #else
-        snprintf(buffer, buflen,"%s%3d %4d %2s %15s %4d",
-                 prefixstr, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
-    #endif   
+    if ( i < nroftasks ) {
+        #if DEBUG_PROFILING > 0
+            snprintf(buffer, buflen,"%s   %s %3d %4d %2s %15s %4d",
+                     prefixstr, corename, i, taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
+        #else
+            snprintf(buffer, buflen,"%s   %s %3d %4d %2s %15s %4d",
+                     prefixstr, corename, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
+        #endif   
+    } else {
+        *buffer = '\0';
+    }
+}
+
+void TaskFormatFooter( char* buffer, size_t buflen, const char *prefixstr, uint32_t i )
+{
+    switch ( i ) {
+        case 0:
+            snprintf(buffer ,buflen, "%s-------------------------------------------------------------------------", prefixstr);
+            break;
+        case 1:
+            snprintf(buffer ,buflen, "%sA: Running, B : Blocked, R : Ready, D : Deleted, S : Suspended, I : Invalid", prefixstr);
+            break;
+        default:
+            *buffer='\0';
+    }
+}
+
+
+static uint8_t itemCnt;    /* counts the items when iterating thru header, body, footer */                 
+static uint8_t listMode;   /* contains the actual part of list ( header, body, footer ) */
+static uint8_t startItem   /* part to start the list generation with                    */
+        = LISTMODE_HEADER; 
+static uint8_t stopItem    /* part to end the list generation with                      */
+        = LISTMODE_FOOTER;
+/******************************************************************************
+ * Set the Items the list will start ansd end with
+ * Allowed are LISTMODE_HEADER, LISTMODE_BODY and LISTMODE_FOOTER for both
+ *****************************************************************************/
+
+void TaskSetListStartStop( uint8_t uStart, uint8_t uStop )
+{
+    startItem = uStart;
+    stopItem  = uStop;
+}
+
+/* Macro returns true, if no more list items are available */
+#define CHECKDONE()   ( *retbuf=='\0' && listMode == stopItem )
+/* Macro returns true, if retbuf contains data */
+#define MOREITEMS()   ( *retbuf!='\0' )
+
+/******************************************************************************
+ * Create the Tasklist by iterated calls to "TaskIterateList"
+ * @param retbuf   - buffer to write one line into
+ * @param buflen   - allowed max length of return buffer
+ * @param actionId - 0 : Start with first line
+ *                   1 : generate next line
+ * @retval        >= 0 : more lines to follow
+ *                  -1 : the returned line is the last one
+ *****************************************************************************/
+int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const char *prefixstr )
+{
+    switch ( actionId ) {
+        case ACTIONID_INIT:
+            TaskGetTasks();
+            listMode = startItem;
+            itemCnt  = 0;
+            // no break here
+        case ACTIONID_ITERATE:
+            switch ( listMode ) {
+                case LISTMODE_HEADER:
+                    TaskFormatHeader(retbuf, buflen, prefixstr,itemCnt++);
+                    if ( CHECKDONE() ) return -1;
+                    if ( MOREITEMS() ) return ACTIONID_ITERATE;
+                    /* no more lines in the current category, go to next category */
+                    listMode++; itemCnt = 0;
+                    // no break here
+                case LISTMODE_BODY:
+                    #if defined(CORE_CM7)
+                        TaskFormatBody(retbuf, buflen, prefixstr,itemCnt++, "CM7");
+                    #else
+                        TaskFormatBody(retbuf, buflen, prefixstr,itemCnt++, "CM4");
+                    #endif
+                    if ( CHECKDONE() ) return -1;
+                    if ( MOREITEMS() ) return ACTIONID_ITERATE;
+                    /* no more lines in the current category, go to next category */
+                    listMode++; itemCnt = 0;
+                    // no break here
+                case LISTMODE_FOOTER:
+                    TaskFormatFooter(retbuf, buflen, prefixstr,itemCnt++);
+                    if ( CHECKDONE() ) return -1;
+                    if ( MOREITEMS() ) return ACTIONID_ITERATE;
+                    /* no more lines in the current category, go to next category */
+                    listMode++; itemCnt = 0;
+                    // no break here
+                default:
+                    *retbuf = '\0';
+                    return -1;
+            }
+            break;
+        default:
+            return -1;
+   }
 }
 
 void TaskDumpList(void)
 {
-    uint32_t i;
-    uint32_t mask;
+    int32_t i;
     char line[80];
 
-    TaskGetTasks(  );
+    TaskSetListStartStop(LISTMODE_HEADER, LISTMODE_FOOTER);
 
-    TaskFormatHeader(line, 80, "", 0);
-    DBG_printf_indent("%s\n",line);
-
-    int oldIndent = DBG_setIndentRel(+2);
-    for ( i=1; TaskFormatHeader(line, 80, "",i), *line; i++) {
+    i = ACTIONID_INIT;
+    while ( i = TaskIterateList ( i, line, 80, "" ), i >= 0 ) {
         DBG_printf_indent("%s\n",line);
     }
-
-    for ( i = 0; i < nroftasks; i++ ) {
-        TaskFormatLine(line, 80, "", i );
-        DBG_printf_indent("%s\n",line);
-    }
- 
-    DBG_setIndentAbs(oldIndent);
 }
-#endif
+
+#endif // DEBUG_MODE > 0
