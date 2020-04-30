@@ -304,7 +304,7 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
   if ( i != HAL_OK ) {
     DEBUG_PRINTF("ETH Tx Err %d, Code=%d\n", i, EthHandle.ErrorCode );
   }
-  DEBUG_PRINTF("DMACSR=0x%08x\n", EthHandle.Instance->DMACSR);
+  // DEBUG_PRINTF("DMACSR=0x%08x\n", EthHandle.Instance->DMACSR);
 
   return errval;
 }

@@ -664,6 +664,7 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 } /* Test_Menu */
 #endif
 #include "system/periodic.h"
+void stats_display(void);
 /*********************************************************************************
   * @brief  Submenu for system functions
   *         
@@ -681,6 +682,9 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
         break;
     case 1:
         PeriodicDumpList();
+        break;
+    case 2:
+        stats_display();
         break;
 
     /* sample entry
@@ -716,6 +720,7 @@ static const CommandSetT cmdTest[] = {
 #endif
   { "Task list",       ctype_fn, .exec.fn = System_Menu,    VOID(0), "Show task list" },
   { "Periodic lists",  ctype_fn, .exec.fn = System_Menu,    VOID(1), "Show periodic lists" },
+  { "LwIP Stats",      ctype_fn, .exec.fn = System_Menu,    VOID(2), "Show LwIP stats" },
 
   { "TmrAbs",          ctype_fn, .exec.fn = Test_TmrAbs,    VOID(0), "Set Abs Timer" },
   { "TmrRel",          ctype_fn, .exec.fn = Test_TmrRel,    VOID(0), "Set Rel Timer" },

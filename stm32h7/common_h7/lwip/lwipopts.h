@@ -48,7 +48,7 @@
 
 /* MEM_SIZE: the size of the heap memory. If the application will send
 a lot of data that needs to be copied, this should be set high. */
-#define MEM_SIZE                (10*1024)
+#define MEM_SIZE                (32*1024)
 
 /* Relocate the LwIP RAM heap pointer */
 // RHB changed to linker allocated memory block instead of hardcoded mem address */
@@ -58,7 +58,7 @@ extern unsigned char mem_heap[];
 /* MEMP_NUM_PBUF: the number of memp struct pbufs. If the application
    sends a lot of data out of ROM (or other static memory), this
    should be set high. */
-#define MEMP_NUM_PBUF           10
+#define MEMP_NUM_PBUF           64  // was 15
 /* MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
    per active UDP "connection". */
 #define MEMP_NUM_UDP_PCB        6
@@ -70,7 +70,7 @@ extern unsigned char mem_heap[];
 #define MEMP_NUM_TCP_PCB_LISTEN 5
 /* MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP
    segments. */
-#define MEMP_NUM_TCP_SEG        8
+#define MEMP_NUM_TCP_SEG        64      // was 8
 /* MEMP_NUM_SYS_TIMEOUT: the number of simulateously active
    timeouts. */
 #define MEMP_NUM_SYS_TIMEOUT    10
@@ -102,7 +102,7 @@ extern unsigned char mem_heap[];
 #define TCP_MSS                 (1500 - 40)	  /* TCP_MSS = (Ethernet MTU - IP header size - TCP header size) */
 
 /* TCP sender buffer space (bytes). */
-#define TCP_SND_BUF             (4*TCP_MSS)
+#define TCP_SND_BUF             (32*TCP_MSS)  // was : 4
 
 /*  TCP_SND_QUEUELEN: TCP sender buffer space (pbufs). This must be at least
   as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work. */
@@ -122,12 +122,14 @@ extern unsigned char mem_heap[];
 
 
 /* ---------- UDP options ---------- */
-#define LWIP_UDP                1
-#define UDP_TTL                 255
+#define LWIP_UDP                        1
+#define UDP_TTL                         255
 
 
 /* ---------- Statistics options ---------- */
-#define LWIP_STATS 0
+#define LWIP_STATS                      1
+#define TCP_STATS                       1
+#define LWIP_STATS_DISPLAY              1
 
 /* ---------- link callback options ---------- */
 /* LWIP_NETIF_LINK_CALLBACK==1: Support a callback function from an interface
@@ -188,22 +190,27 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #endif
 
 #define LWIP_DEBUG                      1
-#define TCP_DEBUG                       LWIP_DBG_OFF
+#define TCP_DEBUG                       LWIP_DBG_ON
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
+#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
+#define TCP_CWND_DEBUG                  LWIP_DBG_ON
+
+
 #define ETHARP_DEBUG                    LWIP_DBG_OFF
 #define PBUF_DEBUG                      LWIP_DBG_OFF
 #define IP_DEBUG                        LWIP_DBG_OFF
 #define INET_DEBUG                      LWIP_DBG_ON
 #define TCPIP_DEBUG                     LWIP_DBG_OFF
-#define DHCP_DEBUG                      LWIP_DBG_ON
+#define DHCP_DEBUG                      LWIP_DBG_OFF
 #define UDP_DEBUG                       LWIP_DBG_OFF
 #define ICMP_DEBUG                      LWIP_DBG_ON
-#define RAW_DEBUG                       LWIP_DBG_ON
-#define NETIF_DEBUG                     LWIP_DBG_OFF
+#define NETIF_DEBUG                     LWIP_DBG_ON
 #define API_LIB_DEBUG                   LWIP_DBG_OFF
 #define API_MSG_DEBUG                   LWIP_DBG_OFF
 #define SOCKETS_DEBUG                   LWIP_DBG_OFF
-#define RAW_DEBUG                       LWIP_DBG_ON
-#define SYS_DEBUG                       LWIP_DBG_ON
+#define RAW_DEBUG                       LWIP_DBG_OFF
+#define SYS_DEBUG                       LWIP_DBG_OFF
 
 
 
@@ -234,7 +241,8 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 */
 /** Set this to 1 to include "fsdata_custom.c" instead of "fsdata.c" for the
  * file system (to prevent changing the file included in CVS) */
-#define HTTPD_USE_CUSTOM_FSDATA   1
+#define HTTPD_USE_CUSTOM_FSDATA             1
+#define HTTPD_SERVER_PORT                   80
 
 
 /*
@@ -244,13 +252,13 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 */
 
 #define TCPIP_THREAD_NAME              "TCP/IP"
-#define TCPIP_THREAD_STACKSIZE          1000
+#define TCPIP_THREAD_STACKSIZE          500
 #define TCPIP_MBOX_SIZE                 6
 #define DEFAULT_UDP_RECVMBOX_SIZE       6
 #define DEFAULT_TCP_RECVMBOX_SIZE       6
 #define DEFAULT_ACCEPTMBOX_SIZE         6
 #define DEFAULT_THREAD_STACKSIZE        500
-#define TCPIP_THREAD_PRIO               osPriorityHigh
+#define TCPIP_THREAD_PRIO               osPriorityHigh+1
 
 #endif /* __LWIPOPTS_H__ */
 

@@ -12,7 +12,6 @@
     <ProgramSection alignment="4" load="Yes" runin=".fast_run" name=".fast" />
     <ProgramSection alignment="4" load="Yes" runin=".data_run" name=".data" />
     <ProgramSection alignment="4" load="Yes" runin=".tdata_run" name=".tdata" />
-    <ProgramSection alignment="4" load="Yes" runin=".data_run2" name=".data2" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:AXISRAM);SRAMA;RAMA">
   </MemorySegment>
@@ -29,20 +28,22 @@
     <ProgramSection alignment="8" size="__STACKSIZE__" load="No" name=".stack" />
     <ProgramSection alignment="8" size="__STACKSIZE_PROCESS__" load="No" name=".stack_process" end_symbol="__RAM_segment_end__" />
   </MemorySegment>
-  <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
+  <MemorySegment name="$(RAM_NAME:SRAMUNCACHED);RAMUNCACHED">
+    <!-- Uncached Memory, 16k for CM7 DMA and IPC memory /-->
+    <ProgramSection alignment="32" load="No" name=".dmamem" />
+    <ProgramSection alignment="32" load="No" name=".ipcmem" />
+  </MemorySegment>
+  <MemorySegment name="$(RAM_NAME:SRAM2);RAM2">
+  <!-- Used by CM4 /-->
+  </MemorySegment>
+  <MemorySegment name="$(RAM_NAME:SRAM3);RAM3">
+  <!-- Used by CM4 /-->
   </MemorySegment>
   <MemorySegment name="$(FLASH2_NAME:FLASH2)">
     <ProgramSection alignment="4" load="Yes" name=".text2" />
     <ProgramSection alignment="4" load="Yes" name=".rodata2" />
     <ProgramSection alignment="4" load="Yes" runin=".data2_run" name=".data2" />
   </MemorySegment>
-  <MemorySegment name="$(RAM_NAME:SRAM2);RAM2">
-    <ProgramSection alignment="4" load="No" name=".data_run2" />
-    <ProgramSection alignment="4" load="No" name=".bss2" />
-    <ProgramSection alignment="32" load="No" name=".dmamem" />
-    <ProgramSection alignment="32" load="No" name=".ipcmem" />
-  </MemorySegment>
-  <MemorySegment name="$(RAM_NAME:SRAM3);RAM3">
-  <!-- Used by CM4 /-->
+  <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
   </MemorySegment>
 </Root>

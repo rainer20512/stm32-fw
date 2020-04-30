@@ -12,7 +12,6 @@
     <ProgramSection alignment="4" load="Yes" runin=".fast_run" name=".fast" />
     <ProgramSection alignment="4" load="Yes" runin=".data_run" name=".data" />
     <ProgramSection alignment="4" load="Yes" runin=".tdata_run" name=".tdata" />
-    <ProgramSection alignment="4" load="Yes" runin=".data_run3" name=".data3" />
   </MemorySegment>
   <!-- Use SRAM1 as main RAM /-->
   <MemorySegment name="$(RAM_NAME:SRAM1);RAM;SRAM">
@@ -23,6 +22,7 @@
     <ProgramSection alignment="4" load="No" name=".tbss" />
     <ProgramSection alignment="4" load="No" name=".tdata_run" />
     <ProgramSection alignment="4" load="No" name=".non_init" />
+    <ProgramSection alignment="4" load="No" name=".lwipheap" />
     <ProgramSection alignment="4" size="__HEAPSIZE__" load="No" name=".heap" />
     <ProgramSection alignment="8" size="__STACKSIZE__" load="No" name=".stack" />
     <ProgramSection alignment="8" size="__STACKSIZE_PROCESS__" load="No" name=".stack_process" />
@@ -31,11 +31,8 @@
   <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM3);RAM3">
-    <ProgramSection alignment="4" load="No" name=".data_run3" />
-    <ProgramSection alignment="4" load="No" name=".dmamem" />
     <ProgramSection alignment="4" load="No" name=".uncached" />
     <ProgramSection alignment="4" load="No" name=".uncached100" />
-    <ProgramSection alignment="4" load="No" name=".lwipheap" />
   </MemorySegment>
   <MemorySegment name="$(FLASH2_NAME:FLASH2)">
     <ProgramSection alignment="4" load="Yes" name=".text2" />

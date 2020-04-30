@@ -36,7 +36,7 @@
 /* Private define ------------------------------------------------------------*/
 
 /* size of RX/TX buffers, sizes must be power of two  */
-#define OUTBUF_SIZE 16384
+#define OUTBUF_SIZE 8192
 #define INBUF_SIZE  64
 
 /* Private variables ---------------------------------------------------------*/

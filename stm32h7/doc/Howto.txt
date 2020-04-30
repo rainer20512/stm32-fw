@@ -12,3 +12,5 @@
            <ProgramSection alignment="4" load="No" name=".dmamem" />
 
       in the non cacheable RAM area.
+
+    3. The MemoryMap.XML file MUST NOT contain comment lines. Parsing will stop with this lines

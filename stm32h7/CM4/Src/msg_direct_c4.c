@@ -45,11 +45,11 @@ void cm4_msg_direct_received(void)
     switch ( AMP_DctBuf_Ptr->msg_id ) {
         case  MSGTYPE_REGISTER_DEVICE:
         case MSGTYPE_CHKUNIQUE_DEVICE:
-            /* Answer of remote device registration: do nothing, answer is  */
-            /* read by polling */
+        case MSGTYPE_TASKLIST_CM7:
+            /* All the previous will get their results by polling */
             break;
         default:
-            DEBUG_PRINTF("cm7_direct_msg: unknown msg_id %d\n", AMP_DctBuf_Ptr->msg_id );
+            DEBUG_PRINTF("cm4_direct_msg: unknown msg_id %d\n", AMP_DctBuf_Ptr->msg_id );
     }
 }
 

@@ -23,7 +23,7 @@
       c_preprocessor_definitions="CORE_CM4"
       c_user_include_directories="./CM4/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM4_Peripherals.xml"
-      linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM4_MemoryMap.xml"
+      linker_memory_map_file="$(ProjectDir)/H745_CM4_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM4.xml"
       macros="DeviceVectorsFile=STM32H745xx.vec"
       project_directory=""
@@ -49,6 +49,7 @@
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="flash_placement_CM4.xml" />
+      <file file_name="H745_CM4_MemoryMap.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="EWARM">
@@ -198,13 +199,13 @@
           <file file_name="common_h7/lwip/ethernetif.h" />
           <file file_name="common_h7/lwip/lwipopts.h" />
           <file file_name="common_h7/lwip/ip_addr.h" />
-          <file file_name="common_h7/lwip/heap_mem.c" />
         </folder>
         <folder Name="ProjectSrc">
           <file file_name="common_h7/lwip/ethernetif.c" />
           <file file_name="common_h7/lwip/app_ethernet.c" />
           <file file_name="common_h7/lwip/httpserver_netconn.c" />
           <file file_name="common_h7/lwip/lwip_start.c" />
+          <file file_name="common_h7/lwip/heap_mem.c" />
         </folder>
       </folder>
     </folder>
@@ -344,7 +345,7 @@
       c_preprocessor_definitions="CORE_CM7"
       c_user_include_directories="./CM7/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H7x5_CM7_Peripherals.xml"
-      linker_memory_map_file="$(TargetsDir)/STM32/STM32H745ZI_CM7_MemoryMap.xml"
+      linker_memory_map_file="$(ProjectDir)/H745_CM7_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM7.xml"
       macros="DeviceVectorsFile=STM32H745xx.vec"
       project_directory=""
@@ -370,6 +371,7 @@
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="flash_placement_CM7.xml" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
+      <file file_name="H745_CM7_MemoryMap.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="src">

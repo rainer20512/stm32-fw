@@ -53,7 +53,7 @@ static const unsigned char PAGE_START[] = {
 0x73,0x65,0x74,0x3d,0x77,0x69,0x6e,0x64,0x6f,0x77,0x73,0x2d,0x31,0x32,0x35,0x32,
 0x22,0x3e,0x0d,0x0a,0x3c,0x6d,0x65,0x74,0x61,0x20,0x68,0x74,0x74,0x70,0x2d,0x65,
 0x71,0x75,0x69,0x76,0x3d,0x22,0x72,0x65,0x66,0x72,0x65,0x73,0x68,0x22,0x20,0x63,
-0x6f,0x6e,0x74,0x65,0x6e,0x74,0x3d,0x22,0x31,0x22,0x3e,0x0d,0x0a,0x3c,0x6d,0x65,
+0x6f,0x6e,0x74,0x65,0x6e,0x74,0x3d,0x22,0x39,0x22,0x3e,0x0d,0x0a,0x3c,0x6d,0x65,
 0x74,0x61,0x20,0x63,0x6f,0x6e,0x74,0x65,0x6e,0x74,0x3d,0x22,0x4d,0x53,0x48,0x54,
 0x4d,0x4c,0x20,0x36,0x2e,0x30,0x30,0x2e,0x32,0x38,0x30,0x30,0x2e,0x31,0x35,0x36,
 0x31,0x22,0x20,0x6e,0x61,0x6d,0x65,0x3d,0x22,0x47,0x45,0x4e,0x45,0x52,0x41,0x54,
@@ -222,12 +222,34 @@ static void http_server_serve(struct netconn *conn)
   netbuf_delete(inbuf);
 }
 
+#include "debug_helper.h"
 
 /**
   * @brief  http server thread 
   * @param arg: pointer on argument(not used here) 
   * @retval None
   */
+#define PORT    80
+#include "lwip/tcp.h"
+
+static void http_server_session ( void *arg )
+{
+    struct netconn *current = (struct netconn *)arg;
+    struct tcp_pcb *tcp;
+    uint16_t remote = current->pcb.tcp->remote_port;
+
+    /* serve connection */    
+    DEBUG_PRINTF("Established connection to remote Port %d...\n",remote );
+
+    http_server_serve(current);
+
+    /* delete connection */
+    netconn_delete(current);
+    DEBUG_PRINTF("Terminated connection to remote Port %d...\n",remote );
+    vTaskDelete(NULL);
+    for ( ;; );
+}
+
 static void http_server_netconn_thread8088(void *arg)
 { 
   struct netconn *conn, *newconn;
@@ -235,11 +257,11 @@ static void http_server_netconn_thread8088(void *arg)
   
   /* Create a new TCP connection handle */
   conn = netconn_new(NETCONN_TCP);
-  
   if (conn!= NULL)
   {
+    DEBUG_PRINTF("Listening on Port %d...\n",PORT);
     /* Bind to port 80 (HTTP) with default IP address */
-    err = netconn_bind(conn, NULL, 8088);
+    err = netconn_bind(conn, NULL, PORT);
     
     if (err == ERR_OK)
     {
@@ -252,11 +274,8 @@ static void http_server_netconn_thread8088(void *arg)
         accept_err = netconn_accept(conn, &newconn);
         if(accept_err == ERR_OK)
         {
-          /* serve connection */
-          http_server_serve(newconn);
-
-          /* delete connection */
-          netconn_delete(newconn);
+            sys_thread_new("HTTPD", http_server_session, newconn, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO+1);
+            taskYIELD();
         }
       }
     }
@@ -274,7 +293,7 @@ static void http_server_netconn_thread80(void *arg)
   if (conn!= NULL)
   {
     /* Bind to port 80 (HTTP) with default IP address */
-    err = netconn_bind(conn, NULL, HTTPD_SERVER_PORT);
+    err = netconn_bind(conn, NULL, 8888);
     
     if (err == ERR_OK)
     {
@@ -305,7 +324,7 @@ static void http_server_netconn_thread80(void *arg)
   */
 void http_server_netconn_init()
 {
-  sys_thread_new("HTTP80", http_server_netconn_thread80, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
+//  sys_thread_new("HTTP80", http_server_netconn_thread80, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
   sys_thread_new("HTTP8088", http_server_netconn_thread8088, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
 }
 
@@ -331,7 +350,7 @@ void DynWebPage(struct netconn *conn)
 
     /* Header and hit counter */
     snprintf(line, MAXLEN, "%d", (int)nPageHits);
-    netconn_write(conn, PAGE_START, strlen((char*)PAGE_START), NETCONN_COPY);
+    netconn_write(conn, PAGE_START, strlen((char*)PAGE_START), NETCONN_NOCOPY);
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
 
     /* Task List */
