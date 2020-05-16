@@ -1,0 +1,1 @@
+makefsdata static -e -f:..\..\common_h7\lwip\fsdata_custom.c

@@ -30,9 +30,9 @@
   <MemorySegment start="0x30044000" name="SRAM3" size="0x4000" />
   <MemorySegment start="0x38000000" name="SRAM4" size="0x10000" />
   <MemorySegment start="0x38800000" name="BackupSRAM" size="0x1000" />
-  <!-- DO NOT PLACE XML COMMENT LINES WITHIN FILE - PARSE WILL STOP HERE /--->
+  <!-- DO NOT PLACE XML COMMENT LINES WITHIN FILE - PARSE WILL STOP HERE   /--->
   <!-- RHB use first 16k of SRAM3 as uncached Memory for DMA and IPC       /--->
-  <!-- RHB The second 16k should be left untoched by CM7 for usage of CM4  /--->
+  <!-- RHB The second 16k should be left untouched by CM7 for usage of CM4 /--->
   <!-- RHB use 128kB of DTCM as RAM -->
   <!---MemorySegment start="0x24000000" name="RAM" size="0x80000" /--->
   <!-- MemorySegment start="0x20000000" name="RAM" size="0x20000" /-->

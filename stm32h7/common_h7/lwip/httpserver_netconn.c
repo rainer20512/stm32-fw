@@ -25,8 +25,8 @@
 #include "string.h"
 #include "httpserver_netconn.h"
 #include "cmsis_os.h"
+#include "debug_helper.h"
 
-#include <stdio.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Function to call to complete the web page */
@@ -42,7 +42,7 @@ typedef enum {
 typedef struct {
     const char  *Title;             /* Page title to be displayed on page */
     const char  *MenuTitle;         /* Text to be displayed as menu item */
-    const char  *PageName;          /* Page name as sent to browser */
+    const char  *HTMLPageName;      /* Page name as requested by browser */
     uint32_t    RefreshRate;        /* page refresh rate, if desired */
     uint32_t    *HitCounter;        /* Hit counter for this page */
     PageDetailE PageType;           /* Type of page */
@@ -58,6 +58,8 @@ typedef struct {
 
 /* Private macro -------------------------------------------------------------*/
 #define LINE_LEN        120
+#define HOME_PAGE_IDX   0           /* Index of home page in page list        */
+#define HTML_404        "/404.html" /* static page for 404                    */
 
 /* Private variables ---------------------------------------------------------*/
 u32_t TaskListPageHits = 0;
@@ -68,12 +70,16 @@ void HtmlTaskList       ( struct netconn *conn, void *arg);
 void HtmlSettingsCM7    ( struct netconn *conn, void *arg); 
 void HtmlSettingsCM4    ( struct netconn *conn, void *arg); 
 
-/* Web pages file and menu structures */
-static OnePageT WebPages[] = {
-    { "STM32H745 WebServer", "Home",         "/",                 0, NULL,              PDdynamic, .DetailCB = HtmlHomePage },
-    { "Task List",           "Tasklist",     "tasklist.html",     5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList },
-    { "Settings CM7",        "Settings CM7", "settings_cm7.html", 0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7 },
-    { "Settings CM4",        "Settings CM4", "settings_cm4.html", 0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4 },
+
+/**********************************************************************************************************************************
+/* Web pages file and menu structures
+ * @note: Home page has to be the first entry -> see HOME_PAGE_IDX
+ *********************************************************************************************************************************/
+static const OnePageT WebPages[] = {
+    { "STM32H745 WebServer", "Startseite",   "/",                   0, NULL,              PDstatic,  .FileName = "/home.html" },
+    { "Task List",           "Tasklist",     "tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList },
+    { "Settings CM7",        "Settings CM7", "settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7 },
+    { "Settings CM4",        "Settings CM4", "settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4 },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -81,22 +87,29 @@ static OnePageT WebPages[] = {
 /* All the following static vars are used to generate the dynamic page header */
 static cc HEADER[] =                                                                             \
 "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\">" \
-"<html><head><title>STM32H7xxTASKS</title>"                                                      \
 "<meta http-equiv=\"Content-Type\" content=\"text/html;charset=windows-1252\">"
 ;
+static cc TITLE_s[] =
+"<html><head><title>%s</title>"                                                      
+;
+
 static cc REFRESH_d[] =                                                                          \
 "<meta http-equiv=\"refresh\" content=\"%d\">"
 ;
 
 static cc HEADER2[] =                                                                            \
-"<meta content=\"MSHTML 6.00.2800.1561\" name=\"GENERATOR\">"                                    \
 "<style =\"font-weight:normal;font-family:Verdana\"></style>"                                    \
-"</head><body><h4 style=\"color:rgb(51, 51, 255)\"><small style=\"font-family:Verdana\">"        \
-"<small><big><big><big style=\"font-weight:bold\"><big><strong><em><span style=\"font-style:italic\">"
+"</head><body>"                                                                                  \
+"<table style=\"width:961px\"><tr style=\"height:100px\">"                                       \
+"<td><a href=\"http://megaexperte.de\"><img style=\"width: 100px; height: 100px;\""          \
+" alt=\"Idiot\" src=\"im/idiot.png\"> </a> </td>"                                                \
+"<td style=\"color:rgb(51, 51, 255); font-family:Verdana; font-weight:bold; font-style:italic; font-size: 30px\">"
 ;
+
 /* Header Text here */
+
 static cc HEADER3[] =                                                                            \
-"</span></em></strong></big></big></big></big></small></small></h4>"                             \
+"</td></tr></table>"                                                                             \
 "<hr style=\"width:100%;height:2px\"><span style=\"font-weight:bold\">"                          \
 "</span><span style=\"font-weight:bold\">"                                                       \
 "<table style=\"width:961px;height:30px\" border=\"0\" cellpadding=\"2\" cellspacing=\"10\"><tbody><tr>"
@@ -129,20 +142,34 @@ static cc BODY_POSTFIX[] =                                                      
 ;
 
 
+/******************************************************************************
+ * transfer a static header, which is common to all pages via "conn"
+ * This common header is outlined in the project file 
+ * .\tools\makefsdata\dynamic\page_header.html, but generated dynamically at
+ * runtime.
+ * it consists of a headline, consisting of an image and a headline text,
+ * a horizontal menu bar, consisting of all entries of "WebPages", except the
+ * current page, an horizontal bar and and optional hit counter and and optional
+ * refresh period
+ *****************************************************************************/
 static void HtmlHeader(struct netconn *conn, uint32_t page_idx )
 {
     /* buffer to generate an dynamic line */
     char dyn[LINE_LEN];
-    OnePageT *actpage = &WebPages[page_idx];
+    const OnePageT *actpage = &WebPages[page_idx];
 
     /* Static Header part 1*/
     netconn_write(conn, HEADER, strlen((char*)HEADER), NETCONN_NOCOPY);
+
+    /* title */
+    snprintf(dyn, LINE_LEN, TITLE_s, actpage->Title);
+    netconn_write(conn, dyn, strlen(dyn), NETCONN_COPY);
     
     /* Refresh rate, if desired */
-    if ( actpage->RefreshRate > 0 ) {
-        snprintf(dyn, LINE_LEN, REFRESH_d, actpage->RefreshRate);
-        netconn_write(conn, dyn, strlen(dyn), NETCONN_COPY);
-    }
+    uint32_t r = actpage->RefreshRate;
+    if ( r == 0 ) r = 9999;
+    snprintf(dyn, LINE_LEN, REFRESH_d, r);
+    netconn_write(conn, dyn, strlen(dyn), NETCONN_COPY);
 
     /* Static Header part 2*/
     netconn_write(conn, HEADER2, strlen(HEADER2), NETCONN_NOCOPY);
@@ -160,7 +187,7 @@ static void HtmlHeader(struct netconn *conn, uint32_t page_idx )
             netconn_write(conn, COL_PREFIX, strlen(COL_PREFIX), NETCONN_NOCOPY);
 
             /* Dynamic column part */
-            snprintf(dyn, LINE_LEN, COL_s_s, WebPages[i].PageName, WebPages[i].MenuTitle);
+            snprintf(dyn, LINE_LEN, COL_s_s, WebPages[i].HTMLPageName, WebPages[i].MenuTitle);
             netconn_write(conn, dyn, strlen(dyn), NETCONN_COPY);
         }
     }
@@ -184,26 +211,36 @@ static void HtmlHeader(struct netconn *conn, uint32_t page_idx )
     }
 }
 
+/******************************************************************************
+ * transfer the static file "filename" from the pseudo filesystem via "conn"
+ * an error mesg is displayed, if not found
+ *****************************************************************************/
 static void HtmlStaticFile(struct netconn *conn, const char *filename )
 {
     static const char FileErr[] = "File not found: ";
     struct fs_file file;
 
+    
     if ( fs_open(&file, filename) == ERR_OK ) {
+        DEBUG_PRINTF("httpd open file %s\n", filename);
         netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
         fs_close(&file);
     } else { 
+        DEBUG_PRINTF("httpd failed to open file %s\n", filename);
         netconn_write(conn, FileErr, strlen(FileErr), NETCONN_NOCOPY);
         netconn_write(conn, filename, strlen(filename), NETCONN_COPY);
     }
 }
 
+/******************************************************************************
+ * transfer WebPages[page_idx] via conn
+ *****************************************************************************/
 static void HtmlPage(struct netconn *conn, uint32_t page_idx )
 {
     static const char PageErr[] = "<br><br> No PageType implementation found<br>";
 
     // assert(page_idx < sizeof(WebPages)/sizeof(OnePageT));
-    OnePageT *actpage = &WebPages[page_idx];
+    const OnePageT *actpage = &WebPages[page_idx];
     HtmlHeader(conn, page_idx);
     switch ( WebPages[page_idx].PageType ) {
         case PDstatic:
@@ -217,48 +254,63 @@ static void HtmlPage(struct netconn *conn, uint32_t page_idx )
     }
 }
 
-
-
-static int32_t HtmlCheckItem ( const char *item, char *buf, u16_t buflen )
+/******************************************************************************
+ * check, whether "item" is contained as static file in fs_data
+ * @param item   - NULL terminated static filename
+ * @returns
+ *    pdTRUE   - if "item" is a static filename
+ *    pdFALSE  - otherwise
+ *****************************************************************************/
+static int32_t IsStaticFile ( const char *item )
 {
-    u16_t ilen = strlen(item);
-    if (  buflen >= ilen && strncmp(buf, item, ilen)==0 ) 
-        return 0;
-    else
-        return -1;
+    struct fs_file file;
+    return ( fs_open(&file, item ) == ERR_OK ? fs_close(&file), pdTRUE : pdFALSE );
 }
 
-#define CHECK(file)          HtmlCheckItem(file, buf, buflen)
-#define CHECKSTATIC(file)    if ( CHECK(file) ) { HtmlStaticFile(conn, file); return; }
+#define CHECK(file)     ( strcmp(file, buf) == 0 )
 
-static void HandleGet ( struct netconn *conn, char *buf, u16_t buflen )
+/******************************************************************************
+ * Handle an HTML GET 
+ * @param conn   - actual netconn
+ * @param buf    - string BEHIND "GET ", null-terminated 
+ * @param buflen - length of that strinf
+ *****************************************************************************/
+static void HandleGet ( struct netconn *conn, char *buf)
 {
-    /* remove trailing blanks */    
-    #if 0
-    while ( buflen && *buf == ' ' )
-      { buf++;buflen--; }
-    #endif
+    DEBUG_PRINTF("HandleGet:%s:\n", buf);
 
-    CHECKSTATIC("/STM32H7xx.html");
-    CHECKSTATIC("/STM32H7xx_files/ST.gif");
-    CHECKSTATIC("/STM32H7xx_files/stm32.jpg");
-    CHECKSTATIC("/STM32H7xx_files/logo.jpg");
-    CHECKSTATIC("/STM32H7xx_files/logo.jpg"); 
-    
-    if ( CHECK("/STM32H7xxTASKS.html") ) {
+    if ( CHECK("/tasks.html") ) {
        /* Load dynamic page */
        HtmlPage(conn, 1);
        // DynWebPage(conn);
        return;
     }
-    if ( CHECK("/") ) {
-        HtmlStaticFile(conn, "/STM32H7xx.html");
-    } else {
-      /* Load Error page */
-      HtmlStaticFile(conn, "/404.html"); 
+    
+    /* If requested file is one of the dynamically created ones, then create it */
+    for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
+        if ( CHECK(WebPages[i].HTMLPageName) ) {
+            HtmlPage(conn, i );
+            return;
+        }
     }
+
+    /* If requested file is that of a static file from fs_data, then send it */
+    if ( IsStaticFile(buf) ) { 
+        HtmlStaticFile(conn, buf); 
+        return; 
+    }
+
+    /* finally, check for index.html */
+    if ( CHECK("/index.html") ) {
+        HtmlPage(conn, HOME_PAGE_IDX);
+        return;
+    } 
+ 
+    /* If all failed, load Error page */
+    HtmlStaticFile(conn, HTML_404); 
 }
 
+#define MAX_TOKEN_LEN           80          /* max length of one Get-token */
 /**
   * @brief serve tcp connection  
   * @param conn: pointer on connection structure 
@@ -269,8 +321,11 @@ static void http_server_serve(struct netconn *conn)
   struct netbuf *inbuf;
   err_t recv_err;
   char* buf;
+  char *dest, *src;
   u16_t buflen;
-  struct fs_file file;
+  uint32_t i;
+  char token[MAX_TOKEN_LEN+1];
+  
   
   /* Read the data from the port, blocking if nothing yet there. 
    We assume the request (the part we care about) is in one netbuf */
@@ -281,12 +336,20 @@ static void http_server_serve(struct netconn *conn)
     if (netconn_err(conn) == ERR_OK) 
     {
       netbuf_data(inbuf, (void**)&buf, &buflen);
-      if ( (buflen >=4) && (strncmp(buf, "GET ", 4) == 0)) 
-        HandleGet( conn, buf+4, buflen - 4 );
-
-    
-      /* Is this an HTTP GET command? (only check the first 5 chars, since
-      there are other formats for GET, and we're keeping it very simple )*/
+      /* Handle GET command */
+      if ( (buflen >=4) && (strncmp(buf, "GET ", 4) == 0)) {
+        /* extract the first token behind "GET " */
+        src = buf+4; dest = token;
+        buflen -= 4; i = 0;
+        while ( i < MAX_TOKEN_LEN && i < buflen && *src != ' ' ) { 
+            *(dest++) = *(src++);
+            i++;
+        }
+        *dest= '\0';
+        /* Report when token is truncated */
+        if ( i >= MAX_TOKEN_LEN ) DEBUG_PUTS("http_server: token too long, truncated");
+        HandleGet( conn, token);
+      }
     }
   }
   /* Close the connection (server closes in HTTP) */
@@ -403,7 +466,6 @@ void http_server_netconn_init()
   sys_thread_new("HTTP8088", http_server_netconn_thread8088, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
 }
 
-void HtmlHomePage       ( struct netconn *conn, void *arg) {}
 
 /**
   * @brief  Create and send a dynamic Web Page. This page contains the list of 

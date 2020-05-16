@@ -40,6 +40,8 @@
 #include "system/tm1637.h"
 #include "cmsis_os.h"
 
+/* external variables --------------------------------------------------------*/
+extern uint32_t __SRAMUNCACHED_segment_start__;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
@@ -60,7 +62,10 @@ uint32_t gflags;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void CPU_CACHE_Enable(void);
+static void MPU_Setup(void);
 static void MPU_Config(void);
+static void MPU_Dump(void);
+
 
 /* Forward declarations for external initialization functions -----------------*/
 void HW_InitJtagDebug(void);
@@ -137,6 +142,7 @@ int main(void)
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
      */
+    MPU_Setup();
     MPU_Config();
 
     /* Enable the D- and I- Cache for M7  */
@@ -226,6 +232,7 @@ int main(void)
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 #endif
     
+    MPU_Dump();
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
@@ -235,6 +242,7 @@ int main(void)
 
     Init_DefineTasks();
     STATUS(6);
+
     #if DEBUG_PROFILING > 0
         ProfilerSwitchTo(JOB_TASK_MAIN);  
     #endif
@@ -636,27 +644,40 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableICache();
 
   /* Enable D-Cache */
-  // SCB_EnableDCache();
+  SCB_EnableDCache();
 }
 
-/**
-  * @brief  Configure the MPU attributes as Not Cachable for Internal D3SRAM.
-  * @note   The Base Address is 0x38000000 (D3_SRAM_BASE).
-  *         The Configured Region Size is 64KB because same as D3SRAM size.
-  * @param  None
-  * @retval None
-  */
+/* Definition of non cached memory areas */
+typedef struct {
+    uint32_t baseAddress;
+    uint32_t regionSize;
+} MPURegionT;
+
+#define MAX_MPU_REGIONS     1                       /* Number of defined MPU regions */
+static MPURegionT mpuRegions[MAX_MPU_REGIONS]; 
+
+/******************************************************************************
+ * define MPU regions
+ *****************************************************************************/
+static void MPU_Setup(void)
+{
+    mpuRegions[0].baseAddress = (uint32_t)&__SRAMUNCACHED_segment_start__;
+    mpuRegions[0].regionSize  = MPU_REGION_SIZE_16KB;
+}
+
+
+/******************************************************************************
+ * configure the previously defined MPU regions
+ *****************************************************************************/
 static void MPU_Config(void)
 {
   MPU_Region_InitTypeDef MPU_InitStruct;
-  extern uint32_t __SRAM3_segment_start__;
   
   /* Disable the MPU */
   HAL_MPU_Disable();
-  /* Configure the MPU attributes as WT for SRAM */
+
+  /* Configure the MPU "constant" attributes once */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.BaseAddress = __SRAM3_segment_start__;
-  MPU_InitStruct.Size = MPU_REGION_SIZE_32KB;
   MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
@@ -666,7 +687,12 @@ static void MPU_Config(void)
   MPU_InitStruct.SubRegionDisable = 0x00;
   MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
 
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  /* Now configure the "dynamic attributes for every region and setup MPU */
+  for ( uint32_t i = 0; i < MAX_MPU_REGIONS; i++ ) {
+      MPU_InitStruct.BaseAddress = mpuRegions[i].baseAddress;
+      MPU_InitStruct.Size = mpuRegions[i].regionSize;
+      HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  }
 
   /* Configure the MPU attributes as RO for CM7 Flash */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
@@ -683,11 +709,23 @@ static void MPU_Config(void)
 
   HAL_MPU_ConfigRegion(&MPU_InitStruct);
 
-
-
   /* Enable the MPU */
   HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
 }
+
+/******************************************************************************
+ * dump info about every configured MPU region
+ *****************************************************************************/
+static void MPU_Dump(void)
+{
+  for ( uint32_t i = 0; i < MAX_MPU_REGIONS; i++ ) {
+      DEBUG_PRINTF("Uncached RAM at 0x%p of size 0x%08x\n", 
+        mpuRegions[i].baseAddress, 
+        2 << mpuRegions[i].regionSize 
+      );
+  }
+}
+
 
 
 /**

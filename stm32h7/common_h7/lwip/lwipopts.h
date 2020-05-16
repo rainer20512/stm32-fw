@@ -189,23 +189,23 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
   #define CHECKSUM_CHECK_ICMP             1
 #endif
 
-#define LWIP_DEBUG                      1
-#define TCP_DEBUG                       LWIP_DBG_ON
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
-#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
-#define TCP_QLEN_DEBUG                  LWIP_DBG_ON
-#define TCP_CWND_DEBUG                  LWIP_DBG_ON
+#define LWIP_DEBUG                      0
+#define TCP_DEBUG                       LWIP_DBG_OFF
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
+#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
+#define TCP_QLEN_DEBUG                  LWIP_DBG_OFF
+#define TCP_CWND_DEBUG                  LWIP_DBG_OFF
 
 
 #define ETHARP_DEBUG                    LWIP_DBG_OFF
 #define PBUF_DEBUG                      LWIP_DBG_OFF
 #define IP_DEBUG                        LWIP_DBG_OFF
-#define INET_DEBUG                      LWIP_DBG_ON
+#define INET_DEBUG                      LWIP_DBG_OFF
 #define TCPIP_DEBUG                     LWIP_DBG_OFF
 #define DHCP_DEBUG                      LWIP_DBG_OFF
 #define UDP_DEBUG                       LWIP_DBG_OFF
-#define ICMP_DEBUG                      LWIP_DBG_ON
-#define NETIF_DEBUG                     LWIP_DBG_ON
+#define ICMP_DEBUG                      LWIP_DBG_OFF
+#define NETIF_DEBUG                     LWIP_DBG_OFF
 #define API_LIB_DEBUG                   LWIP_DBG_OFF
 #define API_MSG_DEBUG                   LWIP_DBG_OFF
 #define SOCKETS_DEBUG                   LWIP_DBG_OFF
