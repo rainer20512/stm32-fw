@@ -1,0 +1,44 @@
+<html>
+<script>
+var ch = []
+function add(e) {
+	var n = e.name;
+    if(ch.indexOf(n) == -1)
+		ch.push(n);
+}
+
+function is_changed(n) {
+	for(var k = 0; k < ch.length; k++)
+		if(n == ch[k]) return n && true;
+	return false;
+}
+
+function before_submit() {
+	var inp = document.getElementsByTagName("input");
+	var sel = document.getElementsByTagName("select");
+	for(var k = 0; k < inp.length; k++) {
+		var n = inp[k].name;
+		if(!is_changed(n)) inp[k].disabled = true;
+	}
+	for(var k = 0; k < sel.length; k++) {
+		var n = sel[k].name;
+		if(!is_changed(n)) sel[k].disabled = true;
+	}
+}
+</script>
+<body>
+<form onSubmit="before_submit()">
+<table>
+  <tr><td><label for="fname">First name:</label>
+  </td><td><input type="text" value ="koks" name="fname" onchange="add(this)">
+  </td></tr>
+  <tr><td><label for="lname">Last name:</label>
+  </td><td><input type="text" value="keks" name="lname" onchange="add(this)">
+  </td></tr>
+  <tr><td><label for="nochwas">Nochwas:</label>
+  </td><td><input type="text" name="nochwas" onchange="add(this)">
+  </td></tr>
+</table>
+  <br><input type="submit" value="Submit">
+</form>
+</body></html>

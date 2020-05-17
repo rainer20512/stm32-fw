@@ -309,8 +309,26 @@ static void HandleGet ( struct netconn *conn, char *buf)
     /* If all failed, load Error page */
     HtmlStaticFile(conn, HTML_404); 
 }
+#define MAX_TOKEN_LEN           80          /* max length of one Get-token (params excluded) */
+#define MAX_PARAM_LEN           160         /* max length of the ?param=value section        */
+#define MAX_PARAM               10          /* max number of parameter/value pairs           */
 
-#define MAX_TOKEN_LEN           80          /* max length of one Get-token */
+typedef struct {                            /* structure to point to one param/value pair    */
+    uint8_t p_ofs;                          /* offset of the param string                    */
+    uint8_t v_ofs;                          /* offset of the value string                    */
+} ParamValuePairT;
+
+
+static uint8_t ParseParams(char *buf, u16_t buflen, char* paramstr, ParamValuePairT *pv )
+{
+    char *src;
+    DEBUG_PUTS("Params:");
+    src=buf;
+    for(uint32_t i=0; i < buflen; i++ )
+        DEBUG_PUTC(*(src++));
+    DEBUG_PUTC('\n');
+}
+
 /**
   * @brief serve tcp connection  
   * @param conn: pointer on connection structure 
@@ -324,8 +342,10 @@ static void http_server_serve(struct netconn *conn)
   char *dest, *src;
   u16_t buflen;
   uint32_t i;
+  uint32_t num_params;
   char token[MAX_TOKEN_LEN+1];
-  
+  char params[MAX_PARAM_LEN];
+  ParamValuePairT pv[MAX_PARAM];
   
   /* Read the data from the port, blocking if nothing yet there. 
    We assume the request (the part we care about) is in one netbuf */
@@ -336,15 +356,21 @@ static void http_server_serve(struct netconn *conn)
     if (netconn_err(conn) == ERR_OK) 
     {
       netbuf_data(inbuf, (void**)&buf, &buflen);
+
       /* Handle GET command */
       if ( (buflen >=4) && (strncmp(buf, "GET ", 4) == 0)) {
         /* extract the first token behind "GET " */
         src = buf+4; dest = token;
         buflen -= 4; i = 0;
-        while ( i < MAX_TOKEN_LEN && i < buflen && *src != ' ' ) { 
+        while ( i < MAX_TOKEN_LEN && i < buflen && *src != ' ' && *src != '?' ) { 
             *(dest++) = *(src++);
             i++;
         }
+        if ( *src == '?' ) 
+            num_params = ParseParams(src+1, buflen - i - 1, params, pv );
+        else
+            num_params = 0;
+
         *dest= '\0';
         /* Report when token is truncated */
         if ( i >= MAX_TOKEN_LEN ) DEBUG_PUTS("http_server: token too long, truncated");
