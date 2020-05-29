@@ -285,6 +285,12 @@ static void HandleGet ( struct netconn *conn, char *buf)
        // DynWebPage(conn);
        return;
     }
+    else if ( CHECK("/settings_cm7.html") ) {
+       /* Load dynamic page */
+       HtmlPage(conn, 2);
+       // DynWebPage(conn);
+       return;
+    }
     
     /* If requested file is one of the dynamically created ones, then create it */
     for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
@@ -531,7 +537,36 @@ void HtmlTaskList(struct netconn *conn, void *arg)
         ret = MSGD_WaitForTasklistLine();
     }
 }
-void HtmlSettingsCM7    ( struct netconn *conn, void *arg) {}
+
+#define ONLY_CHNG_JS    "/js/only_chgd.js"
+static char setting_row[] =
+" <tr><td><label for=\"%s\">%s:</label>"\
+"</td><td><input type=\"text\" value =\"%s\" name=\"%s\" onchange=\"add(this)\">" \
+"</td></tr>";
+#define FORMAT_LINE(result,maxlen,lbl,tag,data) snprintf(result, maxlen, setting_row, tag, lbl, data, lbl)
+#define SETTING_LEN 160
+
+static void HtmlOneSetting(struct netconn *conn, const char *label, const char *fortag, const char *data)
+{
+    portCHAR line[SETTING_LEN];
+    FORMAT_LINE(line, SETTING_LEN, label, fortag, data);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+}
+
+
+const char form_prefix[]="<form onSubmit=\"before_submit()\"><table>";
+const char form_postfix[]="</table><br><input type=\"submit\" value=\"Submit\"></form>";
+
+
+void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
+{
+    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
+    HtmlStaticFile(conn, ONLY_CHNG_JS );
+    HtmlOneSetting(conn, "Vorname", "vn", "Rainer");    
+    HtmlOneSetting(conn, "Name",    "nn", "Booh");    
+    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
+}
+
 void HtmlSettingsCM4    ( struct netconn *conn, void *arg) {}
 
 
