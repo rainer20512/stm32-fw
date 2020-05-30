@@ -133,6 +133,7 @@ void     Config_Init  (void);
 void     Config_Dump  (void);
 bool     Config_SetVal(uint8_t idx, uint8_t newval);
 uint8_t  Config_GetVal(uint8_t idx);
+bool     Config_GetValMinMax(uint8_t idx, EE_LimitsT *ret );
 uint32_t Config_GetCnt(void);
 
 

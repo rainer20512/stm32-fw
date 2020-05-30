@@ -30,9 +30,10 @@
 /*
  * different types of data transfer 
  */
-#define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core */
-#define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core */
-#define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7*/
+#define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core                    */
+#define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core   */
+#define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7         */
+#define MSGTYPE_SETTINGS_CM7                    4   /* Get one persistent settings element for CM4 from CM7 */
 
 
 /* 
@@ -56,6 +57,14 @@ typedef union {
         char buffer[TYPE3_BUFLEN];    /* Return buffer for the actual task list line */
 } MsgTaskItemU;                       /* List is finished, when buffer == ""         */ 
 
+typedef struct {
+    uint8_t     bIsValid;
+    uint8_t     val;
+    uint8_t     min;
+    uint8_t     max;
+    const char *help;
+} MSgSettingItemT;
+
 /*
  * Direct message buffer: consists of constant ID, msg type identifier,
  * sub identifiert für that id (if needed) and a
@@ -69,6 +78,7 @@ typedef struct {
   union {
     MsgRegisterDeviceT msg1;  
     MsgTaskItemU       msg3;
+    MSgSettingItemT    msg4;
   }; 
 } AMPDctBuf_t;
 
@@ -83,13 +93,15 @@ typedef struct {
 #if defined ( CORE_CM4 )
     typedef AMPDctBuf_t *       AMPDctBufPtr_t;
     extern  AMPDctBufPtr_t      AMP_DctBuf_Ptr;
-    void cm4_msg_direct_received(void);
-    void MSGD_DoRemoteRegistration(void *dev);
+    void    cm4_msg_direct_received(void);
+    void    MSGD_DoRemoteRegistration(void *dev);
     int32_t MSGD_WaitForRemoteRegistration(void);
-    void MSGD_DoCheckUniqueRemote(void *dev);
-    bool MSGD_WaitForCheckUniqueRemote(void);
-    void MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
-    char *MSGD_WaitForTasklistLine(void);
+    void    MSGD_DoCheckUniqueRemote(void *dev);
+    bool    MSGD_WaitForCheckUniqueRemote(void);
+    void    MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
+    char*   MSGD_WaitForTasklistLine(void);
+    void    MSGD_GetSettingsLine(bool bInitCall);
+    MSgSettingItemT *MSGD_WaitForSettingsLine(void);
 #endif
 
 

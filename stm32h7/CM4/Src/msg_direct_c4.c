@@ -1,10 +1,10 @@
 /*
  ******************************************************************************
- * @file    msg_direct_c7.c 
+ * @file    msg_direct_c4.c 
  * @author  rainer
  *
  * @brief  direct interprocess communication w/o RTOS on STM32H745 
- *         CM7 part
+ *         CM4 part
  *         
  ******************************************************************************
  */
@@ -46,6 +46,7 @@ void cm4_msg_direct_received(void)
         case  MSGTYPE_REGISTER_DEVICE:
         case MSGTYPE_CHKUNIQUE_DEVICE:
         case MSGTYPE_TASKLIST_CM7:
+        case MSGTYPE_SETTINGS_CM7:
             /* All the previous will get their results by polling */
             break;
         default:
@@ -141,3 +142,29 @@ char *MSGD_WaitForTasklistLine(void)
     return  *(AMP_DctBuf_Ptr->msg3.buffer) == '\0' ? NULL : AMP_DctBuf_Ptr->msg3.buffer;
 }
 
+/******************************************************************************
+ * CM4 Stub for Settings list from CM7
+ *****************************************************************************/
+void MSGD_GetSettingsLine(bool bInitCall)
+{
+    if ( bInitCall ) {
+        AMP_DctBuf_Ptr->msg_sub_id = ACTIONID_INIT;
+    }
+
+    AMP_DctBuf_Ptr->msg_id      = MSGTYPE_SETTINGS_CM7;
+    AMP_DctBuf_Ptr->msg_status  = MSGSTATUS_CM4_TO_CM7_ACTIVE;
+    Ipc_CM4_SendDirect();
+}
+
+MSgSettingItemT *MSGD_WaitForSettingsLine(void)
+{
+    uint32_t tickstart = HAL_GetTick();
+    while ( AMP_DctBuf_Ptr->msg_status  != MSGSTATUS_CM7_TO_CM4_DONE ) {
+    /* Check for the Timeout */
+        if ((HAL_GetTick() - tickstart) > DIRECTMSG_WAIT_TIMEOUT) {
+            DEBUG_PUTS("DirectMessage Wait #4 timed out!");
+            return 0;
+        }
+    }
+    return  &AMP_DctBuf_Ptr->msg4;
+}

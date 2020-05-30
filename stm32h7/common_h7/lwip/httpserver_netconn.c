@@ -76,10 +76,10 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg);
  * @note: Home page has to be the first entry -> see HOME_PAGE_IDX
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
-    { "STM32H745 WebServer", "Startseite",   "/",                   0, NULL,              PDstatic,  .FileName = "/home.html" },
-    { "Task List",           "Tasklist",     "tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList },
-    { "Settings CM7",        "Settings CM7", "settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7 },
-    { "Settings CM4",        "Settings CM4", "settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4 },
+    { "STM32H745 WebServer", "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
+    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList },
+    { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7 },
+    { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4 },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -279,6 +279,7 @@ static void HandleGet ( struct netconn *conn, char *buf)
 {
     DEBUG_PRINTF("HandleGet:%s:\n", buf);
 
+#if 0 
     if ( CHECK("/tasks.html") ) {
        /* Load dynamic page */
        HtmlPage(conn, 1);
@@ -291,7 +292,7 @@ static void HandleGet ( struct netconn *conn, char *buf)
        // DynWebPage(conn);
        return;
     }
-    
+#endif    
     /* If requested file is one of the dynamically created ones, then create it */
     for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
         if ( CHECK(WebPages[i].HTMLPageName) ) {
@@ -539,35 +540,120 @@ void HtmlTaskList(struct netconn *conn, void *arg)
 }
 
 #define ONLY_CHNG_JS    "/js/only_chgd.js"
-static char setting_row[] =
+#define SETTING_LEN 160
+static char text_setting_row[] =
 " <tr><td><label for=\"%s\">%s:</label>"\
 "</td><td><input type=\"text\" value =\"%s\" name=\"%s\" onchange=\"add(this)\">" \
-"</td></tr>";
-#define FORMAT_LINE(result,maxlen,lbl,tag,data) snprintf(result, maxlen, setting_row, tag, lbl, data, lbl)
-#define SETTING_LEN 160
+"</td></tr>\n";
+#define FORMAT_TEXTLINE(result,maxlen,lbl,tag,data) snprintf(result, maxlen, text_setting_row, tag, lbl, data, tag)
 
-static void HtmlOneSetting(struct netconn *conn, const char *label, const char *fortag, const char *data)
+static void HtmlOneTextSetting(struct netconn *conn, const char *label, const char *tag, const char *data)
 {
     portCHAR line[SETTING_LEN];
-    FORMAT_LINE(line, SETTING_LEN, label, fortag, data);
+    FORMAT_TEXTLINE(line, SETTING_LEN, label, tag, data);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+}
+static char row_prefix[] = 
+    "<tr><td><label>%s:</td><td>";
+static char bool_setting_rowyn[] =
+    "<input type=\"radio\" value=%s id=\"%s\" %s name=\"%s\" onchange=\"add(this)\"><label for=\"%s\">%s</label>";
+static char row_postfix[] = 
+    "</td></label></tr>\n";
+#define FORMAT_BOOLPREFIX(result,maxlen,tag)                  snprintf(result, maxlen, row_prefix, tag)
+#define FORMAT_BOOLLINE1(result,maxlen,fmt,tag,data,truetxt)  snprintf(result, maxlen, fmt, "1", "1", data==1?"checked":"", tag, "1", truetxt)
+#define FORMAT_BOOLLINE0(result,maxlen,fmt,tag,data,falsetxt) snprintf(result, maxlen, fmt, "0", "0", data==0?"checked":"", tag, "0", falsetxt)
+static void HtmlOneBoolSetting(struct netconn *conn, const char *label, const char *tag, uint8_t data, const char *truetxt, const char *falsetxt)
+{
+    portCHAR line[SETTING_LEN];
+  
+    FORMAT_BOOLPREFIX(line, SETTING_LEN, label);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    FORMAT_BOOLLINE1(line, SETTING_LEN, bool_setting_rowyn, tag, data, truetxt);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    FORMAT_BOOLLINE0(line, SETTING_LEN, bool_setting_rowyn, tag, data, falsetxt);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    netconn_write(conn, row_postfix, strlen(row_postfix), NETCONN_NOCOPY );
+}
+
+static char decimal_setting_lbl[] =
+"<tr><td><label for=\"%s\">%s(%d..%d) :</label></td>";
+static char decimal_setting_val[] =
+"<td><input type=\"number\" value =%d name=\"%s\" min=%d max=%d onchange=\"add(this)\"></td></tr>\n";
+#define FORMAT_DECLBL(result,maxlen,lbl,tag,minval,maxval)  snprintf(result, maxlen, decimal_setting_lbl, tag, lbl, minval, maxval)
+#define FORMAT_DECVAL(result,maxlen,tag,val,minval,maxval)  snprintf(result, maxlen, decimal_setting_val, val, tag, minval, maxval)
+
+static void HtmlOneDecimalSetting(struct netconn *conn, const char *label, const char *tag, uint32_t value, uint32_t minval, uint32_t maxval)
+{
+    portCHAR line[SETTING_LEN];
+  
+    FORMAT_DECLBL(line, SETTING_LEN, label, tag, minval, maxval);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    FORMAT_DECVAL(line, SETTING_LEN, tag, value, minval, maxval);
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
 }
 
+static char hex_setting_lbl[] =
+"<tr><td><label for=\"%s\">%s(%X..%X) :</label></td>";
+static char hex_setting_val[] =
+"<td><input pattern=\"[A-Fa-f0-9]*\" value =\"%x\" name=\"%s\" onchange=\"add(this)\"></td></tr>\n";
+#define FORMAT_HEXLBL(result,maxlen,lbl,tag,minval,maxval)  snprintf(result, maxlen, hex_setting_lbl, tag, lbl, minval, maxval)
+#define FORMAT_HEXVAL(result,maxlen,tag,val,minval,maxval)  snprintf(result, maxlen, hex_setting_val, val, tag)
 
-const char form_prefix[]="<form onSubmit=\"before_submit()\"><table>";
-const char form_postfix[]="</table><br><input type=\"submit\" value=\"Submit\"></form>";
+static void HtmlOneHexSetting(struct netconn *conn, const char *label, const char *tag, uint32_t value, uint32_t minval, uint32_t maxval)
+{
+    portCHAR line[SETTING_LEN];
+  
+    FORMAT_HEXLBL(line, SETTING_LEN, label, tag, minval, maxval);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    FORMAT_HEXVAL(line, SETTING_LEN, tag, value, minval, maxval);
+    netconn_write(conn, line, strlen(line), NETCONN_COPY);
+}
 
+const char cm7_header[]     ="<p>Core CM7 Settings</p>";
+const char cm4_header[]     ="<p>Core CM4 Settings</p>";
+const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
+const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
+
+void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
+{
+    /* Check for boolean value */
+    if ( setting->min == 0 && setting->max == 1 ) {
+        HtmlOneBoolSetting(conn, setting->help, "tt", setting->val, "Yes", "No");
+    } else {
+        HtmlOneDecimalSetting(conn, setting->help, "dn", setting->val, setting->min, setting->max );
+    }
+}
 
 void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
 {
+    netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
     HtmlStaticFile(conn, ONLY_CHNG_JS );
-    HtmlOneSetting(conn, "Vorname", "vn", "Rainer");    
-    HtmlOneSetting(conn, "Name",    "nn", "Booh");    
+    HtmlOneTextSetting(conn, "Vorname", "vn", "Rainer");    
+    HtmlOneBoolSetting(conn, "Name",    "nn", 1, "Yes", "No");    
+    HtmlOneBoolSetting(conn, "Keks",    "xn", 0, "On", "Off"); 
+    HtmlOneDecimalSetting(conn,"Decval", "dn", 24,0,255);   
+    HtmlOneHexSetting(conn,"Hexval", "dx", 511,0,0xffff);   
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
 
-void HtmlSettingsCM4    ( struct netconn *conn, void *arg) {}
+void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
+{
+    MSgSettingItemT *ret;
+    /* remote settings */
+    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
+    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
+    HtmlStaticFile(conn, ONLY_CHNG_JS );
+
+    MSGD_GetSettingsLine(true);
+    ret = MSGD_WaitForSettingsLine();
+    while ( ret->bIsValid ) {
+        HtmlOneSetting( conn, ret );
+        MSGD_GetSettingsLine(false);
+        ret = MSGD_WaitForSettingsLine();
+    }
+    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
+}
 
 
 #if 0

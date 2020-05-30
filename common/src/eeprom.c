@@ -53,6 +53,8 @@ EE_ConfigT config;
 
 /* Exported functions --------------------------------------------------------*/
 
+
+
 void Config_Dump(void)
 {
    uint32_t i;
@@ -103,6 +105,28 @@ uint8_t Config_GetVal(uint8_t idx)
     else
         return *(config_raw+idx);
 }
+
+/******************************************************************************
+ * return a complete EEprom setting element, consisting of
+ * actual value
+ * minimum allowed value
+ * maximum allowed value
+ * helptext
+ * \note the "deflt" field of EE_LimitsT return var is abused to store the
+ *       actual value!
+ *****************************************************************************/
+bool Config_GetValMinMax(uint8_t idx, EE_LimitsT *ret )
+{
+    /* check validity of index */
+    if ( idx >= ee_element_num ) 
+        return false;
+    else {
+        *ret  = eelimits[idx];
+        ret->deflt = *(config_raw+idx);
+        return true;
+    }
+}
+
 
 uint32_t Config_GetCnt(void)
 {

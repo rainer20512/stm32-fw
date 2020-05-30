@@ -17,6 +17,7 @@
 
 #include "dev/hw_device.h"
 #include "task/minitask.h"
+#include "eeprom.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
@@ -31,7 +32,7 @@ bool    CheckUniqueRemote(const HW_DeviceType *dev);
 void Handle_Receive_1(void);
 void Handle_Receive_2(void);
 void Handle_Receive_3(void);
-
+void Handle_Receive_4(void);
 
 void CM7_handle_remote( uint32_t arg )
 {
@@ -53,6 +54,10 @@ void CM7_handle_remote( uint32_t arg )
     case  MSGTYPE_TASKLIST_CM7:
         /* return a CM/ task list dump line by line */
         Handle_Receive_3();
+        break;
+    case  MSGTYPE_SETTINGS_CM7:
+        /* return a CM/ task list dump line by line */
+        Handle_Receive_4();
         break;
     default:
         DEBUG_PRINTF("cm7_handle_remote: unknown msg_id %d\n", AMP_DirectBuffer.msg_id );
@@ -106,6 +111,29 @@ void Handle_Receive_3(void)
     }
     
     AMP_DirectBuffer.msg_sub_id = TaskIterateList ( AMP_DirectBuffer.msg_sub_id, AMP_DirectBuffer.msg3.buffer, TYPE3_BUFLEN, prefixstr );
+    AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
+    Ipc_CM7_SendDirect();
+}
+
+/******************************************************************************
+ * CM7 Handler for remote (CM7) Settings list
+ * @note  will be executed in interrupt context
+ *****************************************************************************/
+void Handle_Receive_4(void)
+{
+    EE_LimitsT eelt;
+    if ( AMP_DirectBuffer.msg_sub_id == ACTIONID_INIT ) {
+        /* Then Initialize Settings list generation */
+        AMP_DirectBuffer.msg_sub_id = 0;
+    }
+    AMP_DirectBuffer.msg4.bIsValid = Config_GetValMinMax(AMP_DirectBuffer.msg_sub_id, &eelt );
+    if (AMP_DirectBuffer.msg4.bIsValid) {
+        AMP_DirectBuffer.msg4.val  = eelt.deflt;
+        AMP_DirectBuffer.msg4.min  = eelt.min;
+        AMP_DirectBuffer.msg4.max  = eelt.max;
+        AMP_DirectBuffer.msg4.help = eelt.help;
+        AMP_DirectBuffer.msg_sub_id++;
+    }
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
     Ipc_CM7_SendDirect();
 }
