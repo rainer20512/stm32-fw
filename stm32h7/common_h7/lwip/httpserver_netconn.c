@@ -48,9 +48,27 @@ typedef struct {
     PageDetailE PageType;           /* Type of page */
     union {                             
         const char *FileName;       /* Static file to display                 */
-        PageDetail  DetailCB;       /* Function to fill in the page details   */
+        struct {
+            PageDetail  DetailCB;   /* Function to fill in the page details   */
+            PageDetail  SetterCB;   /* Function to handle input via GET       */
+        };
     };
 } OnePageT;
+
+#define MAX_TOKEN_LEN           80          /* max length of one Get-token (params excluded) */
+#define MAX_PARAM_LEN           160         /* max length of the ?param=value section        */
+#define MAX_PARAM               10          /* max number of parameter/value pairs           */
+
+typedef struct {                            /* structure to point to one param/value pair    */
+    uint8_t p_ofs;                          /* offset of the param string                    */
+    uint8_t v_ofs;                          /* offset of the value string                    */
+} ParamValuePairT;
+
+typedef struct {
+    char        paramstr[MAX_PARAM_LEN+1];  /* String to hold the whole parameter string     */
+    ParamValuePairT pv[MAX_PARAM];          /* Array to hold ptrs to PV-Pairs                */
+    uint32_t         num_params;            /* Actual number of valid PV-Pairs               */
+} HttpGetParamT;
 
 
 /* Private define ------------------------------------------------------------*/
@@ -61,6 +79,7 @@ typedef struct {
 #define HOME_PAGE_IDX   0           /* Index of home page in page list        */
 #define HTML_404        "/404.html" /* static page for 404                    */
 
+
 /* Private variables ---------------------------------------------------------*/
 u32_t TaskListPageHits = 0;
 
@@ -68,8 +87,9 @@ u32_t TaskListPageHits = 0;
 void HtmlHomePage       ( struct netconn *conn, void *arg); 
 void HtmlTaskList       ( struct netconn *conn, void *arg); 
 void HtmlSettingsCM7    ( struct netconn *conn, void *arg); 
+void HtmlSetCM7         ( struct netconn *conn, void *arg); 
 void HtmlSettingsCM4    ( struct netconn *conn, void *arg); 
-
+void HtmlSetCM4         ( struct netconn *conn, void *arg); 
 
 /**********************************************************************************************************************************
 /* Web pages file and menu structures
@@ -77,9 +97,9 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg);
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
     { "STM32H745 WebServer", "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
-    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList },
-    { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7 },
-    { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4 },
+    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList, .SetterCB = NULL },
+    { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7, .SetterCB = HtmlSetCM7 },
+    { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4, .SetterCB = HtmlSetCM4 },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -235,7 +255,7 @@ static void HtmlStaticFile(struct netconn *conn, const char *filename )
 /******************************************************************************
  * transfer WebPages[page_idx] via conn
  *****************************************************************************/
-static void HtmlPage(struct netconn *conn, uint32_t page_idx )
+static void HtmlPage(struct netconn *conn, uint32_t page_idx, HttpGetParamT *p )
 {
     static const char PageErr[] = "<br><br> No PageType implementation found<br>";
 
@@ -247,6 +267,9 @@ static void HtmlPage(struct netconn *conn, uint32_t page_idx )
             HtmlStaticFile(conn, WebPages[page_idx].FileName);
             break;
         case PDdynamic:
+            /* If we have parameters behind GET, first execute the Setter callback, if specfied */
+            if ( p->num_params > 0 && WebPages[page_idx].SetterCB ) WebPages[page_idx].SetterCB(NULL, (void *)p );
+            /* Thereafter actualize the dynamic page */
             if ( WebPages[page_idx].DetailCB ) WebPages[page_idx].DetailCB(conn, (void *)0 );
             break;
         default:
@@ -275,7 +298,7 @@ static int32_t IsStaticFile ( const char *item )
  * @param buf    - string BEHIND "GET ", null-terminated 
  * @param buflen - length of that strinf
  *****************************************************************************/
-static void HandleGet ( struct netconn *conn, char *buf)
+static void HandleGet ( struct netconn *conn, char *buf, HttpGetParamT *p )
 {
     DEBUG_PRINTF("HandleGet:%s:\n", buf);
 
@@ -296,7 +319,7 @@ static void HandleGet ( struct netconn *conn, char *buf)
     /* If requested file is one of the dynamically created ones, then create it */
     for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
         if ( CHECK(WebPages[i].HTMLPageName) ) {
-            HtmlPage(conn, i );
+            HtmlPage(conn, i, p );
             return;
         }
     }
@@ -309,31 +332,86 @@ static void HandleGet ( struct netconn *conn, char *buf)
 
     /* finally, check for index.html */
     if ( CHECK("/index.html") ) {
-        HtmlPage(conn, HOME_PAGE_IDX);
+        HtmlPage(conn, HOME_PAGE_IDX, p);
         return;
     } 
  
     /* If all failed, load Error page */
     HtmlStaticFile(conn, HTML_404); 
 }
-#define MAX_TOKEN_LEN           80          /* max length of one Get-token (params excluded) */
-#define MAX_PARAM_LEN           160         /* max length of the ?param=value section        */
-#define MAX_PARAM               10          /* max number of parameter/value pairs           */
 
-typedef struct {                            /* structure to point to one param/value pair    */
-    uint8_t p_ofs;                          /* offset of the param string                    */
-    uint8_t v_ofs;                          /* offset of the value string                    */
-} ParamValuePairT;
-
-
-static uint8_t ParseParams(char *buf, u16_t buflen, char* paramstr, ParamValuePairT *pv )
+static void ParseParams(char *buf, u16_t buflen, HttpGetParamT *p )
 {
     char *src;
-    DEBUG_PUTS("Params:");
-    src=buf;
-    for(uint32_t i=0; i < buflen; i++ )
-        DEBUG_PUTC(*(src++));
-    DEBUG_PUTC('\n');
+    char *dest;
+    char *next;
+    uint32_t i = 0;
+    uint32_t pcnt = 0;
+
+    /* Make sure, the parameter prefix is first sign */
+    if (*buf != '?' ) return;
+
+    /* skip first '?' */
+    buf++; buflen--;
+
+    /* assert we have params */
+    if ( buflen == 0 ) return;
+    
+    src  = buf;
+    dest = p->paramstr;
+    /* Copy the buffer from begin to first blank to "paramstr" and add terminating '\0' */
+    while ( i < MAX_PARAM_LEN && i < buflen && *src != ' ' ) { 
+        *(dest++) = *(src++);
+        i++;
+    }
+    *dest='\0';
+
+    /* Paramstr now contains parameter/value pairs in the format p1=v1&p2=v2... */
+    DEBUG_PRINTF("Params:%s:\n", p->paramstr);
+    
+    /* Walk thru paramstr and find all parameter value pairs ) */
+    src     = p->paramstr;
+    i       = 0;
+    pcnt    = 0;
+    
+    do {
+        /* Store offset of parameter name */
+        p->pv[pcnt].p_ofs = i;
+        /* find corresponding value by by scanning for '=' */
+        src++;i++;
+        while ( *src && *src != '=' ) { 
+            src++;i++;
+        }
+        /* '=' not found -> terminate parse */
+        if ( !(*src) ) break;
+
+        /* otherwise replace '=' with '\0' and store offset of value */
+        *(src)='\0';
+        src++;i++;
+
+        p->pv[pcnt].v_ofs = i;
+        pcnt++;
+
+        /* Find next parameter by scanning for & */ 
+        while ( *src && *src != '&' ) { 
+            src++;i++;
+        }
+
+        /* No more parameter found -> terminate parse */
+        if ( !(*src) ) break;
+
+        /* Otherwise replace '&' with '\0' and continue parsing */
+        *(src)='\0';
+        src++;i++;
+    } while (1);
+
+
+    for ( i=0; i < pcnt;i++ )
+        DEBUG_PRINTF("Param %d: P=%s, V=%s\n", i, p->paramstr+p->pv[i].p_ofs, p->paramstr+p->pv[i].v_ofs);
+
+    p->num_params =  pcnt;
+
+
 }
 
 /**
@@ -349,10 +427,10 @@ static void http_server_serve(struct netconn *conn)
   char *dest, *src;
   u16_t buflen;
   uint32_t i;
-  uint32_t num_params;
+  /* token will contail the parameter behind GET up to the first blank or '?' */
   char token[MAX_TOKEN_LEN+1];
-  char params[MAX_PARAM_LEN];
-  ParamValuePairT pv[MAX_PARAM];
+  /* params will contain the parameter string, ie. the part from first ? to next blank */
+  HttpGetParamT params;
   
   /* Read the data from the port, blocking if nothing yet there. 
    We assume the request (the part we care about) is in one netbuf */
@@ -373,15 +451,14 @@ static void http_server_serve(struct netconn *conn)
             *(dest++) = *(src++);
             i++;
         }
-        if ( *src == '?' ) 
-            num_params = ParseParams(src+1, buflen - i - 1, params, pv );
-        else
-            num_params = 0;
-
         *dest= '\0';
+
         /* Report when token is truncated */
         if ( i >= MAX_TOKEN_LEN ) DEBUG_PUTS("http_server: token too long, truncated");
-        HandleGet( conn, token);
+
+        /* Extract and parse all parameter/value pairs of HTML GET string */
+        ParseParams(src, buflen - i, &params );
+        HandleGet( conn, token, &params);
       }
     }
   }
@@ -595,17 +672,24 @@ static void HtmlOneDecimalSetting(struct netconn *conn, const char *label, const
 static char hex_setting_lbl[] =
 "<tr><td><label for=\"%s\">%s(%X..%X) :</label></td>";
 static char hex_setting_val[] =
-"<td><input pattern=\"[A-Fa-f0-9]*\" value =\"%x\" name=\"%s\" onchange=\"add(this)\"></td></tr>\n";
+"<td><input pattern=\"0x[A-Fa-f0-9]{1,%d}\" value =\"%s\" name=\"%s\" onchange=\"add(this)\"></td></tr>\n";
 #define FORMAT_HEXLBL(result,maxlen,lbl,tag,minval,maxval)  snprintf(result, maxlen, hex_setting_lbl, tag, lbl, minval, maxval)
-#define FORMAT_HEXVAL(result,maxlen,tag,val,minval,maxval)  snprintf(result, maxlen, hex_setting_val, val, tag)
+#define FORMAT_HEXVAL(result,maxlen,tag,strval,hexlen,minval,maxval)  snprintf(result, maxlen, hex_setting_val, hexlen, strval, tag)
 
-static void HtmlOneHexSetting(struct netconn *conn, const char *label, const char *tag, uint32_t value, uint32_t minval, uint32_t maxval)
+static void HtmlOneHexSetting(struct netconn *conn, const char *label, const char *tag, uint32_t value, uint32_t hexlen, uint32_t minval, uint32_t maxval)
 {
     portCHAR line[SETTING_LEN];
+    portCHAR strval[11];
+
+    /* Generate the format string for printing a hex number with hexlen digits */
+    snprintf(line,SETTING_LEN, "0x%%0%dx", hexlen);
+
+    /* Generate the hex string */
+    snprintf(strval, 11, line, value );
   
     FORMAT_HEXLBL(line, SETTING_LEN, label, tag, minval, maxval);
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
-    FORMAT_HEXVAL(line, SETTING_LEN, tag, value, minval, maxval);
+    FORMAT_HEXVAL(line, SETTING_LEN, tag, strval, hexlen, minval, maxval);
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
 }
 
@@ -613,18 +697,39 @@ const char cm7_header[]     ="<p>Core CM7 Settings</p>";
 const char cm4_header[]     ="<p>Core CM4 Settings</p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
-
+#define  TAG_PREFIX         "V"
+#include "eeprom.h"
 void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
 {
+    #define TAGLEN      6
+    char tag[TAGLEN];
+
+    /* Prepare the Tag. That is "V<x>", where <x> is the index of the setting element */
+    snprintf(tag, TAGLEN, TAG_PREFIX"%d", setting->idx);
+
     /* Check for boolean value */
-    if ( setting->min == 0 && setting->max == 1 ) {
-        HtmlOneBoolSetting(conn, setting->help, "tt", setting->val, "Yes", "No");
-    } else {
-        HtmlOneDecimalSetting(conn, setting->help, "dn", setting->val, setting->min, setting->max );
+    switch ( setting->type ) {
+    case EEType_OnOff:
+        HtmlOneBoolSetting(conn, setting->help, tag, setting->val, "On", "Off");
+        break;
+    case EEType_YesNo:
+        HtmlOneBoolSetting(conn, setting->help, tag, setting->val, "Yes", "No");
+        break;
+    case EEType_Uint8_Dec:
+        HtmlOneDecimalSetting(conn, setting->help, tag, setting->val, setting->min, setting->max );
+        break;
+    case EEType_Uint8_Hex:
+        HtmlOneHexSetting(conn, setting->help, tag, setting->val, 2, setting->min, setting->max );
+        break;
+    case EEType_Uint16_Hex:
+        HtmlOneHexSetting(conn, setting->help, tag, setting->val, 4, setting->min, setting->max );
+        break;
+    default:
+        DEBUG_PRINTF("HTML rendering for setting type %d not implemented\n", setting->type);
     }
 }
 
-void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
+void HtmlSettingsTEST    ( struct netconn *conn, void *arg) 
 {
     netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
@@ -633,11 +738,13 @@ void HtmlSettingsCM7    ( struct netconn *conn, void *arg)
     HtmlOneBoolSetting(conn, "Name",    "nn", 1, "Yes", "No");    
     HtmlOneBoolSetting(conn, "Keks",    "xn", 0, "On", "Off"); 
     HtmlOneDecimalSetting(conn,"Decval", "dn", 24,0,255);   
-    HtmlOneHexSetting(conn,"Hexval", "dx", 511,0,0xffff);   
+    HtmlOneHexSetting(conn,"Hexval2", "dx", 0xab, 2, 0,0xff);   
+    HtmlOneHexSetting(conn,"Hexval4", "dy", 0xabcd, 4, 0,0xffff);   
+    HtmlOneHexSetting(conn,"Hexval8", "dz", 0xdeadbeef, 8, 0,0xffffffff);   
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
 
-void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
+void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
 {
     MSgSettingItemT *ret;
     /* remote settings */
@@ -653,6 +760,118 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg)
         ret = MSGD_WaitForSettingsLine();
     }
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
+}
+void HtmlSetCM7         ( struct netconn *conn, void *arg)
+{
+    HttpGetParamT *p = (HttpGetParamT *)arg;
+}
+
+static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
+{
+    ret->bIsValid   = true;
+    ret->idx        = idx;
+    ret->help       = eelimits[idx].help;
+    ret->max        = eelimits[idx].max;
+    ret->min        = eelimits[idx].min;
+    ret->type       = eelimits[idx].type;
+    ret->val        = Config_GetVal(idx);
+}
+
+void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
+{
+    MSgSettingItemT ret;
+    /* remote settings */
+    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
+    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
+    HtmlStaticFile(conn, ONLY_CHNG_JS );
+    
+    uint32_t num = Config_GetCnt();
+    for ( uint32_t i = 0; i < num; i++ ) {
+        GetLocalSettings(i, &ret);
+        HtmlOneSetting( conn, &ret );
+    }
+    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
+}
+
+/******************************************************************************
+ * extract the Tag index from the Tagstring. The Tagstring has the format
+ * TAG_PREFIX<idx>. So first ensure the tag prefixx is in front, then decode
+ * the index and return as number
+ * -1 is returned in case of failure ( tag string or index not found )
+ *****************************************************************************/
+int32_t GetTagIndex( char *tagstr )
+{
+    size_t len = strlen(TAG_PREFIX);
+    char *uuu;
+    /* check for TAG_Prefix */
+    if ( strncmp(TAG_PREFIX, tagstr, len ) != 0 ) return -1;
+
+    /* Skip prefix and decode number */
+    tagstr += len;
+    int32_t ret = strtol(tagstr, &uuu, 10 );
+
+    /* if uuu does not point to the end of string, there were non numeric characters */
+    if (*uuu) return -1;
+
+    return ret;
+}
+
+/******************************************************************************
+ * extract the value from valstr. Valstr can be numeric ( decimal or hex )
+ * alphanumeric or boolean, see EETypeT in eeprom.h
+ * decoded value is returned in ret
+ * function returns -1, if a conversion error occured
+ *****************************************************************************/
+int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
+{
+    uint32_t val;
+    char *uuu;
+    /* decode all kinds of decimal values */
+    switch ( type ) {
+    case EEType_OnOff:
+    case EEType_YesNo:
+    case EEType_Uint8_Dec:
+    case EEType_Uint16_Dec:
+    case EEType_Uint32_Dec:
+        *ret = (uint32_t)strtol(valstr, &uuu, 10 );
+        /* if there are additional characters, the input is not numeric */
+        if ( *uuu ) return -1;
+
+        /* no further range checking here !*/
+        break;
+    case EEType_Uint8_Hex:
+    case EEType_Uint16_Hex:
+    case EEType_Uint32_Hex:
+        /* Check for 0x at the beginning, if so skip these */
+        if ( *valstr == '0' && ( *(valstr+1)=='x' || *(valstr+1)=='X' ) ) valstr += 2;
+        /* Decode hex */
+        *ret = (uint32_t)strtol(valstr, &uuu, 16 );
+        /* if there are additional characters, the input is not numeric */
+        if ( *uuu ) return -1;
+    default:
+        DEBUG_PRINTF("HTML extract value for type %d not implemented\n", type);
+    }
+
+    return 0;
+}
+
+void HtmlSetCM4         ( struct netconn *conn, void *arg)
+{
+    HttpGetParamT *p = (HttpGetParamT *)arg;
+    uint32_t idx;
+    uint32_t val;
+
+    for ( uint32_t i = 0; i < p->num_params; i++ ) {
+        idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
+        if ( idx > Config_GetCnt() ) {
+            DEBUG_PRINTF("SetCM4: Index %d out of bounds\n", idx  );
+            continue;
+        }
+        if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
+            if ( !Config_SetVal((uint8_t) idx, (uint8_t) val) )
+                DEBUG_PRINTF("SetCM4: Failed to set config[%d] to %d\n", idx,val  );
+        }            
+    }
 }
 
 

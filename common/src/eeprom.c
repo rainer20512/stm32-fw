@@ -43,7 +43,7 @@ static __IO uint32_t ErasingOnGoing = 0; /* flag for "erase operation in progres
     bool eeprom_write_config_byte (uint8_t cfg_idx, uint8_t val);
     bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval);
 #else
-    #define eeprom_update_config_byte(a,b)  false
+    #define eeprom_update_config_byte(a,b)  true
 #endif
 
 /* Private functions ---------------------------------------------------------*/

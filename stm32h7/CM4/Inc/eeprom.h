@@ -22,6 +22,21 @@
 #endif
 
 /******************************************************************************
+ * Allowed types of persistent config parameters
+ *****************************************************************************/
+typedef enum {
+    EEType_OnOff    = 0,
+    EEType_YesNo,
+    EEType_Uint8_Dec,
+    EEType_Uint8_Hex,
+    EEType_Uint16_Dec,
+    EEType_Uint16_Hex,
+    EEType_Uint32_Dec,
+    EEType_Uint32_Hex,
+    EEType_String,
+}EETypeT;
+
+/******************************************************************************
  * A type to specify default value and minimal/maximal allowed value for an
  * eeprom item
  *****************************************************************************/
@@ -29,6 +44,7 @@ typedef struct EELT {
   uint8_t deflt;
   uint8_t min;
   uint8_t max;
+  uint8_t type;
   const char *help;
 } EE_LimitsT;
 
@@ -38,47 +54,47 @@ extern const EE_LimitsT eelimits[];
  * Define the limits for every single eeprom item
  *****************************************************************************/
     #define EELIMITS01 \
-    /* 00 */ {                 0,   0,   1, "Reset System\nat next hh:mm:10" },                        \
-    /* 01 */ {                 5,   1,  30, "Radio Timeout [min]" },                                        
+    /* 00 */ {                 0,   0,   1, EEType_YesNo,       "Reset System\nat next hh:mm:10" },                        \
+    /* 01 */ {                 5,   1,  30, EEType_Uint8_Dec,   "Radio Timeout [min]" },                                        
 #if USE_DS18X20 > 0
     #define EELIMITS02  EELIMITS01 \
-    /* 02 */ {                30,  10, 255, "Interval [s] of\ntemperature measurement" },               
+    /* 02 */ {                30,  10, 255, EEType_Uint8_Dec,   "Interval [s] of\ntemperature measurement" },               
 #else
     #define EELIMITS02  EELIMITS01 \
-    /* 02 */ {                 0,   0, 255, "Unused 02" },                                             
+    /* 02 */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 02" },                                             
 #endif
     #define EELIMITS03  EELIMITS02 \
-    /* 03 */ {                 1,   0,   1, "FSK-Mode (0=off, 1=On)" },                                \
-    /* 04 */ {                 5,   1,  60, "Send data interval [min]" },                              \
-    /* 05 */ {                 1,   0,   1, "Dump detailled\nTimestamps (0=off, 1=On)" },              \
-    /* 06 */ {                 1,   1,   9, "Debug-Level, reqires\nDEBUG_MODE > 0" },                  \
-    /* 07 */ {                 9,   0, 255, "Correction value to correct\nlocal pressure to MSL" },    \
-    /* 08 */ {                 1,   0,  31, "Backlight intensity" },                                   \
-    /* 09 */ {                 1,   0,   3, "LCD display scheme to use" },                             \
-    /* 0a */ {                 5,   1,  30, "Backlight on time [s]" },                                 \
-    /* 0b */ {                 0,   0, 255, "LCD on time [s]" },                                       \
-    /* 0c */ {               125,  80, 160, "threshold for battery\nwarning [unit 0.02V]" },           \
-    /* 0d */ {               115,  80, 160, "threshold for battery\nLOW [unit 0.02V]" },                
+    /* 03 */ {                 1,   0,   1, EEType_OnOff,       "FSK-Mode (0=off, 1=On)" },                                \
+    /* 04 */ {                 5,   1,  60, EEType_Uint8_Dec,   "Send data interval [min]" },                              \
+    /* 05 */ {                 1,   0,   1, EEType_OnOff,       "Dump detailled\nTimestamps (0=off, 1=On)" },              \
+    /* 06 */ {                 1,   1,   9, EEType_Uint8_Dec,   "Debug-Level, reqires\nDEBUG_MODE > 0" },                  \
+    /* 07 */ {                 9,   0, 255, EEType_Uint8_Dec,   "Correction value to correct\nlocal pressure to MSL" },    \
+    /* 08 */ {                 1,   0,  31, EEType_Uint8_Dec,   "Backlight intensity" },                                   \
+    /* 09 */ {                 1,   0,   3, EEType_Uint8_Dec,   "LCD display scheme to use" },                             \
+    /* 0a */ {                 5,   1,  30, EEType_Uint8_Dec,   "Backlight on time [s]" },                                 \
+    /* 0b */ {                 0,   0, 255, EEType_Uint8_Dec,   "LCD on time [s]" },                                       \
+    /* 0c */ {               125,  80, 160, EEType_Uint8_Dec,   "threshold for battery\nwarning [unit 0.02V]" },           \
+    /* 0d */ {               115,  80, 160, EEType_Uint8_Dec,   "threshold for battery\nLOW [unit 0.02V]" },                
     #define EELIMITS0E EELIMITS03 \
-    /* 0e */ {                 0,   0, 255, "Unused 0e" },                                             \
-    /* 0f */ {                 0,   0, 255, "Unused 0f" },                                             
+    /* 0e */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 0e" },                                             \
+    /* 0f */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 0f" },                                             
     #define EELIMITS10 EELIMITS0E \
-    /* 10 */ {                28,   1,  28, "Device Address" },                                        \
-    /* 11 */ {                01,  00, 255, "Security Key[0]" },                                       \
-    /* 12 */ {              0x23,  00, 255, "Security Key[1]" },                                       \
-    /* 13 */ {              0x45,  00, 255, "Security Key[2]" },                                       \
-    /* 14 */ {              0x67,  00, 255, "Security Key[3]" },                                       \
-    /* 15 */ {              0x89,  00, 255, "Security Key[4]" },                                       \
-    /* 16 */ {              0xab,  00, 255, "Security Key[5]" },                                       \
-    /* 17 */ {              0xcd,  00, 255, "Security Key[6]" },                                       \
-    /* 18 */ {              0xef,  00, 255, "Security Key[7]" },                                       \
-    /* 19 */ {                 0,   0,   1, "Enable Periodic Dump\nof values to ext. EEPROM" },        \
-    /* 1a */ {                 1,   0,   1, "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
-    /* 1b */ {                 1,   0,   1, "Allow StopMode\n(0=no, 1=yes)" },                         \
-    /* 1c */ { DEFAULT_STOP_MODE,   0,   2, "StopMode to enter on stop" },                             \
-    /* 1d */ {                 0 ,  0,  15, "Unused 1d" },                                             \
-    /* 1e */ {                 0,   0, 255, "Unused 1e" },                                             \
-    /* 1f */ {                 0,   0, 255, "Unused 1f" },                                             \
+    /* 10 */ {                28,   1,  28, EEType_Uint8_Hex,   "Device Address" },                                        \
+    /* 11 */ {                01,  00, 255, EEType_Uint8_Hex,   "Security Key[0]" },                                       \
+    /* 12 */ {              0x23,  00, 255, EEType_Uint8_Hex,   "Security Key[1]" },                                       \
+    /* 13 */ {              0x45,  00, 255, EEType_Uint8_Hex,   "Security Key[2]" },                                       \
+    /* 14 */ {              0x67,  00, 255, EEType_Uint8_Hex,   "Security Key[3]" },                                       \
+    /* 15 */ {              0x89,  00, 255, EEType_Uint8_Hex,   "Security Key[4]" },                                       \
+    /* 16 */ {              0xab,  00, 255, EEType_Uint8_Hex,   "Security Key[5]" },                                       \
+    /* 17 */ {              0xcd,  00, 255, EEType_Uint8_Hex,   "Security Key[6]" },                                       \
+    /* 18 */ {              0xef,  00, 255, EEType_Uint8_Hex,   "Security Key[7]" },                                       \
+    /* 19 */ {                 0,   0,   1, EEType_YesNo,       "Enable Periodic Dump\nof values to ext. EEPROM" },        \
+    /* 1a */ {                 1,   0,   1, EEType_YesNo,       "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
+    /* 1b */ {                 1,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
+    /* 1c */ { DEFAULT_STOP_MODE,   0,   2, EEType_Uint8_Dec,   "StopMode to enter on stop" },                             \
+    /* 1d */ {                 0 ,  0,  15, EEType_Uint8_Dec,   "Unused 1d" },                                             \
+    /* 1e */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1e" },                                             \
+    /* 1f */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1f" },                                             \
 
 #define EELIMITS { EELIMITS10 }
 

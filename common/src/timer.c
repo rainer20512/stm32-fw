@@ -952,58 +952,42 @@ void handle_sectimer_periodic(void)
 
 void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD)
 {
-    uint8_t prescale_reg;
     uint8_t prescale_val;
 
     if (num_of_ms < 1)
     {
         num_of_ms = 1;
-        prescale_reg = IWDG_PRESCALER_32;
         prescale_val = 1;
     }
     else if (num_of_ms <= 4096)
     {
-        prescale_reg = IWDG_PRESCALER_32;
         prescale_val = 1;
     }
     else if (num_of_ms <= 8192)
     {
-        prescale_reg = IWDG_PRESCALER_64;
         prescale_val = 2;
     }
     else if (num_of_ms <= 16384)
     {
-        prescale_reg = IWDG_PRESCALER_128;
         prescale_val = 4;
     }
     else if (num_of_ms <= 32768)
     {
-        prescale_reg = IWDG_PRESCALER_256;
         prescale_val = 8;
     }
     else
     {
         num_of_ms = 32768;
-        prescale_reg = IWDG_PRESCALER_256;
         prescale_val = 8;
     }
 
-#if 0
-    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-    while (IWDG_GetFlagStatus(IWDG_FLAG_PVU));
-    IWDG_SetPrescaler(prescale_reg);
-    while (IWDG_GetFlagStatus(IWDG_FLAG_RVU));
-    IWDG_SetReload(num_of_ms/prescale_val-1);
-    IWDG_Enable();
-#endif
-
-  myWD->KR = IWDG_KEY_WRITE_ACCESS_ENABLE;  /* Enable write     */
-  while ( myWD->SR & IWDG_SR_PVU );         /* Wait for PVU statusbit being reset */
-  myWD->PR = prescale_val;                  /* Prescaler as configured  */
-  while ( myWD->SR & IWDG_SR_RVU );         /* Wait for RVU statusbit being reset */
-  myWD->RLR = num_of_ms/prescale_val-1;      /* Write Reload register */
-  myWD->KR = IWDG_KEY_RELOAD;               
-  myWD->KR = IWDG_KEY_ENABLE;               /* Enable Watchdog  */
+    myWD->KR = IWDG_KEY_WRITE_ACCESS_ENABLE;  /* Enable write     */
+    while ( myWD->SR & IWDG_SR_PVU );         /* Wait for PVU statusbit being reset */
+    myWD->PR = prescale_val;                  /* Prescaler as configured  */
+    while ( myWD->SR & IWDG_SR_RVU );         /* Wait for RVU statusbit being reset */
+    myWD->RLR = num_of_ms/prescale_val-1;      /* Write Reload register */
+    myWD->KR = IWDG_KEY_RELOAD;               
+    myWD->KR = IWDG_KEY_ENABLE;               /* Enable Watchdog  */
 
 }
 

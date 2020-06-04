@@ -57,12 +57,14 @@ typedef union {
         char buffer[TYPE3_BUFLEN];    /* Return buffer for the actual task list line */
 } MsgTaskItemU;                       /* List is finished, when buffer == ""         */ 
 
-typedef struct {
-    uint8_t     bIsValid;
-    uint8_t     val;
-    uint8_t     min;
-    uint8_t     max;
-    const char *help;
+typedef struct {                      /* CM7 -> CM4: One persistent setting item    */  
+    uint8_t     bIsValid;             /* Will return true, if idx is index of valid setting item */
+    uint8_t     idx;                  /* Setting item that is/was queried           */
+    uint8_t     val;                  /* Actual setting value                       */  
+    uint8_t     min;                  /* minimum allowed value                      */  
+    uint8_t     max;                  /* maximum allowed value                      */
+    uint8_t     type;                 /* base type of setting item                  */
+    const char *help;                 /* ptr to help text in CM7 Flash area         */  
 } MSgSettingItemT;
 
 /*

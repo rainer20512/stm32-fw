@@ -455,9 +455,10 @@ static void DBG_n_spaces(uint32_t num )
 
 static void DBG_dump_one_exti(uint32_t domain, uint32_t idx)
 {
-  char namebuf[EXTI_NAMELEN+1];
+  char namebuf[EXTI_NAMELEN+1]; 
   uint32_t mask = 1 << ( idx & 0x1f );
 
+  UNUSED(domain);
   DBG_get_exti_line_name(idx, namebuf, EXTI_NAMELEN);
   DEBUG_PRINTF("%s",namebuf);
   if ( ( GET_IMR(domain,idx) | GET_EMR(domain,idx) )  & mask ) {

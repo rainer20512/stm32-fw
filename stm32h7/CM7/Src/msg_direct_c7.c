@@ -128,10 +128,12 @@ void Handle_Receive_4(void)
     }
     AMP_DirectBuffer.msg4.bIsValid = Config_GetValMinMax(AMP_DirectBuffer.msg_sub_id, &eelt );
     if (AMP_DirectBuffer.msg4.bIsValid) {
+        AMP_DirectBuffer.msg4.idx  = AMP_DirectBuffer.msg_sub_id;
         AMP_DirectBuffer.msg4.val  = eelt.deflt;
         AMP_DirectBuffer.msg4.min  = eelt.min;
         AMP_DirectBuffer.msg4.max  = eelt.max;
         AMP_DirectBuffer.msg4.help = eelt.help;
+        AMP_DirectBuffer.msg4.type = eelt.type;
         AMP_DirectBuffer.msg_sub_id++;
     }
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
