@@ -33,7 +33,8 @@
 #define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core                    */
 #define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core   */
 #define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7         */
-#define MSGTYPE_SETTINGS_CM7                    4   /* Get one persistent settings element for CM4 from CM7 */
+#define MSGTYPE_SETTINGS_GET_CM7                4   /* Get one persistent settings element for CM4 from CM7 */
+#define MSGTYPE_SETTINGS_SET_CM7                5   /* Set one persistent settings element of CM7 from CM4  */
 
 
 /* 
@@ -59,6 +60,7 @@ typedef union {
 
 typedef struct {                      /* CM7 -> CM4: One persistent setting item    */  
     uint8_t     bIsValid;             /* Will return true, if idx is index of valid setting item */
+    uint8_t     max_idx;              /* Will return the number of setting items    */
     uint8_t     idx;                  /* Setting item that is/was queried           */
     uint8_t     val;                  /* Actual setting value                       */  
     uint8_t     min;                  /* minimum allowed value                      */  
@@ -80,7 +82,7 @@ typedef struct {
   union {
     MsgRegisterDeviceT msg1;  
     MsgTaskItemU       msg3;
-    MSgSettingItemT    msg4;
+    MSgSettingItemT    msg4;            /* Used for Message Type 4 aund 5 */
   }; 
 } AMPDctBuf_t;
 
@@ -103,7 +105,9 @@ typedef struct {
     void    MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
     char*   MSGD_WaitForTasklistLine(void);
     void    MSGD_GetSettingsLine(bool bInitCall);
-    MSgSettingItemT *MSGD_WaitForSettingsLine(void);
+    MSgSettingItemT *MSGD_WaitForGetSettingsLine(void);
+    void MSGD_SetSettingsLine(uint8_t idx, uint8_t newval);
+    bool MSGD_WaitForSetSettingsLine(void);
 #endif
 
 

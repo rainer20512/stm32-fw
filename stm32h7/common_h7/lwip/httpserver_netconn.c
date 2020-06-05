@@ -753,42 +753,11 @@ void HtmlSettingsCM7    ( struct netconn *conn, void *arg)
     HtmlStaticFile(conn, ONLY_CHNG_JS );
 
     MSGD_GetSettingsLine(true);
-    ret = MSGD_WaitForSettingsLine();
+    ret = MSGD_WaitForGetSettingsLine();
     while ( ret->bIsValid ) {
         HtmlOneSetting( conn, ret );
         MSGD_GetSettingsLine(false);
-        ret = MSGD_WaitForSettingsLine();
-    }
-    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
-}
-void HtmlSetCM7         ( struct netconn *conn, void *arg)
-{
-    HttpGetParamT *p = (HttpGetParamT *)arg;
-}
-
-static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
-{
-    ret->bIsValid   = true;
-    ret->idx        = idx;
-    ret->help       = eelimits[idx].help;
-    ret->max        = eelimits[idx].max;
-    ret->min        = eelimits[idx].min;
-    ret->type       = eelimits[idx].type;
-    ret->val        = Config_GetVal(idx);
-}
-
-void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
-{
-    MSgSettingItemT ret;
-    /* remote settings */
-    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
-    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
-    HtmlStaticFile(conn, ONLY_CHNG_JS );
-    
-    uint32_t num = Config_GetCnt();
-    for ( uint32_t i = 0; i < num; i++ ) {
-        GetLocalSettings(i, &ret);
-        HtmlOneSetting( conn, &ret );
+        ret = MSGD_WaitForGetSettingsLine();
     }
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
@@ -848,12 +817,69 @@ int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
         *ret = (uint32_t)strtol(valstr, &uuu, 16 );
         /* if there are additional characters, the input is not numeric */
         if ( *uuu ) return -1;
+        break;
     default:
         DEBUG_PRINTF("HTML extract value for type %d not implemented\n", type);
     }
 
     return 0;
 }
+
+void HtmlSetCM7         ( struct netconn *conn, void *arg)
+{
+    HttpGetParamT *p = (HttpGetParamT *)arg;
+    uint32_t idx;
+    uint32_t val;
+    uint32_t num_settings;
+    MSgSettingItemT *ret;
+
+    /* Read first element of CM7 settings to get the number of setting items */
+    MSGD_GetSettingsLine(true);
+    ret = MSGD_WaitForGetSettingsLine();
+    num_settings = ret->max_idx;
+
+    /* Iterate thru all PV-pairs */
+    for ( uint32_t i = 0; i < p->num_params; i++ ) {
+        idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
+        if ( idx > num_settings ) {
+            DEBUG_PRINTF("SetCM7: Index %d out of bounds\n", idx  );
+            continue;
+        }
+        if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
+            MSGD_SetSettingsLine((uint8_t) idx, (uint8_t) val);
+            if ( !MSGD_WaitForSetSettingsLine() )
+                DEBUG_PRINTF("SetCM7: Failede to set config[%d] to %d\n", idx,val  );
+        }            
+    }
+}
+
+static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
+{
+    ret->bIsValid   = true;
+    ret->idx        = idx;
+    ret->help       = eelimits[idx].help;
+    ret->max        = eelimits[idx].max;
+    ret->min        = eelimits[idx].min;
+    ret->type       = eelimits[idx].type;
+    ret->val        = Config_GetVal(idx);
+}
+
+void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
+{
+    MSgSettingItemT ret;
+    /* remote settings */
+    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
+    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
+    HtmlStaticFile(conn, ONLY_CHNG_JS );
+    
+    uint32_t num = Config_GetCnt();
+    for ( uint32_t i = 0; i < num; i++ ) {
+        GetLocalSettings(i, &ret);
+        HtmlOneSetting( conn, &ret );
+    }
+    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
+}
+
 
 void HtmlSetCM4         ( struct netconn *conn, void *arg)
 {
@@ -873,6 +899,7 @@ void HtmlSetCM4         ( struct netconn *conn, void *arg)
         }            
     }
 }
+
 
 
 #if 0

@@ -46,7 +46,8 @@ void cm4_msg_direct_received(void)
         case  MSGTYPE_REGISTER_DEVICE:
         case MSGTYPE_CHKUNIQUE_DEVICE:
         case MSGTYPE_TASKLIST_CM7:
-        case MSGTYPE_SETTINGS_CM7:
+        case MSGTYPE_SETTINGS_GET_CM7:
+        case MSGTYPE_SETTINGS_SET_CM7:
             /* All the previous will get their results by polling */
             break;
         default:
@@ -151,12 +152,12 @@ void MSGD_GetSettingsLine(bool bInitCall)
         AMP_DctBuf_Ptr->msg_sub_id = ACTIONID_INIT;
     }
 
-    AMP_DctBuf_Ptr->msg_id      = MSGTYPE_SETTINGS_CM7;
+    AMP_DctBuf_Ptr->msg_id      = MSGTYPE_SETTINGS_GET_CM7;
     AMP_DctBuf_Ptr->msg_status  = MSGSTATUS_CM4_TO_CM7_ACTIVE;
     Ipc_CM4_SendDirect();
 }
 
-MSgSettingItemT *MSGD_WaitForSettingsLine(void)
+MSgSettingItemT *MSGD_WaitForGetSettingsLine(void)
 {
     uint32_t tickstart = HAL_GetTick();
     while ( AMP_DctBuf_Ptr->msg_status  != MSGSTATUS_CM7_TO_CM4_DONE ) {
@@ -167,4 +168,29 @@ MSgSettingItemT *MSGD_WaitForSettingsLine(void)
         }
     }
     return  &AMP_DctBuf_Ptr->msg4;
+}
+
+/******************************************************************************
+ * CM4 Stub for set one CM7 settings item
+ *****************************************************************************/
+void MSGD_SetSettingsLine(uint8_t idx, uint8_t newval)
+{
+    AMP_DctBuf_Ptr->msg_id      = MSGTYPE_SETTINGS_SET_CM7;
+    AMP_DctBuf_Ptr->msg_status  = MSGSTATUS_CM4_TO_CM7_ACTIVE;
+    AMP_DctBuf_Ptr->msg4.idx    = idx;
+    AMP_DctBuf_Ptr->msg4.val    = newval;
+    Ipc_CM4_SendDirect();
+}
+
+bool MSGD_WaitForSetSettingsLine(void)
+{
+    uint32_t tickstart = HAL_GetTick();
+    while ( AMP_DctBuf_Ptr->msg_status  != MSGSTATUS_CM7_TO_CM4_DONE ) {
+    /* Check for the Timeout */
+        if ((HAL_GetTick() - tickstart) > DIRECTMSG_WAIT_TIMEOUT) {
+            DEBUG_PUTS("DirectMessage Wait #5 timed out!");
+            return false;
+        }
+    }
+    return  AMP_DctBuf_Ptr->msg4.bIsValid;
 }

@@ -33,6 +33,7 @@ void Handle_Receive_1(void);
 void Handle_Receive_2(void);
 void Handle_Receive_3(void);
 void Handle_Receive_4(void);
+void Handle_Receive_5(void);
 
 void CM7_handle_remote( uint32_t arg )
 {
@@ -55,9 +56,13 @@ void CM7_handle_remote( uint32_t arg )
         /* return a CM/ task list dump line by line */
         Handle_Receive_3();
         break;
-    case  MSGTYPE_SETTINGS_CM7:
-        /* return a CM/ task list dump line by line */
+    case  MSGTYPE_SETTINGS_GET_CM7:
+        /* return a CM7 task list dump line by line */
         Handle_Receive_4();
+        break;
+    case  MSGTYPE_SETTINGS_SET_CM7:
+        /* Set one CM7 settings item */
+        Handle_Receive_5();
         break;
     default:
         DEBUG_PRINTF("cm7_handle_remote: unknown msg_id %d\n", AMP_DirectBuffer.msg_id );
@@ -126,6 +131,7 @@ void Handle_Receive_4(void)
         /* Then Initialize Settings list generation */
         AMP_DirectBuffer.msg_sub_id = 0;
     }
+    AMP_DirectBuffer.msg4.max_idx  = Config_GetCnt();
     AMP_DirectBuffer.msg4.bIsValid = Config_GetValMinMax(AMP_DirectBuffer.msg_sub_id, &eelt );
     if (AMP_DirectBuffer.msg4.bIsValid) {
         AMP_DirectBuffer.msg4.idx  = AMP_DirectBuffer.msg_sub_id;
@@ -136,6 +142,20 @@ void Handle_Receive_4(void)
         AMP_DirectBuffer.msg4.type = eelt.type;
         AMP_DirectBuffer.msg_sub_id++;
     }
+    AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
+    Ipc_CM7_SendDirect();
+}
+
+/******************************************************************************
+ * CM7 Handler for remote (from CM4) Setting set
+ * Uses also MSgSettingItemT to exchange the data
+ * Settings index is expected in member idx, newvalue is expected in  member val
+ * result will be returned in member bIsValid
+ * @note  will be executed in interrupt context
+ *****************************************************************************/
+void Handle_Receive_5(void)
+{
+    AMP_DirectBuffer.msg4.bIsValid = Config_SetVal(AMP_DirectBuffer.msg4.idx, AMP_DirectBuffer.msg4.val );
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
     Ipc_CM7_SendDirect();
 }
