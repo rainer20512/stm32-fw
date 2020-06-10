@@ -9,6 +9,9 @@
   * configuration itme, that have to be defined/undefined, too.
   * Check the corresponding ifdef-Block
   *
+  * This is the configuration file for CM7 core !!
+  *                                    ---
+  *
   ******************************************************************************
   */
 
@@ -269,9 +272,10 @@
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
       #define USE_QSPI1
-      #define USE_QSPI1_ALTN1
+      #define QSPI1_CLKSPEED    125000      // Use low clk rates on breadboard
+      #define USE_QSPI1_ALTN4
       #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
+      // #define QSPI1_USE_DMA Not implemented yet 
   #endif
 
   #if USE_ETH > 0

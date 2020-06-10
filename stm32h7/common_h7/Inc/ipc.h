@@ -31,6 +31,7 @@
 
 /* Number of different message buffer paths between CM7 and CM4 */
 #define MAX_AMP_CTRL                            8
+/* Magic number to indicate a valid AMP_Ctrl buffer             */
 #define AMP_ID                                  0x4354524C
 
 typedef struct {
@@ -89,9 +90,9 @@ extern  AMP_Ctrl_ptr        AMPCtrl_Ptr;
 #define DataMessageSemRef(i)         (AMPCtrl_Ptr->xfersem[i]) 
 
 #if defined(CORE_CM7)
-    void Ipc_CM7_SendDirect     ( void );
-    void Ipc_CM7_WakeUp_CM4     ( void );
-    void Ipc_CM7_Init           ( void );
+    void     Ipc_CM7_SendDirect     ( void );
+    void     Ipc_CM7_WakeUp_CM4     ( void );
+    void     Ipc_CM7_Init           ( void );
 #endif
 
 #if defined(CORE_CM4)

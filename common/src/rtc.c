@@ -437,6 +437,7 @@ void RTC_AddOneSecond(void)
     void RTC_IncrementSecond ( void )
     {
         RTC_AddOneSecond();
+        // DEBUG_PRINTF("+ %d\n",HAL_GetTick());
         TaskNotify(TASK_RTC);
         TaskNotify(TASK_PERIODIC);
     }

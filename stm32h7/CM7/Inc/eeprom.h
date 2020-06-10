@@ -54,7 +54,7 @@ extern const EE_LimitsT eelimits[];
  * Define the limits for every single eeprom item
  *****************************************************************************/
     #define EELIMITS01 \
-    /* 00 */ {                 0,   0,   1, EEType_YesNo,       "Reset System\nat next hh:mm:10" },                        \
+    /* 00 */ {                 0,   0,   1, EEType_YesNo,       "Reset CM7 core at next hh:mm:10" },                        \
     /* 01 */ {                 5,   1,  30, EEType_Uint8_Dec,   "Radio Timeout [min]" },                                        
 #if USE_DS18X20 > 0
     #define EELIMITS02  EELIMITS01 \

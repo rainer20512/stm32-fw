@@ -34,7 +34,7 @@
 #define QSPI_MAX_ULP_FREQUENCY  33000000
 
 /* safe operating speed to readout ID values */
-#define QSPI_INITIAL_SPEED      1000000UL   
+#define QSPI_INITIAL_SPEED      1000000   
 
 #define QSPI1_FLASH_SIZE    MX25R6435F_FLASH_SIZE
 #define QSPI1_PAGE_SIZE     MX25R6435F_PAGE_SIZE
@@ -66,29 +66,37 @@ static uint16_t MX25_GetType                 (QSpiHandleT *myHandle);
 static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
 {  
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
+    bool ret;
+    bool hperf_enable;
 
     /* calculate prescaler,so that the initial frequency is at or below max. ULP frequency */ 
-    uint32_t prescaler = Get_SysClockFrequency() / desired_frq;
+    uint32_t prescaler = HAL_RCC_GetHCLKFreq() / desired_frq;
+
     if ( prescaler > 0 ) prescaler--;
+
+    if ( prescaler > 255 ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("QSpi_BasicInit - Error: prescaler too big");
+        #endif
+        return false;
+    }
+
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        DEBUG_PRINTF("Qspi: Clk=%d\n", HAL_RCC_GetHCLKFreq() / (prescaler+1) );
+    #endif
 
     /* if not first init, then if selected operating speed is higher than max. ULP speed, select high performance mode */
     /* on first init, the caller has to assure, that "desired_frq" is at or below QSPI_MAX_ULP_FREQUENCY */
     if ( !bFirstInit && MX25_GetType(myHandle) == MX25R6435F_DEVID ) {
-        if ( desired_frq > QSPI_MAX_ULP_FREQUENCY ) {
-            if ( !MX25RXX35_HighPerfMode(hqspi, QSPI_HIGH_PERF_ENABLE) ) {
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                    DEBUG_PUTS("QSpi_BasicInit - Error: Unable to set high perf. mode");
-                #endif
-                return false;
-            } 
-        } else {
-            if (!MX25RXX35_HighPerfMode(hqspi, QSPI_HIGH_PERF_DISABLE) ) {
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                    DEBUG_PUTS("QSpi_BasicInit - Error: Unable to set ultra low power mode");
-                #endif
-                return false;
-            } 
-        }
+        hperf_enable = desired_frq > QSPI_MAX_ULP_FREQUENCY;
+        ret = MX25RXX35_HighPerfMode(hqspi, hperf_enable ? QSPI_HIGH_PERF_ENABLE : QSPI_HIGH_PERF_DISABLE);
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            if ( !ret ) 
+                DEBUG_PRINTF("QSpi_BasicInit - Error: Unable to set %s mode\n", hperf_enable ? "high perf.":"ultra low power");
+            else
+                DEBUG_PRINTF("QSpi: Set %s mode\n", hperf_enable ? "high perf.":"ultra low power");
+        #endif
+        if ( !ret ) return false;
     }
 
     /* QSPI initialization */
@@ -211,7 +219,7 @@ void QSpi_DumpStatusInternal(QSpiHandleT *myHandle)
 {
   QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
-  uint8_t sr, cr;
+  uint8_t cr, sr[2];
   bool ret;
 
   /* Read the 2.byte device ID first, first byte MfgID will be overwritten later */
@@ -228,35 +236,37 @@ void QSpi_DumpStatusInternal(QSpiHandleT *myHandle)
 
   /* Dump Status register */
   ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, &sr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+  if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
   printf("%s Status register\n", QSpi_GetChipTypeText(myHandle->id) );
   if ( ret ) {
-    printf("   SR Write protect = %d\n", sr & MX25_XXX35F_SR_SRWD ? 1 : 0 );
-    printf("   Quad Enable      = %d\n", sr & MX25_XXX35F_SR_QE   ? 1 : 0 );
-    printf("   Block protect    = 0x%1x\n", (sr & MX25_XXX35F_SR_BP ) >> 2);
-    printf("   Write Enable     = %d\n", sr & MX25_XXX35F_SR_WEL  ? 1 : 0 );
-    printf("   Write in progess = %d\n", sr & MX25_XXX35F_SR_WIP  ? 1 : 0 );
+    printf("   SR Write protect = %d\n", cr & MX25_XXX35F_SR_SRWD ? 1 : 0 );
+    printf("   Quad Enable      = %d\n", cr & MX25_XXX35F_SR_QE   ? 1 : 0 );
+    printf("   Block protect    = 0x%1x\n", (cr & MX25_XXX35F_SR_BP ) >> 2);
+    printf("   Write Enable     = %d\n", cr & MX25_XXX35F_SR_WEL  ? 1 : 0 );
+    printf("   Write in progess = %d\n", cr & MX25_XXX35F_SR_WIP  ? 1 : 0 );
   } else {
     puts("   Cannot read SR");
   }
 
   /* Dump configuration register, its content depends from chip tpye  */
+  uint16_t devID             = MX25_GetType(myHandle);
   sCommand.Instruction       = READ_CFG_REG_CMD;
+  sCommand.NbData            = ( devID == MX25R6435F_DEVID ? 2 : 1 );
+
   ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+  if (ret) ret = HAL_QSPI_Receive(hqspi, sr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
   printf("%s Configuration register\n", QSpi_GetChipTypeText(myHandle->id) );
   if ( ret ) {
-    printf("   Bottom area prot = %d\n", cr & ( 1 << 3 ) ? 1 : 0 );
-    uint16_t devID = MX25_GetType(myHandle);
+    printf("   Bottom area prot = %d\n", sr[0] & ( 1 << 3 ) ? 1 : 0 );
 
     switch ( devID ) {
         case MX25R6435F_DEVID:
-            printf("   2/4Rd dummy cyc. = %d\n", cr & ( 1 << 6 ) ? 1 : 0 );
-            printf("   High perf. mode  = %d\n", cr & ( 1 << 1 ) ? 1 : 0 );
+            printf("   2/4Rd dummy cyc. = %d\n", sr[0] & ( 1 << 6 ) ? 1 : 0 );
+            printf("   High perf. mode  = %d\n", sr[1] & ( 1 << 1 ) ? 1 : 0 );
             break;
         case MX25L12835F_DEVID:
-            printf("   Dummy cycles.    = %d\n", cr >> 6);
-            printf("   Outp.Drv.Str.    = %d\n", cr & 0b111 );
+            printf("   Dummy cycles.    = %d\n", sr[0] >> 6);
+            printf("   Outp.Drv.Str.    = %d\n", sr[0] & 0b111 );
             break;
         default:
             #if DEBUG_MDOE > 0 && DEBBUG_QSPI > 0
@@ -271,15 +281,15 @@ void QSpi_DumpStatusInternal(QSpiHandleT *myHandle)
   /* Configure and read SCUR */
   sCommand.Instruction       = READ_SEC_REG_CMD;
   ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, &sr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+  if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
   printf("%s Security register\n", QSpi_GetChipTypeText(myHandle->id) );
   if ( ret ) {
-    printf("   last Erase fail. = %d\n", sr & MX25_XXX35F_SECR_E_FAIL ? 1 : 0 );
-    printf("   last Prog failed = %d\n", sr & MX25_XXX35F_SECR_P_FAIL ? 1 : 0 );
-    printf("   Erase suspended  = %d\n", sr & MX25_XXX35F_SECR_ESB    ? 1 : 0 );
-    printf("   Prog suspended   = %d\n", sr & MX25_XXX35F_SECR_PSB    ? 1 : 0 );
-    printf("   LDSO bit         = %d\n", sr & MX25_XXX35F_SECR_LDSO   ? 1 : 0 );
-    printf("   factury OTP bit  = %d\n", sr & MX25_XXX35F_SECR_SOI    ? 1 : 0 );
+    printf("   last Erase fail. = %d\n", cr & MX25_XXX35F_SECR_E_FAIL ? 1 : 0 );
+    printf("   last Prog failed = %d\n", cr & MX25_XXX35F_SECR_P_FAIL ? 1 : 0 );
+    printf("   Erase suspended  = %d\n", cr & MX25_XXX35F_SECR_ESB    ? 1 : 0 );
+    printf("   Prog suspended   = %d\n", cr & MX25_XXX35F_SECR_PSB    ? 1 : 0 );
+    printf("   LDSO bit         = %d\n", cr & MX25_XXX35F_SECR_LDSO   ? 1 : 0 );
+    printf("   factury OTP bit  = %d\n", cr & MX25_XXX35F_SECR_SOI    ? 1 : 0 );
   } else {
     puts("   Cannot read SCUR");
   }
@@ -292,11 +302,10 @@ void QSpi_DumpStatusInternal(QSpiHandleT *myHandle)
  * - set the flash size and timing parameters 
  * - reset flash controller
  *****************************************************************************/
-bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t default_speed)
+bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle)
 { 
     UNUSED(self);
-    // QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
-  
+    uint32_t clkspeed = myHandle->clkspeed;
 
     /* Basic Initialization with a safe speed and minimum falsh size to readout ID data */
     if ( !QSpi_BasicInit(myHandle, QSPI_INITIAL_SPEED, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
@@ -335,11 +344,11 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
 
  
     /* The operating speed up to now ist the minimum of max- speed in ULP mode and selected operating speed */
-    uint32_t operating_frq = ( default_speed < QSPI_MAX_ULP_FREQUENCY ? default_speed : QSPI_MAX_ULP_FREQUENCY );
+    uint32_t operating_frq = ( clkspeed < QSPI_MAX_ULP_FREQUENCY ? clkspeed : QSPI_MAX_ULP_FREQUENCY );
 
     /* if selected operating speed is higher than max. ULP speed, select high performance mode */
-    if ( operating_frq < default_speed ) {
-        if ( !QSpi_BasicInit(myHandle, default_speed, myHandle->geometry.FlashSize, false) ) return false;
+    if ( operating_frq < clkspeed ) {
+        if ( !QSpi_BasicInit(myHandle, clkspeed, myHandle->geometry.FlashSize, false) ) return false;
     }
 
   return true;
@@ -1015,12 +1024,11 @@ static bool MX25_QuadMode(QSpiHandleT *myHandle, uint8_t Operation)
     /* Enable write operations */
     if ( !QSPI_Specific_WriteEnable(hqspi) ) return false;
 
-    /* Activate/deactivate the Quad mode */
+    /* Activate/deactivate the Quad mode, clear all other bits */
+    reg = 0;
     if (Operation == QSPI_QUAD_ENABLE) {
         SET_BIT(reg, MX25_XXX35F_SR_QE);
-    } else {
-        CLEAR_BIT(reg, MX25_XXX35F_SR_QE);
-    }
+    } 
 
     sCommand.Instruction = WRITE_STATUS_CFG_REG_CMD;
 
@@ -1086,7 +1094,7 @@ static bool MX25RXX35_HighPerfMode(QSPI_HandleTypeDef *hqspi, uint8_t Operation)
     /* Enable write operations */
     if ( !QSPI_Specific_WriteEnable(hqspi) ) return false;
 
-    /* Activate/deactivate the Quad mode */
+    /* Activate/deactivate the hig performance mode */
     if (Operation == QSPI_HIGH_PERF_ENABLE) {
         SET_BIT(reg[2], MX25R6435F_CR2_LH_SWITCH);
     } else {

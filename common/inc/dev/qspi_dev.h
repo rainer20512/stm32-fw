@@ -13,7 +13,6 @@
 
 #include "config/config.h"
 #include "devices.h"
-#include "stm32l4xx_hal.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -51,6 +50,7 @@ typedef struct QSpiHandleType {
     QSPI_HandleTypeDef  hqspi;           /* Embedded HAL QSpi_HandleTypedef Structure     */
     QSpiGeometryT       geometry;        /* actual flash chip geometry                    */
     uint8_t             id[4];           /* Flash memories ID bytes ( only first 3 used ) */
+    uint32_t            clkspeed;        /* Desired Clock Speed in MHz                    */
     QSpiCallbackT       QSpi_RdDoneCB;   /* Callback for any successful read              */
     QSpiCallbackT       QSpi_WrDoneCB;   /* Callback for any successful write/erare       */
     QSpiCallbackT       QSpi_ErrorCB;    /* Callback for any Error in QSPI transaction    */
@@ -67,6 +67,7 @@ bool QSpi_Abort                 (QSpiHandleT *myHandle);
 bool QSpi_EnterDeepPowerDown    (QSpiHandleT *myHandle);
 bool QSpi_LeaveDeepPowerDown    (QSpiHandleT *myHandle);
 bool QSpi_EnableMemoryMappedMode(QSpiHandleT *myHandle);
+bool Qspi_SetSpeed              (QSpiHandleT *myHandle, uint32_t new_clkspeed);
 
 bool QSpi_ReadWait              (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 bool QSpi_ReadIT                (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);

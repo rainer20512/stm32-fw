@@ -35,14 +35,49 @@ void Handle_Receive_3(void);
 void Handle_Receive_4(void);
 void Handle_Receive_5(void);
 
+
+/******************************************************************************
+ * Callback for CM4 message reception on CM7 core
+ * This callback consists of two parts: The first one, which is called in
+ * interrupt context ( this routine ) should be used for all message types
+ * which only requre a very short respones ( setting a "done" flag e.g. )
+ * Respones, which will take a longer execution time, should be executed
+ * in the remote task.
+ * 
+ * @note  this routine will be executed in interrupt context.
+ *
+ *****************************************************************************/
+void CM7_handle_remote_direct(void)
+{
+    assert(AMP_DirectBuffer.id == DIRECTMSG_ID);
+
+
+    /* Neccessary action depends on msg_id */
+    switch ( AMP_DirectBuffer.msg_id ) {
+        /* handle all message types which only require a "done" status to be set */
+        /* and the peer waits for completion by polling                          */
+        /* case keks: uncomment the next statement as soon as the first case appears here 
+            /* Set status to "received" 
+            AMP_DirectBuffer.msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
+            break; */
+        default:
+            /* For all other message types: activate handler task */
+            TaskNotify(TASK_REMOTE_CM7);
+    }
+}
+
+/******************************************************************************
+ * Thread function to handle "complex" messages from CM4 on CM7 core, 
+ * which are too time consuming to handle within interrupt context
+ *****************************************************************************/
 void CM7_handle_remote( uint32_t arg )
 {
     assert(AMP_DirectBuffer.id == DIRECTMSG_ID);
 
-    /* Set status to "received" */
-    AMP_DirectBuffer.msg_status = MSGSTATUS_CM4_TO_CM7_DONE;
+    /* Neccessary action depends on msg_id                      */
+    /* Note: all handlers must set msg_status finally and       */
+    /* call IPC handler, if an answer is expected               */
 
-    /* Neccessary action depends on msg_id */
     switch ( AMP_DirectBuffer.msg_id ) {
     case  MSGTYPE_REGISTER_DEVICE:
         /* do remote device registration */
@@ -65,13 +100,13 @@ void CM7_handle_remote( uint32_t arg )
         Handle_Receive_5();
         break;
     default:
-        DEBUG_PRINTF("cm7_handle_remote: unknown msg_id %d\n", AMP_DirectBuffer.msg_id );
+        DEBUG_PRINTF("CM7_handle_remote: unknown msg_id %d\n", AMP_DirectBuffer.msg_id );
     } /* switch */
+
 }
 
 /******************************************************************************
  * CM7 Handler for remote device registration
- * @note  will be executed in interrupt context
  *****************************************************************************/
 void Handle_Receive_1(void)
 {
@@ -87,7 +122,6 @@ void Handle_Receive_1(void)
 
 /******************************************************************************
  * CM7 Handler for remote device uniqueness check
- * @note  will be executed in interrupt context
  *****************************************************************************/
 void Handle_Receive_2(void)
 {
@@ -103,7 +137,6 @@ void Handle_Receive_2(void)
 
 /******************************************************************************
  * CM7 Handler for remote (CM7) task list
- * @note  will be executed in interrupt context
  *****************************************************************************/
 void Handle_Receive_3(void)
 {
@@ -122,7 +155,6 @@ void Handle_Receive_3(void)
 
 /******************************************************************************
  * CM7 Handler for remote (CM7) Settings list
- * @note  will be executed in interrupt context
  *****************************************************************************/
 void Handle_Receive_4(void)
 {
@@ -151,11 +183,38 @@ void Handle_Receive_4(void)
  * Uses also MSgSettingItemT to exchange the data
  * Settings index is expected in member idx, newvalue is expected in  member val
  * result will be returned in member bIsValid
- * @note  will be executed in interrupt context
  *****************************************************************************/
 void Handle_Receive_5(void)
 {
     AMP_DirectBuffer.msg4.bIsValid = Config_SetVal(AMP_DirectBuffer.msg4.idx, AMP_DirectBuffer.msg4.val );
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
     Ipc_CM7_SendDirect();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Stubs
+///////////////////////////////////////////////////////////////////////////////
+
+/******************************************************************************
+ * CM7 Stub for clock change event on CM4 core
+ * @note  The message field is unused in this type of message
+ *****************************************************************************/
+void MSGD_DoClockChange(void)
+{
+    AMP_DirectBuffer.msg_id      = MSGTYPE_CLOCKCHANGE_CM4;
+    AMP_DirectBuffer.msg_status  = MSGSTATUS_CM7_TO_CM4_ACTIVE;
+    Ipc_CM7_SendDirect();
+}
+
+bool MSGD_WaitForRemoteClockChange(void)
+{
+    uint32_t tickstart = HAL_GetTick();
+    while ( AMP_DirectBuffer.msg_status  != MSGSTATUS_CM7_TO_CM4_DONE ) {
+    /* Check for the Timeout */
+        if ((HAL_GetTick() - tickstart) > DIRECTMSG_WAIT_TIMEOUT) {
+            DEBUG_PUTS("DirectMessage Wait for CM4 clk chng timed out!");
+            return false;
+        }
+    }
+    return true;
 }

@@ -252,7 +252,7 @@ bool DevicesInhibitStop(void)
 bool DevicesInhibitFrqChange(void)
 {
     bool ret = false;
-    /* Check every device with AllowStop method implemented for denial of stop */
+    /* Check every device with OnFrqChange method implemented for denial of stop */
     for( uint32_t i = 0; i < act_devices; i++ ) {
         if ( devices[i]->OnFrqChange && !devices[i]->OnFrqChange(devices[i]) ) {
             #if DEBUG_MODE > 0

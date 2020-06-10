@@ -103,8 +103,11 @@ static void Eth_GPIO_DeInit(const HW_DeviceType *self)
 bool ETH_FrqChange(const HW_DeviceType *self)
 {
     EthHandleT* me = (EthHandleT*)self->devData;
-    /* ReInit ETH handle, this will update the datarate für PHY communication */
-    HAL_ETH_Init(me);
+    /* Minimum HCLK frequeny is 20 MHZ */
+    if ( HAL_RCC_GetHCLKFreq() < 20000000 ) return false;
+    
+    HAL_ETH_SetMDIOClockRange(me); 
+    return true;
 }
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd

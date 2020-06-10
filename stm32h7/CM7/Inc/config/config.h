@@ -4,6 +4,9 @@
   * @author  Rainer
   * @brief   global configuration and definitions
   *
+  * @note    This is the CM7 config part !!!
+  *                      ---
+  * 
   ******************************************************************************
   */
 

@@ -40,7 +40,7 @@ uint32_t GetAPB1TimerFrequency(void)
   if (uPclk1Prescale==RCC_HCLK_DIV1)
      return uPclk1;
   else 
-     return uPclk1/2;
+     return uPclk1*2;
 }
 
 uint32_t GetAPB2TimerFrequency(void)
@@ -52,7 +52,7 @@ uint32_t GetAPB2TimerFrequency(void)
   if (uPclk2Prescale==RCC_HCLK_DIV1)
      return uPclk2;
   else 
-     return uPclk2/2;
+     return uPclk2*2;
 }
 
 void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD);

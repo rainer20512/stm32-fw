@@ -33,6 +33,7 @@
   typedef enum ActiveJobEnum {
     JOB_TASK_TMR = 0,
     JOB_TASK_PERIODIC,
+    JOB_TASK_REMOTE,
     JOB_TASK_DBGIO,
     JOB_TASK_RTC,
     JOB_TASK_INIT,
@@ -47,7 +48,6 @@
     JOB_TASK_QSPI,
 #endif
     JOB_ADC,
-    JOB_REMOTE,
     JOB_SLEEP,
     JOB_STOP0,
     JOB_STOP1,
@@ -71,9 +71,10 @@
 #define JOBNAMES0 \
   "TMR",          \
   "PERIODIC",     \
-  "DBGIO",       \
-  "RTC",        \
-  "INIT",       \
+  "REMOTE",       \
+  "DBGIO",        \
+  "RTC",          \
+  "INIT",         \
   "MAIN",       
 #if USE_DISPLAY > 0 
   #define JOBNAMES1 JOBNAMES0 \
@@ -98,7 +99,6 @@
 #define JOBNAMES99 \
   JOBNAMES4     \
   "ADC",        \
-  "REMOTE",     \
   "SLEEP",      \
   "STOP0",      \
   "STOP1",      \

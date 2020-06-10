@@ -728,11 +728,20 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
         #endif
     }
 
+    /* when IPC communication is set up, Notify CM4 core about frequency change */
+    if ( Ipc_Is_Initialized() ) {
+        MSGD_DoClockChange();
+        if (!MSGD_WaitForRemoteClockChange() ) 
+            DEBUG_PUTS("Error: Clk change event to CM4 core timed out");
+    }
+
     #if DEBUG_MODE > 0
         DEBUG_PRINTF("SYSCLK nom. %d\n", HAL_RCC_GetSysClockFreq());
         uint32_t sysclk = Get_SysClockFrequency();
         DEBUG_PRINTF("SYSCLK real  %d.%06d\n",sysclk/1000000,sysclk%1000000);
     #endif
+
+
 }
 
 /******************************************************************************

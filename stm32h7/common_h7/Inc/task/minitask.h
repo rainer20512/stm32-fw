@@ -43,7 +43,8 @@
 #define TASK_ADC              8
 #define TASK_LCD              9
 #define TASK_QSPI             10
-#define TASK_REMOTE           11
+#define TASK_REMOTE_CM7       11
+#define TASK_REMOTE_CM4       12
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30

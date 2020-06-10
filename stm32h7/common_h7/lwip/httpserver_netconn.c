@@ -348,9 +348,12 @@ static void ParseParams(char *buf, u16_t buflen, HttpGetParamT *p )
     uint32_t i = 0;
     uint32_t pcnt = 0;
 
+    /* Default return value: No parameter/value pairs */
+    p->num_params = 0;
+
     /* Make sure, the parameter prefix is first sign */
     if (*buf != '?' ) return;
-
+    
     /* skip first '?' */
     buf++; buflen--;
 
@@ -693,8 +696,8 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
 }
 
-const char cm7_header[]     ="<p>Core CM7 Settings</p>";
-const char cm4_header[]     ="<p>Core CM4 Settings</p>";
+const char cm7_header[]     ="<p><b>Core CM7 Settings</b></p>";
+const char cm4_header[]     ="<p><b>Core CM4 Settings</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
 #define  TAG_PREFIX         "V"
@@ -748,7 +751,7 @@ void HtmlSettingsCM7    ( struct netconn *conn, void *arg)
 {
     MSgSettingItemT *ret;
     /* remote settings */
-    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
+    netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
     HtmlStaticFile(conn, ONLY_CHNG_JS );
 

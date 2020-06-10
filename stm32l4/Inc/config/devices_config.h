@@ -312,7 +312,7 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    //#define USE_USART2
+    // #define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     //#define COM2_USE_RX_DMA
@@ -437,6 +437,7 @@
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
       #define USE_QSPI1
+      #define QSPI1_CLKSPEED    125000
       #define USE_QSPI1_ALTN1
       #define QSPI1_USE_IRQ
       #define QSPI1_USE_DMA

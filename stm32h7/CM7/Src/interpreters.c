@@ -945,6 +945,13 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 } /* Test_Menu */
 #endif
 #include "system/periodic.h"
+
+static void TmrExpired(uint32_t tickstart)
+{
+    uint32_t tickdiff = HAL_GetTick() - tickstart;
+    DEBUG_PRINTF("%d ticks during wait\n", tickdiff);
+}
+
 /*********************************************************************************
   * @brief  Submenu for system functions
   *         
@@ -954,6 +961,9 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
   ********************************************************************************/
 static bool System_Menu ( char *cmdline, size_t len, const void * arg )
 {
+  char *word;
+  size_t wordlen;
+  uint32_t num;
   UNUSED(cmdline);UNUSED(len);
 
   switch((uint32_t)arg) {
@@ -962,6 +972,19 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
         break;
     case 1:
         PeriodicDumpList();
+        break;
+    case 2:
+        if ( CMD_argc() < 1 ) {
+            printf("Usage: 'SysTickTest <n> : Wait <n> seconds \n");
+            return false;
+        }
+        CMD_get_one_word( &word, &wordlen );
+        num = CMD_to_number ( word, wordlen );
+        if ( SecTimerSetRel(num,false, TmrExpired, HAL_GetTick() ) == NO_TIMER_ID ) {
+            DEBUG_PUTS("Cannot allocate timer");
+        } else {
+            DEBUG_PRINTF("Waiting %d seconds...\n", num);
+        }
         break;
 
     /* sample entry
@@ -1004,6 +1027,8 @@ static const CommandSetT cmdTest[] = {
   { "Multi Tmr",       ctype_fn, .exec.fn = Test_TmrMulti,  VOID(0), "Lots of timers" }, 
   { "Kill Tmr",        ctype_fn, .exec.fn = Test_TmrKill,   VOID(0), "Generates Error" }, 
   { "Toggle",          ctype_fn, .exec.fn = Test_Toggle,    VOID(0), "Toggle UserLed2" },
+  { "SysTickTest",     ctype_fn, .exec.fn = System_Menu,    VOID(2), "Check Systick" },
+
 #if defined(USE_USART2)
   { "USART2 Out",      ctype_fn, .exec.fn = Test_Menu,      VOID(5), "Output via USART2" },
 #endif
@@ -1527,6 +1552,18 @@ ADD_SUBMODULE(Test);
 
             DEBUG_PRINTTS("Waiting for Async op to be done\n");
             break;
+        case 12:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Clk speed <n> - Set Qspi clk speed to <n> MHz\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            printf("Set Qspi Clock speed to %d MHz",  addr );
+             
+                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000000 );
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
         default:
           DEBUG_PUTS("PM_Menu: command not implemented");
       } /* end switch */
@@ -1553,6 +1590,7 @@ ADD_SUBMODULE(Test);
         { "End Power Down",           ctype_fn, .exec.fn = QSPI_Menu, VOID(9), "Exit Power down mode" },
         { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10), "Write many bytes IRQ mode" },
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
+        { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> MHz" },
     };
     ADD_SUBMODULE(QSPI);
 #endif

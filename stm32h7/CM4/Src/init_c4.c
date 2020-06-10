@@ -22,6 +22,8 @@
     #include "onewire.h"
 #endif
 
+/* - declaration of external task handlers ----------------------------------*/
+void CM4_handle_remote(uint32_t);
 
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx
@@ -118,6 +120,7 @@ void task_handle_qspi (uint32_t);
 /* Stack sizes are in 32bit words */
 #define TMR_STACK_SIZE  256
 #define RTC_STACK_SIZE  256
+#define RMT_STACK_SIZE  256
 #define CMD_STACK_SIZE  256
 #define OUT_STACK_SIZE  256
 #define PER_STACK_SIZE  256
@@ -125,6 +128,7 @@ void task_handle_qspi (uint32_t);
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];
+static StackType_t rmtStack[RMT_STACK_SIZE];
 static StackType_t cmdStack[CMD_STACK_SIZE];
 static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
@@ -138,11 +142,12 @@ static StackType_t adcStack[ADC_STACK_SIZE];
  *****************************************************************************/
 void Init_DefineTasks(void)
 {
-  TaskRegisterTask(task_init_rtc, task_handle_tmr, TASK_TMR,      JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
-  TaskRegisterTask(NULL,          task_handle_rtc, TASK_RTC,      JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
+  TaskRegisterTask(task_init_rtc, task_handle_tmr,   TASK_TMR,       JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
+  TaskRegisterTask(NULL,          task_handle_rtc,   TASK_RTC,       JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
+  TaskRegisterTask(NULL,          CM4_handle_remote, TASK_REMOTE_CM4,JOB_TASK_REMOTE,   rmtStack, RMT_STACK_SIZE, "CM7 remote task");
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
-  TaskRegisterTask(CMD_Init,      task_handle_com, TASK_COM,      JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
-  TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
+  TaskRegisterTask(CMD_Init,      task_handle_com,   TASK_COM,       JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
+  TaskRegisterTask(NULL,          task_handle_out,   TASK_OUT,       JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
-  TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
+  TaskRegisterTask(NULL,          task_periodic,     TASK_PERIODIC,  JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
 }

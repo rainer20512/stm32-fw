@@ -72,6 +72,7 @@
       <folder Name="inc">
         <folder Name="system">
           <file file_name="CM4/Inc/system/ram_preset.inc" />
+          <file file_name="CM4/Inc/system/profiling.h" />
         </folder>
         <file file_name="CM4/Inc/debug.h" />
         <file file_name="CM4/Inc/error.h" />
@@ -367,11 +368,11 @@
       target_reset_script="FLASHReset()" />
     <configuration Name="RAM" target_reset_script="Reset()" />
     <folder Name="System Files">
-      <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="flash_placement_CM7.xml" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="H745_CM7_MemoryMap.xml" />
+      <file file_name="thumb_crt0_cm7.s" />
     </folder>
     <folder Name="Application">
       <folder Name="src">
@@ -439,6 +440,8 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">

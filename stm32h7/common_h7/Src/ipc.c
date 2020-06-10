@@ -47,7 +47,7 @@ overhead of message buffers. */
 #if defined(CORE_CM7)
 
     /* The control block is allocated by CM7 and referenced by CM4 */
-    IPCMEM AMPCtrl_t AMPCtrl_Block;
+    IPCMEM AMPCtrl_t AMPCtrl_Block={0};
     static IPCMEM uint8_t StorageBuffer_ctrl74 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
     static IPCMEM uint8_t StorageBuffer_ctrl47 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
     IPCMEM AMPDctBuf_t AMP_DirectBuffer;
@@ -81,8 +81,9 @@ static void IPC_Signal( uint32_t HW_sem )
         HAL_NVIC_SetPriority( HSEM1_IRQn, IPC_IRQ_PRIO, 0);
         HAL_NVIC_EnableIRQ( HSEM1_IRQn);
 
-        memset(&AMPCtrl_Block, 0, sizeof(AMPCtrl_t));
-        AMPCtrl_Block.ID = 0x4354524C;
+        // Is done by initialization code in thumb_crt0_cm7.s 
+        // memset(&AMPCtrl_Block, 0, sizeof(AMPCtrl_t));
+        AMPCtrl_Block.ID = AMP_ID;
         DEBUG_PRINTF("IPC control block of size %d initialized\n", sizeof(AMPCtrl_t) );
 
         /* Create and initialize direct message buffer */
@@ -112,6 +113,13 @@ static void IPC_Signal( uint32_t HW_sem )
         HSEM->C1IER |= (1 << HSEM_CM4_to_CM7_Send) | (1 << HSEM_CM4_to_CM7_Recvd ) | ( 1 << HSEM_CM4_to_CM7_Msg ) ;
     }
 
+    /**************************************************************************
+     * Returns true, if the IPC buffer has been initialized by CMz
+     *************************************************************************/
+    uint32_t Ipc_Is_Initialized     ( void )
+    {
+        return AMPCtrl_Block.ID == AMP_ID;
+    }
 
     /**************************************************************************
      * CM4 goes to sleep after reset and waits for Semaphore HSEM_CM4_WKUP 
@@ -227,7 +235,7 @@ static void IPC_Signal( uint32_t HW_sem )
         /* Handle all "free" interrupts */
         if ( SemMask & (1 << HSEM_CM4_to_CM7_Send ) ) prvCore1ReceiveHandler();
         if ( SemMask & (1 << HSEM_CM4_to_CM7_Recvd) ) prvCore1SendAckHandler();
-        if ( SemMask & (1 << HSEM_CM4_to_CM7_Msg  ) ) TaskNotify(TASK_REMOTE);
+        if ( SemMask & (1 << HSEM_CM4_to_CM7_Msg  ) ) CM7_handle_remote_direct();
 
     }
 
@@ -396,6 +404,6 @@ static void IPC_Signal( uint32_t HW_sem )
         /* Handle all "free" interrupts */
         if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Send) )  prvCore2ReceiveHandler();
         if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Recvd) ) prvCore2SendAckHandler();
-        if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Msg) )   cm4_msg_direct_received();
+        if ( SemMask & __HAL_HSEM_SEMID_TO_MASK(HSEM_CM7_to_CM4_Msg) )   CM4_handle_remote_direct();
     }
 #endif

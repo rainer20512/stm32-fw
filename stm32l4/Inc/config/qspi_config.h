@@ -66,6 +66,11 @@
 //    #define QSPI1_DMA_IRQHandler           DMA1_Channel5_IRQHandler
   #endif
 
+  /* Set a default QSPI clock if not yet set */
+  #if !defined(QSPI1_CLKSPEED)
+      #define QSPI1_CLKSPEED                10000000
+  #endif
+
 #endif // USE_QSPI1 
 
 #endif /* __QSPI_CONFIG_H */

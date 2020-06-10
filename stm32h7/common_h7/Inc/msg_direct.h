@@ -30,11 +30,16 @@
 /*
  * different types of data transfer 
  */
-#define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core                    */
-#define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core   */
-#define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7         */
-#define MSGTYPE_SETTINGS_GET_CM7                4   /* Get one persistent settings element for CM4 from CM7 */
-#define MSGTYPE_SETTINGS_SET_CM7                5   /* Set one persistent settings element of CM7 from CM4  */
+
+/* Messages from CM4 to CM7                                                                                   */
+#define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core                      */
+#define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core     */
+#define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7           */
+#define MSGTYPE_SETTINGS_GET_CM7                4   /* Get one persistent settings element for CM4 from CM7   */
+#define MSGTYPE_SETTINGS_SET_CM7                5   /* Set one persistent settings element of CM7 from CM4    */
+
+/* Messages from CM7 to CM4                                                                                   */
+#define MSGTYPE_CLOCKCHANGE_CM4              1025   /* Perform neccessary actions after Clk frq change on CM4 */
 
 
 /* 
@@ -89,15 +94,20 @@ typedef struct {
 
 /* Used by CM7 */
 #if defined ( CORE_CM7 )
-    extern AMPDctBuf_t          AMP_DirectBuffer;
-    void cm7_msg_direct_received(void);
+    extern   AMPDctBuf_t          AMP_DirectBuffer;
+    uint32_t Ipc_Is_Initialized   ( void );
+    void     CM7_handle_remote_direct(void);
+    void     CM7_handle_remote(uint32_t arg);
+    void     MSGD_DoClockChange(void);
+    uint32_t MSGD_WaitForRemoteClockChange(void);
 #endif
 
 /* Used by CM4 */
 #if defined ( CORE_CM4 )
     typedef AMPDctBuf_t *       AMPDctBufPtr_t;
     extern  AMPDctBufPtr_t      AMP_DctBuf_Ptr;
-    void    cm4_msg_direct_received(void);
+    void    CM4_handle_remote_direct(void);
+    void    CM4_handle_remote(uint32_t arg);
     void    MSGD_DoRemoteRegistration(void *dev);
     int32_t MSGD_WaitForRemoteRegistration(void);
     void    MSGD_DoCheckUniqueRemote(void *dev);

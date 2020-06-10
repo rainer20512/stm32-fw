@@ -653,9 +653,7 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     {
       RCC_ClkInitTypeDef    clkconfig;
       uint32_t              uwTimclock, uwAPB1Prescaler;
-      uint32_t              uwPrescalerValue;
-      uint32_t              pFLatency;
-  
+
       if (TickPriority < (1UL << __NVIC_PRIO_BITS)) {
           uwTickPrio = TickPriority;
       } else {
@@ -663,8 +661,9 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
       }
   
       /* DeInit and Init Basetimer device */
-      BASTIM_HW.DeInit(&BASTIM_HW );  
-      BASTIM_HW.Init(&BASTIM_HW );  
+      if ( BASTIM_HW.OnFrqChange ) BASTIM_HW.OnFrqChange(&BASTIM_HW);
+//      BASTIM_HW.DeInit(&BASTIM_HW );  
+//      BASTIM_HW.Init(&BASTIM_HW );  
 
       return HAL_OK;
     }

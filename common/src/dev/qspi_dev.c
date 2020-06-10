@@ -108,6 +108,46 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
     GpioAFInitAll(gpioaf, &Init );
 }
 
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    /* STM32L4xx has no clock mux for QUADSPI device */
+    #define QSpiSetClockSource(a)           (true)
+#elif defined(STM32H745xx)
+    static bool QSpiSetClockSource(const void *hw)
+    {
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      /* QUADSPI has to be operaterd with HCLK. Routines, which will set */
+      /* qspi speed, rely on HCLK as Clock source                        */
+
+      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
+      PeriphClkInit.Usart234578ClockSelection = RCC_QSPICLKSOURCE_D1HCLK;
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PUTS("failed to set CLK source for QUADSPI");
+        return false;
+      }
+
+      return true;
+    }
+#else 
+    #error "No usart clock assignment defined"
+#endif
+
+/*
+ * Init or DeInit Clock / clocksource 
+ */
+static bool QSpiClockInit(const HW_DeviceType *self, bool bDoInit)
+{
+    /* Select clock source on init*/
+    if ( bDoInit ) {
+        if ( !QSpiSetClockSource( self->devBase ) ) return false;
+    }
+
+    /* Enable/Disable clock */
+    HW_SetHWClock( (QUADSPI_TypeDef*)self->devBase, bDoInit );
+    return true;
+}
+
 /**************************************************************************************
  * Initialize the flash memories specific geometry data                               *
  *************************************************************************************/
@@ -207,6 +247,14 @@ void QSPI_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
     }
 
 #endif
+
+/**************************************************************************************
+ * Change the Qspi clock speed on the fly                                             *
+ *************************************************************************************/
+bool Qspi_SetSpeed (QSpiHandleT *myHandle, uint32_t new_clkspeed)
+{
+    return QSpi_BasicInit(myHandle, new_clkspeed, myHandle->geometry.FlashSize, false);
+}
 
 /**************************************************************************************
  * Dump Status and restore DeepSleep-Status afterwards                                *
@@ -601,13 +649,15 @@ bool QSpi_Init(const HW_DeviceType *self)
     myHandle->bIsDeepSleep          = false;
     myHandle->bAsyncBusy            = false;
     myHandle->bIsMemoryMapped       = false;
+    myHandle->clkspeed              = adt->default_speed;
 
+    QSpiClockInit(self, true);
     HW_SetHWClock(hqspi->Instance, true);
     HW_Reset(hqspi->Instance);
 
     QSpiGpioInitAF(self->devGpioAF);
 
-    ret = QSpi_SpecificInit(self, adt->myQSpiHandle, adt->default_speed);
+    ret = QSpi_SpecificInit(self, adt->myQSpiHandle);
     if ( ret ) {
         if ( self->devIrqList ) {
             /* Configure the NVIC, enable interrupts */
@@ -692,7 +742,7 @@ bool QSpi_OnFrqChange(const HW_DeviceType *self)
 
     static const QSpi_AdditionalDataType additional_qspi1 = {
         .myQSpiHandle       = &QSpi1Handle,
-        .default_speed      = 40000000,
+        .default_speed      = QSPI1_CLKSPEED,                 
     };
 
 

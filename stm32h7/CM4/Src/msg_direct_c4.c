@@ -27,37 +27,87 @@ AMPDctBufPtr_t      AMP_DctBuf_Ptr;
 
 /* External references------------------------------------------------------ */
 void Ipc_CM4_SendDirect( void );
+bool DevicesInhibitFrqChange(void);
+
+/* Forward declarations ---------------------------------------------------- */
+void Handle_Receive_1025(void);
 
 
 
 /******************************************************************************
- * Callback for CM7 message reception 
- * @note  will be executed in interrupt context
+ * Callback for CM7 message reception on CM4 core
+ * This callback consists of two parts: The first one, which is called in
+ * interrupt context ( this routine ) should be used for all message types
+ * which only requre a very short respones ( setting a "done" flag e.g. )
+ * Respones, which will take a longer execution time, should be executed
+ * in the remote task.
+ * 
+ * @note  this routine will be executed in interrupt context.
+ *
  *****************************************************************************/
-void cm4_msg_direct_received(void)
+void CM4_handle_remote_direct(void)
 {
     assert(AMP_DctBuf_Ptr->id == DIRECTMSG_ID);
 
-    /* Set status to "received" */
-    AMP_DctBuf_Ptr->msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
-
     /* Neccessary action depends on msg_id */
     switch ( AMP_DctBuf_Ptr->msg_id ) {
-        case  MSGTYPE_REGISTER_DEVICE:
+        /* handle all message types which only require a "done" status to be set */
+        /* and the peer waits for completion by polling                          */
+        case MSGTYPE_REGISTER_DEVICE:
         case MSGTYPE_CHKUNIQUE_DEVICE:
         case MSGTYPE_TASKLIST_CM7:
         case MSGTYPE_SETTINGS_GET_CM7:
         case MSGTYPE_SETTINGS_SET_CM7:
-            /* All the previous will get their results by polling */
+            /* Set status to "received"                                          */
+            AMP_DctBuf_Ptr->msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
             break;
         default:
-            DEBUG_PRINTF("cm4_direct_msg: unknown msg_id %d\n", AMP_DctBuf_Ptr->msg_id );
+            /* For all other message types: activate handler task */
+            TaskNotify(TASK_REMOTE_CM4);
     }
 }
 
 /******************************************************************************
- * CM4 Handler for remote device registration
- * @note  will be executed in interrupt context
+ * Thread function to handle "complex" messages from CM7 on CM4 core, 
+ * which are too time consuming to handle within interrupt context
+ *****************************************************************************/
+void CM4_handle_remote(uint32_t arg )
+{
+    assert(AMP_DctBuf_Ptr->id == DIRECTMSG_ID);
+
+    /* 
+     * handle all messages, that require more action than just ACK'ing the reception 
+     * Note: all handlers must set msg_status finally and call IPC handler, 
+     * if an answer is expected 
+     */
+    switch ( AMP_DctBuf_Ptr->msg_id ) {
+        case MSGTYPE_CLOCKCHANGE_CM4:
+            Handle_Receive_1025();
+            break;
+        default:
+            DEBUG_PRINTF("CM4_handle_remote: unknown msg_id %d\n", AMP_DctBuf_Ptr->msg_id );
+    }
+}
+
+/******************************************************************************
+ * CM4 Handler for remote (from CM7) clock change event
+ * Notify all devices about clock change
+ *****************************************************************************/
+void Handle_Receive_1025(void)
+{
+    if ( DevicesInhibitFrqChange() ) {
+        DEBUG_PUTS("Error: One or more CM4 devices disagreed to frq change!");
+    }
+    /* Set status to "received" */
+    AMP_DctBuf_Ptr->msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Stubs
+///////////////////////////////////////////////////////////////////////////////
+
+/******************************************************************************
+ * CM4 Stub for remote device registration
  *****************************************************************************/
 void MSGD_DoRemoteRegistration(void *dev)
 {
@@ -85,8 +135,7 @@ int32_t MSGD_WaitForRemoteRegistration(void)
 }
 
 /******************************************************************************
- * CM4 Handler for remote device uniqueness check
- * @note  will be executed in interrupt context
+ * CM4 Stub for remote device uniqueness check
  *****************************************************************************/
 void MSGD_DoCheckUniqueRemote(void *dev)
 {

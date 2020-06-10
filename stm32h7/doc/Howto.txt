@@ -14,3 +14,17 @@
       in the non cacheable RAM area.
 
     3. The MemoryMap.XML file MUST NOT contain comment lines. Parsing will stop with this lines
+
+    4. DMA and IPC mem must be zeroed upon start. To do that, customize the systems thumb_crt0.s for CM7 core 
+       and add the following lines 
+
+         /* RHB additional code to zero IPC and DMA memory */
+        ldr r0, =__dmamem_start__
+        ldr r1, =__dmamem_end__
+        movs r2, #0
+        bl memory_set
+        ldr r0, =__ipcmem_start__
+        ldr r1, =__ipcmem_end__
+        movs r2, #0
+        bl memory_set
+        /* RHB end of inserted code */

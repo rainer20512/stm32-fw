@@ -1888,6 +1888,18 @@ ADD_SUBMODULE(Test);
 
             DEBUG_PRINTTS("Waiting for Async op to be done\n");
             break;
+        case 12:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Clk speed <n> - Set Qspi clk speed to <n> kHz\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            printf("Set Qspi Clock speed to %d kHz",  addr );
+             
+                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000 );
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
         default:
           DEBUG_PUTS("PM_Menu: command not implemented");
       } /* end switch */
@@ -1912,8 +1924,9 @@ ADD_SUBMODULE(Test);
         { "Flash status",             ctype_fn, .exec.fn = QSPI_Menu, VOID(7), "Dump flash chip status" },
         { "Power Down",               ctype_fn, .exec.fn = QSPI_Menu, VOID(8), "Enable Power down mode" },
         { "End Power Down",           ctype_fn, .exec.fn = QSPI_Menu, VOID(9), "Exit Power down mode" },
-        { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10), "Write many bytes IRQ mode" },
+        { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10),"Write many bytes IRQ mode" },
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
+        { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> kHz" },
     };
     ADD_SUBMODULE(QSPI);
 #endif
