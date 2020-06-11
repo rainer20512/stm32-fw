@@ -54,6 +54,23 @@ uint32_t GetAPB2TimerFrequency(void)
   else 
      return uPclk2*2;
 }
+/******************************************************************************
+ * Get the STM32H745 peripheral clock frequency. This can be either HSI, CSI or 
+ * HSE clock frequency, depending from select bits in RCC->D1CCIPR
+ *****************************************************************************/
+uint32_t GetPerClkFrequency(void)     
+{
+    uint32_t bits = (RCC->D1CCIPR & RCC_D1CCIPR_CKPERSEL_Msk) >> RCC_D1CCIPR_CKPERSEL_Pos;
+    switch( bits ) {
+        case 0b00: return HSI_VALUE;
+        case 0b01: return CSI_VALUE;
+        case 0b10: return HSE_VALUE;
+        default:
+            DEBUG_PUTS("Error: GetPerClkFrequency - Illegal clk source" );
+    }
+    return 0;
+}
+
 
 void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD);
 

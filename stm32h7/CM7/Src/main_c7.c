@@ -60,7 +60,6 @@ uint32_t gflags;
 #endif
 
 /* Private function prototypes -----------------------------------------------*/
-static void SystemClock_Config(void);
 static void CPU_CACHE_Enable(void);
 static void MPU_Setup(void);
 static void MPU_Config(void);
@@ -122,8 +121,7 @@ int main(void)
 {
 
     int32_t timeout;
-    BaseType_t x;
-   
+
     /* 
      * STM32H745 Nucleo does only support SMPS. So select once at startup 
      * and do not touch again. Due to this, VOS scale0 is inhibited and
@@ -200,6 +198,9 @@ int main(void)
 
     // Switch LSE Clock on 
     LSEClockConfig(true, true);
+
+    /* Peripheral clock to HSE ( 8Mhz ) */
+    SetPeripheralClkSource(CLKP_HSE);
 
     /* Configure the system clock to 400 MHz */
     // SystemClock_Config();
@@ -382,7 +383,6 @@ static void prvCore1ModifiedTask( void *pvParameters )
 {
   BaseType_t x;
   uint32_t ulNextValue = 0;
-  const TickType_t xDelay = pdMS_TO_TICKS( 250 );
   char cString[ 15 ];
   
   /* Remove warning about unused parameters. */

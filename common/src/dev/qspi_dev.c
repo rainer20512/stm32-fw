@@ -108,19 +108,25 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
     GpioAFInitAll(gpioaf, &Init );
 }
 
+/**************************************************************************************
+ * Some Devices support different clock sources for QSPI. Make sure, that             *   
+  * QQSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+ *************************************************************************************/
 #if defined(STM32L476xx) || defined(STM32L496xx)
     /* STM32L4xx has no clock mux for QUADSPI device */
     #define QSpiSetClockSource(a)           (true)
+    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #elif defined(STM32H745xx)
     static bool QSpiSetClockSource(const void *hw)
     {
+      UNUSED(hw);
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
       /* QUADSPI has to be operaterd with HCLK. Routines, which will set */
       /* qspi speed, rely on HCLK as Clock source                        */
 
       PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
-      PeriphClkInit.Usart234578ClockSelection = RCC_QSPICLKSOURCE_D1HCLK;
+      PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_CLKP;
 
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
         DEBUG_PUTS("failed to set CLK source for QUADSPI");
@@ -129,6 +135,8 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
 
       return true;
     }
+    #include "hardware.h"
+    #define  QSpiGetClockSpeed()            GetPerClkFrequency()
 #else 
     #error "No usart clock assignment defined"
 #endif

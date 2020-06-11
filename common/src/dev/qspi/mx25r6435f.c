@@ -70,19 +70,19 @@ static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t
     bool hperf_enable;
 
     /* calculate prescaler,so that the initial frequency is at or below max. ULP frequency */ 
-    uint32_t prescaler = HAL_RCC_GetHCLKFreq() / desired_frq;
+    uint32_t prescaler = QSpiGetClockSpeed() / desired_frq;
 
     if ( prescaler > 0 ) prescaler--;
 
     if ( prescaler > 255 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_BasicInit - Error: prescaler too big");
+            DEBUG_PRINTF("QSpi_BasicInit - QSPI clk too low, minimum is %d\n", QSpiGetClockSpeed()/256 );
         #endif
         return false;
     }
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTF("Qspi: Clk=%d\n", HAL_RCC_GetHCLKFreq() / (prescaler+1) );
+        DEBUG_PRINTF("Qspi: Clk=%d\n", QSpiGetClockSpeed() / (prescaler+1) );
     #endif
 
     /* if not first init, then if selected operating speed is higher than max. ULP speed, select high performance mode */
@@ -306,9 +306,15 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle)
 { 
     UNUSED(self);
     uint32_t clkspeed = myHandle->clkspeed;
+    
+    /* 
+     * The initialization clock speed is the minimum of selected operating speed and QSPI_INITIAL_SPEED
+     * which is a safe speed for initialization 
+     */
+    uint32_t init_speed = ( clkspeed < QSPI_INITIAL_SPEED ? clkspeed : QSPI_INITIAL_SPEED );
 
-    /* Basic Initialization with a safe speed and minimum falsh size to readout ID data */
-    if ( !QSpi_BasicInit(myHandle, QSPI_INITIAL_SPEED, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
+    /* Basic Initialization with a safe speed and minimum flash size to readout ID data */
+    if ( !QSpi_BasicInit(myHandle, init_speed, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
 
 
     /* QSPI memory reset */
@@ -343,13 +349,8 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle)
     }
 
  
-    /* The operating speed up to now ist the minimum of max- speed in ULP mode and selected operating speed */
-    uint32_t operating_frq = ( clkspeed < QSPI_MAX_ULP_FREQUENCY ? clkspeed : QSPI_MAX_ULP_FREQUENCY );
-
-    /* if selected operating speed is higher than max. ULP speed, select high performance mode */
-    if ( operating_frq < clkspeed ) {
-        if ( !QSpi_BasicInit(myHandle, clkspeed, myHandle->geometry.FlashSize, false) ) return false;
-    }
+    /* The operating speed is now set to user configured speed and flash size is set to correct size */
+    if ( !QSpi_BasicInit(myHandle, clkspeed, myHandle->geometry.FlashSize, false) ) return false;
 
   return true;
 }

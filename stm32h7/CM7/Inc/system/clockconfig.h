@@ -87,6 +87,14 @@ uint32_t Get_SysClockFrequency  ( void );
 bool     HSIClockCalibrate      ( void );
 void     EnableMCO              ( uint32_t mcoSource );
 
+/* Allowed clock sources for SetPeripheralClkSource */
+enum {
+    CLKP_HSI = 0,
+    CLKP_CSI = 1,
+    CLKP_HSE = 2,
+} ;
+void SetPeripheralClkSource( uint32_t src );
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -83,7 +83,7 @@ void DBG_dump_po2 (const char *text, uint32_t exp );
 void CRLF(void);
 void print_hexXX(uint8_t i);
 void print_hexXXXX(uint16_t i);
-#if ( DEBUG_RFM_STATUS > 0 || DEBUG_DUMP_RFM > 0 || DEBUG_DUMP_KEYS > 0 || DEBUG_CHECK_SEC > 0 || DEBUG_PRINT_RTC_TICKS > 0 || DEBUG_MEM_CHECK > 0 || DEBUG_SLEEP_MODE > 0 || DEBUG_PRINT_ADDITIONAL_TIMESTAMPS > 0 ) 
+#if ( DEBUG_RFM_STATUS > 0 || DEBUG_DUMP_RFM > 0 || DEBUG_DUMP_KEYS > 0 || DEBUG_CHECK_SEC > 0 || DEBUG_PRINT_RTC_TICKS > 0 || DEBUG_MEM_CHECK > 0 || DEBUG_SLEEP_MODE > 0 || DEBUG_PRINT_ADDITIONAL_TIMESTAMPS > 0 ) || USE_DISPLAY > 0
     void print_dec_number ( uint16_t num, uint8_t digits, bool bLeadingZeros);
     void print_decSXX(int8_t i);
     char *my_itoa ( uint16_t num, char *retbuf, uint8_t digits, bool bLeadingZeros);

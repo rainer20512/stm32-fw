@@ -36,5 +36,6 @@ extern const TIM_TypeDef* apb1_timers[9];    /* Timers connected to APB1 */
 extern const TIM_TypeDef* apb2_timers[5];    /* Timers connected to APB2 */
 uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
 uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
+uint32_t GetPerClkFrequency     (void);     /* Get the peripheral clock frq */
 void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */
 

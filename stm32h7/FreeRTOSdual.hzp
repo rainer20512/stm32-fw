@@ -590,5 +590,6 @@
     Name="Common"
     c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
     c_user_include_directories="./../common/inc;./common_h7/inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
-    environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0" />
+    environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0"
+    gcc_enable_all_warnings="Yes" />
 </solution>

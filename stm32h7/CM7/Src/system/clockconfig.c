@@ -41,6 +41,7 @@
 #include "eeprom.h"
 #include "system/clockconfig.h"
 #include "system/timer_handler.h"
+#include "msg_direct.h"
 
 
 #if DEBUG_MODE > 0
@@ -143,8 +144,6 @@ static uint32_t GetFlashLatency( uint32_t vrange, uint32_t flash_khz )
  *****************************************************************************/
 static uint32_t SetPredividers( RCC_ClkInitTypeDef *ClkInit, uint32_t sysclk_khz )
 {
-    uint32_t ahb_clock;
-    
     if ( sysclk_khz > 480000 ) {
         Error_Handler_XX(-3, __FILE__, __LINE__); 
     }  
@@ -391,6 +390,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
      *************************************************************************/
     static void SystemClock_HSE_xxMHz_VOSrange_3_0WS_restore ( uint32_t xxmhz, bool bSwitchOffHSI)
     {
+      UNUSED(xxmhz);
       RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
       RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
@@ -522,6 +522,7 @@ static void ConfigurePLL (RCC_OscInitTypeDef *RCC_OscInitStruct, uint32_t pll_kh
  */
 static void SystemClock_PLL_xxMHz_Vrange_01_restore (uint32_t xxkhz, bool bSwitchOffHSI)
 {
+  UNUSED(xxkhz);
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
@@ -565,7 +566,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   uint32_t pll_inp_khz;
-  bool bBaseClkSet = false;         /* flag for "PLL base clock has been set"
+  bool bBaseClkSet = false;         /* flag for "PLL base clock has been set"   */
 
   /* Check constraints */
   if ( pll_khz > 480000 || pll_khz < 64000) {
@@ -783,6 +784,16 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
   }
 
 }
+
+void SetPeripheralClkSource( uint32_t src )
+{
+    if ( src < 3 ) {
+        MODIFY_REG(RCC->D1CCIPR, RCC_D1CCIPR_CKPERSEL_Msk, src << RCC_D1CCIPR_CKPERSEL_Pos);
+    } else {
+        DEBUG_PUTS("Error: SetPeripheralClkSource -illegal source");
+    }
+}
+
 
 void HSIClockConfig(bool bHSIon)
 {
