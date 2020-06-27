@@ -651,9 +651,6 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
      */
     HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority)
     {
-      RCC_ClkInitTypeDef    clkconfig;
-      uint32_t              uwTimclock, uwAPB1Prescaler;
-
       if (TickPriority < (1UL << __NVIC_PRIO_BITS)) {
           uwTickPrio = TickPriority;
       } else {

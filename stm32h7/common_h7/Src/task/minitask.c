@@ -74,7 +74,7 @@ void TaskRTOSWrapper ( void *taskArg ) {
     assert( myTaskID < MAX_TASK );
     #if DEBUG_PROFILING >  0
         /* Accounting to the specified ID, or to main, if nothing specified */
-        uint32_t profID = tasks[myTaskID].PrID;
+        int32_t profID = tasks[myTaskID].PrID;
         if ( profID < 0 ) profID = JOB_TASK_UNCLASSIFIED;
     #endif
     while ( 1 ) {
@@ -105,7 +105,7 @@ void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t 
     assert( r != NULL );
 
 
-    if ( tasks[num].TaskID > 0  ) {
+    if ( tasks[num].TaskID != NULL  ) {
         DEBUG_PRINTF("Task %d already set\n", num);
         return;
     }
@@ -115,7 +115,7 @@ void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t 
     tasks[num].PrID      = profilerID;
     tasks[num].stackMem  = stackMem;
     tasks[num].stackSize = ulStackDepth;
-    tasks[num].TaskID    = 0;
+    tasks[num].TaskID    = NULL;
 #if DEBUG_MODE > 0
     tasks[num].Name = Name;
 #endif
@@ -311,6 +311,7 @@ int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const 
             listMode = startItem;
             itemCnt  = 0;
             // no break here
+            __attribute__((fallthrough));
         case ACTIONID_ITERATE:
             switch ( listMode ) {
                 case LISTMODE_HEADER:
@@ -320,6 +321,7 @@ int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const 
                     /* no more lines in the current category, go to next category */
                     listMode++; itemCnt = 0;
                     // no break here
+                    __attribute__((fallthrough));
                 case LISTMODE_BODY:
                     #if defined(CORE_CM7)
                         TaskFormatBody(retbuf, buflen, prefixstr,itemCnt++, "CM7");
@@ -331,6 +333,7 @@ int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const 
                     /* no more lines in the current category, go to next category */
                     listMode++; itemCnt = 0;
                     // no break here
+                    __attribute__((fallthrough));
                 case LISTMODE_FOOTER:
                     TaskFormatFooter(retbuf, buflen, prefixstr,itemCnt++);
                     if ( CHECKDONE() ) return -1;
@@ -338,6 +341,7 @@ int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const 
                     /* no more lines in the current category, go to next category */
                     listMode++; itemCnt = 0;
                     // no break here
+                    __attribute__((fallthrough));
                 default:
                     *retbuf = '\0';
                     return -1;

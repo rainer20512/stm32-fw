@@ -271,8 +271,9 @@
 
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
+      #define QSPI_HND          QSpi1Handle
       #define USE_QSPI1
-      #define QSPI1_CLKSPEED    50000      // Use low clk rates on breadboard
+      #define QSPI1_CLKSPEED    1000000      // Use low clk rates on breadboard
       #define USE_QSPI1_ALTN4
       #define QSPI1_USE_IRQ
       // #define QSPI1_USE_DMA Not implemented yet 

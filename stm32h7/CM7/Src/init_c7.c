@@ -107,7 +107,7 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_QSPI > 0
+  #if USE_QSPI > 0 && USE_EEPROM_EMUL == 0 
       dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );

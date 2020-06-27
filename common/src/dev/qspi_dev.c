@@ -103,7 +103,7 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
 {
     GPIO_InitTypeDef Init;
     Init.Mode = GPIO_MODE_AF_PP;
-    Init.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    Init.Speed = GPIO_SPEED_FREQ_HIGH;
 
     GpioAFInitAll(gpioaf, &Init );
 }
@@ -126,7 +126,7 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
       /* qspi speed, rely on HCLK as Clock source                        */
 
       PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
-      PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_CLKP;
+      PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_D1HCLK;
 
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
         DEBUG_PUTS("failed to set CLK source for QUADSPI");
@@ -135,8 +135,9 @@ static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
 
       return true;
     }
-    #include "hardware.h"
-    #define  QSpiGetClockSpeed()            GetPerClkFrequency()
+    //#include "hardware.h"
+    //#define  QSpiGetClockSpeed()            GetPerClkFrequency()
+    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #else 
     #error "No usart clock assignment defined"
 #endif
@@ -284,7 +285,7 @@ void QSpi_DumpStatus(QSpiHandleT *myHandle)
 }
 
 /**************************************************************************************
- * Set QSpi done and/or error callback                                                *
+ * Set QSpi read, write/erase and error callbacks                                     *
  * After successful initialization, the device is deactivated to reduce power         *
  * consumption. So, to use the device, it has to be activated first                   *
  *************************************************************************************/
@@ -372,16 +373,39 @@ bool QSpi_ReadDMA   (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, u
  * operation is repeaded as often as possible, until the whole buffer is written
  ******************************************************************************
  *****************************************************************************/
-typedef bool ( *QSpi_SM_T ) (void);     // Typedef for Statemachine function
-static uint32_t currWriteAddr;          // current write Address 
-static uint32_t currWriteSize;          // current write Size
-static uint32_t WriteEndAddr;           // last write Address + 1
-static uint8_t  *WriteSource;           // Ptr to the write source
-static uint32_t currOpmode;             // operation mode of write op
-static uint32_t currState;              // current state of state machine
-static QSpiHandleT *currHandle;         // current QSpi handle
-static QSpi_SM_T currSM;                // currently used Statemachine
-#define currHqspi   (&currHandle->hqspi)
+typedef bool ( *QSpi_SM_Fn ) (void);     // Typedef for Statemachine function
+typedef union {
+    struct {
+        uint32_t wrOpmode;             // operation mode of write op
+        uint32_t wrState;              // current state of write state machine
+        QSpiHandleT *wrHandle;         // current QSpi handle for write op
+        uint32_t currWriteAddr;        // current write Address 
+        uint32_t currWriteSize;        // current write Size
+        uint32_t WriteEndAddr;         // last write Address + 1
+        uint8_t  *WriteSource;         // Ptr to the write source
+    };
+    struct {
+        uint32_t erOpmode;             // operation mode of erase op
+        uint32_t erState;              // current state of erase state machine
+        QSpiHandleT *erHandle;         // current QSpi handle for erase op
+        QSpi_SM_Fn erSM;               // currently used Statemachine for erase
+        uint32_t currEraseAddr;        // current erase address
+        uint32_t EraseAddrInc;         // Address Increment for next erase item
+        uint32_t EraseItemCnt;         // number of items to erase
+        uint32_t EraseMode;            // Selected erase mode ( Sector/block/chip )
+    };
+} Qspi_SM_DataT;
+
+static Qspi_SM_DataT smData;
+static QSpi_SM_Fn wrSM;               // currently used Statemachine for write
+static QSpi_SM_Fn erSM;               // currently used Statemachine for erase
+
+#define GETWRHANDLE()                   (&(smData.wrHandle->hqspi))
+#define GETERHANDLE()                   (&(smData.erHandle->hqspi))
+
+/*-----------------------------------------------------------------------------
+ * Write - Write - Write - Write - Write - Write - Write - Write - Write - Writ
+ *---------------------------------------------------------------------------*/
 
 /******************************************************************************
  * Implement a classic loop with four components
@@ -392,7 +416,7 @@ static QSpi_SM_T currSM;                // currently used Statemachine
  * This is done, because the loop execution is triggered direcly ( in polling mode )
  * or by interrupts ( in IRQ or DMA mode )
  *****************************************************************************/
-static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr, uint32_t Size, uint32_t opmode, QSpi_SM_T stateMachine)
+static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr, uint32_t Size, uint32_t opmode, QSpi_SM_Fn stateMachine)
 {
     if ( opmode != QSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
@@ -413,22 +437,23 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     }
 
     /* Calculation of the size between the write address and the end of the page */
-    currWriteSize = myHandle->geometry.ProgPageSize - (WriteAddr % myHandle->geometry.ProgPageSize);
+    smData.currWriteSize = myHandle->geometry.ProgPageSize - (WriteAddr % myHandle->geometry.ProgPageSize);
 
     /* Check if the size of the data is less than the remaining place in the page */
-    if (currWriteSize > Size) currWriteSize = Size;
+    if (smData.currWriteSize > Size) smData.currWriteSize = Size;
 
     /* Initialize the current and final write addresses */
-    currWriteAddr = WriteAddr;
-    WriteEndAddr  = WriteAddr + Size;
-    WriteSource   = pData;
-    currOpmode    = opmode;
-    currState     = 0;
-    currHandle    = myHandle;
-    currSM        = stateMachine;
+    smData.currWriteAddr = WriteAddr;
+    smData.WriteEndAddr  = WriteAddr + Size;
+    smData.WriteSource   = pData;
+    smData.wrOpmode    = opmode;
+    smData.wrState     = 0;
+    smData.wrHandle    = myHandle;
+    wrSM               = stateMachine;
+    erSM               = NULL;
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTTS("Write Init, area: 0x%08x ... 0x%08x, written in %d steps\n", WriteAddr, WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
+        DEBUG_PRINTTS("Write Init, area: 0x%08x ... 0x%08x, written in %d steps\n", WriteAddr,smData.WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
     #endif
 
     /* Wake up device, if in deep sleep */
@@ -437,20 +462,20 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     return true;
 }
 
-static void WriteTerminate(bool finalState)
+static void WriteEraseTerminate(bool finalState, uint32_t opmode, QSpiHandleT *myHandle)
 {
-    if ( currOpmode != QSPI_MODE_POLL ) {
-        if ( !currHandle->bAsyncBusy ) {
+    if ( opmode != QSPI_MODE_POLL ) {
+        if ( !myHandle->bAsyncBusy ) {
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PUTS("WriteTerminate - Error: Async Op not active");
+                DEBUG_PUTS("WriteEraseTerminate - Error: Async Op not active");
             #endif
         }
-        currHandle->bAsyncBusy = false;
+        myHandle->bAsyncBusy = false;
     }
-    DEBUG_PRINTTS("Write terminated %s\n",finalState ? "ok" : "with error");
+    DEBUG_PRINTTS("Write/Erase terminated %s\n",finalState ? "ok" : "with error");
 
     /* Activate Callback, if specified */
-    if (currHandle->QSpi_WrDoneCB) currHandle->QSpi_WrDoneCB(currHandle);
+    if (myHandle->QSpi_WrDoneCB) myHandle->QSpi_WrDoneCB(myHandle);
 }
 
 
@@ -458,26 +483,26 @@ static bool WriteBlock (void )
 {
     bool ret;
 
-    DEBUG_PRINTTS("Write @0x%08x, Len=%d\n", currWriteAddr, currWriteSize);
+    DEBUG_PRINTTS("Write @0x%08x, Len=%d\n", smData.currWriteAddr, smData.currWriteSize);
     /* Enable write and send write command */
-    if ( !QSpi_WriteCMD(currHqspi, currWriteAddr, currWriteSize) ) return false;
+    if ( !QSpi_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
 
-    switch ( currOpmode ) {
+    switch ( smData.wrOpmode ) {
         case QSPI_MODE_POLL:
             /* Transmission of the data in polling mode*/
-            ret = HAL_QSPI_Transmit(currHqspi, WriteSource, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            ret = HAL_QSPI_Transmit(GETWRHANDLE(), smData.WriteSource, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
             break;
         case QSPI_MODE_IRQ:
             /* Transmission of the data in irq mode*/
-            ret = HAL_QSPI_Transmit_IT(currHqspi, WriteSource) == HAL_OK;
+            ret = HAL_QSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
             break;
         case QSPI_MODE_DMA:
             /* Transmission of the data in irq mode*/
-            ret = HAL_QSPI_Transmit_DMA(currHqspi, WriteSource) == HAL_OK;
+            ret = HAL_QSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
             break;
         default:
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PRINTF("WriteLoop - Error: Mode %d not implemented\n", currOpmode);
+                DEBUG_PRINTF("WriteLoop - Error: Mode %d not implemented\n", smData.wrOpmode);
             #endif
             return false;
     } // switch
@@ -485,7 +510,7 @@ static bool WriteBlock (void )
     /* report errors, if configured */
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTF("WriteLoop - Error: Transmit error in mode %d\n", currOpmode);
+            DEBUG_PRINTF("WriteLoop - Error: Transmit error in mode %d\n", smData.wrOpmode);
         #endif
     }
 
@@ -497,10 +522,10 @@ static bool WaitForWriteDone(void)
     bool ret;
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
-    if ( currOpmode == QSPI_MODE_POLL ) 
-        ret = QSpi_WaitForWriteDone(currHqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
+    if ( smData.wrOpmode == QSPI_MODE_POLL ) 
+        ret = QSpi_WaitForWriteDone(GETWRHANDLE(), HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
     else 
-        ret = QSpi_WaitForWriteDone_IT(currHqspi);
+        ret = QSpi_WaitForWriteDone_IT(GETWRHANDLE());
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
@@ -515,11 +540,11 @@ static bool WaitForWriteDone(void)
 static bool WriteIncement(QSpiHandleT *myHandle)
 {
     /* Update the address and size variables for next page programming */
-    currWriteAddr += currWriteSize;
-    WriteSource   += currWriteSize;
-    currWriteSize = ((currWriteAddr + myHandle->geometry.ProgPageSize) > WriteEndAddr) ? (WriteEndAddr - currWriteAddr) : myHandle->geometry.ProgPageSize;
+    smData.currWriteAddr += smData.currWriteSize;
+    smData.WriteSource   += smData.currWriteSize;
+    smData.currWriteSize = ((smData.currWriteAddr + myHandle->geometry.ProgPageSize) >smData.WriteEndAddr) ? (smData.WriteEndAddr - smData.currWriteAddr) : myHandle->geometry.ProgPageSize;
   
-    return currWriteAddr < WriteEndAddr;
+    return smData.currWriteAddr <smData.WriteEndAddr;
 }
 #define WRSTATE_START       0
 #define WRSTATE_WRITEBLOCK  1
@@ -528,55 +553,55 @@ static bool WriteIncement(QSpiHandleT *myHandle)
 #define WRSTATE_TERMINATE   4
 #define STATE_ERROR         99
 
-#define NEXTSTATE(a)     currState=a
-#define SM_PAUSE(a)      bSmPause=a
+#define WR_NEXTSTATE(a)     smData.wrState=a
+#define WR_SM_PAUSE(a)      bSmPause=a
 static bool WriteSM(void)
 {
     bool bSmPause = false;
 
     while (!bSmPause ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTTS("WriteSM in state %d\n", currState);
+            DEBUG_PRINTTS("WriteSM in state %d\n", smData.wrState);
         #endif
-        switch ( currState ) {
+        switch ( smData.wrState ) {
             case WRSTATE_START: 
                 /* Enable Write and Send Write Command - both in one step */
-                if ( !QSpi_WriteCMD(currHqspi, currWriteAddr, currWriteSize) ) goto WriteSmTerminate;
+                if ( !QSpi_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) goto WriteSmTerminate;
                 /* Continue with next state in any case*/
-                NEXTSTATE(WRSTATE_WRITEBLOCK);
-                SM_PAUSE(false);
+                WR_NEXTSTATE(WRSTATE_WRITEBLOCK);
+                WR_SM_PAUSE(false);
                 break;
             case WRSTATE_WRITEBLOCK:
                 if (!WriteBlock() ) goto WriteSmTerminate;
-                NEXTSTATE(WRSTATE_WAITFORDONE);
+                WR_NEXTSTATE(WRSTATE_WAITFORDONE);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
-                SM_PAUSE( currOpmode != QSPI_MODE_POLL );
+                WR_SM_PAUSE( smData.wrOpmode != QSPI_MODE_POLL );
                 break;
             case WRSTATE_WAITFORDONE:
                 if ( !WaitForWriteDone() ) goto WriteSmTerminate;
-                NEXTSTATE(WRSTATE_INCREMENT);
+                WR_NEXTSTATE(WRSTATE_INCREMENT);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
-                SM_PAUSE( currOpmode != QSPI_MODE_POLL );
+                WR_SM_PAUSE( smData.wrOpmode != QSPI_MODE_POLL );
                 break;
             case WRSTATE_INCREMENT:
                 /* increment the loop counters and check for termination */
-                if ( WriteIncement(currHandle) ) 
-                    NEXTSTATE(WRSTATE_WRITEBLOCK);
+                if ( WriteIncement(smData.wrHandle) ) 
+                    WR_NEXTSTATE(WRSTATE_WRITEBLOCK);
                 else
-                    NEXTSTATE(WRSTATE_TERMINATE);
+                    WR_NEXTSTATE(WRSTATE_TERMINATE);
                 /* Continue with next state right now*/
-                SM_PAUSE(false);
+                WR_SM_PAUSE(false);
                 break;
             case WRSTATE_TERMINATE:
                 /* Final State reached without error */
-                WriteTerminate(true);
+                WriteEraseTerminate(true, smData.wrOpmode, smData.wrHandle);
                 return true;
             case STATE_ERROR:
                 /* Error state, reached only by error Interrupt; */
                 goto WriteSmTerminate;    
             default:
                 #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                    DEBUG_PRINTF("WriteSM - Error: illegal state %d\n", currState);
+                    DEBUG_PRINTF("WriteSM - Error: illegal state %d\n", smData.wrState);
                 #endif
                 goto WriteSmTerminate;
         } // switch
@@ -585,7 +610,7 @@ static bool WriteSM(void)
 
 WriteSmTerminate:
     // All erroneous exits are handeled here
-    WriteTerminate(false);
+    WriteEraseTerminate(false, smData.wrOpmode, smData.wrHandle);
     return false;
 }
 
@@ -601,6 +626,225 @@ bool QSpi_WriteDMA  (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, 
     if ( !WriteInit(myHandle, pData, WriteAddr, Size, QSPI_MODE_DMA, WriteSM) ) return false;
     return WriteSM();
 }
+
+/*-----------------------------------------------------------------------------
+ * Erase - Erase - Erase - Erase - Erase - Erase - Erase - Erase - Erase - Eras
+ *---------------------------------------------------------------------------*/
+
+/******************************************************************************
+ * Get the address increment depending from the erase mode
+ *****************************************************************************/
+static uint32_t GetEraseAddrInc(QSpiHandleT *myHandle,uint32_t erasemode)
+{
+    switch(erasemode)
+    {
+        case QSPI_ERASE_SECTOR:
+            return myHandle->geometry.EraseSectorSize;
+            break;
+        case QSPI_ERASE_BLOCK:
+            // RHB tbd return myHandle->geometry.EraseBlockSize;
+            return 1 << 15;
+            break;
+        case QSPI_ERASE_ALL:
+            return 1 << 16;
+            break;
+        default:
+            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                DEBUG_PRINTF("GetEraseAddrInc - Error: unkown erasemode %d\n", erasemode);
+            #endif
+    }
+
+    return 1 << 16;
+}
+
+/******************************************************************************
+ * Implement a classic loop with four components
+ * - Initialisation
+ * - Loop body
+ * - Change loop variables and check for termination
+ * - terminate
+ * This is done, because the loop execution is triggered direcly ( in polling mode )
+ * or by interrupts ( in IRQ or DMA mode )
+ *****************************************************************************/
+static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numItems, uint32_t opmode, uint32_t erasemode, QSpi_SM_Fn stateMachine)
+{
+    if ( opmode != QSPI_MODE_POLL ) {
+        if ( myHandle->bAsyncBusy ) {
+            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                DEBUG_PUTS("EraseInit - Error: Another Async Op is active");
+            #endif
+            return false;
+        }
+        myHandle->bAsyncBusy = true;
+    }
+
+    /* check for positive size */
+    if ( numItems == 0 ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("EraseInit - Erasing 0 items not allowed");
+        #endif
+        return false;
+    }
+
+    /* Initialize the neccessary erase data */
+    smData.currEraseAddr = EraseAddr;
+    smData.EraseAddrInc  = GetEraseAddrInc(myHandle, erasemode);
+    smData.EraseItemCnt  = ( erasemode == QSPI_ERASE_ALL ? 1 : numItems);
+    smData.EraseMode     = erasemode;
+    smData.erOpmode      = opmode;
+    smData.wrOpmode    = opmode;
+    smData.erState     = 0;
+    smData.erHandle    = myHandle;
+    erSM               = stateMachine;
+    wrSM               = NULL;
+
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        DEBUG_PRINTTS("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d\n", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
+    #endif
+
+    /* Wake up device, if in deep sleep */
+    if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+
+    return true;
+}
+
+static bool WaitForEraseDone(uint32_t timeout_ms)
+{
+    bool ret;
+
+    /* Configure automatic polling mode to wait for reset of WIP bit */  
+    if ( smData.erOpmode == QSPI_MODE_POLL ) 
+        ret = QSpi_WaitForWriteDone(GETERHANDLE(), timeout_ms);
+    else 
+        ret = QSpi_WaitForWriteDone_IT(GETERHANDLE());
+ 
+    if ( !ret ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("QSpi_SpecificWait - Error: Timeout while autopll");
+        #endif
+        return false;
+    }
+    
+    return true;
+}
+
+static bool EraseIncement(void)
+{
+    /* Update the address and decrement count */
+    if ( --smData.EraseItemCnt == 0 ) return false;
+
+    smData.currEraseAddr += smData.EraseAddrInc;
+    return true;
+}
+
+
+#define ERSTATE_START       0
+#define ERSTATE_WAITFORDONE 1
+#define ERSTATE_INCREMENT   2
+#define ERSTATE_TERMINATE   3
+#define STATE_ERROR         99
+
+#define ER_NEXTSTATE(a)     smData.erState=a
+#define ER_SM_PAUSE(a)      bSmPause=a
+
+static bool EraseSM(void)
+{
+    bool bSmPause = false;
+    uint32_t tmo_ms;
+    uint8_t opcode_unused;
+
+    while (!bSmPause ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PRINTTS("EraseSM in state %d\n", smData.erState);
+        #endif
+        switch ( smData.erState ) {
+            case ERSTATE_START: 
+                /* Enable Write and Send Write Command - both in one step */
+                DEBUG_PRINTTS("Erase @0x%08x, mode=%d\n", smData.currEraseAddr, smData.EraseMode);
+                if ( !QSpi_EraseCmd(GETERHANDLE(), smData.currEraseAddr, smData.EraseMode) ) goto EraseSmTerminate;
+                /* Continue with next state in any case*/
+                ER_NEXTSTATE(ERSTATE_WAITFORDONE);
+                /* Continue with waiting for completion immediately */
+                ER_SM_PAUSE( false );
+                break;
+            case ERSTATE_WAITFORDONE:
+                if ( !GetEraseParams(smData.EraseMode, &tmo_ms, &opcode_unused ) ) goto EraseSmTerminate;
+                if ( !WaitForEraseDone(tmo_ms) ) goto EraseSmTerminate;
+                DEBUG_PRINTTS("Erase done\n");
+                ER_NEXTSTATE(ERSTATE_INCREMENT);
+                /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
+                ER_SM_PAUSE( smData.erOpmode != QSPI_MODE_POLL );
+                break;
+            case ERSTATE_INCREMENT:
+                /* increment the loop counters and check for termination */
+                if ( EraseIncement() ) 
+                    ER_NEXTSTATE(ERSTATE_START);
+                else
+                    ER_NEXTSTATE(ERSTATE_TERMINATE);
+                /* Continue with next state right now*/
+                ER_SM_PAUSE(false);
+                break;
+            case ERSTATE_TERMINATE:
+                /* Final State reached without error */
+                WriteEraseTerminate(true, smData.erOpmode, smData.erHandle);
+                return true;
+            case STATE_ERROR:
+                /* Error state, reached only by error Interrupt; */
+                goto EraseSmTerminate;    
+            default:
+                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                    DEBUG_PRINTF("EraseSM - Error: illegal state %d\n", smData.erState);
+                #endif
+                goto EraseSmTerminate;
+        } // switch
+    } // while
+    return true;
+
+EraseSmTerminate:
+    // All erroneous exits are handeled here
+    WriteEraseTerminate(false, smData.erOpmode, smData.erHandle);
+    return false;
+}
+
+
+
+
+/* Erase <numSect> consecutive sectors, first sector specified by <EraseAddr> */
+bool QSpi_EraseSectorWait       (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
+{
+    if (!EraseInit(myHandle, EraseAddr, numSect, QSPI_MODE_POLL, QSPI_ERASE_SECTOR, EraseSM )) return false;
+    return EraseSM();
+}
+bool QSpi_EraseSectorIT         (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
+{
+    if (!EraseInit(myHandle, EraseAddr, numSect, QSPI_MODE_IRQ, QSPI_ERASE_SECTOR, EraseSM )) return false;
+    return EraseSM();
+}
+
+/* Erase <numSect> consecutive block, first block specified by <EraseAddr> */
+bool QSpi_EraseBlockWait        (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+{
+    if (!EraseInit(myHandle, EraseAddr, numBlock, QSPI_MODE_POLL, QSPI_ERASE_BLOCK , EraseSM )) return false;
+    return EraseSM();
+}
+bool QSpi_EraseBlockIT          (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+{
+    if (!EraseInit(myHandle, EraseAddr, numBlock, QSPI_MODE_IRQ, QSPI_ERASE_BLOCK, EraseSM )) return false;
+    return EraseSM();
+}
+
+/* Erase entire chip */
+bool QSpi_EraseChipWait         (QSpiHandleT *myHandle)
+{
+    if (!EraseInit(myHandle, 0, 1, QSPI_MODE_POLL, QSPI_ERASE_ALL , EraseSM )) return false;
+    return EraseSM();
+}
+bool QSpi_EraseChipIT           (QSpiHandleT *myHandle)
+{
+    if (!EraseInit(myHandle, 0, 1, QSPI_MODE_IRQ, QSPI_ERASE_ALL , EraseSM )) return false;
+    return EraseSM();
+}
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -693,6 +937,17 @@ bool QSpi_Init(const HW_DeviceType *self)
     return ret;
 }
 
+    /**********************************************************************************
+     * Early Init of QSPI Device to enable R/W of config values
+     *********************************************************************************/
+    void QSPI_EarlyInit(void)
+    {
+      int32_t dev_idx;
+
+      /* Init QSPI device */
+      dev_idx = AddDevice(&QSPI_DEV,NULL ,NULL);
+      DeviceInitByIdx(dev_idx, NULL);
+    }
 
 
 
@@ -844,7 +1099,7 @@ const HW_DeviceType HW_QSPI1 = {
       UNUSED(hqspi);
       DEBUG_PRINTTS("ERROR CALLBACK\n");
       /* Set error state and trigger next call of SM */
-      currState = STATE_ERROR;
+      smData.wrState = STATE_ERROR;
       TaskNotify(TASK_QSPI);
     }
 #endif /* if defined(QSPI1_USE_IRQ) */
@@ -853,7 +1108,9 @@ const HW_DeviceType HW_QSPI1 = {
 void task_handle_qspi(uint32_t arg)
 {
     UNUSED(arg);
-    if (currSM) currSM();
+    /* Only one SM may be active at one time, check which */
+    if      (wrSM) wrSM();
+    else if (erSM) erSM(); 
 }
 
 #endif /* if USE_QSPI > 0 */

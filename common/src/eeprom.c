@@ -20,8 +20,8 @@
 #endif
 
 #if USE_EEPROM_EMUL > 0
-    #include "../modules/eeprom_emul/core/eeprom_emul_conf.h"
-    #include "../modules/eeprom_emul/core/eeprom_emul.h"
+    #include "eeprom_emul_conf.h"
+    #include "eeprom_emul.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
@@ -174,16 +174,7 @@ static void configInit(void)
  *****************************************************************************/
 static void eeprom_prepare_write(void)
 {
-    uint32_t err = (FLASH->SR & FLASH_FLAG_SR_ERRORS);
-
-    if ( err ) {
-        #if DEBUG_MODE > 0 
-            DEBUG_PRINTF("EEPROM Write: Found an error from previous write! (SR=%08x)\n", err);
-        #endif
-        __HAL_FLASH_CLEAR_FLAG(err);
-    }
-
-    HAL_FLASH_Unlock();
+    EE_PrepareWrite();
 }
 
 /******************************************************************************
@@ -191,7 +182,7 @@ static void eeprom_prepare_write(void)
  *****************************************************************************/
 static void eeprom_finalize_write(void)
 {
-    HAL_FLASH_Lock();
+    EE_FinalizeWrite();
 }
 
 bool eeprom_read_config_byte(uint8_t cfg_idx, uint8_t *ret)
@@ -301,34 +292,6 @@ void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue)
   }
 }
 
-/**
-  * @brief  Programmable Voltage Detector (PVD) Configuration
-  *         PVD set to level 6 for a threshold around 2.9V.
-  * @param  None
-  * @retval None
-  */
-static void PVD_Config(void)
-{
-  #if defined(EEPROM_PVDLEVEL)
-      PWR_PVDTypeDef sConfigPVD;
-      
-      sConfigPVD.PVDLevel = EEPROM_PVDLEVEL;
-      sConfigPVD.Mode     = PWR_PVD_MODE_IT_RISING;
-      if (HAL_PWR_ConfigPVD(&sConfigPVD) != HAL_OK) {
-        #if DEBUG_MODE > 0 
-            DEBUG_PUTS("Cannot configure PVD");
-        #endif
-      } else {
-
-          /* Enable PVD */
-          HAL_PWR_EnablePVD();
- 
-          /* Enable and set PVD Interrupt priority */
-          HAL_NVIC_SetPriority(PVD_PVM_IRQn, 0, 0);
-          HAL_NVIC_EnableIRQ(PVD_PVM_IRQn);
-      }
-  #endif
-}
 #endif
 
 void Config_Init(void)
@@ -360,8 +323,9 @@ void Config_Init(void)
       /* PVD interrupt is used to suspend the current application flow in case
          a power-down is detected, allowing the flash interface to finish any
          ongoing operation before a reset is triggered. */
-      PVD_Config();
-
+      #if defined(EEPROM_PVDLEVEL)
+        EE_PVD_Config(EEPROM_PVDLEVEL);
+      #endif  
     
       /* Set user List of Virtual Address variables: 0x0000 and 0xFFFF values are prohibited */
       for (uint32_t VarValue = 0; VarValue < NB_OF_VARIABLES; VarValue++)
@@ -370,7 +334,7 @@ void Config_Init(void)
       }
 
       /* Unlock the Flash Program Erase controller */
-      HAL_FLASH_Unlock();
+      EE_PrepareWrite();
 
       /* Set EEPROM emulation firmware to erase all potentially incompletely erased
          pages if the system came from an asynchronous reset. Conditional erase is
@@ -391,7 +355,7 @@ void Config_Init(void)
       }
   
       /* Lock the Flash Program Erase controller */
-      HAL_FLASH_Lock();
+      EE_FinalizeWrite();
 
       /* Schedule a periodic check for eeprom cleanup */
       AtSecond(29, eeprom_check_cleanup, (void *)0, "EEPROM emul check for cleanup");

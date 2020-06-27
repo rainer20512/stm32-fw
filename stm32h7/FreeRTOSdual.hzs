@@ -1,7 +1,7 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints;V7M Exceptions" active_group="Breakpoints">
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
   <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
  <ExecutionProfileWindow/>
@@ -32,36 +32,23 @@
   <ProjectSessionItem path="FreeRTOS_Dual"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;config"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;inc"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;inc;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;src"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;src;system"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;inc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;inc;dev"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;inc;system"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;src;debug"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common;src;dev"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;inc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;inc;task"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;src;task"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Doc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Drivers;STM32H7xx_HAL_Driver"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;FreeRTOS"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;FreeRTOS;CMSIS-RTOS"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;FreeRTOS;portable"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP;apps"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP;apps;httpd"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP;config"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP;Core"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;Middlewares;LwIP;ProjectSrc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;System Files"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;config"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;eeprom_emul"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;eeprom_emul;core"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;eeprom_emul;porting"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;inc"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;inc;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;src"/>
@@ -70,7 +57,6 @@
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;debug"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;dev"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;debug"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;dev"/>
@@ -79,9 +65,6 @@
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;inc"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;inc;devconfig"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;inc;system"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;src;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;task"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Doc"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Drivers"/>
@@ -125,8 +108,10 @@
    <Watchpoint expression="p" name="p" radix="-1" linenumber="323" filename="common_h7/lwip/httpserver_netconn.c"/>
    <Watchpoint expression="buf" name="buf" radix="16" linenumber="0" filename="../stm32h7"/>
    <Watchpoint expression="token" name="token" radix="-1" linenumber="0" filename="../stm32h7"/>
-   <Watchpoint expression="AMP_DirectBuffer" name="AMP_DirectBuffer" radix="16" linenumber="212" filename="CM7/Src/msg_direct_c7.c"/>
+   <Watchpoint expression="AMP_DirectBuffer" name="AMP_DirectBuffer" radix="16" linenumber="214" filename="CM7/Src/msg_direct_c7.c"/>
    <Watchpoint expression="AMPCtrl_Block" name="AMPCtrl_Block" radix="-1" linenumber="121" filename="common_h7/Src/ipc.c"/>
+   <Watchpoint expression="pageaddress" name="pageaddress" radix="-1" linenumber="260" filename="common_h7/eeprom-emul/core/eeprom_emul.c"/>
+   <Watchpoint expression="pagestatus" name="pagestatus" radix="-1" linenumber="261" filename="common_h7/eeprom-emul/core/eeprom_emul.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -139,58 +124,36 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/main_c4.c" selected="0" top="73" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="403" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/ipc.c" selected="0" top="381" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="98" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/msg_direct.h" selected="0" top="57" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="49" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/msg_direct_c4.c" selected="0" top="38" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="95" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/ipc.h" selected="0" top="25" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="251" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/system/devices_cm4.c" selected="0" top="217" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="88" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/lwip/ethernetif.c" selected="0" top="39" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="218" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/msg_direct_c7.c" selected="0" top="186" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/init_c4.c" selected="0" top="114" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="207" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/lwip/lwipopts.h" selected="0" top="171" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="612" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/lwip/httpserver_netconn.c" selected="0" top="600" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="165" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="128" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="65" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/stats.c" selected="0" top="54" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="471" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include/lwip/stats.h" selected="0" top="443" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="686" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Src/interpreters_c4.c" selected="0" top="653" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="79" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/apps/httpd/fs.c" selected="0" top="49" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="2" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/lwip/fsdata_custom.c" selected="0" top="939" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="81" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Inc/eeprom.h" selected="0" top="38" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="56" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/eeprom.h" selected="0" top="39" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4626" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="4604" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="64" y="138" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/qspi_dev.c" selected="0" top="107" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="14" y="69" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/dev/qspi_dev.h" selected="0" top="39" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="92" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/inc/config/qspi_config.h" selected="0" top="60" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="78" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/config/uart_config.h" selected="0" top="36" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="34" y="274" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="258" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="78" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/qspi/mx25r6435f.c" selected="0" top="53" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1000" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include/cmsis_gcc.h" selected="0" top="963" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/dev/lcd.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="10" y="886" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="876" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="57" y="790" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/system/clockconfig.c" selected="0" top="762" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/qspi/mx25r6435f.h" selected="0" top="81" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="72" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/inc/rtc.h" selected="0" top="36" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="668" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/timer_dev.c" selected="0" top="646" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/config/timer_config.h" selected="0" top="117" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="95" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/system/clockconfig.h" selected="0" top="52" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="439" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/rtc.c" selected="0" top="411" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/eeprom.c" selected="0" top="6" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="46" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/task/minitask.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="1" top="99" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="29" y="81" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/task/minitask.c" selected="0" top="57" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="312" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_it.c" selected="0" top="291" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="23" useTextEdit="1" useBinaryEdit="0" left="0" path="doc/Howto.txt" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="doc/ErrorCodes.txt" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="CM4/Inc/system/ram_preset.inc" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/system/ram_preset.inc" selected="0" top="3" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/system/profiling.h" selected="0" top="12" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="47" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="0" top="6" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="38" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Inc/hardware.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="90" y="62" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/hardware.c" selected="0" top="38" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="7209" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h" selected="0" top="7188" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="524" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" selected="0" top="495" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="193" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h" selected="0" top="172" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/main_c4.c" selected="0" top="73" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="403" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/Src/ipc.c" selected="0" top="381" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="98" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/Inc/msg_direct.h" selected="0" top="57" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="49" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/msg_direct_c4.c" selected="0" top="38" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="95" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/Inc/ipc.h" selected="0" top="25" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="61" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/msg_direct_c7.c" selected="0" top="44" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/init_c4.c" selected="0" top="114" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="612" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/lwip/httpserver_netconn.c" selected="0" top="600" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="109" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="83" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="686" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/interpreters_c4.c" selected="0" top="653" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="3393" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="3357" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="48" y="778" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/inc/dev/qspi_dev.h" useBinaryEdit="0" left="0" path="../common/src/dev/qspi_dev.c" selected="0" top="659" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="34" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/qspi_dev.c" useBinaryEdit="0" left="0" path="../common/inc/dev/qspi_dev.h" selected="0" top="50" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="92" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/inc/config/qspi_config.h" selected="0" top="51" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1389" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="1369" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="790" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/system/clockconfig.c" selected="0" top="762" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="346" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common/src/eeprom.c" selected="0" top="331" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="98" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/system/devices_c7.c" selected="0" top="68" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="69" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/Src/task/minitask.c" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/task.h" selected="0" top="43" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="555" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/eeprom-emul/core/eeprom_emul.c" selected="0" top="533" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="93" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/eeprom-emul/porting/stm32h7/flash_interface.c" useBinaryEdit="0" left="0" path="common_h7/eeprom-emul/porting/stm32h7/flash_interface.h" selected="0" top="66" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="154" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/eeprom-emul/core/eeprom_emul.c" useBinaryEdit="0" left="0" path="common_h7/eeprom-emul/core/eeprom_emul.h" selected="0" top="126" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="5" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/hardfault.s" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="3" y="92" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="common_h7/eeprom-emul/porting/stm32h7/flash_interface.c" selected="1" top="70" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="650" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/qspi_dev.c" useBinaryEdit="0" left="0" path="../common/src/dev/qspi/mx25r6435f.c" selected="0" top="610" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="638" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_it.c" selected="0" top="160" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="240" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="170" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/qspi_dev.c" useBinaryEdit="0" left="0" path="common_h7/Src/task/minitask.c" selected="0" top="143" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/qspi/mx25r6435f.c" useBinaryEdit="0" left="0" path="../common/src/dev/qspi/mx25r6435f.h" selected="0" top="9" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7" debugSearchPath="" autoConnectCapabilities="266111"/>
+ <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/eeprom-emul/porting/stm32h7" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

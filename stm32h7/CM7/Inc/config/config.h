@@ -40,7 +40,7 @@
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             0
+#define USE_EEPROM_EMUL             1
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0

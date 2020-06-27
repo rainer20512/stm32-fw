@@ -604,26 +604,64 @@ bool QSpi_WriteCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
     return true;
 }
 
+/******************************************************************************
+ * return the maximum erase time ( according to data sheet ) and tpye of
+ * erase
+ *****************************************************************************/
+static bool GetEraseParams(uint32_t erasemode, uint32_t *timeout_ms, uint8_t *opcode)
+{
+    bool ret = true;
+ 
+    switch(erasemode)
+    {
+        case QSPI_ERASE_SECTOR:
+            *timeout_ms = MX25R6435F_SECTOR_ERASE_MAX_TIME;
+            *opcode     = SECTOR_ERASE_CMD;
+            break;
+        case QSPI_ERASE_BLOCK:
+            *timeout_ms = MX25R6435F_BLOCK_ERASE_MAX_TIME;
+            *opcode     = BLOCK_ERASE_CMD;
+            break;
+        case QSPI_ERASE_ALL:
+            *timeout_ms = MX25L12835F_CHIP_ERASE_MAX_TIME;
+            *opcode     = CHIP_ERASE_CMD;
+            break;
+        default:
+            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                DEBUG_PRINTF("GetEraseTimeout - Error: unkown erasemode %d\n", erasemode);
+            #endif
+            *timeout_ms = MX25R6435F_SECTOR_ERASE_MAX_TIME;
+            *opcode     = SECTOR_ERASE_CMD;
+            ret = false;
+    }
+    return ret;
+}
+
 
 /**
   * @brief  Erases the specified block of the QSPI memory. 
   * @param  BlockAddress : Block address to erase  
   * @retval QSPI memory status
   */
-bool QSpi_EraseBlockWait(QSpiHandleT *myHandle, uint32_t BlockAddress)
+bool QSpi_EraseCmd(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t eraseMode )
 {
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
+    uint32_t tmo_unused;
+    uint8_t  opcode;
+
     QSPI_CommandTypeDef sCommand;
 
-    /* Wake up device, if in deep sleep */
-    if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( !GetEraseParams(eraseMode, &tmo_unused, &opcode ) ) return false;
 
     /* Initialize the erase command */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction       = BLOCK_ERASE_CMD;
-    sCommand.AddressMode       = QSPI_ADDRESS_1_LINE;
-    sCommand.AddressSize       = QSPI_ADDRESS_24_BITS;
-    sCommand.Address           = BlockAddress;
+    sCommand.Instruction       = opcode;
+    if ( eraseMode == QSPI_ERASE_ALL ) {
+        sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    } else {
+        sCommand.AddressMode       = QSPI_ADDRESS_1_LINE;
+        sCommand.AddressSize       = QSPI_ADDRESS_24_BITS;
+        sCommand.Address           = Address;
+    }
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
     sCommand.DataMode          = QSPI_DATA_NONE;
     sCommand.DummyCycles       = 0;
@@ -647,17 +685,10 @@ bool QSpi_EraseBlockWait(QSpiHandleT *myHandle, uint32_t BlockAddress)
       return false;
     }
 
-    /* Configure automatic polling mode to wait for end of erase */  
-    if ( !QSpi_WaitForWriteDone(hqspi, MX25R6435F_BLOCK_ERASE_MAX_TIME) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificEraseBlockWait - Error: Timeout");
-        #endif
-      return false;
-    }
-
     return true;
 }
 
+#if 0
 /**
   * @brief  Erases the specified sector of the QSPI memory. 
   * @param  SectorAddress: Any Address within the sector to erase
@@ -766,7 +797,7 @@ bool QSpi_EraseChipWait(QSpiHandleT *myHandle)
 
     return true;
 }
-
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////

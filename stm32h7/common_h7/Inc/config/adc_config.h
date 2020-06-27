@@ -54,7 +54,7 @@
     /* Definition ADC1 NVIC */
     #define ADC3_IRQ                             { ADC_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC_IRQHandler
-    #define ADC3_RX_DMA                          DMA1_Stream6, DMA_REQUEST_ADC3,  DMA1_Stream6_IRQn
+    #define ADC3_RX_DMA                          DMA1_Stream6, DMA_REQUEST_ADC3,  DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
     #define ADC3_DMA_IRQHandler                  DMA1_Stream6_IRQHandler
                                                     
 #endif

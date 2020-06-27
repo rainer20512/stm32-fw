@@ -99,6 +99,8 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
   size_t wordlen;
   uint32_t ret;
 
+  UNUSED(cmdline); UNUSED(len);
+
   switch( (uint32_t)arg )  {
     case 0:
       DBG_dump_clocksetting();
@@ -1382,12 +1384,9 @@ ADD_SUBMODULE(Test);
                 cnt = 0;
             }
             addr =  QSpi1Handle.geometry.EraseSectorSize * num;
-            for ( i=0; i <=cnt; i++ ) {
-                printf("Erase sector %d (startaddr=0x%08x) - ", num+i, addr );
-                ret = QSpi_Erase_SectorWait(&QSpi1Handle, addr);
-                printf ( "%s\n", ret ? "ok": "fail");
-                addr += QSpi1Handle.geometry.EraseSectorSize;
-            }
+            printf("Erase sector %d (startaddr=0x%08x) plus %d follwing sectors ", num, addr,cnt );
+            ret = QSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
+            printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
             if ( QSpi1Handle.geometry.ProgPageSize > PGSIZE ) {
@@ -1554,14 +1553,19 @@ ADD_SUBMODULE(Test);
             break;
         case 12:
             if ( CMD_argc() < 1 ) {
-              printf("Usage: Clk speed <n> - Set Qspi clk speed to <n> MHz\n");
+              printf("Usage: Clk speed <n> - Set Qspi clk speed to <n> kHz\n");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d MHz",  addr );
              
-                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000000 );
+                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000 );
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
+        case 13:
+            printf("QSPI chip reset - ");
+            ret = QSpi_ResetMemory(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:
@@ -1590,7 +1594,8 @@ ADD_SUBMODULE(Test);
         { "End Power Down",           ctype_fn, .exec.fn = QSPI_Menu, VOID(9), "Exit Power down mode" },
         { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10), "Write many bytes IRQ mode" },
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
-        { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> MHz" },
+        { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> kHz" },
+        { "Reset memory",             ctype_fn, .exec.fn = QSPI_Menu, VOID(13),"Reset QSPI Memory" },
     };
     ADD_SUBMODULE(QSPI);
 #endif

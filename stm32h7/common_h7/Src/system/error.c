@@ -64,6 +64,7 @@ void assert_failed(uint8_t *file, uint32_t line)
     #include "task.h"
     void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName )
     {
+        UNUSED(xTask);
         DEBUG_PRINTF("RTOS Stack Overflow Task=%s, line=%d, file=%s\n", pcTaskName, __LINE__, __FILE__);
     }
 #endif

@@ -27,9 +27,14 @@
 #define QSPI_SUSPENDED     ((uint32_t)0x08)
 
 /* Different modes of QUADSPI operation */
-#define QSPI_MODE_POLL  0       // Execute function in Polling/active wait mode
-#define QSPI_MODE_IRQ   1       // Execute function in Interrupt/NoWalt mode
-#define QSPI_MODE_DMA   2       // Execute function in DMA/NoWalt mode, makes only sense for read/write operations
+#define QSPI_MODE_POLL      0       // Execute function in Polling/active wait mode
+#define QSPI_MODE_IRQ       1       // Execute function in Interrupt/NoWalt mode
+#define QSPI_MODE_DMA       2       // Execute function in DMA/NoWalt mode, makes only sense for read/write operations
+
+/* Different modes of erase Operation */
+#define QSPI_ERASE_SECTOR   1000    // Erase one sector
+#define QSPI_ERASE_BLOCK    1001    // Erase one block
+#define QSPI_ERASE_ALL      1009    // Erase whole chip
 
 /* Public typedef -----------------------------------------------------------------------*/
 typedef void ( *QEncEncCB ) ( int32_t );        /* Callback for encoder rotation         */
@@ -38,7 +43,7 @@ typedef void ( *QEncClickCB ) ( void );         /* Callbacks for Click and DblCl
 typedef struct QSpiGeometryType {
     uint32_t FlashSize;             /* Total Size in Bytes */
     uint32_t ProgPageSize;          /* Size of a write "unit" */
-    uint32_t EraseSectorSize;       /* Size of a erade "uint" */
+    uint32_t EraseSectorSize;       /* Size of a erase "uint" */
     uint32_t ProgPagesNumber;       /* Resulting number of "write ubits" */
     uint32_t EraseSectorsNumber;    /* Resulting number of "erase units" */
 
@@ -76,9 +81,21 @@ bool QSpi_WriteWait             (QSpiHandleT *myHandle, uint8_t* pData, uint32_t
 bool QSpi_WriteIT               (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size);
 bool QSpi_WriteDMA              (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size);
 
-bool QSpi_Erase_SectorWait      (QSpiHandleT *myHandle, uint32_t SectorAddress);
+/* Erase <numSect> consecutive sectors, first sector specified by <EraseAddr> */
+bool QSpi_EraseSectorWait       (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect);
+bool QSpi_EraseSectorIT         (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect);
+
+/* Erase <numSect> consecutive block, first block specified by <EraseAddr> */
+bool QSpi_EraseBlockWait        (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock);
+bool QSpi_EraseBlockIT          (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock);
+
+/* Erase entire chip */
+bool QSpi_EraseChipWait         (QSpiHandleT *myHandle);
+bool QSpi_EraseChipIT           (QSpiHandleT *myHandle);
 
 bool QSpi_EraseChipWait         (QSpiHandleT *myHandle);
+
+void QSPI_EarlyInit             (void);
 
 /* Global variables ---------------------------------------------------------------------*/
 #if defined(USE_QSPI)

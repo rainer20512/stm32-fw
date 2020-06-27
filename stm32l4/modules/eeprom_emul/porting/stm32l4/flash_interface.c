@@ -51,6 +51,7 @@
 #include "../../core/eeprom_emul.h"
 #include "flash_interface.h"
 
+#include "debug_helper.h"
 /** @addtogroup EEPROM_Emulation
   * @{
   */
@@ -68,6 +69,10 @@ static uint32_t GetBankNumber(uint32_t Address);
   * @{
   */
 
+EE_ELEMENT_TYPE ElementRead( uint32_t address )
+{
+    return *(__IO EE_ELEMENT_TYPE*)address;
+}
 /**
   * @brief  Erase a page in polling mode
   * @param  Page Page number
@@ -268,6 +273,49 @@ EE_Status CheckBankConfig(void)
   return EE_OK;
 #endif
 }
+void EE_PrepareWrite(void)
+{
+    uint32_t err = (FLASH->SR & FLASH_FLAG_SR_ERRORS);
+
+    if ( err ) {
+        #if DEBUG_MODE > 0 
+            DEBUG_PRINTF("EEPROM Write: Found an error from previous write! (SR=%08x)\n", err);
+        #endif
+        __HAL_FLASH_CLEAR_FLAG(err);
+    }
+
+    HAL_FLASH_Unlock();
+}
+
+void EE_FinalizeWrite(void)
+{
+    HAL_FLASH_Lock();
+}
+
+/**
+  * @brief  Programmable Voltage Detector (PVD) Configuration
+  *         PVD set to level 6 for a threshold around 2.9V.
+  * @param  None
+  * @retval None
+  */
+void EE_PVD_Config(uint32_t pvd_level)
+{
+      PWR_PVDTypeDef sConfigPVD;
+      
+      sConfigPVD.PVDLevel = pvd_level;
+      sConfigPVD.Mode     = PWR_PVD_MODE_IT_RISING;
+      if ( HAL_PWR_ConfigPVD(&sConfigPVD) == HAL_OK ) {
+
+          /* Enable PVD */
+          HAL_PWR_EnablePVD();
+
+          /* Enable and set PVD Interrupt priority */
+          HAL_NVIC_SetPriority(PVD_PVM_IRQn, 0, 0);
+          HAL_NVIC_EnableIRQ(PVD_PVM_IRQn);
+      }  
+}
+
+
 
 #endif // #if USE_EEPROM_EMUL> 0
 

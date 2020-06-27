@@ -437,7 +437,7 @@
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
       #define USE_QSPI1
-      #define QSPI1_CLKSPEED    125000
+      #define QSPI1_CLKSPEED    500000
       #define USE_QSPI1_ALTN1
       #define QSPI1_USE_IRQ
       #define QSPI1_USE_DMA

@@ -56,9 +56,9 @@ void CM7_handle_remote_direct(void)
     switch ( AMP_DirectBuffer.msg_id ) {
         /* handle all message types which only require a "done" status to be set */
         /* and the peer waits for completion by polling                          */
-        /* case keks: uncomment the next statement as soon as the first case appears here 
-            /* Set status to "received" 
-            AMP_DirectBuffer.msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
+        /* case keks: uncomment the next statement as soon as the first case appears here */
+            /* Set status to "received" */
+            /* AMP_DirectBuffer.msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
             break; */
         default:
             /* For all other message types: activate handler task */
@@ -73,6 +73,8 @@ void CM7_handle_remote_direct(void)
 void CM7_handle_remote( uint32_t arg )
 {
     assert(AMP_DirectBuffer.id == DIRECTMSG_ID);
+
+    UNUSED(arg);
 
     /* Neccessary action depends on msg_id                      */
     /* Note: all handlers must set msg_status finally and       */

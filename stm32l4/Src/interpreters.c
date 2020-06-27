@@ -1718,12 +1718,9 @@ ADD_SUBMODULE(Test);
                 cnt = 0;
             }
             addr =  QSpi1Handle.geometry.EraseSectorSize * num;
-            for ( i=0; i <=cnt; i++ ) {
-                printf("Erase sector %d (startaddr=0x%08x) - ", num+i, addr );
-                ret = QSpi_Erase_SectorWait(&QSpi1Handle, addr);
-                printf ( "%s\n", ret ? "ok": "fail");
-                addr += QSpi1Handle.geometry.EraseSectorSize;
-            }
+            printf("Erase sector %d to %d (startaddr=0x%08x)\n", num, num+cnt, addr);
+            ret = QSpi_EraseSectorIT(&QSpi1Handle, addr, cnt+1);
+            printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
             if ( QSpi1Handle.geometry.ProgPageSize > PGSIZE ) {

@@ -182,6 +182,11 @@ int main(void)
         BASTMR_EarlyInit();
     #endif
 
+    #if USE_QSPI  > 0 && USE_EEPROM_EMUL > 0
+        QSPI_EarlyInit();
+    #endif
+    
+
     HAL_Init();
 
     STATUS(0);

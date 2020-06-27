@@ -24,7 +24,7 @@
       arm_target_loader_default_loader="Flash"
       arm_target_restrict_memory_accesses="Yes"
       c_preprocessor_definitions="STM32L476xx;USE_HAL_DRIVER;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
-      c_user_include_directories="$(PackagesDir)/CMSIS_4/CMSIS/Include;.//inc;./../common/inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common"
+      c_user_include_directories="$(PackagesDir)/CMSIS_4/CMSIS/Include;.//inc;./../common/inc;./modules/eeprom_emul/core;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/stm32l476rg_MemoryMap.xml"
       linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
@@ -47,7 +47,7 @@
       arm_target_loader_can_unlock_range="No"
       target_reset_script="FLASHReset()" />
     <configuration Name="RAM" target_reset_script="Reset()" />
-    <folder Name="Source Files">
+    <folder Name="Project Files">
       <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
       <folder Name="Inc">
         <file file_name="$(ProjectDir)/Inc/com.h" />

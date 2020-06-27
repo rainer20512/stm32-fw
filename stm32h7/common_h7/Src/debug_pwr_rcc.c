@@ -52,6 +52,7 @@ static const char* DBG_get_pwr_vos_txt(uint32_t sel)
     return "Illegal";
 }
 
+#if 0
 const char * const lpms_txt[]={"Stop 0", "Stop 1", "Stop 2", "Standby" };
 static const char* DBG_get_pwr_cr1_lpms_txt(uint32_t sel)
 {
@@ -59,6 +60,7 @@ static const char* DBG_get_pwr_cr1_lpms_txt(uint32_t sel)
     
   return lpms_txt[sel];
 }
+#endif
 const char * als_txt[]={"1.7V", "2.1V", "2.5V", "2.8V" };
 static const char* get_pwr_cr1_als_txt(uint32_t sel)
 {
@@ -322,7 +324,7 @@ static void DBG_dump_rcc_bdcr(void)
   DBG_setPadLen(16);
 
   DBG_dump_bitvalue("RTC enable", RCC->BDCR, RCC_BDCR_RTCEN );
-  if ( READ_BIT(RCC->BDCR, RCC_BDCR_RTCEN) )
+  if ( READ_BIT(RCC->BDCR, RCC_BDCR_RTCEN) ) {
     DBG_dump_textvalue("RTC/LCD Clk source", DBG_get_rcc_bdcr_rtcsel_txt((RCC->BDCR & RCC_BDCR_RTCSEL_Msk) >> RCC_BDCR_RTCSEL_Pos));
     if ((RCC->BDCR & RCC_BDCR_RTCSEL_Msk)  == RCC_BDCR_RTCSEL_Msk ) {
         uint32_t rtc_presc = (RCC->CFGR & RCC_CFGR_RTCPRE_Msk) >> RCC_CFGR_RTCPRE_Pos;
@@ -331,7 +333,8 @@ static void DBG_dump_rcc_bdcr(void)
         else 
             DBG_dump_number("RTC/HSE prescaler", rtc_presc);
     }
-      
+  }    
+
   dbg_rcc_on_ready("LSE",  RCC->BDCR, RCC_BDCR_LSEON,  RCC_BDCR_LSERDY );
   if ( READ_BIT( RCC->BDCR, RCC_BDCR_LSEON ) ) {
     DBG_dump_bitvalue("LSE bypass", RCC->BDCR, RCC_BDCR_LSEBYP);

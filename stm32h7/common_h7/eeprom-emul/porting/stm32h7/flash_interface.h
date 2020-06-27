@@ -53,11 +53,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_hal.h"
-
-/** @addtogroup EEPROM_Emulation
-  * @{
-  */
+#include "stm32h7xx_hal.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -65,15 +61,9 @@
 
 /* Private types -------------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/
-/** @addtogroup EEPROM_Private_Constants
-  * @{
-  */
 
-/** @addtogroup Private_Other_Constants
-  * @{
-  */
-
-#define BANK_SIZE               FLASH_BANK_SIZE         /*!< Alias to FLASH_BANK_SIZE definition from HAL STM32L4 */
+#define EEPROM_PAGE_SIZE        4096                    /*!< Size of one eeprom sector ( i.e. minimum eraseable unit )    */    
+#define EEPROM_BANK_SIZE        4096                    
 #define EE_ACCESS_32BITS    /*!< Enable EEPROM 32bits R/W functions, only valid for flash allowing 64bits access*/
 
 /* Page state header */
@@ -99,53 +89,17 @@
 #define EE_MASK_DATA            (uint64_t)0xFFFFFFFF00000000U
 #define EE_MASK_FULL            (uint64_t)0xFFFFFFFFFFFFFFFFU
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/* Private macro -------------------------------------------------------------*/
-/** @addtogroup EEPROM_Private_Macros
-  * @{
-  */
-
-/** @defgroup Macros_Flash Macros to access flash
-  * @{
-  */
-#define EE_FLASH_PROGRAM(__ADDRESS__, __DATA__) HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (__ADDRESS__), (__DATA__))
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
 /* Private functions ---------------------------------------------------------*/
-/** @addtogroup EEPROM_Private_Functions
-  * @{
-  */
-EE_ELEMENT_TYPE ElementRead( uint32_t address );
+
+EE_ELEMENT_TYPE ElementRead( uint32_t Address );
+HAL_StatusTypeDef EE_FLASH_PROGRAM(uint32_t Address, uint64_t Data);
 EE_Status PageErase(uint32_t Page, uint16_t NbPages);
 EE_Status PageErase_IT(uint32_t Page, uint16_t NbPages);
-EE_Status DeleteCorruptedFlashAddress(uint32_t Address);
 EE_Status CheckBankConfig(void);
-
-/**
-  * @}
-  */
 
 #ifdef __cplusplus
 }
 #endif
-
-/**
-  * @}
-  */
 
 #endif /* __FLASH_INTERFACE_H */
 

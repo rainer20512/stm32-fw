@@ -85,12 +85,6 @@ void NMI_Handler(void)
 }
 
 #if USE_EEPROM_EMUL > 0
-    /* Handler for Interrupt driven page erase when using eeprom emulation */
-    void FLASH_IRQHandler(void)
-    {
-      HAL_FLASH_IRQHandler();
-    }
-  
     /* @brief  This function handles PVD interrupt request.
      * @param  None
      * @retval None
@@ -675,6 +669,23 @@ void DebugMon_Handler(void)
                 CAN_ErrorStub( &CAN1Handle );
            }
     #endif
+#endif
+
+#if USE_EEPROM_EMUL > 0
+    void PVD_AVD_IRQHandler(void)
+    {
+      /* Loop inside the handler to prevent the Cortex from using the Flash,
+         allowing the flash interface to finish any ongoing transfer. */
+      #if DEBUG_MODE > 0 
+        DEBUG_PUTS("Detected low power situation. Waiting to recover...");
+      #endif
+      while (__HAL_PWR_GET_FLAG(PWR_FLAG_PVDO) != RESET)
+      {
+      }
+      #if DEBUG_MODE > 0 
+        DEBUG_PUTS("Low power situation ended - resuming ...");
+      #endif
+    }
 #endif
 
 

@@ -97,7 +97,6 @@ static void dump_one_device ( uint32_t idx, bool bLong, const HW_DeviceType *dev
 
 void DBG_dump_devices(bool bLong)
 {
-    const HW_DeviceType *dev;
     int oldIndent;
 
     DEBUG_PRINTF("List of hardware devices - Core %s -----------\n", get_core_txt(DEV_CORE_CM7));

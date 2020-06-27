@@ -110,5 +110,11 @@ wegnehmen, s. dazu die Punkte c - f:
   Abhilfe: Mit Thumb release kompilieren und/oder mit >= 24 MHz rennen lassen  
   
 
-temp
+007: Recommended GPIO Clock speeds
+-----------------------------------------------------------------------------------
+GPIO_SPEED_FREQ_LOW        range up to 5 MHz
+GPIO_SPEED_FREQ_MEDIUM     range  5 MHz to 25 MHz
+GPIO_SPEED_FREQ_HIGH       range 25 MHz to 50 MHz
+GPIO_SPEED_FREQ_VERY_HIGH  range 50 MHz to 80 MHz
+
 

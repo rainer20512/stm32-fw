@@ -371,6 +371,7 @@ void HW_SetDmaChClock ( const HW_DmaType *tx, const HW_DmaType *rx)
  */
 uint32_t *    HW_GetPeriphBitBandAddr     ( __IO uint32_t *periphAddr, uint16_t bit_number )
 {
+    UNUSED(periphAddr);UNUSED(bit_number);
     Error_Handler_XX(-8, __FILE__, __LINE__); 
     return 0;
 }
