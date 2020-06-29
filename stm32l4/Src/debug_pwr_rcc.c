@@ -358,6 +358,19 @@ static const char* DBG_get_rcc_pllcfgr_pllsrc_txt(uint32_t sel )
   else
     return "Illegal";
 }
+static void DBG_dump_rcc_pllcfgr(uint32_t reg)
+{
+    #define _EN(reg,mask)       ( reg & mask ? "Enabled" : "" )
+    DBG_setPadLen(20);
+    DBG_dump_textvalue("Source", DBG_get_rcc_pllcfgr_pllsrc_txt(( RCC->PLLCFGR & RCC_PLLCFGR_PLLSRC_Msk  ) >> RCC_PLLCFGR_PLLSRC_Pos) );  
+    DBG_dump_number_and_text("M Div", ( (RCC->PLLCFGR & RCC_PLLCFGR_PLLM_Msk ) >> RCC_PLLCFGR_PLLM_Pos)+1, 3, "" );  
+    DBG_dump_number_and_text("N Mul", ( reg & RCC_PLLCFGR_PLLN_Msk ) >> RCC_PLLCFGR_PLLN_Pos, 3, "" );   
+    DBG_dump_number_and_text("R Div", ((( reg & RCC_PLLCFGR_PLLR_Msk ) >> RCC_PLLCFGR_PLLR_Pos)+1)*2,   3, _EN(reg, RCC_PLLCFGR_PLLREN_Msk) );  
+    DBG_dump_number_and_text("Q DIV", ((( reg & RCC_PLLCFGR_PLLQ_Msk ) >> RCC_PLLCFGR_PLLQ_Pos)+1)*2,   3, _EN(reg, RCC_PLLCFGR_PLLQEN_Msk) );    
+    DBG_dump_number_and_text("P DIV", (( reg & RCC_PLLCFGR_PLLP_Msk ) >> RCC_PLLCFGR_PLLP_Pos)==0?7:17, 3, _EN(reg, RCC_PLLCFGR_PLLPEN_Msk) );    
+}
+
+/*
 static void DBG_dump_rcc_pllcfgr(void)
 {
   DBG_setPadLen(20);
@@ -373,6 +386,7 @@ static void DBG_dump_rcc_pllcfgr(void)
     DBG_printf_indent("PLL disabled\n" );    
   }
 }
+*/
 
 static void DBG_dump_clocks(void)
 {
@@ -422,11 +436,26 @@ void DBG_dump_clocksetting(void)
   DBG_setIndentRel(-2);
 
   /******** PLL configuration register *****************/
-  DBG_printf_indent("RCC: PLL configuration register\n" );
-  DBG_setIndentRel(+2);
-  DBG_dump_rcc_pllcfgr();
-  DBG_setIndentRel(-2);
+  if ( RCC->CR & RCC_CR_PLLON) {
+      DBG_printf_indent("RCC: PLL configuration register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_pllcfgr( RCC->PLLCFGR );
+      DBG_setIndentRel(-2);
+  }
 
+  if ( RCC->CR & RCC_CR_PLLSAI1ON) {
+      DBG_printf_indent("RCC: PLLSAI1 configuration register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_pllcfgr( RCC->PLLSAI1CFGR );
+      DBG_setIndentRel(-2);
+  }
+
+  if ( RCC->CR & RCC_CR_PLLSAI2ON) {
+      DBG_printf_indent("RCC: PLLSAI2 configuration register\n" );
+      DBG_setIndentRel(+2);
+      DBG_dump_rcc_pllcfgr( RCC->PLLSAI2CFGR );
+      DBG_setIndentRel(-2);
+  }
 
   /******** System Clocks *****************/
   DBG_printf_indent("Resulting System Clocks\n" );

@@ -64,6 +64,7 @@ int DBG_setPadLen ( int len );
 int  DBG_setIndentRel ( int delta );
 int  DBG_setIndentAbs ( int absval );
 void DBG_dump_number (const char *text, uint32_t num );
+void DBG_dump_number_and_text (const char *text, uint32_t num, uint32_t numlen, const char *text2 );
 void DBG_dump_textvalue(const char *text, const char *content );
 void DBG_printf_indent(const char *format, ...);
 void DBG_strpadright(const char *text, uint32_t desiredlen, char padchar );

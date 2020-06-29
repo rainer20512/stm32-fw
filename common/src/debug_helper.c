@@ -113,6 +113,15 @@ void DBG_dump_number (const char *text, uint32_t num )
   DEBUG_PRINTF(" %u\n", num );
 }
 
+void DBG_dump_number_and_text (const char *text, uint32_t num, uint32_t numlen, const char *text2 )
+{
+  char fmt[20];
+  snprintf(fmt, 20," %%%du %%s\n", numlen);
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(fmt, num, text2 );
+}
+
 void DBG_dump_uint32_hex (const char *text, uint32_t num )
 {
   DBG_do_indent();

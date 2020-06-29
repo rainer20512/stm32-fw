@@ -55,6 +55,10 @@
     #define HW_HAS_LSE
 #endif
 
+/* set the Output frq. of the PLL's M-stage to a fixed value when PLL is used */
+/* This is not mandatory, but alleviates other setup                          */
+#define PLL_BASE_FRQ      8000000
+
 /*
  *************************************************************************************
  * As in Stop2 mode the wakeup clock is either MSI or HSI, we have to safe 
@@ -137,6 +141,12 @@ static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint32_t khz )
   return flash_latency;
 }
 
+#if USE_USB > 0
+    static inline __attribute__((always_inline)) void SC_SetUsbClockSource(uint32_t source )
+    {
+        MODIFY_REG(RCC->CCIPR, RCC_CCIPR_CLK48SEL_Msk, source );
+    }
+#endif
 
 /* Public functions ---------------------------------------------------------*/
 
@@ -302,6 +312,14 @@ static void SystemClock_MSI_Vrange_1(uint32_t msi_range)
     /* Initialization Error */
     while(1); 
   }
+
+
+  #if USE_USB > 0
+      /* Set USB clock also to MSI 48 MHz */
+      if ( msi_range == RCC_MSIRANGE_11 ) {
+          SC_SetUsbClockSource(RCC_USBCLKSOURCE_MSI);
+      }
+  #endif
 }
 
 
@@ -667,12 +685,22 @@ static void SystemClock_HSI_16MHz_Vrange_1_0WS(bool bSwitchOffMSI)
   SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 }
 
+#if USE_USB > 0
+    /**************************************************************************
+     * PLL clock has been set up as system clock. During setup, output of the
+     * PLL's M-divider has been set to  PLL_BASE_FRQ
+     *************************************************************************/
+    static void SetupUSB48Clk(void)
+    {
+    }
+#endif
 
 /******************************************************************************
- * configure PLL on HSI16 bas to xxmhz Mhz and stich on PLL
+ * configure PLL on HSI16 bas to xxmhz Mhz and switch on PLL
  *****************************************************************************/
 static void SwitchOnPLL ( uint32_t xxmhz )
 {
+  uint32_t pllsrc;
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
 
   /* 
@@ -685,6 +713,10 @@ static void SwitchOnPLL ( uint32_t xxmhz )
     SC_SwitchOnHSI();
   }
 
+  #if USE_USB > 0
+      CLEAR_BIT(RCC->CR, RCC_CR_PLLSAI1ON_Msk);
+  #endif
+
   /* if HSE oscillator is equipped, use as PLL input, otherwise use HSI16 */
   #if defined(PLL_INP_FRQ) 
     #undef PLL_INP_FRQ
@@ -694,26 +726,27 @@ static void SwitchOnPLL ( uint32_t xxmhz )
     SwitchOnHSE();
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+    pllsrc = RCC_PLLSOURCE_HSE;
     #define PLL_INP_FRQ  LSE_FREQUENCY
   #else
       RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
       RCC_OscInitStruct.HSIState = RCC_HSI_ON;
       RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT; 
-      RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+      pllsrc = RCC_PLLSOURCE_HSI;
       #define PLL_INP_FRQ 16000000
   #endif
 
   /* 
-   * PLLN is computed so, that the output is at 8MHz,
-   * check, whether this can be achieved
+   * PLLN is computed so, that the output after M-Divider is at 8MHz.
+   * Check, whether this can be achieved
    */
-  #define PLL_BASE_FRQ      8000000
   #define PLL_DIVM          (PLL_INP_FRQ/PLL_BASE_FRQ) 
   #if PLL_DIVM * PLL_BASE_FRQ != PLL_INP_FRQ
     #error "PLLM is not an integer value - cannot set PLLM"
   #endif  
   /* Enable  PLL */
+
+  RCC_OscInitStruct.PLL.PLLSource = pllsrc;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;   
   RCC_OscInitStruct.PLL.PLLM = PLL_DIVM;
   RCC_OscInitStruct.PLL.PLLN = xxmhz / 2 ;
@@ -726,6 +759,22 @@ static void SwitchOnPLL ( uint32_t xxmhz )
     /* Initialization Error */
     while(1); 
   }
+
+  #if USE_USB > 0
+    /* PLLSAI1 Q output to 48 MHz */
+    RCC->PLLSAI1CFGR = 
+        24 << RCC_PLLSAI1CFGR_PLLSAI1N_Pos |       /* PLLSAI1N = 24          */
+      0b01 << RCC_PLLSAI1CFGR_PLLSAI1Q_Pos |       /* PLLSAI1Q = 4           */
+      0b11 << RCC_PLLSAI1CFGR_PLLSAI1R_Pos |       /* PLLSAI1R = 8,  unused  */
+         1 << RCC_PLLSAI1CFGR_PLLSAI1P_Pos |       /* PLLSAI1P = 17, unused  */
+         1 << RCC_PLLSAI1CFGR_PLLSAI1QEN_Pos ;     /* Enable Q output        */
+    
+    /* Switch PLLSAI1 on and wait for ready */
+    SET_BIT(RCC->CR, RCC_CR_PLLSAI1ON_Msk );
+    while ( (RCC->CR & RCC_CR_PLLSAI1RDY_Msk ) == 0 );
+
+    SC_SetUsbClockSource(RCC_USBCLKSOURCE_PLLSAI1);
+  #endif
 }
 
 /*
@@ -740,6 +789,7 @@ static void SystemClock_PLL_xxMHz_Vrange_1_restore (uint32_t xxmhz, bool bSwitch
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency );
+
   if ( bSwitchOffMSI ) {
     SwitchOffMSI();
   }
@@ -794,6 +844,10 @@ static void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI)
     while(1); 
   }
 
+  #if USE_USB > 0
+    SetupUSB48Clk();
+  #endif
+
   /* Disable MSI Oscillator, if desired */
   if ( bSwitchOffMSI ) {
     SwitchOffMSI();
@@ -803,6 +857,20 @@ static void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI)
   SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 }
 
+static const uint16_t pll_clk_rates[] = {16,24,32,48,64,80};
+/*******************************************************************************
+ * Return the clock spped in MHz for a given CLK_CONFIG_T with PLL useage
+ *******************************************************************************/
+static uint16_t GetPLLClockRate( CLK_CONFIG_T clk_config_byte )
+{
+    if ( clk_config_byte < CLK_PLL_VRNG1_16MHZ_0WS || clk_config_byte > CLK_PLL_VRNG1_80MHZ_4WS ) 
+        return 0;
+    else   
+        return pll_clk_rates[clk_config_byte - CLK_PLL_VRNG1_16MHZ_0WS];
+}
+
+
+
 /* Only use "SystemClock_SetConfiguredClock" to change system clock            */
 /* THis will ensure, that all devices will be noticed about clock              */
 /* changes                                                                     */
@@ -811,101 +879,103 @@ static void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI)
  *******************************************************************************/
 void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
 {
+    /* 
+     * When using USB, we need a 48MHz clock. This is generated from PLLSAI1
+     * in any case. So we only allow clock settings, which are derived from PLL
+     * This is not mandatory, but easier to handle
+     * Only if the System clock is MSI48, we use this as USB clock, too
+     */
+    #if USE_USB > 0
+        /* 
+         * any clocksetting without PLL and != MSI48 will be changed to
+         * MSI48, if USB is configured.
+         */
+        if ( clk_config_byte < CLK_MSI_VRNG1_48MHZ_2WS ) {
+            DEBUG_PRINTF("Error: Clock config #%d not allowed with USB active. Setting SYSCLK to MSI48\n", clk_config_byte); 
+            clk_config_byte = CLK_MSI_VRNG1_48MHZ_2WS;
+        }
+    #endif
     /* Save desired settings for restoration after Stop */
     saved_bSwitchOffMSI   = bSwitchOffMSI;
 
     /* 
-     * Initially assunm, that there is no restoration needed
+     * Initially assume, that there is no restoration needed
      * In general, all clock settings on basis of HSI16 or MSI are non volatile
      * and do not need a restoration, whereas all other clock settings 
      * ( eg. HSE or PLL are volatile and need a restauration 
      */
-    bClockSettingVolatile = false;         
-    RestoreFn             = NULL;
 
-    switch ( clk_config_byte ) {
-        case CLK_MSI_VRNG1_08MHZ_0WS:
-            SystemClock_MSI_Vrange_1(RCC_MSIRANGE_7);
-            break;
-        case CLK_MSI_VRNG2_08MHZ_1WS:
-            SystemClock_MSI_Vrange_2(RCC_MSIRANGE_7);
-            break;
-        case CLK_HSE_VRNG1_08MHZ_0WS:
-            #if defined(HW_HAS_LSE)
-                bClockSettingVolatile   = true; 
-                RestoreFn               = SystemClock_HSE_8MHz_Vrange_1_0WS_restore;
-                SystemClock_HSE_8MHz_Vrange_1_0WS(bSwitchOffMSI);
-            #else
-                DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
-            #endif
-            break;
-        case CLK_HSE_VRNG2_08MHZ_1WS:
-            #if defined(HW_HAS_LSE)
-                bClockSettingVolatile   = true;         
-                RestoreFn               = SystemClock_HSE_8MHz_Vrange_2_1WS_restore;
-                SystemClock_HSE_8MHz_Vrange_2_1WS(bSwitchOffMSI);
-            #else
-                DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
-            #endif
-            break;
-        case CLK_HSI_VRNG1_16MHZ_0WS:
-            SystemClock_HSI_16MHz_Vrange_1_0WS(bSwitchOffMSI);
-            break;
-        case CLK_HSI_VRNG2_16MHZ_2WS:
-            SystemClock_HSI_16MHz_Vrange_2_2WS(bSwitchOffMSI);
-            break;
-        case CLK_MSI_VRNG1_16MHZ_0WS:
-            SystemClock_MSI_Vrange_1(RCC_MSIRANGE_8);
-            break;
-        case CLK_MSI_VRNG2_16MHZ_2WS:
-            SystemClock_MSI_Vrange_2(RCC_MSIRANGE_8);
-            break;
-        case CLK_MSI_VRNG1_24MHZ_1WS:
-            #if defined(HW_HAS_LSE)
-                bClockSettingVolatile = true;         
-                saved_mhz             = 24;
-                RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
-                SystemClock_PLL_xxMHz_Vrange_1(24, bSwitchOffMSI);
-            #else
+    if (  clk_config_byte <= CLK_MSI_VRNG1_48MHZ_2WS ) {
+        /* First, handle all clock settings, that are not PLL based */
+        bClockSettingVolatile = false;         
+        RestoreFn             = NULL;
+
+        switch ( clk_config_byte ) {
+            case CLK_MSI_VRNG1_08MHZ_0WS:
+                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_7);
+                break;
+            case CLK_MSI_VRNG2_08MHZ_1WS:
+                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_7);
+                break;
+            case CLK_HSE_VRNG1_08MHZ_0WS:
+                #if defined(HW_HAS_LSE)
+                    bClockSettingVolatile   = true; 
+                    RestoreFn               = SystemClock_HSE_8MHz_Vrange_1_0WS_restore;
+                    SystemClock_HSE_8MHz_Vrange_1_0WS(bSwitchOffMSI);
+                #else
+                    DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
+                #endif
+                break;
+            case CLK_HSE_VRNG2_08MHZ_1WS:
+                #if defined(HW_HAS_LSE)
+                    bClockSettingVolatile   = true;         
+                    RestoreFn               = SystemClock_HSE_8MHz_Vrange_2_1WS_restore;
+                    SystemClock_HSE_8MHz_Vrange_2_1WS(bSwitchOffMSI);
+                #else
+                    DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
+                #endif
+                break;
+            case CLK_HSI_VRNG1_16MHZ_0WS:
+                SystemClock_HSI_16MHz_Vrange_1_0WS(bSwitchOffMSI);
+                break;
+            case CLK_HSI_VRNG2_16MHZ_2WS:
+                SystemClock_HSI_16MHz_Vrange_2_2WS(bSwitchOffMSI);
+                break;
+            case CLK_MSI_VRNG1_16MHZ_0WS:
+                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_8);
+                break;
+            case CLK_MSI_VRNG2_16MHZ_2WS:
+                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_8);
+                break;
+            case CLK_MSI_VRNG1_24MHZ_1WS:
                 SystemClock_MSI_Vrange_1(RCC_MSIRANGE_9);
-            #endif
-            break;
-        case CLK_MSI_VRNG2_24MHZ_3WS:
-            SystemClock_MSI_Vrange_2(RCC_MSIRANGE_9);
-            break;
-        case CLK_MSI_VRNG1_32MHZ_1WS:
-            #if defined(HW_HAS_LSE)
-                bClockSettingVolatile = true;         
-                saved_mhz             = 32;
-                RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
-                SystemClock_PLL_xxMHz_Vrange_1(32, bSwitchOffMSI);
-            #else
+                break;
+            case CLK_MSI_VRNG2_24MHZ_3WS:
+                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_9);
+                break;
+            case CLK_MSI_VRNG1_32MHZ_1WS:
                 SystemClock_MSI_Vrange_1(RCC_MSIRANGE_10);
-            #endif
-            break;
-        case CLK_MSI_VRNG1_48MHZ_2WS:
-            #if defined(HW_HAS_LSE)
-                bClockSettingVolatile = true;         
-                saved_mhz             = 48;
-                RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
-                SystemClock_PLL_xxMHz_Vrange_1(48, bSwitchOffMSI);
-            #else
+                break;
+            case CLK_MSI_VRNG1_48MHZ_2WS:
                 SystemClock_MSI_Vrange_1(RCC_MSIRANGE_11);
-            #endif
-            break;
-        case CLK_PLL_VRNG1_64MHZ_3WS:
-            bClockSettingVolatile = true;         
-            saved_mhz             = 64;
-            RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
-            SystemClock_PLL_xxMHz_Vrange_1(64, bSwitchOffMSI);
-            break;
-        case CLK_PLL_VRNG1_80MHZ_4WS:
-            bClockSettingVolatile = true;         
-            saved_mhz             = 80;
-            RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
-            SystemClock_PLL_xxMHz_Vrange_1(80, bSwitchOffMSI);
-            break;
-    } // Case
+                break;
+            default:
+                DEBUG_PRINTF("Error: Clockconfig - Unknown config #%d\n", clk_config_byte);       
+        } // switch
+    } else {
+        /* 
+         * Thereafter, handle all PLL-based clock settings: All these clock settings are
+         * volatile and require a restore function after wakeup from stop
+         */
+        bClockSettingVolatile = true;         
+        RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
+        saved_mhz             = GetPLLClockRate(clk_config_byte );
+        if ( saved_mhz == 0 ) { 
+            DEBUG_PRINTF("Error: Clockconfig - Unknown config #%d, setting 48Mhz PLL clk\n", clk_config_byte);       
+            saved_mhz = 48;
+        }                
+        SystemClock_PLL_xxMHz_Vrange_1(saved_mhz, bSwitchOffMSI);
+    } // if
 
     /* Notice all devices about frequency change                             */
     /* Momentarily, the frq change is not reverted, if any device refuses to */

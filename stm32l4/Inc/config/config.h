@@ -56,6 +56,7 @@
 #define USE_BASICTIMER      1
 #define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
+#define USE_USB             1   
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate

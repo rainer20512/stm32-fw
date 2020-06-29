@@ -49,6 +49,7 @@
  ******************************************************************************
  Define some common clock configurations, so all the neccessary clock settings
  can be done by configuration byte
+ When USB is used, all configs w/o PLL, except MSI48 are not allowed
  ******************************************************************************
  */
 typedef enum {
@@ -63,29 +64,24 @@ typedef enum {
   CLK_MSI_VRNG1_24MHZ_1WS =  8, /* 24 MHz, source MSI, Vrange1, 1 WS */
   CLK_MSI_VRNG2_24MHZ_3WS =  9, /* 24 MHz, source MSI, Vrange2, 3 WS */
   CLK_MSI_VRNG1_32MHZ_1WS = 10, /* 32 MHz, source MSI, Vrange1, 1 WS */
-  CLK_MSI_VRNG1_48MHZ_2WS = 11, /* 48 MHz, source MSI, Vrange1, 2 WS */
-  CLK_PLL_VRNG1_64MHZ_3WS = 12, /* 64 MHz, source PLL with HSI, Vrange1, 3 WS */
-  CLK_PLL_VRNG1_80MHZ_4WS = 13, /* 48 MHz, source PLL with HSI, Vrange1, 4 WS */
+  CLK_MSI_VRNG1_48MHZ_2WS = 16, /* 48 MHz, source MSI, Vrange1, 2 WS */
+
+  /* 
+   * Note: the follwing PLL based clock configuration values MUST be consecutive 
+   * and have matching entries in array "pll_clk_rates" in clockconfig.c
+   * PLL input clock is either HSE ( if equipped ) or HSI16
+   */   
+  CLK_PLL_VRNG1_16MHZ_0WS = 18, /* 16 MHz, source PLL with HSI, Vrange1, 0 WS */
+  CLK_PLL_VRNG1_24MHZ_1WS = 19, /* 24 MHz, source PLL with HSI, Vrange1, 1 WS */
+  CLK_PLL_VRNG1_32MHZ_1WS = 20, /* 32 MHz, source PLL with HSI, Vrange1, 1 WS */
+  CLK_PLL_VRNG1_48MHZ_2WS = 21, /* 48 MHz, source PLL with HSI, Vrange1, 2 WS */
+  CLK_PLL_VRNG1_64MHZ_3WS = 22, /* 64 MHz, source PLL with HSI, Vrange1, 3 WS */
+  CLK_PLL_VRNG1_80MHZ_4WS = 23, /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
 
 } CLK_CONFIG_T;
 
 bool ClockMustReconfiguredAfterStop ( void );
 void ClockReconfigureAfterStop(void);
-
-/* Only use "SystemClock_SetConfiguredClock" to change system clock */
-/* THis will ensure, that all devices will be noticed about clock   */
-/* changes                                                          */
-/*
-void SystemClock_MSI_Vrange_2(uint32_t msi_range);
-void SystemClock_MSI_Vrange_1(uint32_t msi_range);
-void SystemClock_HSE_8MHz_Vrange_2_1WS(bool bSwitchOffMSI);
-void SystemClock_HSE_8MHz_Vrange_1_0WS(bool bSwitchOffMSI);
-void SystemClock_HSI_16MHz_Vrange_2_2WS(bool bSwitchOffMSI);
-void SystemClock_HSI_16MHz_Vrange_1_0WS(bool bSwitchOffMSI);
-void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI);
-void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
-*/
-
 void SystemClock_SetConfiguredClock(void);
 void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock);
 void HSIClockConfig(bool bHSIon);
