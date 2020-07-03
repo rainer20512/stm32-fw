@@ -10,7 +10,7 @@
       arm_core_type="Cortex-M4"
       arm_fpu_type="FPv4-SP-D16"
       arm_gcc_target="arm-unknown-eabi"
-      arm_linker_heap_size="128"
+      arm_linker_heap_size="4096"
       arm_linker_jtag_pad_pre_dr="1"
       arm_linker_jtag_pad_pre_ir="5"
       arm_linker_process_stack_size="0"
@@ -24,7 +24,7 @@
       arm_target_loader_default_loader="Flash"
       arm_target_restrict_memory_accesses="Yes"
       c_preprocessor_definitions="STM32L476xx;USE_HAL_DRIVER;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
-      c_user_include_directories="$(PackagesDir)/CMSIS_4/CMSIS/Include;.//inc;./../common/inc;./modules/eeprom_emul/core;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common"
+      c_user_include_directories=".//inc;./../common/inc;./modules/eeprom_emul/core;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common;./modules/STM32_USBD_Library/inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/stm32l476rg_MemoryMap.xml"
       linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
@@ -222,21 +222,15 @@
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc.c" />
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_uart_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rcc_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pwr_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_tim.c" />
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-        </file>
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc_ex.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_rtc_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
@@ -248,6 +242,10 @@
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_qspi.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_can.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pcd.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_pcd_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_fmc.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_ll_usb.c" />
       </folder>
       <folder Name="CMSIS">
         <file file_name="$(ProjectDir)/Src/system_stm32l4xx.c" />
@@ -266,6 +264,28 @@
             <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.c" />
             <file file_name="$(ProjectDir)/modules/eeprom_emul/porting/stm32l4/flash_interface.h" />
           </folder>
+        </folder>
+      </folder>
+      <folder Name="STM32_USBD_Library">
+        <folder Name="Class">
+          <folder Name="CDC">
+            <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c" />
+          </folder>
+        </folder>
+        <folder Name="Core">
+          <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c" />
+          <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c" />
+          <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c" />
+        </folder>
+        <folder Name="inc">
+          <file file_name="modules/STM32_USBD_Library/inc/usbd_cdc_interface.h" />
+          <file file_name="modules/STM32_USBD_Library/inc/usbd_conf.h" />
+          <file file_name="modules/STM32_USBD_Library/inc/usbd_desc.h" />
+        </folder>
+        <folder Name="src">
+          <file file_name="modules/STM32_USBD_Library/src/usbd_cdc_interface.c" />
+          <file file_name="modules/STM32_USBD_Library/src/usbd_conf.c" />
+          <file file_name="modules/STM32_USBD_Library/src/usbd_desc.c" />
         </folder>
       </folder>
     </folder>

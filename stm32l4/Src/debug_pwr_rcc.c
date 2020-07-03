@@ -684,7 +684,7 @@ void DBG_dump_peripheralclockconfig(void)
     DBG_dump_textvalue("ADC Clk Source", DBG_get_rcc_ccipr_adcclk_txt((RCC->CCIPR & RCC_CCIPR_ADCSEL_Msk) >> RCC_CCIPR_ADCSEL_Pos) );    
 
   /* CLK48 used by sdmmc, usb and rng */
-  if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->APB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
+  if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
     DBG_dump_textvalue("CLK48 Source", DBG_get_rcc_ccipr_clk48_txt((RCC->CCIPR & RCC_CCIPR_CLK48SEL_Msk) >> RCC_CCIPR_CLK48SEL_Pos) );    
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
     DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI2SEL_Msk) >> RCC_CCIPR_SAI2SEL_Pos) );    

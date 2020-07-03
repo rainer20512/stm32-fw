@@ -73,7 +73,6 @@ void NMI_Handler(void)
     #endif
 }
 
-
 #if USE_EEPROM_EMUL > 0
     /* Handler for Interrupt driven page erase when using eeprom emulation */
     void FLASH_IRQHandler(void)
@@ -671,6 +670,52 @@ void SysTick_Handler(void)
                 CAN_ErrorStub( &CAN1Handle );
            }
     #endif
+#endif
+
+#if USE_USB > 0
+    #include "usbd_cdc_interface.h"
+    extern PCD_HandleTypeDef hpcd;
+    /* UART handler declared in "usbd_cdc_interface.c" file */
+    extern UART_HandleTypeDef UartHandle;
+
+    /* TIM handler declared in "usbd_cdc_interface.c" file */
+    extern TIM_HandleTypeDef TimHandle;
+
+    void OTG_FS_IRQHandler(void)
+    {
+      HAL_PCD_IRQHandler(&hpcd);
+    }
+
+    /**
+      * @brief  This function handles DMA interrupt request.
+      * @param  None
+      * @retval None
+      */
+    void USARTx_DMA_TX_IRQHandler(void)
+    {
+      HAL_DMA_IRQHandler(UartHandle.hdmatx);
+    }
+
+    /**
+      * @brief  This function handles UART interrupt request.  
+      * @param  None
+      * @retval None
+      */
+    void USARTx_IRQHandler(void)
+    {
+      HAL_UART_IRQHandler(&UartHandle);
+    }
+
+    /**
+      * @brief  This function handles TIM interrupt request.
+      * @param  None
+      * @retval None
+      */
+    void TIMx_IRQHandler(void)
+    {
+      HAL_TIM_IRQHandler(&TimHandle);
+    }
+
 #endif
 
 /******************************************************************************

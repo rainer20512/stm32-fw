@@ -1073,7 +1073,7 @@ void HSIClockConfig(bool bHSIon)
 #define  TIM_TIMx_GPIO              TIM_TIM15_TI1_GPIO
 #define  TIM_TIMx_LSE               TIM_TIM15_TI1_LSE
 #define  TIMx_IRQn                  TIM1_BRK_TIM15_IRQn
-
+#define  TIMx_IRQHandler            TIM1_BRK_TIM15_IRQHandler
 #define CAPTURE_START              ((uint32_t) 0x00000001)
 #define CAPTURE_ONGOING            ((uint32_t) 0x00000002)
 #define CAPTURE_COMPLETED          ((uint32_t) 0x00000003)
@@ -1094,11 +1094,11 @@ void HSIClockConfig(bool bHSIon)
 
 #define INITIAL_ERROR              ((uint32_t)99999000)
 
-TIM_HandleTypeDef  TimHandle; /* Timer handler declaration */
-uint32_t __IO       CaptureState;
-uint32_t __IO       Capture;
-uint32_t            StartCalibration;
-uint32_t            IC1ReadValue1 = 0, IC1ReadValue2 = 0;
+static TIM_HandleTypeDef  CalTimHandle; /* Timer handler declaration */
+static uint32_t __IO       CaptureState;
+static uint32_t __IO       Capture;
+static uint32_t            StartCalibration;
+static uint32_t            IC1ReadValue1 = 0, IC1ReadValue2 = 0;
 /* Exported macro ------------------------------------------------------------*/
 #define __HAL_GET_TIM_PRESCALER(__HANDLE__)       ((__HANDLE__)->Instance->PSC)
 #define ABS_RETURN(x)                             (((x) < 0) ? -(x) : (x))
@@ -1111,9 +1111,9 @@ uint32_t            IC1ReadValue1 = 0, IC1ReadValue2 = 0;
   * @param  None
   * @retval None
   ****************************************************************************/
-void TIM1_BRK_TIM15_IRQHandler(void)
+void TIMx_IRQHandler(void)
 {
-  HAL_TIM_IRQHandler(&TimHandle);
+  HAL_TIM_IRQHandler(&CalTimHandle);
 }
 
 /******************************************************************************
@@ -1196,7 +1196,7 @@ uint32_t HSI_FreqMeasure(void)
     CaptureState = CAPTURE_START;
 
     /* Enable capture 1 interrupt */
-    HAL_TIM_IC_Start_IT(&TimHandle, TIM_CHANNEL_y);
+    HAL_TIM_IC_Start_IT(&CalTimHandle, TIM_CHANNEL_y);
 
     /* Enable the TIMx IRQ channel */
     HAL_NVIC_EnableIRQ(TIMx_IRQn);
@@ -1214,7 +1214,7 @@ uint32_t HSI_FreqMeasure(void)
     HAL_NVIC_DisableIRQ(TIMx_IRQn);
 
     /* Disable TIMx */
-    HAL_TIM_IC_Stop_IT(&TimHandle, TIM_CHANNEL_y);
+    HAL_TIM_IC_Stop_IT(&CalTimHandle, TIM_CHANNEL_y);
 
     if (loop_counter != 0)
     {
@@ -1228,7 +1228,7 @@ uint32_t HSI_FreqMeasure(void)
   /* END of Measurement */
 
   /* Compute the average value corresponding the current trimming value */
-  measured_frequency = (uint32_t)((__HAL_GET_TIM_PRESCALER(&TimHandle) + 1) * (measured_frequency / HSI_NUMBER_OF_LOOPS));
+  measured_frequency = (uint32_t)((__HAL_GET_TIM_PRESCALER(&CalTimHandle) + 1) * (measured_frequency / HSI_NUMBER_OF_LOOPS));
   return measured_frequency;
 }
 
@@ -1330,13 +1330,13 @@ static void HSI_TIMx_ConfigForCalibration(void)
   __TIMx_CLK_ENABLE();
 
   /* Set TIMx instance */
-  TimHandle.Instance = TIMx;
+  CalTimHandle.Instance = TIMx;
 
   /* Reset TIMx registers */
-  HAL_TIM_IC_DeInit(&TimHandle);
+  HAL_TIM_IC_DeInit(&CalTimHandle);
 
     /* Connect LSE clock to TIMx Input Capture 1 */
-    HAL_TIMEx_RemapConfig(&TimHandle, TIM_TIMx_LSE);     
+    HAL_TIMEx_RemapConfig(&CalTimHandle, TIM_TIMx_LSE);     
 
   /* Initialize TIMx peripheral as follows:
        + Period = 0xFFFF
@@ -1344,26 +1344,26 @@ static void HSI_TIMx_ConfigForCalibration(void)
        + ClockDivision = 0
        + Counter direction = Up
   */
-  TimHandle.Init.Period            = 0xFFFF;
-  TimHandle.Init.Prescaler         = HSI_TIMx_COUNTER_PRESCALER;
-  TimHandle.Init.ClockDivision     = 0;
-  TimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;
-  TimHandle.Init.RepetitionCounter = 0;
-  if (HAL_TIM_IC_Init(&TimHandle) != HAL_OK)
+  CalTimHandle.Init.Period            = 0xFFFF;
+  CalTimHandle.Init.Prescaler         = HSI_TIMx_COUNTER_PRESCALER;
+  CalTimHandle.Init.ClockDivision     = 0;
+  CalTimHandle.Init.CounterMode       = TIM_COUNTERMODE_UP;
+  CalTimHandle.Init.RepetitionCounter = 0;
+  if (HAL_TIM_IC_Init(&CalTimHandle) != HAL_OK)
   {
     /* Initialization Error */
     Error_Handler(__FILE__, __LINE__);
   }
 
   /* Register capture Callback */
-  Tim_Register_CaptureCB(TimHandle.Instance, TimerCaptureCallback);
+  Tim_Register_CaptureCB(CalTimHandle.Instance, TimerCaptureCallback);
 
   /* Configure the Input Capture of channel y */
   ic_config.ICPolarity  = TIM_ICPOLARITY_RISING;
   ic_config.ICSelection = TIM_ICSELECTION_DIRECTTI;
   ic_config.ICPrescaler = HSI_TIMx_IC_DIVIDER;
   ic_config.ICFilter    = 0;
-  if (HAL_TIM_IC_ConfigChannel(&TimHandle, &ic_config, TIM_CHANNEL_y) != HAL_OK)
+  if (HAL_TIM_IC_ConfigChannel(&CalTimHandle, &ic_config, TIM_CHANNEL_y) != HAL_OK)
   {
     /* Configuration Error */
     Error_Handler(__FILE__, __LINE__);
@@ -1388,13 +1388,13 @@ static void HSI_TIMx_DeInit(void)
   HAL_NVIC_DisableIRQ(TIMx_IRQn);
 
   /* Set TIMx instance */
-  TimHandle.Instance = TIMx;
+  CalTimHandle.Instance = TIMx;
 
   /* UnRegister capture Callback */
-  Tim_UnRegister_CaptureCB(TimHandle.Instance);
+  Tim_UnRegister_CaptureCB(CalTimHandle.Instance);
 
   /* Reset TIMx registers */
-  HAL_TIM_IC_DeInit(&TimHandle);
+  HAL_TIM_IC_DeInit(&CalTimHandle);
 
   /* Disable TIMx clock */
   __TIMx_CLK_DISABLE();

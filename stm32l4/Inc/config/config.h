@@ -192,10 +192,10 @@
 #define _STR(x) #x
 #define STR(x) _STR(x)
 
-#define MIN(a,b)        ( a < b ? a : b )
-#define MAX(a,b)        ( a > b ? a : b )
-#define ABS(a)          ( a < 0 ? -1*a : a )
-#define UCASE(x)        ( x >= 'a' && x <= 'z' ? x & ~0x20 : x )
+#define MIN(a, b)       (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)       (((a) > (b)) ? (a) : (b))
+#define ABS(a)          (((a) < 0  ) ? -1*(a) : (a) )
+#define UCASE(x)        (((x) >= 'a' && (x) <= 'z') ? (x) & ~0x20 : (x) )
 
 /*
  ********************************************************************************
