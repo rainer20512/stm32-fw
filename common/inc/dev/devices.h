@@ -41,6 +41,9 @@
 #if USE_CAN > 0
     #include "dev/can_dev.h"
 #endif
+#if USE_USB > 0
+    #include "dev/usb_dev.h"
+#endif
 #if USE_ETH > 0
     #include "dev/eth_dev.h"
 #endif

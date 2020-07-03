@@ -66,7 +66,6 @@ uint32_t gflags;
 #include "usbd_cdc.h" 
 #include "usbd_cdc_interface.h"
 USBD_HandleTypeDef USBD_Device;
-extern PCD_HandleTypeDef hpcd;
 
 uint8_t CTL_error           =0;
 uint8_t general_error_code  =0;
@@ -323,25 +322,6 @@ int main(void)
     Init_OtherDevices();
 
     Init_DefineTasks();
-
-
-      /* Enable Power Clock*/
-      __HAL_RCC_PWR_CLK_ENABLE();
-
-      /* enable USB power on Pwrctrl CR2 register */
-      HAL_PWREx_EnableVddUSB();
-
-        /* Init Device Library */
-        USBD_Init(&USBD_Device, &VCP_Desc, 0);
-
-        /* Add Supported Class */
-        USBD_RegisterClass(&USBD_Device, USBD_CDC_CLASS);
-
-        /* Add CDC Interface Class */
-        USBD_CDC_RegisterInterface(&USBD_Device, &USBD_CDC_fops);
-
-        /* Start Device Process */
-        USBD_Start(&USBD_Device);
 
    ProfilerSwitchTo(JOB_TASK_MAIN);  
 

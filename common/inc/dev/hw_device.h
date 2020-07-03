@@ -40,6 +40,7 @@ typedef struct  HWDTS HW_DeviceType;
 #define     HW_DEVICE_QSPI        11
 #define     HW_DEVICE_CAN         12
 #define     HW_DEVICE_ETH         13
+#define     HW_DEVICE_USBD        14
 
 
 /******************************************************************************
@@ -84,6 +85,7 @@ typedef struct {
     uint8_t irq_subprio;         //!< Interrupt subprio 
 } GPIO_IrqType;
 
+#define GPIO_NO_IRQ              {-1,0,}
 
 /******************************************************************************
  * describe a pin that is used in plain IO mode

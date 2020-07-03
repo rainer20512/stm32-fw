@@ -37,65 +37,6 @@ PCD_HandleTypeDef hpcd;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
-/*******************************************************************************
-                       PCD BSP Routines
-*******************************************************************************/
-
-/**
-  * @brief  Initializes the PCD MSP.
-  * @param  hpcd: PCD handle
-  * @retval None
-  */
-void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
-{
-  GPIO_InitTypeDef  GPIO_InitStruct;
-
-  /* Configure USB FS GPIOs */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /* Configure DM DP Pins */
-  GPIO_InitStruct.Pin = (GPIO_PIN_11 | GPIO_PIN_12);
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Configure VBUS Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Configure ID pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Enable USB FS Clock */
-  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
-
-  /* Set USB FS Interrupt priority */
-  HAL_NVIC_SetPriority(OTG_FS_IRQn, 7, 0);
-
-  /* Enable USB FS Interrupt */
-  HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
-
-}
-
-/**
-  * @brief  De-Initializes the PCD MSP.
-  * @param  hpcd: PCD handle
-  * @retval None
-  */
-void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
-{
-  /* Disable USB FS Clock */
-  __HAL_RCC_USB_OTG_FS_CLK_DISABLE();
-  __HAL_RCC_SYSCFG_CLK_DISABLE();
-}
 
 /*******************************************************************************
                        LL Driver Callbacks (PCD -> USB Device Library)

@@ -176,6 +176,10 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(CAN1) && defined(USE_CAN1) 
    { CAN1, &RCC->APB1ENR1, RCC_APB1ENR1_CAN1EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_CAN1RST_Pos, COMBINE('C', 1) },
 #endif
+/* USB OTG  --------------------------------------------------------------------------------------------------------------- */
+#if defined(USB_OTG_FS) && defined(USE_USB) 
+   { USB_OTG_FS, &RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_OTGFSRST_Pos, COMBINE('O', 1) },
+#endif
 
 };
 

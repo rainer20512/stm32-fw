@@ -177,6 +177,15 @@ void Init_OtherDevices(void)
             DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
       }
   #endif
+  #if defined(USB_OTG_FS) && defined(USE_USB)
+      dev_idx = AddDevice(&HW_USBD, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init USBD-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+       
+  #endif
 
 }
 

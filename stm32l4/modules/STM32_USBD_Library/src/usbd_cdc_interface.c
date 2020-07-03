@@ -28,6 +28,7 @@
 #include "usbd_desc.h"
 #include "usbd_cdc.h" 
 #include "usbd_cdc_interface.h"
+#include "dev/usb_dev.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -57,7 +58,9 @@ UART_HandleTypeDef UartHandle;
 /* TIM handler declaration */
 TIM_HandleTypeDef  TimHandle;
 /* USB handler declaration */
-extern USBD_HandleTypeDef  USBD_Device;
+// extern USBD_HandleTypeDef  USBD_Device;
+
+#define MyDevice        ( &USBDHandle.hUsb )
 
 /* Private function prototypes -----------------------------------------------*/
 static int8_t CDC_Itf_Init     (void);
@@ -128,8 +131,8 @@ static int8_t CDC_Itf_Init(void)
   }
   
   /*##-5- Set Application Buffers ############################################*/
-  USBD_CDC_SetTxBuffer(&USBD_Device, UserTxBuffer, 0);
-  USBD_CDC_SetRxBuffer(&USBD_Device, UserRxBuffer);
+  USBD_CDC_SetTxBuffer(MyDevice, UserTxBuffer, 0);
+  USBD_CDC_SetRxBuffer(MyDevice, UserRxBuffer);
   
   return (USBD_OK);
 }
@@ -242,9 +245,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     
     buffptr = UserTxBufPtrOut;
     
-    USBD_CDC_SetTxBuffer(&USBD_Device, (uint8_t*)&UserTxBuffer[buffptr], buffsize);
+    USBD_CDC_SetTxBuffer(MyDevice, (uint8_t*)&UserTxBuffer[buffptr], buffsize);
     
-    if(USBD_CDC_TransmitPacket(&USBD_Device) == USBD_OK)
+    if(USBD_CDC_TransmitPacket(MyDevice) == USBD_OK)
     {
       UserTxBufPtrOut += buffsize;
       if (UserTxBufPtrOut == APP_RX_DATA_SIZE)
@@ -297,7 +300,7 @@ static int8_t CDC_Itf_Receive(uint8_t* Buf, uint32_t *Len)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Initiate next USB packet transfer once UART completes transfer (transmitting data over Tx line) */
-  USBD_CDC_ReceivePacket(&USBD_Device);
+  USBD_CDC_ReceivePacket(MyDevice);
 }
 
 /**

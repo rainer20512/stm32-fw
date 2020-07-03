@@ -31,7 +31,7 @@ void GpioInitHW( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
         if ( gpio == GPIOG && Init->Pin > GPIO_PIN_1 ) {
 
             /* Get clock status of PWR domain and switch on, if not already on*/
-            uint32_t pwrbit = READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_PWREN);
+            uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
             if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
 
             /* Check IOSV Bit and set */

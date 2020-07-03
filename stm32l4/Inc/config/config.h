@@ -47,14 +47,14 @@
 #define USE_EPAPER          0
 #define USE_ONEWIRE         0
 #define USE_DS18X20         0
-#define USE_EEPROM_EMUL     1
+#define USE_EEPROM_EMUL     0
 #define USE_QENCODER        0
 #define USE_DISPLAY         0
 #define USE_DOGM132         0
 #define USE_SECONDTIMER     0
 #define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
-#define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
 #define USE_USB             1   
 
@@ -71,6 +71,7 @@
 #define EXTI_IRQ_PRIO       0x05         // Give Pin Change the third highest
 #define I2C_IRQ_PRIO        0x04         // Give I2C a high prio
 #define CAN_IRQ_PRIO        0x03         // Give CAN a very high prio
+#define USB_IRQ_PRIO        0x02         // Give USB a very, very high prio
 #define RTC_IRQ_PRIO        0x01         // RTC has the next higher prio
 #define BASETIM_IRQ_PRIO    0x00         // Give the base timer the highest possible priority
 
@@ -83,8 +84,11 @@
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
-#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ_2WS   /* 48 MHz, source MSI, Vrange1, 2 WS */
+#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ_3WS   /* 64 MHz, source MSI, Vrange1, 3 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ_4WS   /* 80 MHz, source MSI, Vrange1, 4 WS */
+
 
 /******************************************************************************
  * Check and set constraints for Temperarure, Humidity and Pressure sensors
