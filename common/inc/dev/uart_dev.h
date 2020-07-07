@@ -27,6 +27,14 @@
 #ifdef __cplusplus
  extern "C" {
 #endif
+
+typedef struct {
+    uint32_t baudrate;      /* plain baudrate */
+    uint32_t stopbits;      /* stopbits as decoded in ..._hal_uart.h */
+    uint32_t parity;        /* parity as decoded in ..._hal_uart.h */
+    uint32_t wordlength;    /* wordlength as decoded in ..._hal_uart.h */
+} UsartCommT;
+
 typedef struct UsartHandleType UsartHandleT; 
 typedef void (*UsartCB) ( UsartHandleT * );
 typedef void (*UsartRCB) ( UsartHandleT *, uint8_t  );
@@ -101,7 +109,9 @@ typedef struct UsartHandleType {
 
 UsartHandleT *USART_GetHandleFromDev(const HW_DeviceType *self);
 
-bool Usart_SetCommParams    (UsartHandleT *uhandle,  uint32_t baudrate, bool bFirstInit);
+bool Usart_SetCommParams    (const HW_DeviceType *self, uint32_t baudrate, bool bFirstInit);
+bool Usart_SetCommParamsLong(const HW_DeviceType *self, UsartCommT *comm,  bool bFirstInit );
+
 void Usart_AssignBuffers    (UsartHandleT *uhandle, LinBuffT *rxcharbuf, CircBuffT *xmit); 
 void UsartAssignCallbacks   (UsartHandleT *uhandle, UsartCB OnTx, UsartCB OnErr, UsartRCB OnRx);
 void UsartIRQHandler        (UsartHandleT *uhandle);

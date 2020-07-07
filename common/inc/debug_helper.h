@@ -25,7 +25,6 @@
 #endif
 
 #include <stdio.h>
-#include "hardware.h"
 
 #ifdef __cplusplus
  extern "C" {

@@ -99,7 +99,7 @@ extern const EE_LimitsT eelimits[];
     /* 18 */ {              0xef,  00, 255, EEType_Uint8_Hex,   "Security Key[7]" },                                       \
     /* 19 */ {                 0,   0,   1, EEType_YesNo,       "Enable Periodic Dump\nof values to ext. EEPROM" },        \
     /* 1a */ {                 1,   0,   1, EEType_YesNo,       "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
-    /* 1b */ {                 1,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
+    /* 1b */ {                 0,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
     /* 1c */ { DEFAULT_STOP_MODE,   0,   2, EEType_Uint8_Dec,   "StopMode to enter on stop" },                             \
     /* 1d */ { USER_CLOCKCONFIG,    0,  23, EEType_Uint8_Dec,   "Clock configuration to use" },                            
 #if defined(TX18LISTENER)

@@ -27,7 +27,7 @@ bool CircBuff_Init(CircBuffT *cbuff, uint32_t size, uint8_t *bufptr )
         return false;
     }
     cbuff->buf = bufptr;
-    cbuff->wrptr = cbuff->rdptr =0;
+    cbuff->wrptr = cbuff->rdptr = 0;
 
     return true;
 }
@@ -96,6 +96,52 @@ bool CircBuff_Peek2(CircBuffT *b, uint16_t *w )
   return true;  
 }
 
+
+
+/******************************************************************************
+ * Put a byte vector to circular buffer, which is guaranteed to produce no wrap
+ * and no overflow. 
+ * !! These both prerequisites must have been checked before !!
+ *****************************************************************************/
+static void CB_PutNowrap(CircBuffT *b, uint8_t *buf, uint32_t buflen)
+{
+    memcpy(b->buf+b->wrptr, buf, buflen);
+    b->wrptr = CBUFPTR_INCR(*b, wrptr, buflen);
+}
+
+/******************************************************************************
+ * Put a byte vector to circular buffer. If a buffer rollover occurs, this
+ * vector write is executed in two pieces.
+ * If the circular buffer does not have enough room to store the entire buffer,
+ * only the fitting first bytes will be stored
+ * 
+ * The number of stored bytes will be returned
+ *****************************************************************************/
+#include "debug_helper.h"
+uint32_t CircBuff_PutStr(CircBuffT *b, uint8_t *buf, uint32_t buflen)
+{
+    /* chek for storeable bytes and reduce write size, if neccessary */
+    uint32_t temp = CBUF_GET_FREE(*b);
+    if ( buflen > temp )  buflen = temp;
+
+    /*
+     * Check, whether a wraparound will occur during write. If so, 
+     * write in two parts: First up to wraparound, then the rest
+     */
+    temp = CBUF_GET_LINEARWRITESIZE(*b);
+    if ( temp < buflen ) {
+        DEBUG_PRINTF("Write in 2 portions: %d and %d\n", temp, buflen-temp);
+        CB_PutNowrap(b, buf, temp);
+        buf += temp;
+        temp = buflen - temp;
+    } else {
+        DEBUG_PRINTF("Write in 1 portion: %d \n", buflen);
+        temp = buflen;
+    }
+    CB_PutNowrap(b, buf, temp);
+
+    return buflen;
+}
 
 bool CircBuff_Get_Indexed(CircBuffT *b, uint32_t idx, uint8_t *ch )
 {

@@ -38,6 +38,9 @@ typedef enum ActiveJobEnum {
 #if USE_QSPI > 0
     JOB_TASK_QSPI,
 #endif
+#if USE_USB > 0
+    JOB_TASK_USBD,
+#endif
     JOB_ADC,
     JOB_SLEEP,
     JOB_STOP0,
@@ -89,9 +92,15 @@ typedef enum ActiveJobEnum {
 #else
     #define JOBNAMES4 JOBNAMES3
 #endif             
+#if USE_USB > 0
+    #define JOBNAMES5 JOBNAMES4 \
+    "USB-DEV",
+#else
+    #define JOBNAMES5 JOBNAMES4
+#endif             
 
 #define JOBNAMES99 \
-    JOBNAMES4     \
+    JOBNAMES5     \
     "ADC",        \
     "SLEEP",      \
     "STOP0",      \

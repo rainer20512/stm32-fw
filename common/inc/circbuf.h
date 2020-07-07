@@ -52,10 +52,14 @@ typedef struct linear_buffer {
 #define CHECK_CBUF_FREE(cbuf,num)     ( CBUF_WRAPAROUND(cbuf) ? (cbuf).wrptr + num < (cbuf).rdptr : (cbuf).wrptr + num < (cbuf).rdptr + (cbuf).size )
 /* get the number of used elements */
 #define CBUF_GET_USED(cbuf)           ( CBUF_WRAPAROUND(cbuf) ? (cbuf).wrptr + (cbuf).size - (cbuf).rdptr : (cbuf).wrptr - (cbuf).rdptr )
+/* get the number of free elements */
+#define CBUF_GET_FREE(cbuf)           ( (cbuf).size - 1 - CBUF_GET_USED(cbuf) )
 /* true, if r is a valid read index ( ie between rdptr..wrptr-1  */
 #define CBUF_VALID_RDPOS(cbuf,r)      ( CBUF_WRAPAROUND(cbuf) ? (cbuf).rdptr+r < (cbuf).wrptr + (cbuf).size : (cbuf).rdptr+r < (cbuf).wrptr )
 /* return the number of bytes that can be read consecutively up to the end of the underlying linear buffer */
 #define CBUF_GET_LINEARREADSIZE(cbuf) ( CBUF_WRAPAROUND(cbuf) ? (cbuf).size - (cbuf).rdptr : (cbuf).wrptr - (cbuf).rdptr )
+/* return the number of bytes that can be written consecutively up to the end of the underlying linear buffer */
+#define CBUF_GET_LINEARWRITESIZE(cbuf) ( CBUF_WRAPAROUND(cbuf) ? (cbuf).rdptr - (cbuf).wrptr - 1 : (cbuf).size - (cbuf).wrptr - 1 )
 
 
 /* true, if linear buffer is empty */
@@ -70,24 +74,25 @@ typedef struct linear_buffer {
 
 
 /* Public functions ---------------------------------------------------------*/
-bool CircBuff_Init(CircBuffT *cbuff, uint32_t size, uint8_t *bufptr );
-bool CircBuff_Put(CircBuffT *b, uint8_t ch );
-bool CircBuff_Get(CircBuffT *b, uint8_t *ch );
-bool CircBuff_Put2(CircBuffT *b, uint16_t w );
-bool CircBuff_Get2(CircBuffT *b, uint16_t *w );
-bool CircBuff_Peek2(CircBuffT *b, uint16_t *w );
-bool CircBuff_Get_Indexed(CircBuffT *b, uint32_t idx, uint8_t *ch );
-void CircBuff_GetlinearReadBuffer(CircBuffT *b, uint8_t **readbuf, uint32_t *size );
-void CircBuff_Mark(CircBuffT *b);
-void CircBuff_PutBack(CircBuffT *b, uint8_t ch );
+bool     CircBuff_Init(CircBuffT *cbuff, uint32_t size, uint8_t *bufptr );
+bool     CircBuff_Put(CircBuffT *b, uint8_t ch );
+bool     CircBuff_Get(CircBuffT *b, uint8_t *ch );
+bool     CircBuff_Put2(CircBuffT *b, uint16_t w );
+uint32_t CircBuff_PutStr(CircBuffT *b, uint8_t *buf, uint32_t buflen);
+bool     CircBuff_Get2(CircBuffT *b, uint16_t *w );
+bool     CircBuff_Peek2(CircBuffT *b, uint16_t *w );
+bool     CircBuff_Get_Indexed(CircBuffT *b, uint32_t idx, uint8_t *ch );
+void     CircBuff_GetlinearReadBuffer(CircBuffT *b, uint8_t **readbuf, uint32_t *size );
+void     CircBuff_Mark(CircBuffT *b);
+void     CircBuff_PutBack(CircBuffT *b, uint8_t ch );
 
-void LinBuff_Init(LinBuffT *cbuff, uint32_t size, uint8_t *bufptr );
-bool LinBuff_Putc(LinBuffT *b, uint8_t ch );
-bool LinBuff_Getc(LinBuffT *b, uint8_t *ch );
-void LinBuff_Gets(LinBuffT *b, uint8_t **str, size_t *len );
-bool LinBuff_GetsTo(LinBuffT *b, uint8_t **str, size_t *len, char delimiter );
-void LinBuff_SetEmpty(LinBuffT *b);
-bool LinBuff_CleanUp(LinBuffT *b, uint32_t num );
+void     LinBuff_Init(LinBuffT *cbuff, uint32_t size, uint8_t *bufptr );
+bool     LinBuff_Putc(LinBuffT *b, uint8_t ch );
+bool     LinBuff_Getc(LinBuffT *b, uint8_t *ch );
+void     LinBuff_Gets(LinBuffT *b, uint8_t **str, size_t *len );
+bool     LinBuff_GetsTo(LinBuffT *b, uint8_t **str, size_t *len, char delimiter );
+void     LinBuff_SetEmpty(LinBuffT *b);
+bool     LinBuff_CleanUp(LinBuffT *b, uint32_t num );
 
 
 #ifdef __cplusplus

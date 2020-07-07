@@ -35,7 +35,8 @@
 /* remember U(S)ART to use ----------------------------------------------
  * this is currently USART1 ALTN1(Tx=A9 Rx=A10)
  */
-static UsartHandleT *myUHandle=NULL;
+static UsartHandleT        *myUHandle    = NULL;
+static const HW_DeviceType *myDev        = NULL;
 
 //#define MY_UART (&HandleCOM1)
 
@@ -222,7 +223,7 @@ static void SetBaudrate(uint32_t baudRate)
     /* if baudrate already set to desired value, then do nothing */
     if ( myUHandle->baudrate == baudRate ) return;
 
-    if (!Usart_SetCommParams(myUHandle, baudRate, false) ) {
+    if (!Usart_SetCommParams(myDev, baudRate, false) ) {
         #if DEBUG_MODE > 0 
             DEBUG_PUTS("Error: Failed to change baudrate");
         #endif
@@ -555,6 +556,7 @@ void OW_PostInit(const HW_DeviceType *dev, void *arg)
 {
     UNUSED(arg);
     myUHandle = USART_GetHandleFromDev(dev);
+    myDev     = dev;
 
     SetBaudrate(BR_DATA);
     /* 

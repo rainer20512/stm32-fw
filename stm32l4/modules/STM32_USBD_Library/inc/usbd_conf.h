@@ -21,8 +21,12 @@
 #ifndef __USBD_CONF_H
 #define __USBD_CONF_H
 
+
 /* Includes ------------------------------------------------------------------*/
-#include "stm32l4xx_hal.h"
+
+#include "config/config.h"
+
+#include "hardware.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,36 +40,44 @@
 #define USBD_MAX_STR_DESC_SIZ                 0x100
 #define USBD_SUPPORT_USER_STRING              0 
 #define USBD_SELF_POWERED                     1
-#define USBD_DEBUG_LEVEL                      0
+#define USBD_DEBUG_LEVEL                      2
 
 /* Exported macro ------------------------------------------------------------*/
 /* Memory management macros */   
-#define USBD_malloc               malloc
-#define USBD_free                 free
+#define USBD_malloc               USBD_StaticMalloc
+#define USBD_free(a)              
 #define USBD_memset               memset
 #define USBD_memcpy               memcpy
-    
+
+/* declare the handcrafted static malloc function */
+void *USBD_StaticMalloc( size_t size );
+
 /* DEBUG macros */  
-#if (USBD_DEBUG_LEVEL > 0)
-#define  USBD_UsrLog(...)   printf(__VA_ARGS__);\
-                            printf("\n");
+
+#if DEBUG_MODE > 0 && USBD_DEBUG_LEVEL > 0
+    #include "debug_helper.h"
+#endif
+
+#if (DEBUG_MODE > 0 && USBD_DEBUG_LEVEL > 0)
+#define  USBD_UsrLog(...)   do { DEBUG_PRINTF(__VA_ARGS__);\
+                            DEBUG_PRINTF("\n"); } while (0)
 #else
 #define USBD_UsrLog(...)   
 #endif                            
                             
-#if (USBD_DEBUG_LEVEL > 1)
+#if (DEBUG_MODE > 0 && USBD_DEBUG_LEVEL > 1)
 
-#define  USBD_ErrLog(...)   printf("ERROR: ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#define  USBD_ErrLog(...)   do { DEBUG_PRINTF("ERROR: ") ;\
+                            DEBUG_PRINTF(__VA_ARGS__);\
+                            DEBUG_PRINTF("\n"); } while (0)
 #else
 #define USBD_ErrLog(...)   
 #endif 
                                                         
-#if (USBD_DEBUG_LEVEL > 2)                         
-#define  USBD_DbgLog(...)   printf("DEBUG : ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#if (DEBUG_MODE > 0 && USBD_DEBUG_LEVEL > 2)                         
+#define  USBD_DbgLog(...)   do { DEBUG_PRINTF("DEBUG : ") ;\
+                            DEBUG_PRINTF(__VA_ARGS__);\
+                            DEBUG_PRINTF("\n"); } while (0)
 #else
 #define USBD_DbgLog(...)                         
 #endif

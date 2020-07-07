@@ -30,16 +30,17 @@
  */
 
 #define TASK_TMR              0
-#define TASK_OW               1
-#define TASK_COM              2
-#define TASK_RTC              3
-#define TASK_OUT              4
-#define TASK_RFM              5
-#define TASK_PERIODIC         6
-#define TASK_EPD              7
-#define TASK_ADC              8
-#define TASK_LCD              9
+#define TASK_USBD             1
+#define TASK_OW               2
+#define TASK_COM              3
+#define TASK_RTC              4
+#define TASK_OUT              5
+#define TASK_RFM              6
+#define TASK_PERIODIC         7
+#define TASK_EPD              8
+#define TASK_ADC              9
 #define TASK_QSPI             10
+#define TASK_LCD              11
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30

@@ -39,6 +39,9 @@ typedef struct {
 //    USART_TypeDef       *myUart;
     UsartHandleT        *myHandle;
     uint32_t            myBaudrate;
+    uint32_t            myStopbits;
+    uint32_t            myParity;
+    uint32_t            myWordlength;
 } USART_AdditionalDataType;
 
 /* ------------------------------------------------------------------------------*/
@@ -250,18 +253,18 @@ bool Usart_GPIO_Init(const HW_DeviceType *self)
     return true;
 }
 
-
 /******************************************************************************
  * Se the U(S)ARTs communication parameters
  * currently all comm parameters except baudrate are fixed!
  *****************************************************************************/
-bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstInit )
+bool Usart_SetCommParamsLong(const HW_DeviceType *self, UsartCommT *comm, bool bFirstInit )
 {
+  UsartHandleT *myHandle = USART_GetHandleFromDev(self);
   UART_HandleTypeDef huart={0};
   USART_TypeDef *utiny  = myHandle->Instance;
-
+ 
   /* keep actual baudrate in mind ( need it if system frequancy changes */
-  myHandle->baudrate = baudrate;
+  myHandle->baudrate = comm->baudrate;
 
   /* Disable U(S)ART temporarily */
   utiny->CR1 &= ~USART_CR1_UE;
@@ -274,10 +277,10 @@ bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstI
   }
 
   huart.Instance            = utiny;
-  huart.Init.BaudRate       = myHandle->baudrate;
-  huart.Init.WordLength     = UART_WORDLENGTH_8B;
-  huart.Init.StopBits       = UART_STOPBITS_1;
-  huart.Init.Parity         = UART_PARITY_NONE;
+  huart.Init.BaudRate       = comm->baudrate;
+  huart.Init.WordLength     = comm->wordlength;
+  huart.Init.StopBits       = comm->stopbits;
+  huart.Init.Parity         = comm->parity;
   huart.Init.HwFlowCtl      = UART_HWCONTROL_NONE;
   huart.Init.Mode           = UART_MODE_TX_RX;
   huart.Init.OverSampling   = UART_OVERSAMPLING_16;
@@ -300,6 +303,25 @@ bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstI
 
   return true;
 }
+
+
+/******************************************************************************
+ * Se the U(S)ARTs communication parameters
+ * currently all comm parameters except baudrate are fixed!
+ *****************************************************************************/
+bool Usart_SetCommParams(const HW_DeviceType *self, uint32_t baudrate, bool bFirstInit )
+{
+  USART_AdditionalDataType *adt = USART_GetAdditionalData(self);
+  UsartCommT comm;  
+
+  /* stopbits, parity and wordlength are always taken from static configuration */
+  comm.baudrate     = baudrate;
+  comm.stopbits     = adt->myStopbits;
+  comm.parity       = adt->myParity;
+  comm.wordlength   = adt->myWordlength;
+
+  return Usart_SetCommParamsLong(self, &comm, bFirstInit);
+}
 /******************************************************************************
  * Wrapper for "Usart_SetCommParams"
  * Thsi function will be called by device manager every time the system
@@ -307,7 +329,7 @@ bool Usart_SetCommParams(UsartHandleT *myHandle, uint32_t baudrate, bool bFirstI
  *****************************************************************************/
 bool Usart_OnFrqChange( const HW_DeviceType *self )
 {
-    return Usart_SetCommParams(USART_GetAdditionalData(self)->myHandle, USART_GetAdditionalData(self)->myBaudrate, false );
+    return Usart_SetCommParams(self, USART_GetAdditionalData(self)->myBaudrate, false );
 }
 
 /**
@@ -454,7 +476,7 @@ bool COM_Init(const HW_DeviceType *self)
     myHandle->bRxCharMode = true;
 
     /* Set Communication Parameters (baudrate) */
-    if ( !Usart_SetCommParams(myHandle, adt->myBaudrate, true) ) return false;
+    if ( !Usart_SetCommParams(self, adt->myBaudrate, true) ) return false;
 
     /* Configure the NVIC, enable interrupts */
     HW_SetAllIRQs(self->devIrqList, true);
@@ -531,6 +553,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com1 = {
         &HandleCOM1,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
     
     #if defined(COM1_USE_TX_DMA)
@@ -586,6 +611,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com2 = {
         &HandleCOM2,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
 
     #if defined(COM2_USE_TX_DMA)
@@ -642,6 +670,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com3 = {
         &HandleCOM3,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
 
     #if defined(COM3_USE_TX_DMA)
@@ -698,6 +729,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com4 = {
         &HandleCOM4,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
 
     #if defined(COM4_USE_TX_DMA)
@@ -754,6 +788,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com5 = {
         &HandleCOM5,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
 
     #if defined(COM5_USE_TX_DMA)
@@ -819,6 +856,9 @@ bool COM_AllowStop(const HW_DeviceType *self)
     static const USART_AdditionalDataType additional_com6 = {
         &HandleCOM9,
         DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
     };
 
     static const HW_IrqList irq_com6 = {

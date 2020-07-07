@@ -46,6 +46,7 @@
 #include "eeprom.h"
 #include "task/minitask.h"
 #include "system/exti_handler.h"
+#include "dev/io_dev.h"
 
 #include "system/profiling.h"
 

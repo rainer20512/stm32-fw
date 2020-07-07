@@ -686,6 +686,7 @@ void SysTick_Handler(void)
       HAL_PCD_IRQHandler(&hpcd);
     }
 
+#if 0
     /**
       * @brief  This function handles DMA interrupt request.
       * @param  None
@@ -715,6 +716,7 @@ void SysTick_Handler(void)
     {
       HAL_TIM_IRQHandler(&TimHandle);
     }
+#endif
 
 #endif
 

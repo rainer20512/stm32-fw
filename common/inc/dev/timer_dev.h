@@ -18,7 +18,7 @@
 #include "hw_device.h"
 #include "config/devices_config.h"
 #include "config/timer_config.h"
-#include "devices.h"
+// #include "devices.h"
 #include "circbuf.h"
 
 #ifdef __cplusplus

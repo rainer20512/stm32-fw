@@ -87,6 +87,14 @@ void Init_OtherDevices(void)
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }
+  #endif
+  #if defined(USE_USART2)
+      dev_idx = AddDevice(&HW_COM2, NULL, NULL );
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init USART2-device");
+      } else {
+        DeviceInitByIdx(dev_idx, (void *)0 );
+      }
 
   #endif
   #if USE_RFM12 > 0 || USE_RFM69 > 0
@@ -178,6 +186,7 @@ void Init_OtherDevices(void)
       }
   #endif
   #if defined(USB_OTG_FS) && defined(USE_USB)
+      void USBD_PostInit( const HW_DeviceType *self, void *args);
       dev_idx = AddDevice(&HW_USBD, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init USBD-device");
@@ -219,6 +228,11 @@ void Init_OtherDevices(void)
     #include "disp/ssdxxxx_spi.h"
 #endif
 
+#if USE_USB > 0
+    void U2U_InitTask(void);
+    void U2U_RunTask(uint32_t arg);
+#endif
+
 void task_handle_out  (uint32_t);
 void task_handle_qspi (uint32_t);
 
@@ -231,6 +245,9 @@ void Init_DefineTasks(void)
 {
  TaskRegisterTask(task_init_rtc,  task_handle_tmr, TASK_TMR,      JOB_TASK_TMR,      "Timer task");
   TaskRegisterTask(NULL,          task_handle_rtc, TASK_RTC,      JOB_TASK_RTC,      "RTC task");
+#if USE_USB > 0
+  TaskRegisterTask(U2U_InitTask,  U2U_RunTask,     TASK_USBD,     JOB_TASK_USBD,     "U2U Traffic");
+#endif
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
   TaskRegisterTask(CMD_Init,      task_handle_com, TASK_COM,      JOB_TASK_DBGIO,    "Debug input");
   TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    "Debug output");  

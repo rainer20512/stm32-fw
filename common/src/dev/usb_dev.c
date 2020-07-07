@@ -25,7 +25,8 @@
 #include "config/usb_config.h"
 #include "debug_helper.h"
 
-
+#include "usbd_cdc.h"
+#include "usbd_desc.h"
 
 
 /* forward declarations ------------------------------------------------------------*/
@@ -39,46 +40,6 @@ static void UsbResetMyHandle ( UsbdHandleT *handle )
 {
     memset(handle, 0, sizeof(UsbdHandleT) );
 }
-
-#if 0
-void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
-{
-  GPIO_InitTypeDef  GPIO_InitStruct;
-
-  /* Configure USB FS GPIOs */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /* Configure DM DP Pins */
-  GPIO_InitStruct.Pin = (GPIO_PIN_11 | GPIO_PIN_12);
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Configure VBUS Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Configure ID pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Alternate = GPIO_AF10_OTG_FS;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* Enable USB FS Clock */
-  __HAL_RCC_USB_OTG_FS_CLK_ENABLE();
-
-  /* Set USB FS Interrupt priority */
-  HAL_NVIC_SetPriority(OTG_FS_IRQn, 7, 0);
-
-  /* Enable USB FS Interrupt */
-  HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
-#endif
-
 
 static void Usbd_GPIO_Init(const HW_DeviceType *self)
 {
@@ -144,6 +105,16 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
     HW_SetHWClock( hpcd->Instance, false );
 }
 
+void USBD_CDC_SetCallbacks   ( USBD_CDC_CallbacksT *usb_cbs)
+{
+    USBDHandle.cdc_callbacks = *usb_cbs;
+}
+
+void USBD_CDC_StartReceive(void)
+{
+    USBD_CDC_ReceivePacket(&USBDHandle.hUsb);
+}
+
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Check, whether the system may enter Stop 2 mode. 
  * This is the case, whenever CAN is in SLEEP or INIT Mode
@@ -166,10 +137,7 @@ bool USBD_CanStop(const HW_DeviceType *self)
     UNUSED(me);
     return false;
 }
-
-#include "usbd_cdc.h"
 extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
-extern USBD_DescriptorsTypeDef VCP_Desc;
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Can Device initialization: Reset handle, init GPIO pins and interrupts,
@@ -246,7 +214,7 @@ void USBD_DeInitDev(const HW_DeviceType *self)
     };
 
     const HW_DeviceType HW_USBD = {
-        .devName        = "USB_DEV",
+        .devName        = "USB_CDC",
         .devBase        = USB_OTG_FS,
         .devGpioAF      = &gpioaf_usb,
         .devGpioIO      = &gpioio_usb,
