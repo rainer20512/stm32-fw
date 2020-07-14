@@ -445,6 +445,8 @@
 
   #if USE_CAN > 0
     #define USE_CAN1
+    #define USE_CANDEV1_ALTN1  /* PB8/PB9 for Can Rx/Tx */
+    #define CAN1_USE_IRQ
   #endif
 
   #define DEFAULT_STOP_MODE                2

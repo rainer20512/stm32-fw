@@ -81,6 +81,7 @@
           <file file_name="$(ProjectDir)/Inc/config/uart_config.h" />
           <file file_name="$(ProjectDir)/Inc/config/can_config.h" />
           <file file_name="Inc/config/usb_config.h" />
+          <file file_name="Inc/config/fmc_config.h" />
         </folder>
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
@@ -319,6 +320,7 @@
           <file file_name="../common/src/dev/uart_dev.c" />
           <file file_name="../common/src/dev/can_dev.c" />
           <file file_name="../common/src/dev/usb_dev.c" />
+          <file file_name="../common/src/dev/fmc_dev.c" />
         </folder>
         <file file_name="../common/src/circbuf.c" />
         <folder Name="system">
@@ -360,6 +362,7 @@
           <file file_name="$(ProjectDir)/../common/Inc/dev/can_dev.h" />
           <file file_name="$(ProjectDir)/../common/Inc/dev/uart_dev.h" />
           <file file_name="../common/inc/dev/usb_dev.h" />
+          <file file_name="../common/inc/dev/fmc_dev.h" />
         </folder>
         <file file_name="../common/inc/circbuf.h" />
         <folder Name="system">
