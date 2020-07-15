@@ -41,6 +41,7 @@ typedef struct  HWDTS HW_DeviceType;
 #define     HW_DEVICE_CAN         12
 #define     HW_DEVICE_ETH         13
 #define     HW_DEVICE_USBD        14
+#define     HW_DEVICE_FMC         15
 
 
 /******************************************************************************

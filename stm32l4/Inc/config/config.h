@@ -57,6 +57,8 @@
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             1
 #define USE_USB             0   
+#define USE_FMC_SRAM        1
+#define USE_FMC_NOR         0
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -171,6 +173,16 @@
     #define HW_HAS_LSE_CRYSTAL
     #undef  HW_HAS_LSE_BYPASS
     #define LSE_FREQUENCY   8000000
+#endif
+
+/******************************************************************************
+ * Check and set constraints for FMC module
+ *****************************************************************************/
+#undef USE_FMC 
+#if USE_FMC_SRAM > 0 || USE_FMC_NOR > 0 || USE_FMC_NAND > 0
+    #define USE_FMC 1
+#else
+    #define USE_FMC 0
 #endif
 
 

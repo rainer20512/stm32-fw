@@ -45,24 +45,7 @@
 
 #if USE_FMC > 0
 
-#if USE_FMC_MUXED > 0 
-    #define FMC_DA00                         { GPIO_PIN_14, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA00"  }
-    #define FMC_DA01                         { GPIO_PIN_15, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA01"  }
-    #define FMC_DA02                         { GPIO_PIN_0,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA02"  }
-    #define FMC_DA03                         { GPIO_PIN_1,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA03"  }
-    #define FMC_DA04                         { GPIO_PIN_7,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA04"  }
-    #define FMC_DA05                         { GPIO_PIN_8,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA05"  }
-    #define FMC_DA06                         { GPIO_PIN_9,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA06"  }
-    #define FMC_DA07                         { GPIO_PIN_10, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA07"  }
-    #define FMC_DA08                         { GPIO_PIN_11, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA08"  }
-    #define FMC_DA09                         { GPIO_PIN_12, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA09"  }
-    #define FMC_DA10                         { GPIO_PIN_13, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA10"  }
-    #define FMC_DA11                         { GPIO_PIN_14, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA11"  }
-    #define FMC_DA12                         { GPIO_PIN_15, GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA12"  }
-    #define FMC_DA13                         { GPIO_PIN_8,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA13"  }
-    #define FMC_DA14                         { GPIO_PIN_9,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA14"  }
-    #define FMC_DA15                         { GPIO_PIN_10, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC DA15"  }
-#else
+    /* Don't change the sequence, has to be in the order D00 ... D15 */
     #define FMC_D00                         { GPIO_PIN_14, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D00"  }
     #define FMC_D01                         { GPIO_PIN_15, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D01"  }
     #define FMC_D02                         { GPIO_PIN_0,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D02"  }
@@ -79,14 +62,16 @@
     #define FMC_D13                         { GPIO_PIN_8,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D13"  }
     #define FMC_D14                         { GPIO_PIN_9,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D14"  }
     #define FMC_D15                         { GPIO_PIN_10, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D15"  }
+    #define FMC_D_MAX                        16
 
+    /* Don't change the sequence, has to be in the order A00 ... A25 */
     #define FMC_A00                         { GPIO_PIN_0,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A00"  }
     #define FMC_A01                         { GPIO_PIN_1,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A01"  }
     #define FMC_A02                         { GPIO_PIN_2,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A02"  }
     #define FMC_A03                         { GPIO_PIN_3,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A03"  }
     #define FMC_A04                         { GPIO_PIN_4,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A04"  }
     #define FMC_A05                         { GPIO_PIN_5,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A05"  }
-    #define FMC_A06                         { GPIO_PIN_12,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A06"  }
+    #define FMC_A06                         { GPIO_PIN_12, GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A06"  }
     #define FMC_A07                         { GPIO_PIN_13, GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A07"  }
     #define FMC_A08                         { GPIO_PIN_14, GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A08"  }
     #define FMC_A09                         { GPIO_PIN_15, GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A09"  }
@@ -96,8 +81,6 @@
     #define FMC_A13                         { GPIO_PIN_3,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A13"  }
     #define FMC_A14                         { GPIO_PIN_4,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A14"  }
     #define FMC_A15                         { GPIO_PIN_5,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A15"  }
-#endif
-
     #define FMC_A16                         { GPIO_PIN_11, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A16"  }
     #define FMC_A17                         { GPIO_PIN_12, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A17"  }
     #define FMC_A18                         { GPIO_PIN_13, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A18"  }
@@ -108,13 +91,46 @@
     #define FMC_A23                         { GPIO_PIN_2,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A23"  }
     #define FMC_A24                         { GPIO_PIN_13, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A24"  }
     #define FMC_A25                         { GPIO_PIN_14, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A25"  }
+    #define FMC_A_MAX                       26
+
+    /* Order of control pins in the following section */ 
+    #define FMC_CLK_OFS                     0
+    #define FMC_NWAIT_OFS                   1
+    #define FMC_NOE_OFS                     2
+    #define FMC_NWE_OFS                     3
+    #define FMC_NE1_OFS                     4
+    #define FMC_NE2_OFS                     5
+    #define FMC_NE3_OFS                     6
+    #define FMC_NE4_OFS                     7
+    #define FMC_NBL0_OFS                    8
+    #define FMC_NBL1_OFS                    9
+    #define FMC_INT_OFS                     10
+    #define FMC_NL_OFS                      11
+
+    /* Last entry specifies number of CTL entries */
+    #define FMC_CTL_MAX                     12    
+    #define FMC_CTL_STR                     {"Clk", "NWait", "NOE", "NWE", "NE1", "NE2", "NE3", "NE4", "NBl0", "NBl1", "Int", "NL"}
+
+    /* The order here ha so match the offset definitions above */
+    #define FMC_CTL_CLK                     { GPIO_PIN_3,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC Clk"  }
+    #define FMC_CTL_NWAIT                   { GPIO_PIN_6,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NWait"}
+    #define FMC_CTL_NOE                     { GPIO_PIN_4,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NOE"  }
+    #define FMC_CTL_NWE                     { GPIO_PIN_5,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NWE"  }
+    #define FMC_CTL_NE1                     { GPIO_PIN_7,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE1"  }
+    #define FMC_CTL_NE2                     { GPIO_PIN_9,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE2"  }
+    #define FMC_CTL_NE3                     { GPIO_PIN_10, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE3"  }
+    #define FMC_CTL_NE4                     { GPIO_PIN_11, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE4"  }
+    #define FMC_CTL_NBL0                    { GPIO_PIN_0,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL1" }
+    #define FMC_CTL_NBL1                    { GPIO_PIN_1,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL0" }
+    #define FMC_CTL_INT                     { GPIO_PIN_7,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC INT"  }
+    #define FMC_CTL_NL                      { GPIO_PIN_7,  GPIOB, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NL"  }
 
 
-	/* Definition for FMC NVIC */
-	#if defined(FMC_USE_IRQ)
-		#define FMC_IRQ                        { FMC_IRQn, FMC_IRQ_PRIO, 0    }
-		#define FMC_IRQHandler                 FMC_IRQHandler
-	#endif
+    /* Definition for FMC NVIC */
+    #if defined(FMC_USE_IRQ)
+            #define FMC_IRQ                        { FMC_IRQn, FMC_IRQ_PRIO, 0    }
+            #define FMC_IRQHandler                 FMC_IRQHandler
+    #endif
 
 
 #endif // USE_FMC 

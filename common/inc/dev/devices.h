@@ -47,6 +47,9 @@
 #if USE_ETH > 0
     #include "dev/eth_dev.h"
 #endif
+#if USE_FMC > 0
+    #include "dev/fmc_dev.h"
+#endif
 
 
 /* Exported types ------------------------------------------------------------*/
