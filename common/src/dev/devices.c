@@ -23,9 +23,12 @@
   */
 
 /* Private define -----------------------------------------------------------------------*/
-#define MAX_DEV    16
-#define MAX_PRIO 0x0f
+#define MAX_DEV                 16
+#define MAX_PRIO                0x0f
 
+#define MAX_PORTS               11              /* Support GPIOA .. GPIOK                */ 
+#define REMOTE_DEV_MASK         0x80            /* Indicates a remote device as owner    */
+#define LOCAL_DEV_MASK          ( 0xFF & ~REMOTE_DEV_MASK )
 /* Private typedef ----------------------------------------------------------------------*/
 /* Private macro ------------------------------------------------------------------------*/
 
@@ -33,7 +36,9 @@
 static const HW_DeviceType* devices[MAX_DEV];   /* ptr to device descripter              */
 static HW_DynInitBlock      devDyn [MAX_DEV];   /* Ptr to dynamic PostInit/PreDeInit Fns */
 static uint8_t              devIsInited[MAX_DEV]; /* flag for "device is Initialized     */
-static uint32_t             act_devices     = 0;
+static uint32_t             act_devices;        /* curenntly used number of devices      */
+
+static uint8_t              gpios[MAX_PORTS][16]; /* hold the using device for every gpio*/
 
 /* Public functions: UART#s GPIO port initialization  -----------------------------------*/
 /* Public device variables --------------------------------------------------------------*/
@@ -56,9 +61,19 @@ static uint32_t             act_devices     = 0;
 /* --------------------------------------------------------------------------------------*/
 
 
-#define PRINTNAME(a)     ( a ? a : "" )
-#define PRINTCOLON(a)    ( a ? " : " : "" )
+#define PRINTNAME(a)            ( a ? a : "" )
+#define PRINTCOLON(a)           ( a ? " : " : "" )
+#define PRINTOWNERSHIP(i,g,p)   ( IsMyPin(0,i,g,p) ? "" : " Not assigned")
 
+
+/******************************************************************************
+ * Init device list: No Devices are defined, no ports are assigned
+ *****************************************************************************/
+void DevicesInit(void )
+{
+    memset(gpios,sizeof(gpios), 0);
+    act_devices = 0;
+}
 
 void DBG_dump_devices(bool bLong)
 {
@@ -81,22 +96,25 @@ void DBG_dump_devices(bool bLong)
             if ( gpioaf ) 
                 for ( uint8_t j = 0; j < gpioaf->num; j++ ) {
                     if ( gpioaf->gpio[j].gpio )
-                        DBG_printf_indent("  AF  %c%02d%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
-                                          ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)                                 
+                        DBG_printf_indent("  AF  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
+                                          ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioaf->gpio[j].gpio,gpioaf->gpio[j].pin)
                         );
                 }
             if ( gpioio ) 
                 for ( uint8_t j = 0; j < gpioio->num; j++ ) {
                     if ( gpioio->gpio[j].gpio )
-                        DBG_printf_indent("  IO  %c%02d%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
-                                          ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)                                 
+                        DBG_printf_indent("  IO  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
+                                          ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioio->gpio[j].gpio,gpioio->gpio[j].pin)
                         );
                 }
             if ( gpioadc ) 
                 for ( uint8_t j = 0; j < gpioadc->num; j++ ) {
                     if ( gpioadc->gpio[j].gpio )
-                        DBG_printf_indent("  ADC %c%02d%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
+                        DBG_printf_indent("  ADC %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
                                           ,PRINTCOLON(gpioadc->gpio[j].dbg_name), PRINTNAME(gpioadc->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioadc->gpio[j].gpio,gpioadc->gpio[j].pin)
                         );
                 }
           
@@ -107,6 +125,80 @@ void DBG_dump_devices(bool bLong)
     DBG_setIndentAbs(oldIndent);
 }
 
+#define PUT_DEVICEIDX(r,d)      ((r) ? REMOTE_DEV_MASK | ((d)+1) : (d)+1)
+#define GET_DEVICEIDX(d)        ( d & LOCAL_DEV_MASK )
+#define GET_REMOTEFLAG(d)       ( d & REMOTE_DEV_MASK )
+#define GPIO_UNUSED             0x00
+
+/******************************************************************************
+ * Check, whether Pin "Pin" of GPIO port "gpio" is still unassigned
+ * if so, it is assigned to "newdev" and true is returned
+ * if already assigned to any other device, false is returned
+ *****************************************************************************/
+bool AssignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+
+    if ( gpios[gpioIdx][pinIdx] == GPIO_UNUSED ) {
+        gpios[gpioIdx][pinIdx] = PUT_DEVICEIDX(remoteIdx, devIdx);
+        return true;
+    } else {
+        uint32_t usedIdx = GET_DEVICEIDX(gpios[gpioIdx][pinIdx]);
+
+        DEBUG_PRINTF("GPIO%c%d of ",HW_GetGPIOLetter(gpio), HW_GetIdxFromPin(pin));
+        if ( remoteIdx ) DEBUG_PRINTF("remote device %d", devIdx); else DEBUG_PRINTF("device %s", devices[devIdx]->devName);
+        DEBUG_PRINTF(" already used in ");
+        if ( GET_REMOTEFLAG(gpios[gpioIdx][pinIdx])) DEBUG_PRINTF("remote device# %d",usedIdx); else DEBUG_PRINTF("device %s",devices[usedIdx]->devName);
+        DEBUG_PRINTF("\n");
+        
+        return false;
+    }
+}
+
+/******************************************************************************
+ * returns true, if device owns that GPIO pin
+ *****************************************************************************/
+bool IsMyPin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+    
+    /* check ownership and release if owned */
+    return gpios[gpioIdx][pinIdx] == PUT_DEVICEIDX(remoteIdx, devIdx);
+}
+
+/******************************************************************************
+ * Deassign one GPIO pin from a device
+ * this is only possible, iff the device owned that pin before
+ *****************************************************************************/
+bool DeassignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+
+    /* Unowned pin can be deassigned without danger */
+    if ( gpios[gpioIdx][pinIdx] == GPIO_UNUSED ) {
+        return true;
+    } 
+    
+    /* check ownership and release if owned */
+    if ( gpios[gpioIdx][pinIdx] == PUT_DEVICEIDX(remoteIdx, devIdx) ) {
+        gpios[gpioIdx][pinIdx] = GPIO_UNUSED;
+        return true;
+    } else {
+        uint32_t usedIdx = GET_DEVICEIDX(gpios[gpioIdx][pinIdx]);
+        DEBUG_PRINTF("GPIO%c%d of ",HW_GetGPIOLetter(gpio), HW_GetIdxFromPin(pin));
+        if ( remoteIdx ) DEBUG_PRINTF("remote device %d", devIdx); else DEBUG_PRINTF("device %s", devices[devIdx]->devName);
+        DEBUG_PRINTF(" is owned by ");
+        if ( GET_REMOTEFLAG(gpios[gpioIdx][pinIdx])) DEBUG_PRINTF("remote device# %d",usedIdx); else DEBUG_PRINTF("device %s",devices[usedIdx]->devName);
+        DEBUG_PRINTF(" and cannot be deassigned\n");
+        
+        return false;
+    }
+}
+
+#if 0
 /******************************************************************************
  * Check whether Pin "pin" of GPIO "gpio" is already contained in device list,
  * i.e. whether this pin is already used in another device
@@ -192,7 +284,7 @@ bool CheckOnePin( const HW_DeviceType *newdev, GPIO_TypeDef *gpio, uint16_t pin 
 
     return true;
 }
-
+#endif
 /******************************************************************************
  * returns true, if hardwarwe address is not used by any other device
  * i.e. if any hardware component is not used by more than one device
@@ -270,6 +362,7 @@ bool DeviceInitByIdx(uint32_t dev_idx, void *arg)
 
     devIsInited[dev_idx] = false;
 
+#if 0
     /* check for unique pin assignments */
     if (!CheckUnique(dev) ) {
         #if DEBUG_MODE > 0
@@ -277,7 +370,7 @@ bool DeviceInitByIdx(uint32_t dev_idx, void *arg)
         #endif
         return false;
     }
-
+#endif
     /* try to init */
     if ( !dev->Init(dev) ) {
         DEBUG_PRINTF("DeviceInit: Init of Device %s failed!\n", dev->devName);
@@ -355,6 +448,9 @@ bool DevicesInhibitFrqChange(void)
 }
 
 
+/******************************************************************************
+ * Find a device by a given base address
+ ******************************************************************************/
 const HW_DeviceType *FindDevByBaseAddr(uint32_t dt, void *pBase )
 {
     for( uint8_t i = 0; i < act_devices; i++ ) {
@@ -362,6 +458,22 @@ const HW_DeviceType *FindDevByBaseAddr(uint32_t dt, void *pBase )
     }
     return NULL;
 }
+
+/******************************************************************************
+ * return the index of the device list for a given device
+ * -1 will be returned when not foune
+ ******************************************************************************/
+int32_t GetDevIdx ( const HW_DeviceType *dev)
+{
+    for( uint8_t i = 0; i < act_devices; i++ ) {
+        if ( devices[i] == dev ) return i;
+    }
+    DEBUG_PUTS("Error: GetDevIdx: Device not found");
+    return -1;
+}
+
+
+
 #ifndef HW_DEBUG_UART
     #error "DEBUG_UART is not defined!"
 #endif

@@ -46,7 +46,7 @@ static void FmcSetEffectiveBits ( void )
     FmcHandle.allCtlBits  = cbits;
 }
 
-static void FmcGpioInitAF(const HW_GpioList_AF *gpioaf)
+static void FmcGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 {
     uint32_t i;
     GPIO_InitTypeDef Init;
@@ -55,11 +55,11 @@ static void FmcGpioInitAF(const HW_GpioList_AF *gpioaf)
     Init.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
 
     for ( i = 0 ; i < FMC_D_MAX; i++ ) if ( FmcHandle.allDataBits & ( 1 << i ) )
-        GpioAFInitOne (&(gpioaf->gpio[i]), &Init );
+        GpioAFInitOne (devIdx, &(gpioaf->gpio[i]), &Init );
     for ( i = 0 ; i < FMC_A_MAX; i++ ) if ( FmcHandle.allAddrBits & ( 1 << i ) )
-        GpioAFInitOne (&(gpioaf->gpio[FMC_D_MAX+i]), &Init );
+        GpioAFInitOne (devIdx, &(gpioaf->gpio[FMC_D_MAX+i]), &Init );
     for ( i = 0 ; i < FMC_CTL_MAX; i++ ) if ( FmcHandle.allCtlBits & ( 1 << i ) )
-        GpioAFInitOne (&(gpioaf->gpio[FMC_D_MAX+FMC_D_MAX+i]), &Init );
+        GpioAFInitOne (devIdx, &(gpioaf->gpio[FMC_D_MAX+FMC_A_MAX+i]), &Init );
 }
 
 /******************************************************************************
@@ -140,7 +140,7 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
     /**************************************************************************************
      * Dump the FMC parameters  *
      *************************************************************************************/
-    static void FMC_DumpGeometry(uint32_t idx, FmcDataT *curr)
+    static void FMC_DumpOneGeometry(uint32_t idx, FmcDataT *curr)
     {
         
         DEBUG_PRINTF("FMC Bank %d:\n", idx);
@@ -161,6 +161,19 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
 
 #endif
 
+void FMC_DumpGeometry(void)
+{
+    for ( uint32_t i=0; i < FMC_MAX_BLOCKS; i++) {
+        #if DEBUG_MODE > 0 
+            FMC_DumpOneGeometry(i, FmcHandle.fmcData+i);
+        #endif
+    }
+    #if DEBUG_MODE > 0
+        DEBUG_PRINTF("Resulting Data lines:"); FmcPrintBitVector("D",FmcHandle.allDataBits, FMC_D_MAX);DEBUG_PRINTF("\n");
+        DEBUG_PRINTF("Resulting Addr lines:"); FmcPrintBitVector("A",FmcHandle.allAddrBits, FMC_A_MAX);DEBUG_PRINTF("\n");
+        DEBUG_PRINTF("Resulting Ctl  lines:"); ;FmcPrintCtlText(FmcHandle.allCtlBits);DEBUG_PRINTF("\n");
+    #endif
+}
 
 bool Fmc_SRAM_Init(FMC_NORSRAM_InitTypeDef *Init, uint32_t nAddrBits, FMC_NORSRAM_TimingTypeDef *Timing, FMC_NORSRAM_TimingTypeDef *ExtTiming)
 {
@@ -181,9 +194,9 @@ bool Fmc_SRAM_Init(FMC_NORSRAM_InitTypeDef *Init, uint32_t nAddrBits, FMC_NORSRA
 
     /* set effective io lines and activate all IO */
     FmcSetEffectiveBits();
-    FmcGpioInitAF(HW_FMC.devGpioAF);
+    FmcGpioInitAF(GetDevIdx(&HW_FMC), HW_FMC.devGpioAF);
     
-    FMC_DumpGeometry(idx, curr);
+    FMC_DumpOneGeometry(idx, curr);
 
     curr->hHal.hsram.Instance  = FMC_NORSRAM_DEVICE;
     curr->hHal.hsram.Extended  = FMC_NORSRAM_EXTENDED_DEVICE;
@@ -200,7 +213,7 @@ void Fmc_DeInit(const HW_DeviceType *self)
     FmcHandleT *myFmc = (FmcHandleT *)self->devData;
 
     /* DeInit GPIO */
-    GpioAFDeInitAll(self->devGpioAF);
+    GpioAFDeInitAll(GetDevIdx(&HW_FMC),self->devGpioAF);
   
     /* disable interrupts */
     if (self->devIrqList) HW_SetAllIRQs(self->devIrqList, false);
@@ -276,7 +289,7 @@ bool Fmc_Init(const HW_DeviceType *self)
             FMC_A16, FMC_A17, FMC_A18, FMC_A19, FMC_A20, FMC_A21, FMC_A22, FMC_A23, 
             FMC_A24, FMC_A25, 
             FMC_CTL_CLK,  FMC_CTL_NWAIT, FMC_CTL_NOE, FMC_CTL_NWE,
-            FMC_CTL_NE1,  FMC_CTL_NE2,   FMC_CTL_NE3, FMC_CTL_NE1,
+            FMC_CTL_NE1,  FMC_CTL_NE2,   FMC_CTL_NE3, FMC_CTL_NE4,
             FMC_CTL_NBL0, FMC_CTL_NBL1,  FMC_CTL_INT, FMC_CTL_NL,
         }
     };
@@ -336,7 +349,9 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
     Init.ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
     Init.PageSize           = FMC_PAGE_SIZE_NONE;
 
-    Fmc_SRAM_Init(&Init, 24, &SRAM_Timing, &SRAM_Timing);
+    if (!Fmc_SRAM_Init(&Init, 24, &SRAM_Timing, &SRAM_Timing)) {
+        DEBUG_PUTS("FMC SRAM init failed!");
+    }
 }
 
 

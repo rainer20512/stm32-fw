@@ -248,7 +248,8 @@ bool Usart_GPIO_Init(const HW_DeviceType *self)
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_LOW;
 
-    GpioAFInitAll(self->devGpioAF, &GPIO_InitStruct);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFInitAll(devIdx, self->devGpioAF, &GPIO_InitStruct);
 
     return true;
 }
@@ -507,7 +508,8 @@ void COM_DeInit(const HW_DeviceType *self)
     HW_Reset( (USART_TypeDef*)self->devBase );
 
     /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFDeInitAll(devIdx, self->devGpioAF);
     
     /* disable interrupts */
     HW_SetAllIRQs(self->devIrqList, false);

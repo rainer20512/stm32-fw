@@ -698,7 +698,8 @@ bool ADC_Init(const HW_DeviceType *self)
   
     ADC_ClockInit(self, true);
 
-    GpioADCInitAll(self->devGpioADC);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioADCInitAll(devIdx, self->devGpioADC);
 
     /* DeInit before Init */
     if (HAL_ADC_DeInit(hAdc) != HAL_OK) {
@@ -764,7 +765,8 @@ void ADC_DeInit(const HW_DeviceType *self)
 
     HAL_ADC_Stop(hAdc);
 
-    GpioADCDeInitAll(self->devGpioADC);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioADCDeInitAll(devIdx, self->devGpioADC);
   
     /* disable interrupts */
     HW_SetAllIRQs(self->devIrqList, false);

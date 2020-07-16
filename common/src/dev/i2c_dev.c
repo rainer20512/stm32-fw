@@ -132,14 +132,16 @@ static void I2c_GPIO_Init(const HW_DeviceType *self)
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
 
-    GpioAFInitAll(self->devGpioAF, &GPIO_InitStruct);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFInitAll(devIdx, self->devGpioAF, &GPIO_InitStruct);
 }
 
 static void I2c_GPIO_DeInit(const HW_DeviceType *self)
 {
 
     /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFDeInitAll(devIdx, self->devGpioAF);
     /* Disable I2C clock */
     HW_SetHWClock((I2C_TypeDef *)self->devBase, 0);
 }

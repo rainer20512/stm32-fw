@@ -10,6 +10,7 @@
 
 #include "config/config.h"
 #include "dev/hw_device.h"
+#include "dev/devices.h"
 #include "system/hw_util.h"
 #include "system/exti_handler.h"
 #if DEBUG_MODE > 0
@@ -23,9 +24,14 @@
  * Special pins and there associated bits in PWR registers are
  *    GPIOG Bit 2 .. 15 -> requires PWR-CR.IOSV to be set
  *    GPIOA BIT 9 .. 12 -> requires PWR-CR.USV to be set
+ * true will be returned, iff successful
+ * false will be returned in case of pin collision with other device
  *****************************************************************************/
-void GpioInitHW( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
+bool GpioInitHW( uint32_t devIdx, GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
 {
+    /* chack and Register Pin useage */
+    if ( !AssignOnePin( 0, devIdx, gpio, Init->Pin ) ) return false;
+
     #if defined( PWR_CR2_IOSV )
         /* check for IOSV */
         if ( gpio == GPIOG && Init->Pin > GPIO_PIN_1 ) {
@@ -44,7 +50,17 @@ void GpioInitHW( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
 
     /* Set hardware Pin */
     HAL_GPIO_Init(gpio, Init);
+    return true;
 }
+
+/******************************************************************************
+ * Unset and deassign one GPIO pin
+ *****************************************************************************/
+void GpioDeInitHW( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    DeassignOnePin( 0, devIdx, gpio, pin );
+    HAL_GPIO_DeInit(gpio, pin);
+}  
 
 /******************************************************************************
  * Initialize one Pin to the values Given in Init
@@ -54,14 +70,14 @@ void GpioInitHW( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
  * values. The pullup is set, the output value isn't. Use "GpioAFInitOneWithPreset"
  * to set the output value, too.
  *****************************************************************************/
-void GpioAFInitOne( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init )
+bool GpioAFInitOne( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init )
 {
  
     HW_SetHWClock ( gpio->gpio, 1 );
     Init->Pin       = gpio->pin;
     Init->Alternate = gpio->af_mode;
     Init->Pull      = gpio->pull;
-   GpioInitHW(gpio->gpio, Init);
+    return GpioInitHW(devIdx, gpio->gpio, Init);
 }
 
 /******************************************************************************
@@ -71,7 +87,7 @@ void GpioAFInitOne( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init )
  * Only Pin Number and AF code are set by this function according to gpio field
  * values
  *****************************************************************************/
-void GpioAFInitOneWithPreset( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init, HW_PinOutInitial preset )
+bool GpioAFInitOneWithPreset( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init, HW_PinOutInitial preset )
 {
  
     HW_SetHWClock ( gpio->gpio, 1 );
@@ -91,25 +107,27 @@ void GpioAFInitOneWithPreset( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Ini
             /* do nothing */
             ;
     }
-   GpioInitHW(gpio->gpio, Init);
+   return GpioInitHW(devIdx, gpio->gpio, Init);
 }
 
-void GpioAFInitAll   ( const HW_GpioList_AF *gpioList, GPIO_InitTypeDef *Init)
+bool GpioAFInitAll   ( uint32_t devIdx, const HW_GpioList_AF *gpioList, GPIO_InitTypeDef *Init)
 {
    for ( uint32_t i=0; i < gpioList->num; i++ )
-       GpioAFInitOne(&gpioList->gpio[i], Init);
+       if ( !GpioAFInitOne(devIdx, &gpioList->gpio[i], Init) ) return false;
+
+    return true;
 }
 
-void GpioAFDeInitOne   ( const HW_Gpio_AF_Type *gpio )
+void GpioAFDeInitOne   ( uint32_t devIdx, const HW_Gpio_AF_Type *gpio )
 {
-        HAL_GPIO_DeInit(gpio->gpio, gpio->pin);
+        GpioDeInitHW( devIdx, gpio->gpio, gpio->pin);
 }
 
 
-void GpioAFDeInitAll ( const HW_GpioList_AF *gpioList )
+void GpioAFDeInitAll ( uint32_t devIdx, const HW_GpioList_AF *gpioList )
 {
     for ( uint32_t i=0; i < gpioList->num; i++ )
-        GpioAFDeInitOne(&gpioList->gpio[i]);
+        GpioAFDeInitOne( devIdx, &gpioList->gpio[i]);
 }
 
 /******************************************************************************
@@ -176,7 +194,7 @@ bool HW_IsOutputMode ( uint32_t mode )
  * Alle GPIO_InitTypeDef-structure members are defined in the corresponding
  * gpio-structure.
  *****************************************************************************/
-static void GpioIOInitOne(const HW_Gpio_IO_Type *gpio)
+static bool GpioIOInitOne(uint32_t devIdx, const HW_Gpio_IO_Type *gpio)
 {
     GPIO_InitTypeDef Init;
 
@@ -190,7 +208,7 @@ static void GpioIOInitOne(const HW_Gpio_IO_Type *gpio)
     /* Set Output Pin to predefined value BEFORE configuring as output */
     if ( gpio->initial != HW_INPUT )
         HAL_GPIO_WritePin(gpio->gpio, gpio->pin, ( gpio->initial == HW_OUTPUT_LOW ? GPIO_PIN_RESET : GPIO_PIN_SET));
-   GpioInitHW( gpio->gpio, &Init);
+   bool ret = GpioInitHW( devIdx, gpio->gpio, &Init);
 
     /* Enable Interrupt, if Input and Interrupt mode configured and interrupt configured*/
     const GPIO_IrqType *irq = &gpio->gpio_irq;
@@ -208,18 +226,19 @@ static void GpioIOInitOne(const HW_Gpio_IO_Type *gpio)
             }
         #endif
     }
+    return ret;
 }
 
-void GpioIOInitAll ( const HW_GpioList_IO *gpioList )
+bool GpioIOInitAll ( uint32_t devIdx, const HW_GpioList_IO *gpioList )
 {
    for ( uint32_t i=0; i < gpioList->num; i++ )
-        GpioIOInitOne(&gpioList->gpio[i]);
+        if ( !GpioIOInitOne(devIdx, &gpioList->gpio[i]) ) return false;
+   
+   return true;
 }
 
-static void GpioIODeInitOne   ( const HW_Gpio_IO_Type *gpio )
+static void GpioIODeInitOne   ( uint32_t devIdx, const HW_Gpio_IO_Type *gpio )
 {
-    HAL_GPIO_DeInit(gpio->gpio, gpio->pin);
-
     /* Disable Interrupt, if Input and Interrupt mode configured and interrupt configured */
     /* and interrupt is not shared between more than one pin ( PIN5 .. PIN15 have shared interrupts ) */
     if(HW_IsIrqMode(gpio->gpio_mode)) {
@@ -228,13 +247,13 @@ static void GpioIODeInitOne   ( const HW_Gpio_IO_Type *gpio )
             HAL_NVIC_DisableIRQ( ExtiGetIrqNumFromPin(gpio->pin) );
         }
     }
-     HAL_GPIO_DeInit(gpio->gpio, gpio->pin);
+    GpioDeInitHW( devIdx, gpio->gpio, gpio->pin);
 }
 
-void GpioIODeInitAll ( const HW_GpioList_IO *gpioList )
+void GpioIODeInitAll ( uint32_t devIdx, const HW_GpioList_IO *gpioList )
 {
     for ( uint32_t i=0; i < gpioList->num; i++ )
-        GpioIODeInitOne(&gpioList->gpio[i]);
+        GpioIODeInitOne(devIdx, &gpioList->gpio[i]);
 }
 
 
@@ -242,7 +261,7 @@ void GpioIODeInitAll ( const HW_GpioList_IO *gpioList )
 /**************************************************************************************************
  * Analog ADC input pins
  *************************************************************************************************/
-void GpioADCInitAll ( const HW_GpioList_ADC *gpioList )
+bool GpioADCInitAll ( uint32_t devIdx, const HW_GpioList_ADC *gpioList )
 {
     const HW_Gpio_ADC_Type *gpio;
 
@@ -260,13 +279,15 @@ void GpioADCInitAll ( const HW_GpioList_ADC *gpioList )
             /* Exclude internal channels, they have gpio==NULL */
             HW_SetHWClock ( gpio->gpio, 1 );
             Init.Pin = gpio->pin;
-           GpioInitHW( gpio->gpio, &Init);
+            if ( !GpioInitHW( devIdx, gpio->gpio, &Init) ) return false;
         }
     }
+
+    return true;
 }
 
 
-void GpioADCDeInitAll ( const HW_GpioList_ADC *gpioList )
+void GpioADCDeInitAll ( uint32_t devIdx, const HW_GpioList_ADC *gpioList )
 {
     const HW_Gpio_ADC_Type *gpio;
 
@@ -274,7 +295,7 @@ void GpioADCDeInitAll ( const HW_GpioList_ADC *gpioList )
         gpio = &gpioList->gpio[i];
         if ( gpio->gpio ) {
             /* Exclude internal channels, they have gpio==NULL */
-            HAL_GPIO_DeInit( gpio->gpio, gpio->pin);
+            GpioDeInitHW( devIdx, gpio->gpio, gpio->pin);
         }
     }
 }

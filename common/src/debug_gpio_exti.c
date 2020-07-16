@@ -229,7 +229,7 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
         init.Pull =  GPIO_NOPULL;
         init.Speed = GPIO_SPEED_FREQ_LOW;
         init.Pin  = pin_bitmap; 
-       GpioInitHW( gp, &init);
+        GpioInitHW(63, gp, &init);
 
         for ( uint8_t i = 0; i < TOGGLES; i++ ) {
             gp->ODR  ^= pin_bitmap;
@@ -238,12 +238,13 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
 
          // restore GPIO status
          *gp = save;
+     GpioDeInitHW(63, gp, &init);
      }
      // Switch portclock off again, if it was off before
      if (!gp_clck_ena ) HW_SetHWClock(gp, false);
 }
 
-static void DBG_init_pin_internal(char portletter, uint8_t portnum, bool bDoInit, uint32_t speed, uint32_t pupd_status, uint32_t outval)
+static void DBG_init_pin_internal(uint32_t devIdx, char portletter, uint8_t portnum, bool bDoInit, uint32_t speed, uint32_t pupd_status, uint32_t outval)
 {
     GPIO_TypeDef *gp = HW_GetGPIO ( portletter );
     GPIO_InitTypeDef init = {0};
@@ -263,7 +264,7 @@ static void DBG_init_pin_internal(char portletter, uint8_t portnum, bool bDoInit
     if ( !bDoInit ) {
         /* in case of DeInit */
         DEBUG_PRINTF("DeInit %c%02d\n", portletter, portnum);
-        HAL_GPIO_DeInit(gp, pin_bitmap);
+        GpioDeInitHW(devIdx,  gp, pin_bitmap);
     } else {
         DEBUG_PRINTF("Init %c%02d as output\n", portletter, portnum);
         init.Mode =  GPIO_MODE_OUTPUT_PP;
@@ -300,7 +301,7 @@ static void DBG_init_pin_internal(char portletter, uint8_t portnum, bool bDoInit
                 /* Set output pin low */
                 gp->BSRR = pin_bitmap<<16;
         }
-       GpioInitHW( gp, &init);
+       GpioInitHW(devIdx,  gp, &init);
 
     }
     // Switch portclock off again, if it was off before
@@ -309,11 +310,11 @@ static void DBG_init_pin_internal(char portletter, uint8_t portnum, bool bDoInit
 
 void DBG_init_pin(char portletter, uint8_t portnum, uint32_t speed, uint32_t pupd_status, uint32_t init)
 {
-    DBG_init_pin_internal(portletter, portnum, true, speed, pupd_status, init);
+    DBG_init_pin_internal(63, portletter, portnum, true, speed, pupd_status, init);
 }
 void DBG_deinit_pin(char portletter, uint8_t portnum)
 {
-    DBG_init_pin_internal(portletter, portnum, false, 0, 0, 0);
+    DBG_init_pin_internal(63, portletter, portnum, false, 0, 0, 0);
 }
 
 /*

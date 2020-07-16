@@ -144,13 +144,15 @@ static void OutputToggle( const HW_Gpio_IO_Type *gpio )
 /* Public or driver functions --------------------------------------------------------*/
 bool IO_Init(const HW_DeviceType *self)
 {
-    GpioIOInitAll(self->devGpioIO);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioIOInitAll(devIdx, self->devGpioIO);
     return true;
 }
 
 void IO_DeInit(const HW_DeviceType *self)
 {
-    GpioIOInitAll(self->devGpioIO);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioIOInitAll(devIdx, self->devGpioIO);
 }
 
 /*******************************************************************************************

@@ -22,8 +22,8 @@
  */ 
 //#define BL475IOT   
 //#define DRAGONFLY476
-#define STM32L476NUCLEO
-//#define STM32L476EVAL
+// #define STM32L476NUCLEO
+#define STM32L476EVAL
 //#define STM32L476BAREMETAL
 
 
@@ -54,7 +54,7 @@
 #define USE_SECONDTIMER     0
 #define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
-#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             1
 #define USE_USB             0   
 #define USE_FMC_SRAM        1

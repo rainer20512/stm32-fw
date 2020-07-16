@@ -151,6 +151,8 @@ int main(void)
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
+    /* Init variables and structures for device handling */
+    DevicesInit();
 
     /* Wait until CPU2 boots and enters in stop mode or timeout*/
     timeout = 0xFFFFFF;

@@ -471,13 +471,13 @@ static void Can_GPIO_Init(const HW_DeviceType *self)
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
 
-    GpioAFInitAll(self->devGpioAF, &GPIO_InitStruct);
+    GpioAFInitAll(GetDevIdx(self), self->devGpioAF, &GPIO_InitStruct);
 }
 
 static void CAN_GPIO_DeInit(const HW_DeviceType *self)
 {
     /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
+    GpioAFDeInitAll(GetDevIdx(self),self->devGpioAF);
     /* Disable CAN clock */
     HW_SetHWClock((CAN_TypeDef *)self->devBase, 0);
 }

@@ -174,7 +174,8 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
  *****************************************************************************/
 static void TMR_GPIO_DeInit(const HW_DeviceType *self)
 {
-    GpioAFDeInitAll(self->devGpioAF); 
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFDeInitAll(devIdx, self->devGpioAF); 
 }
 
 /******************************************************************************
@@ -365,11 +366,13 @@ bool TMR_InitPWMCh(const HW_DeviceType *self, uint32_t ch, bool invert )
 {
     if ( ch < 1 || ch > 4 ) return false;
 
+    uint32_t devIdx = GetDevIdx(self);
+
    /* configure/enable the corresponding gpio */
     GPIO_InitTypeDef  Init;
     Init.Mode  = GPIO_MODE_AF_PP;
     Init.Speed = GPIO_SPEED_FREQ_HIGH;   
-    GpioAFInitOne(&self->devGpioAF->gpio[ch-1], &Init );
+    GpioAFInitOne(devIdx, &self->devGpioAF->gpio[ch-1], &Init );
 
     TIM_OC_InitTypeDef sConfig;
     const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self); 
@@ -453,11 +456,13 @@ void TMR_StopPWMCh(const HW_DeviceType *self, uint32_t ch)
 {
     if ( ch < 1 || ch > 4 ) return;
 
+    uint32_t devIdx = GetDevIdx(self);
     TIM_HandleTypeDef *htim = &TMR_GetAdditionalData(self)->myTmrHandle->myHalHnd;
+
     HAL_TIM_PWM_Stop(htim, idxToTimCh[ch-1]);
 
     /* Deactivate GPIO */
-    GpioAFDeInitOne(&self->devGpioAF->gpio[ch-1]);
+    GpioAFDeInitOne(devIdx, &self->devGpioAF->gpio[ch-1]);
 
     /* If no other PWM channel is active, disable TMR */
     if ( !IsAnyChnActive(self) ) CLEAR_BIT( htim->Instance->CR1, TIM_CR1_CEN );

@@ -259,6 +259,9 @@ int main(void)
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
 
+    /* Init variables and structures for device handling */
+    DevicesInit();
+
     // Switch LSE Clock on 
     LSEClockConfig(true, true);
 

@@ -41,8 +41,8 @@ typedef struct {
     FmcHalHandleT   hHal;               /* Associated HAL handle                          */
     FmcTypeE        fmcType;            /* Memory type                                    */
     uint32_t        fmcCtlBits;         /* Bit mask of used control bits                  */
-    uint8_t         fmcAddrBits;        /* Bit mask of used address bits                  */
-    uint8_t         fmcDataBits;        /* Bit mask of used data bus bits 8/16            */
+    uint32_t         fmcAddrBits;        /* Bit mask of used address bits                  */
+    uint32_t         fmcDataBits;        /* Bit mask of used data bus bits 8/16            */
     uint8_t         fmcIsMuxed;         /* true iff Addr and Data lines are multiplexed   */
     uint8_t         fmcIsUsed;          /* True, iff this FmcDataT block is config'd/used */
 } FmcDataT;
@@ -61,6 +61,8 @@ typedef struct FmcHandleType {
     extern const HW_DeviceType HW_FMC;
     extern FmcHandleT FmcHandle;
 #endif
+
+void FMC_DumpGeometry(void);
 
 bool Fmc_SRAM_Init(FMC_NORSRAM_InitTypeDef *Init, uint32_t nAddrBits, FMC_NORSRAM_TimingTypeDef *Timing, FMC_NORSRAM_TimingTypeDef *ExtTiming);
 

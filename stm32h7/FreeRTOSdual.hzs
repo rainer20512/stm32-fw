@@ -31,6 +31,8 @@
  <Project>
   <ProjectSessionItem path="FreeRTOS_Dual"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;src"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;src"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;task"/>
@@ -106,7 +108,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1389" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="1369" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="790" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/system/clockconfig.c" selected="0" top="762" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="346" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/eeprom.c" selected="0" top="331" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="98" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="155" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="1" top="119" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="99" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Src/system/devices_c7.c" selected="0" top="68" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="69" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/task.h" selected="0" top="43" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="555" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/eeprom-emul/core/eeprom_emul.c" selected="0" top="533" codecName="Default"/>
@@ -119,7 +121,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="240" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="170" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/task/minitask.c" selected="0" top="143" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" useBinaryEdit="0" left="0" path="../common/src/dev/qspi/mx25r6435f.h" selected="0" top="9" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/debug_pwr_rcc.c" selected="1" top="922" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="common_h7/Src/debug_pwr_rcc.c" selected="0" top="922" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/eeprom-emul/porting/stm32h7" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

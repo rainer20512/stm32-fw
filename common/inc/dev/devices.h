@@ -58,6 +58,7 @@
 
 /* Exported functions ------------------------------------------------------- */
 void     DBG_dump_devices               (bool bLong);
+void     DevicesInit                    (void);
 int32_t  AddDevice                      (const HW_DeviceType *dev, HW_DynInitT postInit, HW_DynDeInitT preDeInit);
 void     BasicDevInit                   (void);
 bool     DeviceInitByIdx                (uint32_t dev_idx, void *arg);
@@ -66,6 +67,11 @@ bool     DevicesInhibitStop             (void);
 bool     DevicesInhibitFrqChange        (void);
 
 const HW_DeviceType *FindDevByBaseAddr  (uint32_t , void *pAddress );
+int32_t  GetDevIdx                      ( const HW_DeviceType *dev);
+
+bool     AssignOnePin                   ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     DeassignOnePin                 ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     IsMyPin                        ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
 
 #ifdef __cplusplus
 }

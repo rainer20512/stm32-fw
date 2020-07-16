@@ -13,7 +13,7 @@
 
 #if defined(STM32L476EVAL)
   // LEDs  
-  #define IO_00                             { GPIO_PIN_2 , GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED,   HW_OUTPUT_HIGH,    GPIO_NO_IRQ, "UserLed1" }
+  #define IO_00                             { GPIO_PIN_2 , GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED,   HW_OUTPUT_HIGH,   GPIO_NO_IRQ, "UserLed1" }
   #define IO_01                             { GPIO_PIN_1,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED,   HW_OUTPUT_HIGH,   GPIO_NO_IRQ, "UserLed2" }
 /*
   #define IO_02                             { GPIO_PIN_7,  GPIOG, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED,   HW_OUTPUT_HIGH,   GPIO_NO_IRQ, "GpioOut 1"  }

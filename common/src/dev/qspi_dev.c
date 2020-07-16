@@ -99,13 +99,14 @@ static void QSpiDmaChannelInit(const HW_DeviceType *self, QSpiDmaDirectionEnumTy
 }
 #endif
 
-static void QSpiGpioInitAF(const HW_GpioList_AF *gpioaf)
+static void QSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 {
     GPIO_InitTypeDef Init;
+
     Init.Mode = GPIO_MODE_AF_PP;
     Init.Speed = GPIO_SPEED_FREQ_HIGH;
 
-    GpioAFInitAll(gpioaf, &Init );
+    GpioAFInitAll(devIdx, gpioaf, &Init );
 }
 
 /**************************************************************************************
@@ -857,7 +858,8 @@ void QSpi_DeInit(const HW_DeviceType *self)
     QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
 
     /* DeInit GPIO */
-    GpioAFDeInitAll(self->devGpioAF);
+    uint32_t devIdx = GetDevIdx(self);
+    GpioAFDeInitAll(devIdx, self->devGpioAF);
   
     /* disable interrupts */
     if (self->devIrqList) HW_SetAllIRQs(self->devIrqList, false);
@@ -907,7 +909,8 @@ bool QSpi_Init(const HW_DeviceType *self)
     HW_SetHWClock(hqspi->Instance, true);
     HW_Reset(hqspi->Instance);
 
-    QSpiGpioInitAF(self->devGpioAF);
+    uint32_t devIdx = GetDevIdx(self);
+    QSpiGpioInitAF(devIdx, self->devGpioAF);
 
     ret = QSpi_SpecificInit(self, adt->myQSpiHandle);
     if ( ret ) {

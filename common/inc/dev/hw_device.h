@@ -193,13 +193,13 @@ typedef struct HWDTS {
     const HW_DmaType        *devDmaTx;
 } HW_DeviceType;
 
-void GpioInitHW             ( GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init );
+bool GpioInitHW             ( uint32_t devIdx, GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init );
 
-void GpioAFInitOneWithPreset( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init, HW_PinOutInitial preset );
-void GpioAFInitOne          ( const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init );
-void GpioAFInitAll          ( const HW_GpioList_AF *gpioList, GPIO_InitTypeDef *Init );
-void GpioAFDeInitOne        ( const HW_Gpio_AF_Type *gpio );
-void GpioAFDeInitAll        ( const HW_GpioList_AF *gpioList );
+bool GpioAFInitOneWithPreset( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init, HW_PinOutInitial preset );
+bool GpioAFInitOne          ( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init );
+bool GpioAFInitAll          ( uint32_t devIdx, const HW_GpioList_AF *gpioList, GPIO_InitTypeDef *Init );
+void GpioAFDeInitOne        ( uint32_t devIdx, const HW_Gpio_AF_Type *gpio );
+void GpioAFDeInitAll        ( uint32_t devIdx, const HW_GpioList_AF *gpioList );
 
 void HW_SetAllIRQs          ( const HW_IrqList *irqlist, bool bDoEna );
 
@@ -208,11 +208,11 @@ bool HW_IsEvtMode           ( uint32_t mode );
 bool HW_IsInputMode         ( uint32_t mode );
 bool HW_IsOutputMode        ( uint32_t mode );
 
-void GpioIOInitAll          ( const HW_GpioList_IO *gpioList );
-void GpioIODeInitAll        ( const HW_GpioList_IO *gpioList );
+bool GpioIOInitAll          ( uint32_t devIdx, const HW_GpioList_IO *gpioList );
+void GpioIODeInitAll        ( uint32_t devIdx, const HW_GpioList_IO *gpioList );
 
-void GpioADCInitAll         ( const HW_GpioList_ADC *gpioList );
-void GpioADCDeInitAll       ( const HW_GpioList_ADC *gpioList );
+bool GpioADCInitAll         ( uint32_t devIdx, const HW_GpioList_ADC *gpioList );
+void GpioADCDeInitAll       ( uint32_t devIdx, const HW_GpioList_ADC *gpioList );
 
 #ifdef __cplusplus
 }

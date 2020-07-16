@@ -229,25 +229,25 @@
     #define USE_SPI3_BAUDRATE        400000
     #define USE_SPI3_MASTER
 
-      /* User I2C is I2C1 with PG14=SCL, PG13=SDA                                  */
-      #define USE_I2C1
-      #undef  USE_I2CDEV1_ALTN1
-      #define  USE_I2CDEV1_ALTN2
-      #define I2C1_CLKSOURCE           I2cClock_HSI
-      #define I2C1_SPEED               I2c_StandardMode
-      #define I2C1_USE_IRQ
-      #define I2C1_USE_DMA
-      #define USER_I2C1
+    /* User I2C is I2C1 with PG14=SCL, PG13=SDA                                  */
+    #define USE_I2C1
+    #undef  USE_I2CDEV1_ALTN1
+    #define  USE_I2CDEV1_ALTN2
+    #define I2C1_CLKSOURCE           I2cClock_HSI
+    #define I2C1_SPEED               I2c_StandardMode
+    #define I2C1_USE_IRQ
+    #define I2C1_USE_DMA
+    #define USER_I2C1
 
-      /* I2C2 with PB11=SCL, PB10=SDA                                  */
-      #define USE_I2C2
-      #undef  USE_I2CDEV2_ALTN1
-      #undef  USE_I2CDEV2_ALTN2
-      #define I2C2_CLKSOURCE           I2cClock_HSI
-      #define I2C2_SPEED               I2c_StandardMode
-      #define I2C2_USE_IRQ
-      #define I2C2_USE_DMA
-      #define USER_I2C2
+    /* I2C2 with PB11=SCL, PB10=SDA                                  */
+    #define USE_I2C2
+    #undef  USE_I2CDEV2_ALTN1
+    #undef  USE_I2CDEV2_ALTN2
+    #define I2C2_CLKSOURCE           I2cClock_HSI
+    #define I2C2_SPEED               I2c_StandardMode
+    #define I2C2_USE_IRQ
+    #define I2C2_USE_DMA
+    #define USER_I2C2
 
     // #define USE_I2C2
     #define I2C2_CLKSOURCE           I2cClock_HSI
@@ -256,45 +256,51 @@
     #define I2C2_USE_DMA
 
 
-  #define USE_ADC1
-  #define ADC1_USE_IRQ
-  #define ADC1_USE_DMA 
+    #define USE_ADC1
+    #define ADC1_USE_IRQ
+    #define ADC1_USE_DMA 
+    #define USER_ADC      HW_ADC1
 
-  /* CAN with Tx=PB9, Rx=PB8 */
-  #define USE_CAN1
-  #define CAN1_USE_IRQ
-  #define USE_CANDEV1_ALTN1
+    /* CAN with Tx=PB9, Rx=PB8 */
+    #define USE_CAN1
+    #define CAN1_USE_IRQ
+    #define USE_CANDEV1_ALTN1
 
-  #if USE_PWMTIMER > 0
-      #define USE_TIM3
-      #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
-      #define HW_PWMTIMER HW_TIM3
-      #define LCD_BKLGHT_CH         1
-  #endif
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM1
+    #define RTCTIMER_IRQn           LPTIM1_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-  #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
-      #define USE_QSPI1
-      #define USE_QSPI1_ALTN1
-      #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
-  #endif
+    #if USE_PWMTIMER > 0
+        #define USE_TIM3
+        #define USE_TIM3_ALTN2
+        #define PWM_FREQUENCY 20000
+        #define HW_PWMTIMER HW_TIM3
+        #define LCD_BKLGHT_CH         1
+    #endif
 
-  #define DEFAULT_STOP_MODE                2
+    #if USE_QSPI > 0
+        #define QSPI_DEV          HW_QSPI1
+        #define USE_QSPI1
+        #define USE_QSPI1_ALTN1
+        #define QSPI1_USE_IRQ
+        #define QSPI1_USE_DMA
+    #endif
 
-  #if USE_THPSENSOR > 0  
-      /* User I2C is I2C1 with PB6=SCL, PB7=SDA                                  */
-      #define USE_I2C1
-      #define I2C
-      #undef  USE_I2CDEV1_ALTN1
-      #undef  USE_I2CDEV1_ALTN2
-      #define I2C1_CLKSOURCE           I2cClock_HSI
-      #define I2C1_SPEED               I2c_StandardMode
-      #define I2C1_USE_IRQ
-      #define I2C1_USE_DMA
-      #define USER_I2C1
-  #endif
+    #define DEFAULT_STOP_MODE                2
+
+#if USE_THPSENSOR > 0  
+    /* User I2C is I2C1 with PB6=SCL, PB7=SDA                                  */
+    #define USE_I2C1
+    #define I2C
+    #undef  USE_I2CDEV1_ALTN1
+    #undef  USE_I2CDEV1_ALTN2
+    #define I2C1_CLKSOURCE           I2cClock_HSI
+    #define I2C1_SPEED               I2c_StandardMode
+    #define I2C1_USE_IRQ
+    #define I2C1_USE_DMA
+    #define USER_I2C1
+#endif
 
 #elif defined(STM32L476NUCLEO)
 
@@ -499,8 +505,11 @@
 #endif
 
 /* Any User CAN defined at all ? */
+#undef USE_CAN
 #if defined(USE_CAN1) || defined(USE_CAN2) 
     #define USE_CAN     1
+#else
+    #define USE_CAN     0
 #endif
 
 /* Determine, which I2C to use */ 
