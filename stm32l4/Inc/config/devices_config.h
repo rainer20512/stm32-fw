@@ -229,6 +229,7 @@
     #define USE_SPI3_BAUDRATE        400000
     #define USE_SPI3_MASTER
 
+#if 0
     /* User I2C is I2C1 with PG14=SCL, PG13=SDA                                  */
     #define USE_I2C1
     #undef  USE_I2CDEV1_ALTN1
@@ -254,17 +255,19 @@
     #define I2C2_SPEED               I2c_StandardMode
     #define I2C2_USE_IRQ
     #define I2C2_USE_DMA
-
+#endif
 
     #define USE_ADC1
     #define ADC1_USE_IRQ
     #define ADC1_USE_DMA 
     #define USER_ADC      HW_ADC1
 
-    /* CAN with Tx=PB9, Rx=PB8 */
-    #define USE_CAN1
-    #define CAN1_USE_IRQ
-    #define USE_CANDEV1_ALTN1
+    #if USE_CAN > 0
+        /* CAN with Tx=PB9, Rx=PB8 */
+        #define USE_CAN1
+        #define CAN1_USE_IRQ
+        #define USE_CANDEV1_ALTN1
+    #endif
 
     /* Define the LPTimer that does timekeeping in case RTC is not used for that */
     #define RTCTIMER                LPTIM1

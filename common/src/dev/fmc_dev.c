@@ -175,6 +175,78 @@ void FMC_DumpGeometry(void)
     #endif
 }
 
+void Fmc_MspInit(void)
+{
+  GPIO_InitTypeDef GPIO_Init_Structure;
+
+  /* Enable FMC clock */
+  __HAL_RCC_FMC_CLK_ENABLE();
+
+  /* Enable GPIOs clock */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOF_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
+  __HAL_RCC_PWR_CLK_ENABLE();
+  HAL_PWREx_EnableVddIO2();
+
+  /* Common GPIO configuration */
+  GPIO_Init_Structure.Mode      = GPIO_MODE_AF_PP;
+  GPIO_Init_Structure.Pull      = GPIO_PULLUP;
+  GPIO_Init_Structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_Init_Structure.Alternate = GPIO_AF12_FMC;
+
+  /*## Data Bus #######*/
+  /* GPIOD configuration */
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 | \
+                              GPIO_PIN_10 | GPIO_PIN_14 | GPIO_PIN_15;
+  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
+
+  /* GPIOE configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | \
+                              GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | \
+                              GPIO_PIN_14 | GPIO_PIN_15;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
+  
+  /*## Address Bus #######*/
+  /* GPIOF configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | \
+                              GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_12 | GPIO_PIN_13 | \
+                              GPIO_PIN_14 | GPIO_PIN_15;
+  HAL_GPIO_Init(GPIOF, &GPIO_Init_Structure);
+  
+  /* GPIOG configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | \
+                              GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOG, &GPIO_Init_Structure);
+  
+  /* GPIOD configuration */
+  GPIO_Init_Structure.Pin   = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
+  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
+
+  /* GPIOE configuration */  
+  GPIO_Init_Structure.Pin   = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
+
+  /*## NOE and NWE configuration #######*/ 
+  GPIO_Init_Structure.Pin = GPIO_PIN_4 |GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
+
+  /*## Enable Bank pin configuration #######*/
+  GPIO_Init_Structure.Pin = GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
+
+#if 0 && defined(USE_STM32L476G_EVAL_REVB)
+  /*## LCD NE3 configuration #######*/
+  GPIO_Init_Structure.Pin = GPIO_PIN_10;
+  HAL_GPIO_Init(GPIOG, &GPIO_Init_Structure);
+#endif /* USE_STM32L476G_EVAL_REVB */
+
+  /*## NBL0, NBL1 configuration #######*/
+  GPIO_Init_Structure.Pin = GPIO_PIN_0 | GPIO_PIN_1;
+  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure); 
+}
+
 bool Fmc_SRAM_Init(FMC_NORSRAM_InitTypeDef *Init, uint32_t nAddrBits, FMC_NORSRAM_TimingTypeDef *Timing, FMC_NORSRAM_TimingTypeDef *ExtTiming)
 {
     uint32_t idx         = BANK_TO_IDX(Init->NSBank);
@@ -189,17 +261,28 @@ bool Fmc_SRAM_Init(FMC_NORSRAM_InitTypeDef *Init, uint32_t nAddrBits, FMC_NORSRA
     if ( curr->fmcIsMuxed) curr->fmcAddrBits &= ~(curr->fmcDataBits);
     /* Enable NBL0, NBL1, NOE, NWE and selected enable-line */
     curr->fmcCtlBits     = 1 << FMC_NBL0_OFS | 1 << FMC_NBL1_OFS | 1 << FMC_NOE_OFS | 1 << FMC_NWE_OFS | 1 << ( FMC_NE1_OFS + idx ) ;
+
+#if defined(STM32L476EVAL)
+    /* When using STM32L476-EVAL with glass LCD deployed, also activate FMCs NE3 select line to deactivate LCD data output */
+    curr->fmcCtlBits |= 1 << ( FMC_NE3_OFS );
+#endif
+
     /* enable Address valid line in muxed mode */
     if ( curr->fmcIsMuxed ) curr->fmcCtlBits |= ( 1 << FMC_NL_OFS );
 
     /* set effective io lines and activate all IO */
+    #if 0
+    Fmc_MspInit();
+    #else
     FmcSetEffectiveBits();
     FmcGpioInitAF(GetDevIdx(&HW_FMC), HW_FMC.devGpioAF);
-    
+    #endif
+
     FMC_DumpOneGeometry(idx, curr);
 
     curr->hHal.hsram.Instance  = FMC_NORSRAM_DEVICE;
     curr->hHal.hsram.Extended  = FMC_NORSRAM_EXTENDED_DEVICE;
+    curr->hHal.hsram.Init      = *Init;
 
     return HAL_SRAM_Init(&curr->hHal.hsram, Timing, ExtTiming) == HAL_OK;
 }
@@ -318,11 +401,12 @@ const HW_DeviceType HW_FMC = {
 };
 #endif
 
+
 void FMC_PostInit( const HW_DeviceType *self, void *args)
 {
     UNUSED(self); UNUSED(args);
 
-    FMC_NORSRAM_InitTypeDef Init;
+    FMC_NORSRAM_InitTypeDef   Init;
     FMC_NORSRAM_TimingTypeDef SRAM_Timing;
 
     /* SRAM device configuration */  

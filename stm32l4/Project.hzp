@@ -2,12 +2,14 @@
 <solution Name="Framework-L476" target="8" version="2">
   <project Name="Framework-L476">
     <configuration
+      CMSIS_CORE="Yes"
       Family="STM32"
       Name="Common"
       Placement="Flash"
       Target="STM32L476RG"
       arm_architecture="v7EM"
       arm_core_type="Cortex-M4"
+      arm_fp_abi="Soft"
       arm_fpu_type="FPv4-SP-D16"
       arm_gcc_target="arm-unknown-eabi"
       arm_linker_heap_size="128"
@@ -22,8 +24,7 @@
       arm_target_interface_type="Default"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
-      arm_target_restrict_memory_accesses="Yes"
-      c_preprocessor_definitions="STM32L476xx;USE_HAL_DRIVER;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
+      c_preprocessor_definitions="STM32L476xx;USE_HAL_DRIVER;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1;USE_STM32L476G_EVAL_REVB"
       c_user_include_directories=".//inc;./../common/inc;./modules/eeprom_emul/core;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Drivers/BSP/Components/Common;./modules/STM32_USBD_Library/inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.14.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/stm32l476rg_MemoryMap.xml"
@@ -218,6 +219,7 @@
     </folder>
     <folder Name="Doc">
       <file file_name="$(ProjectDir)/Doc/readme.txt" />
+      <file file_name="Doc/clues.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="STM32L4xx_HAL_Driver">

@@ -311,7 +311,7 @@ int main(void)
 
     /* Toggle LEDs to indicate system up and running with correct SYSTICK and frquency */
     for ( uint32_t i = 0; i < IO_UseLedGetNum(); i++ )
-        IO_UserLedBlink(i, 2, 200);
+        IO_UserLedBlink(i, 2, 100);
 
     IO_AssignInterrupt(GPIO_PIN_13, PB_CB );
 

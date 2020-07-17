@@ -2102,7 +2102,7 @@ ADD_SUBMODULE(Test);
 
 #if USE_FMC > 0
 
-    #define BUFFER_SIZE         ((uint32_t)0x0100)
+    #define BUFFER_SIZE         ((uint32_t)0x1000)
     #define WRITE_READ_ADDR     ((uint32_t)0x0800)
     #define SRAM_BANK_ADDR      ((uint32_t)0x60000000)
 
@@ -2142,35 +2142,34 @@ ADD_SUBMODULE(Test);
       return true;
     }
 
-#define BUFFER_SIZE         ((uint32_t)0x0100)
-#define WRITE_READ_ADDR     ((uint32_t)0x0800)
-#define SRAM_BANK_ADDR      ((uint32_t)0x60000000)
 
-    static void FMC_Sram_Test(void)
+    static void FMC_Sram_Test(uint32_t ofs)
     {
-        /*##-2- SRAM memory read/write access ######################################*/
+        uint16_t *extmemptr = (uint16_t *)(SRAM_BANK_ADDR + ofs );
+
+        
         /* Fill the buffer to write */
         Fill_Buffer(aTxBuffer, BUFFER_SIZE, 0xC20F);
 
         /* Write data to the SRAM memory */
         for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
         {
-        *(__IO uint16_t *)(SRAM_BANK_ADDR + WRITE_READ_ADDR + 2 * uwIndex) = aTxBuffer[uwIndex];
+        *(extmemptr+uwIndex) = aTxBuffer[uwIndex];
         }
 
         /* Read back data from the SRAM memory */
         for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
         {
-        aRxBuffer[uwIndex] = *(__IO uint16_t *)(SRAM_BANK_ADDR + WRITE_READ_ADDR + 2 * uwIndex);
+        aRxBuffer[uwIndex] = *(extmemptr+uwIndex);
         }
 
         /*##-3- Checking data integrity ############################################*/
         uwWriteReadStatus = Buffercmp(aTxBuffer, aRxBuffer, BUFFER_SIZE);
 
         if(!uwWriteReadStatus) {
-            DEBUG_PUTS("Sram test failed");
+            DEBUG_PRINTTS("Sram test @0x%08x failed\n",SRAM_BANK_ADDR + ofs );
         } else {
-            DEBUG_PUTS("Sram test ok");
+            DEBUG_PRINTTS("Sram test @0x%08x ok\n",SRAM_BANK_ADDR + ofs);
 
         }
     }
@@ -2181,7 +2180,6 @@ ADD_SUBMODULE(Test);
       size_t wordlen;
       uint32_t num;
       uint32_t addr;
-      CanFilterT flt;
       bool ret;
       
       UNUSED(cmdline);UNUSED(len);
@@ -2191,16 +2189,14 @@ ADD_SUBMODULE(Test);
             FMC_DumpGeometry();
             break;
         case 1:
-            #if 0
             if ( CMD_argc() < 1 ) {
-              printf("Usage: Baudrate <idx> - Set CAN baudrate\n");
-              printf("       0-1000k, 1-500, 2-250, 3-200, 4=125, 5=100, 6=50, 7=20, 8=10\n");
+              printf("Usage: Sram test <n> - test <n> blocks \n");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            #endif
-            FMC_Sram_Test();
+            for ( uint32_t i = 0; i < num; i++ )
+                FMC_Sram_Test(i*BUFFER_SIZE);
             break;
         default:
           DEBUG_PUTS("CAN_Menu: command not implemented");

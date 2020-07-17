@@ -1,0 +1,10 @@
+Merkwürdige Dinge und wie man sie behebt                              15.07.20 RHB
+----------------------------------------------------------------------------------
+
+1.   Wenn im Debugger der über FMC eingebundene externe Speicher nicht angezeigt wird
+     und stattdesseen alle bytes als 0xFE ( oder so ) angezeigt wird, dann im
+     Projektfile die Einstellung rauslöschen:
+
+         arm_target_restrict_memory_accesses="Yes"
+
+     Danach CrossStudio neu starten, erst dann wird die Änderung wirksam!
