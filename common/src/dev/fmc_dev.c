@@ -416,11 +416,11 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
     SRAM_Timing.BusTurnAroundDuration  = 0;
     SRAM_Timing.CLKDivision            = 2;
     SRAM_Timing.DataLatency            = 2;
-    SRAM_Timing.AccessMode             = FMC_ACCESS_MODE_A;
+    SRAM_Timing.AccessMode             = FMC_ACCESS_MODE_D;
 
     Init.NSBank             = FMC_NORSRAM_BANK1;
-    Init.DataAddressMux     = FMC_DATA_ADDRESS_MUX_DISABLE;
-    Init.MemoryType         = FMC_MEMORY_TYPE_SRAM;
+    Init.DataAddressMux     = FMC_DATA_ADDRESS_MUX_ENABLE;
+    Init.MemoryType         = FMC_MEMORY_TYPE_PSRAM;
     Init.MemoryDataWidth    = FMC_NORSRAM_MEM_BUS_WIDTH_16;
     Init.BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
     Init.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
@@ -432,10 +432,15 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
     Init.WriteBurst         = FMC_WRITE_BURST_DISABLE;
     Init.ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
     Init.PageSize           = FMC_PAGE_SIZE_NONE;
+    Init.WriteFifo          = FMC_WRITE_FIFO_ENABLE;
 
     if (!Fmc_SRAM_Init(&Init, 24, &SRAM_Timing, &SRAM_Timing)) {
         DEBUG_PUTS("FMC SRAM init failed!");
     }
+
+    uint16_t *extmemptr = (uint16_t *)(0x60000000 );
+    for ( uint32_t i = 0; i < 1 << 23; i++ )
+        *(extmemptr + i) = 0;
 }
 
 

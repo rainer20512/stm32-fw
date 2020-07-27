@@ -22,8 +22,8 @@
  */ 
 //#define BL475IOT   
 //#define DRAGONFLY476
-// #define STM32L476NUCLEO
-#define STM32L476EVAL
+#define STM32L476NUCLEO
+//#define STM32L476EVAL
 //#define STM32L476BAREMETAL
 
 
@@ -52,7 +52,7 @@
 #define USE_DISPLAY         0
 #define USE_DOGM132         0
 #define USE_SECONDTIMER     0
-#define USE_PWMTIMER        0
+#define USE_PWMTIMER        1
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
@@ -174,6 +174,7 @@
     #undef  HW_HAS_LSE_BYPASS
     #define LSE_FREQUENCY   8000000
 #endif
+
 
 /******************************************************************************
  * Check and set constraints for FMC module

@@ -135,8 +135,10 @@ void Init_OtherDevices(void)
       } else {
         DeviceInitByIdx(dev_idx, NULL );
       }
-      /* Assign PWM device and channel to LCD */
-      LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
+      #if USE_DISPLAY > 0
+          /* Assign PWM device and channel to LCD */
+          LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
+      #endif
   #endif
   #if USE_DISPLAY > 0
       dev_idx = AddDevice(&EPAPER_DEV, LCD_PostInit, NULL);

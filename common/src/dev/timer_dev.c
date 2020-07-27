@@ -54,8 +54,7 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
     TIM_TypeDef *htim   = (TIM_TypeDef *)self->devBase;
         
     /* Check, if any of the enable bits in CCER are set */
-    uint32_t mask = 0xbfff;
-    return htim->CCER & mask;
+    return htim->CCER & ( TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E | TIM_CCER_CC5E | TIM_CCER_CC6E );
 }     
 
 #if USE_BASICTIMER > 0 
