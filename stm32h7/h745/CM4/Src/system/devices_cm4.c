@@ -45,12 +45,14 @@
 static const HW_DeviceType* devices[MAX_DEV];   /* ptr to device descripter              */
 static HW_DynInitBlock      devDyn [MAX_DEV];   /* Ptr to dynamic PostInit/PreDeInit Fns */
 static uint8_t              devIsInited[MAX_DEV]; /* flag for "device is Initialized     */
+static uint32_t             devRmtIdx[MAX_DEV]; /* remote idx of this CM4 device         */
 static uint32_t             act_devices     = 0;
 
 
 /* Public functions ---------------------------------------------------------------------*/
 #define PRINTNAME(a)     ( a ? a : "" )
 #define PRINTCOLON(a)    ( a ? " : " : "" )
+#define PRINTOWNERSHIP(i,g,p)   ( IsMyPin(i,g,p) ? "" : " Not assigned")
 
 void DBG_dump_devices(bool bLong)
 {
@@ -73,31 +75,72 @@ void DBG_dump_devices(bool bLong)
             if ( gpioaf ) 
                 for ( uint8_t j = 0; j < gpioaf->num; j++ ) {
                     if ( gpioaf->gpio[j].gpio )
-                        DBG_printf_indent("  AF  %c%02d%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
-                                          ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)                                 
+                        DBG_printf_indent("  AF  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
+                                          ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioaf->gpio[j].gpio,gpioaf->gpio[j].pin)
                         );
                 }
             if ( gpioio ) 
                 for ( uint8_t j = 0; j < gpioio->num; j++ ) {
                     if ( gpioio->gpio[j].gpio )
-                        DBG_printf_indent("  IO  %c%02d%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
-                                          ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)                                 
+                        DBG_printf_indent("  IO  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
+                                          ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioio->gpio[j].gpio,gpioio->gpio[j].pin)
                         );
                 }
             if ( gpioadc ) 
                 for ( uint8_t j = 0; j < gpioadc->num; j++ ) {
                     if ( gpioadc->gpio[j].gpio )
-                        DBG_printf_indent("  ADC %c%02d%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
+                        DBG_printf_indent("  ADC %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
                                           ,PRINTCOLON(gpioadc->gpio[j].dbg_name), PRINTNAME(gpioadc->gpio[j].dbg_name)
+                                          ,PRINTOWNERSHIP(i,gpioadc->gpio[j].gpio,gpioadc->gpio[j].pin)
                         );
                 }
-          
+      
             DBG_setIndentRel(-4);
         } // if ( bLong )
     } // for
     
     DBG_setIndentAbs(oldIndent);
 }
+
+/******************************************************************************
+ * Check, whether Pin "Pin" of GPIO port "gpio" is still unassigned
+ * if so, it is assigned to "newdev" and true is returned
+ * if already assigned to any other device, false is returned
+ *****************************************************************************/
+bool AssignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    /* Do remote registration */
+    MSGD_DoRemotePinAssignment(MSGTYPE2_SUBID_ASSIGN, devRmtIdx[devIdx], gpio, pin);
+
+    return MSGD_WaitForRemotePinAssignment();
+}
+
+/******************************************************************************
+ * returns true, if device owns that GPIO pin
+ *****************************************************************************/
+bool IsMyPin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{    
+    /* Do remote query */
+    MSGD_DoRemotePinAssignment(MSGTYPE2_SUBID_QUERY, devRmtIdx[devIdx], gpio, pin);
+
+    return MSGD_WaitForRemotePinAssignment();
+}
+
+/******************************************************************************
+ * Deassign one GPIO pin from a device
+ * this is only possible, iff the device owned that pin before
+ *****************************************************************************/
+bool DeassignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    /* Do remote deassignment */
+    MSGD_DoRemotePinAssignment(MSGTYPE2_SUBID_DEASSIGN, devRmtIdx[devIdx], gpio, pin);
+
+    return MSGD_WaitForRemotePinAssignment();
+}
+
+
 /******************************************************************************
  * returns true, if hardwarwe address is not used by any other device
  * i.e. if any hardware component is not used by more than one device
@@ -143,7 +186,7 @@ int32_t AddDevice(const HW_DeviceType *dev, HW_DynInitT postInit, HW_DynDeInitT 
     }
 
     if ( act_devices >= MAX_DEV ) {
-        DEBUG_PUTS("AddDevice: max. number of devices reached");
+        DEBUG_PUTS("AddDevice: No more room to store CM4-deivces");
         return -1;
     }
 
@@ -151,14 +194,21 @@ int32_t AddDevice(const HW_DeviceType *dev, HW_DynInitT postInit, HW_DynDeInitT 
         DEBUG_PRINTF("AddDevice: %s causes hardware collision\n", dev->devName);
     }
 
-    devices[act_devices]     = dev;
-    devIsInited[act_devices] = false;
-    devDyn [act_devices].PostInitFn =postInit;
-    devDyn [act_devices].PreDeInitFn=preDeInit;
-
     /* Do remote registration */
     MSGD_DoRemoteRegistration((void *)dev);
-    if (!MSGD_WaitForRemoteRegistration() ) return -1;
+    int32_t remoteIdx = MSGD_WaitForRemoteRegistration();
+
+    if ( remoteIdx  == -1 ) {
+        DEBUG_PUTS("AddDevice: Remote registration failed");
+        return -1;
+    }
+
+    devices[act_devices]            = dev;
+    devRmtIdx[act_devices]          = remoteIdx;
+    devIsInited[act_devices]        = false;
+    devDyn [act_devices].PostInitFn = postInit;
+    devDyn [act_devices].PreDeInitFn= preDeInit;
+
 
     return (int32_t)act_devices++;
 }
@@ -179,15 +229,6 @@ bool DeviceInitByIdx(uint32_t dev_idx, void *arg)
     register const HW_DeviceType *dev = devices[dev_idx];
 
     devIsInited[dev_idx] = false;
-
-    /* check for unique pin assignments */
-    MSGD_DoCheckUniqueRemote((void *)dev);
-    if (!MSGD_WaitForCheckUniqueRemote()) {
-        #if DEBUG_MODE > 0
-            DEBUG_PRINTF("Device %s not initialized due to multiple pin assignments\n", dev->devName);
-        #endif
-        return false;
-    }
 
     /* try to init */
     if ( !dev->Init(dev) ) {
@@ -273,6 +314,20 @@ const HW_DeviceType *FindDevByBaseAddr(uint32_t dt, void *pBase )
     }
     return NULL;
 }
+
+/******************************************************************************
+ * return the index of the device list for a given device
+ * -1 will be returned when not foune
+ ******************************************************************************/
+int32_t GetDevIdx ( const HW_DeviceType *dev)
+{
+    for( uint8_t i = 0; i < act_devices; i++ ) {
+        if ( devices[i] == dev ) return i;
+    }
+    DEBUG_PUTS("Error: GetDevIdx: Device not found");
+    return -1;
+}
+
 #ifndef HW_DEBUG_UART
     #error "DEBUG_UART is not defined!"
 #endif

@@ -30,7 +30,7 @@
 bool GpioInitHW( uint32_t devIdx, GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
 {
     /* chack and Register Pin useage */
-    if ( !AssignOnePin( 0, devIdx, gpio, Init->Pin ) ) return false;
+    if ( !AssignOnePin( devIdx, gpio, Init->Pin ) ) return false;
 
     #if defined( PWR_CR2_IOSV )
         /* check for IOSV */
@@ -58,7 +58,7 @@ bool GpioInitHW( uint32_t devIdx, GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init )
  *****************************************************************************/
 void GpioDeInitHW( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
 {
-    DeassignOnePin( 0, devIdx, gpio, pin );
+    DeassignOnePin( devIdx, gpio, pin );
     HAL_GPIO_DeInit(gpio, pin);
 }  
 

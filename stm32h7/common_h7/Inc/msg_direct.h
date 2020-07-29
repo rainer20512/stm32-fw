@@ -33,7 +33,7 @@
 
 /* Messages from CM4 to CM7                                                                                   */
 #define MSGTYPE_REGISTER_DEVICE                 1   /* Register a CM4 device on CM7 core                      */
-#define MSGTYPE_CHKUNIQUE_DEVICE                2   /* Check for Pin uniqueness of CM4 device on CM7 core     */
+#define MSGTYPE_PIN_ASSIGNMENT                  2   /* Check/Query pin assignment from CM4 device on CM7 core */
 #define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7           */
 #define MSGTYPE_SETTINGS_GET_CM7                4   /* Get one persistent settings element for CM4 from CM7   */
 #define MSGTYPE_SETTINGS_SET_CM7                5   /* Set one persistent settings element of CM7 from CM4    */
@@ -53,6 +53,22 @@ typedef struct {
     void *dev;                        /* CM4->CM7: HW-Device address */
     int32_t response;                 /* CM7->CM4: >= 0 ok, -1 error for type 1, 0 = false, != 0 = true for type 2*/
 } MsgRegisterDeviceT;
+
+/*
+ * Transfer type 2: Assignment/deassignment ir query of cm4 device pin on cm7 core. cm7 core acts as master,
+ * who does the bookkeeping for all pin assignments of all loccal (cm7 ) and remote devices
+ */
+typedef struct {
+    uint32_t devIdx;                  /* remote device idx               */
+    GPIO_TypeDef *gpio;               /* affected GPIO port              */
+    uint16_t pin;                     /* affexted pin                    */
+    uint16_t response;                /* 0 = false; all other = true     */
+} MsqQueryPinT;
+
+/* Sub-IDs for Pin Assignment/Deassignment/Query from CM4 core on CM7 core */
+#define MSGTYPE2_SUBID_ASSIGN          0
+#define MSGTYPE2_SUBID_DEASSIGN        1
+#define MSGTYPE2_SUBID_QUERY           2
 
 #define TYPE3_BUFLEN        80
 typedef union {
@@ -85,7 +101,8 @@ typedef struct {
   uint32_t msg_sub_id;
   uint32_t msg_status;
   union {
-    MsgRegisterDeviceT msg1;  
+    MsgRegisterDeviceT msg1;            /* Used for message type 1 */
+    MsqQueryPinT       msg2;            /* Used for message type 2 */
     MsgTaskItemU       msg3;
     MSgSettingItemT    msg4;            /* Used for Message Type 4 aund 5 */
   }; 
@@ -110,8 +127,8 @@ typedef struct {
     void    CM4_handle_remote(uint32_t arg);
     void    MSGD_DoRemoteRegistration(void *dev);
     int32_t MSGD_WaitForRemoteRegistration(void);
-    void    MSGD_DoCheckUniqueRemote(void *dev);
-    bool    MSGD_WaitForCheckUniqueRemote(void);
+    void    MSGD_DoRemotePinAssignment ( uint32_t operation, uint32_t dev_idx, GPIO_TypeDef *gpio, uint16_t pin );
+    bool    MSGD_WaitForRemotePinAssignment(void);
     void    MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
     char*   MSGD_WaitForTasklistLine(void);
     void    MSGD_GetSettingsLine(bool bInitCall);

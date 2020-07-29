@@ -16,6 +16,7 @@
 #include "msg_direct.h"
 
 #include "dev/hw_device.h"
+#include "dev/devices.h"
 #include "task/minitask.h"
 #include "eeprom.h"
 
@@ -85,7 +86,7 @@ void CM7_handle_remote( uint32_t arg )
         /* do remote device registration */
         Handle_Receive_1();
         break;
-    case  MSGTYPE_CHKUNIQUE_DEVICE:
+    case  MSGTYPE_PIN_ASSIGNMENT:
         /* do remote device registration */
         Handle_Receive_2();
         break;
@@ -123,16 +124,30 @@ void Handle_Receive_1(void)
 }
 
 /******************************************************************************
- * CM7 Handler for remote device uniqueness check
+ * CM7 Handler for remote pin assignment/deassignment/query
  *****************************************************************************/
 void Handle_Receive_2(void)
 {
+    bool ret=false;
     /* 
      * get Address of remote flash-stored device description. As all device
      * infos are stored in flash, direct read is possible
      */
-    const HW_DeviceType *dev = (HW_DeviceType *)AMP_DirectBuffer.msg1.dev;
-    AMP_DirectBuffer.msg1.response = CheckUniqueRemote(dev);
+    switch ( AMP_DirectBuffer.msg_sub_id ) {
+        case MSGTYPE2_SUBID_ASSIGN:
+            ret = AssignOnePinRemote(1, AMP_DirectBuffer.msg2.devIdx, AMP_DirectBuffer.msg2.gpio, AMP_DirectBuffer.msg2.pin);
+            break;
+        case MSGTYPE2_SUBID_DEASSIGN:
+            ret = DeassignOnePinRemote(1, AMP_DirectBuffer.msg2.devIdx, AMP_DirectBuffer.msg2.gpio, AMP_DirectBuffer.msg2.pin);
+            break;
+        case MSGTYPE2_SUBID_QUERY:
+            ret = IsMyPinRemote(1, AMP_DirectBuffer.msg2.devIdx, AMP_DirectBuffer.msg2.gpio, AMP_DirectBuffer.msg2.pin);
+            break;
+        default:
+            DEBUG_PRINTF("CM7_handle_pins assign: unknown msg_subid %d\n", AMP_DirectBuffer.msg_sub_id );
+    }
+
+    AMP_DirectBuffer.msg2.response = ( ret ? 1 : 0 );
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
     Ipc_CM7_SendDirect();
 }

@@ -63,7 +63,7 @@
         <file file_name="CM4/Src/init_c4.c" />
         <file file_name="CM4/Src/interpreters_c4.c" />
         <file file_name="CM4/Src/stm32h7xx_it_c4.c" />
-        <file file_name="common_h7/Src/system/error.c" />
+        <file file_name="../common_h7/Src/system/error.c" />
         <folder Name="system">
           <file file_name="CM4/Src/system/devices_cm4.c" />
         </folder>
@@ -98,7 +98,7 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/lan8742/lan8742.c" />
       </folder>
       <folder Name="CMSIS">
-        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
+        <file file_name="../common_h7/Src/system_stm32h7xx.c" />
       </folder>
       <folder Name="STM32H7xx_HAL_Driver">
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
@@ -195,106 +195,106 @@
         </folder>
         <configuration
           Name="Common"
-          c_user_include_directories="./common_h7/lwip;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system" />
+          c_user_include_directories="../common_h7/lwip;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system" />
         <folder Name="config">
-          <file file_name="common_h7/lwip/ethernetif.h" />
-          <file file_name="common_h7/lwip/lwipopts.h" />
-          <file file_name="common_h7/lwip/ip_addr.h" />
+          <file file_name="../common_h7/lwip/ethernetif.h" />
+          <file file_name="../common_h7/lwip/lwipopts.h" />
+          <file file_name="../common_h7/lwip/ip_addr.h" />
         </folder>
         <folder Name="ProjectSrc">
-          <file file_name="common_h7/lwip/ethernetif.c" />
-          <file file_name="common_h7/lwip/app_ethernet.c" />
-          <file file_name="common_h7/lwip/httpserver_netconn.c" />
-          <file file_name="common_h7/lwip/lwip_start.c" />
-          <file file_name="common_h7/lwip/heap_mem.c" />
+          <file file_name="../common_h7/lwip/ethernetif.c" />
+          <file file_name="../common_h7/lwip/app_ethernet.c" />
+          <file file_name="../common_h7/lwip/httpserver_netconn.c" />
+          <file file_name="../common_h7/lwip/lwip_start.c" />
+          <file file_name="../common_h7/lwip/heap_mem.c" />
         </folder>
       </folder>
     </folder>
     <folder Name="common">
       <folder Name="src">
-        <file file_name="../common/src/circbuf.c" />
-        <file file_name="../common/src/cmdline.c" />
-        <file file_name="../common/src/eeprom.c" />
-        <file file_name="../common/src/rtc.c" />
-        <file file_name="../common/src/timer.c" />
+        <file file_name="../../common/src/circbuf.c" />
+        <file file_name="../../common/src/cmdline.c" />
+        <file file_name="../../common/src/eeprom.c" />
+        <file file_name="../../common/src/rtc.c" />
+        <file file_name="../../common/src/timer.c" />
         <folder Name="debug">
-          <file file_name="../common/src/debug_gpio_exti.c" />
-          <file file_name="../common/src/debug_helper.c" />
-          <file file_name="../common/src/debug_outbuf.c" />
-          <file file_name="../common/src/debug_sram.c" />
+          <file file_name="../../common/src/debug_gpio_exti.c" />
+          <file file_name="../../common/src/debug_helper.c" />
+          <file file_name="../../common/src/debug_outbuf.c" />
+          <file file_name="../../common/src/debug_sram.c" />
         </folder>
         <folder Name="dev">
-          <file file_name="../common/src/dev/adc_dev.c" />
-          <file file_name="../common/src/dev/hw_device.c" />
-          <file file_name="../common/src/dev/io_dev.c" />
-          <file file_name="../common/src/dev/timer_dev.c" />
-          <file file_name="../common/src/dev/uart_dev.c" />
-          <file file_name="../common/src/dev/eth_dev.c">
+          <file file_name="../../common/src/dev/adc_dev.c" />
+          <file file_name="../../common/src/dev/hw_device.c" />
+          <file file_name="../../common/src/dev/io_dev.c" />
+          <file file_name="../../common/src/dev/timer_dev.c" />
+          <file file_name="../../common/src/dev/uart_dev.c" />
+          <file file_name="../../common/src/dev/eth_dev.c">
             <configuration Name="THUMB Debug" build_exclude_from_build="No" />
           </file>
         </folder>
         <folder Name="system">
-          <file file_name="../common/src/system/periodic.c" />
-          <file file_name="../common/src/system/exti_handler.c" />
+          <file file_name="../../common/src/system/periodic.c" />
+          <file file_name="../../common/src/system/exti_handler.c" />
         </folder>
       </folder>
       <folder Name="inc">
         <folder Name="dev">
-          <file file_name="../common/inc/dev/adc_dev.h" />
-          <file file_name="../common/inc/dev/devices.h" />
-          <file file_name="../common/inc/dev/hw_device.h" />
-          <file file_name="../common/inc/dev/i2c_abstract.h" />
-          <file file_name="../common/inc/dev/i2c_dev.h" />
-          <file file_name="../common/inc/dev/io_dev.h" />
-          <file file_name="../common/inc/dev/lcd.h" />
-          <file file_name="../common/inc/dev/qencode.h" />
-          <file file_name="../common/inc/dev/qspi_dev.h" />
-          <file file_name="../common/inc/dev/spi.h" />
-          <file file_name="../common/inc/dev/spi_dev.h" />
-          <file file_name="../common/inc/dev/timer_dev.h" />
-          <file file_name="../common/inc/dev/uart_dev.h" />
-          <file file_name="../common/inc/dev/eth_dev.h" />
+          <file file_name="../../common/inc/dev/adc_dev.h" />
+          <file file_name="../../common/inc/dev/devices.h" />
+          <file file_name="../../common/inc/dev/hw_device.h" />
+          <file file_name="../../common/inc/dev/i2c_abstract.h" />
+          <file file_name="../../common/inc/dev/i2c_dev.h" />
+          <file file_name="../../common/inc/dev/io_dev.h" />
+          <file file_name="../../common/inc/dev/lcd.h" />
+          <file file_name="../../common/inc/dev/qencode.h" />
+          <file file_name="../../common/inc/dev/qspi_dev.h" />
+          <file file_name="../../common/inc/dev/spi.h" />
+          <file file_name="../../common/inc/dev/spi_dev.h" />
+          <file file_name="../../common/inc/dev/timer_dev.h" />
+          <file file_name="../../common/inc/dev/uart_dev.h" />
+          <file file_name="../../common/inc/dev/eth_dev.h" />
         </folder>
-        <file file_name="../common/inc/timer.h" />
+        <file file_name="../../common/inc/timer.h" />
         <folder Name="system">
-          <file file_name="../common/inc/system/periodic.h" />
+          <file file_name="../../common/inc/system/periodic.h" />
         </folder>
       </folder>
     </folder>
     <folder Name="common_h7">
       <folder Name="inc">
         <folder Name="task">
-          <file file_name="common_h7/Inc/task/minitask.h" />
+          <file file_name="../common_h7/Inc/task/minitask.h" />
         </folder>
-        <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
+        <file file_name="../common_h7/Inc/debug_pwr_rcc.h" />
         <folder Name="system">
-          <file file_name="../common/inc/system/exti_handler.h" />
+          <file file_name="../../common/inc/system/exti_handler.h" />
         </folder>
-        <file file_name="common_h7/Inc/ipc.h" />
-        <file file_name="common_h7/Inc/MessageBufferAMP.h" />
+        <file file_name="../common_h7/Inc/ipc.h" />
+        <file file_name="../common_h7/Inc/MessageBufferAMP.h" />
         <folder Name="devconfig">
-          <file file_name="common_h7/Inc/config/adc_config.h" />
-          <file file_name="common_h7/Inc/config/can_config.h" />
-          <file file_name="common_h7/Inc/config/gpio_config.h" />
-          <file file_name="common_h7/Inc/config/i2c_config.h" />
-          <file file_name="common_h7/Inc/config/qencode_config.h" />
-          <file file_name="common_h7/Inc/config/qspi_config.h" />
-          <file file_name="common_h7/Inc/config/spi_config.h" />
-          <file file_name="common_h7/Inc/config/timer_config.h" />
-          <file file_name="common_h7/Inc/config/uart_config.h" />
+          <file file_name="../common_h7/Inc/config/adc_config.h" />
+          <file file_name="../common_h7/Inc/config/can_config.h" />
+          <file file_name="../common_h7/Inc/config/gpio_config.h" />
+          <file file_name="../common_h7/Inc/config/i2c_config.h" />
+          <file file_name="../common_h7/Inc/config/qencode_config.h" />
+          <file file_name="../common_h7/Inc/config/qspi_config.h" />
+          <file file_name="../common_h7/Inc/config/spi_config.h" />
+          <file file_name="../common_h7/Inc/config/timer_config.h" />
+          <file file_name="../common_h7/Inc/config/uart_config.h" />
         </folder>
-        <file file_name="common_h7/Inc/msg_direct.h" />
+        <file file_name="../common_h7/Inc/msg_direct.h" />
       </folder>
       <folder Name="src">
         <folder Name="task">
-          <file file_name="common_h7/Src/task/minitask.c" />
+          <file file_name="../common_h7/Src/task/minitask.c" />
         </folder>
-        <file file_name="common_h7/Src/debug_pwr_rcc.c" />
-        <file file_name="common_h7/Src/hardware.c" />
+        <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
+        <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
-          <file file_name="common_h7/Src/system/hw_util.c" />
+          <file file_name="../common_h7/Src/system/hw_util.c" />
         </folder>
-        <file file_name="common_h7/Src/ipc.c" />
+        <file file_name="../common_h7/Src/ipc.c" />
       </folder>
     </folder>
   </project>
@@ -388,7 +388,7 @@
         <folder Name="system">
           <file file_name="CM7/Src/hardfault.s" />
           <file file_name="CM7/Src/system/clockconfig.c" />
-          <file file_name="common_h7/Src/system/error.c" />
+          <file file_name="../common_h7/Src/system/error.c" />
           <file file_name="CM7/Src/system/devices_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
@@ -413,14 +413,14 @@
       </folder>
       <folder Name="eeprom_emul">
         <folder Name="core">
-          <file file_name="common_h7/eeprom-emul/core/eeprom_emul.c" />
-          <file file_name="common_h7/eeprom-emul/core/eeprom_emul.h" />
-          <file file_name="common_h7/eeprom-emul/core/eeprom_emul_conf.h" />
-          <file file_name="common_h7/eeprom-emul/core/eeprom_emul_types.h" />
+          <file file_name="../common_h7/eeprom-emul/core/eeprom_emul.c" />
+          <file file_name="../common_h7/eeprom-emul/core/eeprom_emul.h" />
+          <file file_name="../common_h7/eeprom-emul/core/eeprom_emul_conf.h" />
+          <file file_name="../common_h7/eeprom-emul/core/eeprom_emul_types.h" />
         </folder>
         <folder Name="porting">
-          <file file_name="common_h7/eeprom-emul/porting/stm32h7/flash_interface.c" />
-          <file file_name="common_h7/eeprom-emul/porting/stm32h7/flash_interface.h" />
+          <file file_name="../common_h7/eeprom-emul/porting/stm32h7/flash_interface.c" />
+          <file file_name="../common_h7/eeprom-emul/porting/stm32h7/flash_interface.h" />
         </folder>
       </folder>
     </folder>
@@ -479,120 +479,120 @@
     </folder>
     <folder Name="common_h7">
       <folder Name="src">
-        <file file_name="$(ProjectDir)/common_h7/Src/system_stm32h7xx.c" />
-        <file file_name="common_h7/Src/hardware.c" />
+        <file file_name="../common_h7/Src/system_stm32h7xx.c" />
+        <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
-          <file file_name="common_h7/Src/system/hw_util.c" />
+          <file file_name="../common_h7/Src/system/hw_util.c" />
         </folder>
-        <file file_name="common_h7/Src/debug_pwr_rcc.c" />
-        <file file_name="common_h7/Src/ipc.c" />
+        <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
+        <file file_name="../common_h7/Src/ipc.c" />
       </folder>
       <folder Name="inc">
-        <file file_name="common_h7/Inc/hardware.h" />
+        <file file_name="../common_h7/Inc/hardware.h" />
         <folder Name="system">
-          <file file_name="common_h7/Inc/system/hw_util.h" />
+          <file file_name="../common_h7/Inc/system/hw_util.h" />
         </folder>
         <folder Name="task">
-          <file file_name="common_h7/Inc/task/minitask.h" />
+          <file file_name="../common_h7/Inc/task/minitask.h" />
         </folder>
-        <file file_name="common_h7/Inc/debug_pwr_rcc.h" />
-        <file file_name="common_h7/Inc/ipc.h" />
+        <file file_name="../common_h7/Inc/debug_pwr_rcc.h" />
+        <file file_name="../common_h7/Inc/ipc.h" />
         <folder Name="devconfig">
-          <file file_name="common_h7/Inc/config/adc_config.h" />
-          <file file_name="common_h7/Inc/config/can_config.h" />
-          <file file_name="common_h7/Inc/config/gpio_config.h" />
-          <file file_name="common_h7/Inc/config/i2c_config.h" />
-          <file file_name="common_h7/Inc/config/qencode_config.h" />
-          <file file_name="common_h7/Inc/config/qspi_config.h" />
-          <file file_name="common_h7/Inc/config/spi_config.h" />
-          <file file_name="common_h7/Inc/config/timer_config.h" />
-          <file file_name="common_h7/Inc/config/uart_config.h" />
-          <file file_name="common_h7/Inc/config/eth_config.h" />
+          <file file_name="../common_h7/Inc/config/adc_config.h" />
+          <file file_name="../common_h7/Inc/config/can_config.h" />
+          <file file_name="../common_h7/Inc/config/gpio_config.h" />
+          <file file_name="../common_h7/Inc/config/i2c_config.h" />
+          <file file_name="../common_h7/Inc/config/qencode_config.h" />
+          <file file_name="../common_h7/Inc/config/qspi_config.h" />
+          <file file_name="../common_h7/Inc/config/spi_config.h" />
+          <file file_name="../common_h7/Inc/config/timer_config.h" />
+          <file file_name="../common_h7/Inc/config/uart_config.h" />
+          <file file_name="../common_h7/Inc/config/eth_config.h" />
         </folder>
-        <file file_name="common_h7/Inc/msg_direct.h" />
+        <file file_name="../common_h7/Inc/msg_direct.h" />
       </folder>
       <folder Name="task">
-        <file file_name="common_h7/Src/task/minitask.c" />
+        <file file_name="../common_h7/Src/task/minitask.c" />
       </folder>
     </folder>
     <folder Name="common">
       <folder Name="src">
         <folder Name="dev">
-          <file file_name="../common/src/dev/adc_dev.c" />
-          <file file_name="../common/src/dev/bitbang_spi.c" />
-          <file file_name="../common/src/dev/can_dev.c" />
-          <file file_name="../common/src/dev/common_spi.c" />
-          <file file_name="../common/src/dev/hw_device.c" />
-          <file file_name="../common/src/dev/hw_spi.c" />
-          <file file_name="../common/src/dev/i2c_abstract.c" />
-          <file file_name="../common/src/dev/i2c_dev.c" />
-          <file file_name="../common/src/dev/io_dev.c" />
-          <file file_name="../common/src/dev/qencoder.c" />
-          <file file_name="../common/src/dev/qspi_dev.c" />
-          <file file_name="../common/src/dev/spi_dev.c" />
-          <file file_name="../common/src/dev/timer_dev.c" />
-          <file file_name="../common/src/dev/uart_dev.c" />
+          <file file_name="../../common/src/dev/adc_dev.c" />
+          <file file_name="../../common/src/dev/bitbang_spi.c" />
+          <file file_name="../../common/src/dev/can_dev.c" />
+          <file file_name="../../common/src/dev/common_spi.c" />
+          <file file_name="../../common/src/dev/hw_device.c" />
+          <file file_name="../../common/src/dev/hw_spi.c" />
+          <file file_name="../../common/src/dev/i2c_abstract.c" />
+          <file file_name="../../common/src/dev/i2c_dev.c" />
+          <file file_name="../../common/src/dev/io_dev.c" />
+          <file file_name="../../common/src/dev/qencoder.c" />
+          <file file_name="../../common/src/dev/qspi_dev.c" />
+          <file file_name="../../common/src/dev/spi_dev.c" />
+          <file file_name="../../common/src/dev/timer_dev.c" />
+          <file file_name="../../common/src/dev/uart_dev.c" />
           <folder Name="qspi">
-            <file file_name="../common/src/dev/qspi/mx25r6435f.c">
+            <file file_name="../../common/src/dev/qspi/mx25r6435f.c">
               <configuration Name="Common" build_exclude_from_build="Yes" />
             </file>
-            <file file_name="../common/src/dev/qspi/mx25r6435f.h" />
+            <file file_name="../../common/src/dev/qspi/mx25r6435f.h" />
           </folder>
-          <file file_name="../common/src/dev/eth_dev.c" />
+          <file file_name="../../common/src/dev/eth_dev.c" />
         </folder>
         <folder Name="system">
-          <file file_name="../common/src/system/periodic.c" />
-          <file file_name="../common/src/system/exti_handler.c" />
-          <file file_name="../common/src/system/tm1637.c" />
-          <file file_name="../common/src/system/timer_handler.c" />
-          <file file_name="../common/src/system/profiling.c" />
+          <file file_name="../../common/src/system/periodic.c" />
+          <file file_name="../../common/src/system/exti_handler.c" />
+          <file file_name="../../common/src/system/tm1637.c" />
+          <file file_name="../../common/src/system/timer_handler.c" />
+          <file file_name="../../common/src/system/profiling.c" />
         </folder>
-        <file file_name="../common/src/rtc.c" />
-        <file file_name="../common/src/timer.c" />
-        <file file_name="../common/src/cmdline.c" />
-        <file file_name="../common/src/eeprom.c" />
-        <file file_name="../common/src/circbuf.c" />
+        <file file_name="../../common/src/rtc.c" />
+        <file file_name="../../common/src/timer.c" />
+        <file file_name="../../common/src/cmdline.c" />
+        <file file_name="../../common/src/eeprom.c" />
+        <file file_name="../../common/src/circbuf.c" />
         <folder Name="debug">
-          <file file_name="../common/src/debug_helper.c" />
-          <file file_name="../common/src/debug_outbuf.c" />
-          <file file_name="../common/src/debug_sram.c" />
-          <file file_name="../common/src/debug_gpio_exti.c" />
+          <file file_name="../../common/src/debug_helper.c" />
+          <file file_name="../../common/src/debug_outbuf.c" />
+          <file file_name="../../common/src/debug_sram.c" />
+          <file file_name="../../common/src/debug_gpio_exti.c" />
         </folder>
       </folder>
       <folder Name="inc">
         <folder Name="dev">
-          <file file_name="../common/inc/dev/adc_dev.h" />
-          <file file_name="../common/inc/dev/can_dev.h" />
-          <file file_name="../common/inc/dev/devices.h" />
-          <file file_name="../common/inc/dev/hw_device.h" />
-          <file file_name="../common/inc/dev/i2c_abstract.h" />
-          <file file_name="../common/inc/dev/i2c_dev.h" />
-          <file file_name="../common/inc/dev/io_dev.h" />
-          <file file_name="../common/inc/dev/lcd.h" />
-          <file file_name="../common/inc/dev/qencode.h" />
-          <file file_name="../common/inc/dev/qspi_dev.h" />
-          <file file_name="../common/inc/dev/spi.h" />
-          <file file_name="../common/inc/dev/spi_dev.h" />
-          <file file_name="../common/inc/dev/timer_dev.h" />
-          <file file_name="../common/inc/dev/uart_dev.h" />
-          <file file_name="../common/inc/dev/eth_dev.h" />
+          <file file_name="../../common/inc/dev/adc_dev.h" />
+          <file file_name="../../common/inc/dev/can_dev.h" />
+          <file file_name="../../common/inc/dev/devices.h" />
+          <file file_name="../../common/inc/dev/hw_device.h" />
+          <file file_name="../../common/inc/dev/i2c_abstract.h" />
+          <file file_name="../../common/inc/dev/i2c_dev.h" />
+          <file file_name="../../common/inc/dev/io_dev.h" />
+          <file file_name="../../common/inc/dev/lcd.h" />
+          <file file_name="../../common/inc/dev/qencode.h" />
+          <file file_name="../../common/inc/dev/qspi_dev.h" />
+          <file file_name="../../common/inc/dev/spi.h" />
+          <file file_name="../../common/inc/dev/spi_dev.h" />
+          <file file_name="../../common/inc/dev/timer_dev.h" />
+          <file file_name="../../common/inc/dev/uart_dev.h" />
+          <file file_name="../../common/inc/dev/eth_dev.h" />
         </folder>
         <folder Name="system">
-          <file file_name="../common/inc/system/periodic.h" />
-          <file file_name="../common/inc/system/exti_handler.h" />
-          <file file_name="../common/inc/system/tm1637.h" />
-          <file file_name="../common/inc/system/timer_handler.h" />
+          <file file_name="../../common/inc/system/periodic.h" />
+          <file file_name="../../common/inc/system/exti_handler.h" />
+          <file file_name="../../common/inc/system/tm1637.h" />
+          <file file_name="../../common/inc/system/timer_handler.h" />
         </folder>
-        <file file_name="../common/inc/rtc.h" />
-        <file file_name="../common/inc/timer.h" />
-        <file file_name="common_h7/Inc/interpreters.h" />
-        <file file_name="../common/inc/cmdline.h" />
-        <file file_name="../common/inc/circbuf.h" />
+        <file file_name="../../common/inc/rtc.h" />
+        <file file_name="../../common/inc/timer.h" />
+        <file file_name="../common_h7/Inc/interpreters.h" />
+        <file file_name="../../common/inc/cmdline.h" />
+        <file file_name="../../common/inc/circbuf.h" />
         <folder Name="debug">
-          <file file_name="../common/inc/debug_gpio_exti.h" />
-          <file file_name="../common/inc/debug_helper.h" />
-          <file file_name="../common/inc/debug_outbuf.h" />
-          <file file_name="../common/inc/debug_sram.h" />
+          <file file_name="../../common/inc/debug_gpio_exti.h" />
+          <file file_name="../../common/inc/debug_helper.h" />
+          <file file_name="../../common/inc/debug_outbuf.h" />
+          <file file_name="../../common/inc/debug_sram.h" />
         </folder>
         <file file_name="CM7/Inc/global_flags.h" />
       </folder>
@@ -601,7 +601,7 @@
   <configuration
     Name="Common"
     c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
-    c_user_include_directories="./../common/inc;./common_h7/inc;./common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
+    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0"
     gcc_enable_all_warnings="Yes" />
 </solution>

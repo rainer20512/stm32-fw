@@ -69,9 +69,12 @@ bool     DevicesInhibitFrqChange        (void);
 const HW_DeviceType *FindDevByBaseAddr  (uint32_t , void *pAddress );
 int32_t  GetDevIdx                      ( const HW_DeviceType *dev);
 
-bool     AssignOnePin                   ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
-bool     DeassignOnePin                 ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
-bool     IsMyPin                        ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     AssignOnePinRemote             ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     DeassignOnePinRemote           ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     IsMyPinRemote                  ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     AssignOnePin                   (                     uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     DeassignOnePin                 (                     uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
+bool     IsMyPin                        (                     uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
 
 #ifdef __cplusplus
 }

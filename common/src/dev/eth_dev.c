@@ -76,7 +76,7 @@ static void Eth_GPIO_Init(const HW_DeviceType *self)
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_HIGH;
 
-    GpioAFInitAll(self->devGpioAF, &GPIO_InitStruct);
+    GpioAFInitAll(GetDevIdx(self), self->devGpioAF, &GPIO_InitStruct);
 
     /* Enable Ethernet clocks - there is more than one clock, so we use HAL here */
     __HAL_RCC_ETH1MAC_CLK_ENABLE();
@@ -92,7 +92,7 @@ static void Eth_GPIO_DeInit(const HW_DeviceType *self)
     __HAL_RCC_ETH1MAC_CLK_DISABLE();
 
     /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
+    GpioAFDeInitAll(GetDevIdx(self), self->devGpioAF);
 }
 
 

@@ -54,7 +54,7 @@ void CM4_handle_remote_direct(void)
         /* handle all message types which only require a "done" status to be set */
         /* and the peer waits for completion by polling                          */
         case MSGTYPE_REGISTER_DEVICE:
-        case MSGTYPE_CHKUNIQUE_DEVICE:
+        case MSGTYPE_PIN_ASSIGNMENT:
         case MSGTYPE_TASKLIST_CM7:
         case MSGTYPE_SETTINGS_GET_CM7:
         case MSGTYPE_SETTINGS_SET_CM7:
@@ -73,6 +73,7 @@ void CM4_handle_remote_direct(void)
  *****************************************************************************/
 void CM4_handle_remote(uint32_t arg )
 {
+    UNUSED(arg);
     assert(AMP_DctBuf_Ptr->id == DIRECTMSG_ID);
 
     /* 
@@ -135,32 +136,34 @@ int32_t MSGD_WaitForRemoteRegistration(void)
 }
 
 /******************************************************************************
- * CM4 Stub for remote device uniqueness check
+ * CM4 Stub for remote pin assignment, deassignment, query
  *****************************************************************************/
-void MSGD_DoCheckUniqueRemote(void *dev)
+void MSGD_DoRemotePinAssignment ( uint32_t operation, uint32_t dev_idx, GPIO_TypeDef *gpio, uint16_t pin )
 {
-    /* 
-     * get Address of remote flash-stored device description. As all device
-     * infos are stored in flash, direct read is possible
-     */
-    AMP_DctBuf_Ptr->msg1.dev    = dev;
-    AMP_DctBuf_Ptr->msg_id      = MSGTYPE_CHKUNIQUE_DEVICE;
-    AMP_DctBuf_Ptr->msg_status  = MSGSTATUS_CM4_TO_CM7_ACTIVE;
+    /* Fill in all necccessary data  */
+    AMP_DctBuf_Ptr->msg2.devIdx = dev_idx;
+    AMP_DctBuf_Ptr->msg2.gpio   = gpio;
+    AMP_DctBuf_Ptr->msg2.pin    = pin;
+    AMP_DctBuf_Ptr->msg_id       = MSGTYPE_PIN_ASSIGNMENT;
+    AMP_DctBuf_Ptr->msg_sub_id   = operation;
+    AMP_DctBuf_Ptr->msg_status   = MSGSTATUS_CM4_TO_CM7_ACTIVE;
     Ipc_CM4_SendDirect();
 }
 
-bool MSGD_WaitForCheckUniqueRemote(void)
+bool MSGD_WaitForRemotePinAssignment(void)
 {
     uint32_t tickstart = HAL_GetTick();
     while ( AMP_DctBuf_Ptr->msg_status  != MSGSTATUS_CM7_TO_CM4_DONE ) {
     /* Check for the Timeout */
         if ((HAL_GetTick() - tickstart) > DIRECTMSG_WAIT_TIMEOUT) {
-            DEBUG_PUTS("DirectMessage Wait #2 timed out!");
-            return -1;
+            DEBUG_PUTS("Wait remote pin assignment timed out!");
+            return false;
         }
     }
-    return (bool)AMP_DctBuf_Ptr->msg1.response;
+
+    return AMP_DctBuf_Ptr->msg2.response != 0;
 }
+
 
 /******************************************************************************
  * CM4 Stub for remote task list from CM7

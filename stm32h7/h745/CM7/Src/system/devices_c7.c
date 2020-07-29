@@ -35,6 +35,10 @@
 #define DEV_CORE_CM7        0
 #define DEV_CORE_CM4        1
 
+#define MAX_PORTS           11              /* Support GPIOA .. GPIOK                */ 
+#define REMOTE_DEV_MASK     0x80            /* Indicates a remote device as owner    */
+#define LOCAL_DEV_MASK      ( 0xFF & ~REMOTE_DEV_MASK )
+
 /* Private typedef ----------------------------------------------------------------------*/
 /* Private macro ------------------------------------------------------------------------*/
 
@@ -43,10 +47,16 @@ static const HW_DeviceType* devices[MAX_DEV];   /* ptr to device descripter     
 static HW_DynInitBlock      devDyn [MAX_DEV];   /* Ptr to dynamic PostInit/PreDeInit Fns */
 static uint8_t              devIsInited[MAX_DEV]; /* flag for "device is Initialized     */
 static uint8_t              devCoreNum[MAX_DEV];  /* the core the devices is attached to */
+static uint8_t              gpios[MAX_PORTS][16]; /* hold the using device for every gpio*/
 static uint32_t             act_devices     = 0;
 
 #define PRINTNAME(a)     ( a ? a : "" )
 #define PRINTCOLON(a)    ( a ? " : " : "" )
+
+#define PRINTNAME(a)            ( a ? a : "" )
+#define PRINTCOLON(a)           ( a ? " : " : "" )
+#define PRINTOWNERSHIP(r,i,g,p) ( IsMyPinRemote(r,i,g,p) ? "" : " Not assigned")
+
 
 const char * const corename[]={"CM7","CM4"};
 static const char* get_core_txt(uint32_t sel )
@@ -57,13 +67,23 @@ static const char* get_core_txt(uint32_t sel )
     return "Illegal";
 }
 
-static void dump_one_device ( uint32_t idx, bool bLong, const HW_DeviceType *dev )
+
+/******************************************************************************
+ * Init device list: No Devices are defined, no ports are assigned
+ *****************************************************************************/
+void DevicesInit(void )
+{
+    memset(gpios,sizeof(gpios), 0);
+    act_devices = 0;
+}
+
+static void dump_one_device ( uint32_t remoteIdx, uint32_t idx, bool bLong, const HW_DeviceType *dev )
 {
     const HW_GpioList_AF *gpioaf;
     const HW_GpioList_IO *gpioio;
     const HW_GpioList_ADC *gpioadc;
 
-    DBG_printf_indent("%2d) %s %sInit'ed\n", idx, dev->devName, devIsInited[idx] ? "" : "NOT " );
+    DBG_printf_indent("%2d) %s %s\n", idx, dev->devName, devIsInited[idx] ? "Init'ed" : "" );
     if ( bLong) {
         DBG_setIndentRel(+4);
         gpioaf = dev->devGpioAF;
@@ -72,27 +92,30 @@ static void dump_one_device ( uint32_t idx, bool bLong, const HW_DeviceType *dev
         if ( gpioaf ) 
             for ( uint8_t j = 0; j < gpioaf->num; j++ ) {
                 if ( gpioaf->gpio[j].gpio )
-                    DBG_printf_indent("  AF  %c%02d%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
-                                      ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)                                 
+                    DBG_printf_indent("  AF  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioaf->gpio[j].gpio), HW_GetIdxFromPin(gpioaf->gpio[j].pin)
+                                      ,PRINTCOLON(gpioaf->gpio[j].dbg_name), PRINTNAME(gpioaf->gpio[j].dbg_name)
+                                      ,PRINTOWNERSHIP(remoteIdx, idx,gpioaf->gpio[j].gpio,gpioaf->gpio[j].pin)
                     );
             }
         if ( gpioio ) 
             for ( uint8_t j = 0; j < gpioio->num; j++ ) {
                 if ( gpioio->gpio[j].gpio )
-                    DBG_printf_indent("  IO  %c%02d%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
-                                      ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)                                 
+                    DBG_printf_indent("  IO  %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioio->gpio[j].gpio), HW_GetIdxFromPin(gpioio->gpio[j].pin)
+                                      ,PRINTCOLON(gpioio->gpio[j].dbg_name), PRINTNAME(gpioio->gpio[j].dbg_name)
+                                      ,PRINTOWNERSHIP(remoteIdx, idx,gpioio->gpio[j].gpio,gpioio->gpio[j].pin)
                     );
             }
         if ( gpioadc ) 
             for ( uint8_t j = 0; j < gpioadc->num; j++ ) {
                 if ( gpioadc->gpio[j].gpio )
-                    DBG_printf_indent("  ADC %c%02d%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
+                    DBG_printf_indent("  ADC %c%02d%s%s%s\n",HW_GetGPIOLetter(gpioadc->gpio[j].gpio), HW_GetIdxFromPin(gpioadc->gpio[j].pin) 
                                       ,PRINTCOLON(gpioadc->gpio[j].dbg_name), PRINTNAME(gpioadc->gpio[j].dbg_name)
+                                      ,PRINTOWNERSHIP(remoteIdx, idx,gpioadc->gpio[j].gpio,gpioadc->gpio[j].pin)
                     );
             }
       
         DBG_setIndentRel(-4);
-    } // if ( bLong )
+        } // if ( bLong )
 }
 
 void DBG_dump_devices(bool bLong)
@@ -103,7 +126,7 @@ void DBG_dump_devices(bool bLong)
     oldIndent = DBG_setIndentAbs(2);
     DBG_setPadLen(20);
     for ( uint32_t i = 0; i < act_devices; i++ ) if ( devCoreNum[i] == DEV_CORE_CM7 ) {
-        dump_one_device(i, bLong, devices[i]);
+        dump_one_device(0, i, bLong, devices[i]);
     }
     
     DBG_setIndentAbs(oldIndent);
@@ -112,12 +135,108 @@ void DBG_dump_devices(bool bLong)
     oldIndent = DBG_setIndentAbs(2);
     DBG_setPadLen(20);
     for ( uint32_t i = 0; i < act_devices; i++ ) if ( devCoreNum[i] == DEV_CORE_CM4 ) {
-        dump_one_device(i, bLong, devices[i]);
+        dump_one_device(1, i, bLong, devices[i]);
     } 
     
     DBG_setIndentAbs(oldIndent);
 
 }
+#define PUT_DEVICEIDX(r,d)      ((r) ? REMOTE_DEV_MASK | ((d)+1) : (d)+1)
+#define GET_DEVICEIDX(d)        ( (d & LOCAL_DEV_MASK) - 1 )
+#define GET_REMOTEFLAG(d)       ( d & REMOTE_DEV_MASK )
+#define GPIO_UNUSED             0x00
+
+/******************************************************************************
+ * Check, whether Pin "Pin" of GPIO port "gpio" is still unassigned
+ * if so, it is assigned to "devIdx" and true is returned
+ * if already assigned to any other device, false is returned
+ *****************************************************************************/
+bool AssignOnePinRemote( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+
+    // DEBUG_PRINTF("AssignOnePin: RmtIdx=%d, Dev=%s, GPIO%c%d\n",remoteIdx, devices[devIdx]->devName, HW_GetGPIOLetter(gpio),HW_GetIdxFromPin(pin));
+    
+    if ( gpios[gpioIdx][pinIdx] == GPIO_UNUSED ) {
+        gpios[gpioIdx][pinIdx] = PUT_DEVICEIDX(remoteIdx, devIdx);
+        return true;
+    } else {
+        uint32_t usedIdx = GET_DEVICEIDX(gpios[gpioIdx][pinIdx]);
+
+        DEBUG_PRINTF("GPIO%c%d of ",HW_GetGPIOLetter(gpio), HW_GetIdxFromPin(pin));
+        if ( remoteIdx ) DEBUG_PRINTF("remote "); 
+        DEBUG_PRINTF("device %s", devices[devIdx]->devName);
+        DEBUG_PRINTF(" already used in ");
+        if ( GET_REMOTEFLAG(gpios[gpioIdx][pinIdx])) DEBUG_PRINTF("remote "); 
+        DEBUG_PRINTF("device %s",devices[usedIdx]->devName);
+        DEBUG_PRINTF("\n");
+        
+        return false;
+    }
+}
+
+bool AssignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return AssignOnePinRemote(0, devIdx, gpio, pin );
+}
+
+
+/******************************************************************************
+ * returns true, if device owns that GPIO pin
+ *****************************************************************************/
+bool IsMyPinRemote( uint32_t remoteIdx, uint32_t devIdx,  GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+    
+    /* check ownership and release if owned */
+    return gpios[gpioIdx][pinIdx] == PUT_DEVICEIDX(remoteIdx, devIdx);
+}
+
+/******************************************************************************
+ * returns true, if device owns that GPIO pin
+ *****************************************************************************/
+bool IsMyPin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return IsMyPinRemote(0, devIdx, gpio, pin);
+}
+
+/******************************************************************************
+ * Deassign one GPIO pin from a device
+ * this is only possible, iff the device owned that pin before
+ *****************************************************************************/
+bool DeassignOnePinRemote( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
+    uint16_t pinIdx  = HW_GetIdxFromPin(pin);
+
+    /* Unowned pin can be deassigned without danger */
+    if ( gpios[gpioIdx][pinIdx] == GPIO_UNUSED ) {
+        return true;
+    } 
+    
+    /* check ownership and release if owned */
+    if ( gpios[gpioIdx][pinIdx] == PUT_DEVICEIDX(remoteIdx, devIdx) ) {
+        gpios[gpioIdx][pinIdx] = GPIO_UNUSED;
+        return true;
+    } else {
+        uint32_t usedIdx = GET_DEVICEIDX(gpios[gpioIdx][pinIdx]);
+        DEBUG_PRINTF("GPIO%c%d of ",HW_GetGPIOLetter(gpio), HW_GetIdxFromPin(pin));
+        if ( remoteIdx ) DEBUG_PRINTF("remote device %d", devIdx); else DEBUG_PRINTF("device %s", devices[devIdx]->devName);
+        DEBUG_PRINTF(" is owned by ");
+        if ( GET_REMOTEFLAG(gpios[gpioIdx][pinIdx])) DEBUG_PRINTF("remote device# %d",usedIdx); else DEBUG_PRINTF("device %s",devices[usedIdx]->devName);
+        DEBUG_PRINTF(" and cannot be deassigned\n");
+        
+        return false;
+    }
+}
+
+bool DeassignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return DeassignOnePinRemote(0, devIdx, gpio, pin);
+}
+#if 0
 
 /******************************************************************************
  * Check whether Pin "pin" of GPIO "gpio" is already contained in device list,
@@ -213,13 +332,8 @@ bool CheckOnePin( const HW_DeviceType *newdev, uint8_t newdevCore, GPIO_TypeDef 
     return true;
 }
 
-/******************************************************************************
- * Stub for CheckUniqueRemote from CM4 core
- *****************************************************************************/
-bool CheckUniqueRemote(const HW_DeviceType *dev)
-{
-    return CheckUnique( dev, DEV_CORE_CM4);
-}
+#endif
+
 
 /******************************************************************************
  * returns true, if hardwarwe address is not used by any other device
@@ -330,14 +444,6 @@ bool DeviceInitByIdx(uint32_t dev_idx, void *arg)
     }
 
 
-    /* check for unique pin assignments */
-    if (!CheckUnique(dev, DEV_CORE_CM7) ) {
-        #if DEBUG_MODE > 0
-            DEBUG_PRINTF("Device %s not initialized\n", dev->devName);
-        #endif
-        return false;
-    }
-
     /* try to init */
     if ( !dev->Init(dev) ) {
         DEBUG_PRINTF("DeviceInit: Init of Device %s failed!\n", dev->devName);
@@ -429,6 +535,20 @@ const HW_DeviceType *FindDevByBaseAddr(uint32_t dt, void *pBase )
     }
     return NULL;
 }
+
+/******************************************************************************
+ * return the index of the device list for a given device
+ * -1 will be returned when not foune
+ ******************************************************************************/
+int32_t GetDevIdx ( const HW_DeviceType *dev)
+{
+    for( uint8_t i = 0; i < act_devices; i++ ) {
+        if ( devices[i] == dev ) return i;
+    }
+    DEBUG_PUTS("Error: GetDevIdx: Device not found");
+    return -1;
+}
+
 #ifndef HW_DEBUG_UART
     #error "DEBUG_UART is not defined!"
 #endif
