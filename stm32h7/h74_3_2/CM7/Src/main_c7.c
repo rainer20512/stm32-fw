@@ -27,9 +27,6 @@
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
 #include "task.h"
-#include "message_buffer.h"
-#include "MessageBufferAMP.h"
-#include "ipc.h"
 #include "system/hw_util.h"
 #include "system/clockconfig.h"
 #include "eeprom.h"
@@ -48,8 +45,6 @@ extern uint32_t __SRAMUNCACHED_segment_start__;
 #define mainCHECK_TASK_PRIORITY			( configMAX_PRIORITIES - 2 )
 
 /* Private variables ---------------------------------------------------------*/
-static IPCMEM uint8_t StorageBuffer_data[mbaNUMBER_OF_CORE_2_TASKS][ mbaTASK_MESSAGE_BUFFER_SIZE ];
-static IPCMEM uint8_t StorageBuffer_back[ mbaTASK_MESSAGE_BUFFER_SIZE ];
 
 osSemaphoreId osSemaphore;
 /* Exported variables --------------------------------------------------------*/
@@ -83,12 +78,12 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 uint32_t LedToggle ( uint32_t duration, uint32_t num )
 {   uint32_t k = 0;
     for ( uint32_t i = 0; i < num; i++ ) {
-        BSP_LED_Toggle(LED2);
+        IO_UserLedToggle(num);
         for ( uint32_t j=0; j < duration * 2000; j++ ) {
             k += j;
             asm("nop");
         }
-        BSP_LED_Toggle(LED2);
+        IO_UserLedToggle(num);
         for ( uint32_t j=0; j < duration * 2000; j++ ) {
             k += j;
             asm("nop");
@@ -137,14 +132,11 @@ int main(void)
     /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
 
-    BSP_LED_Init(LED2); 
-    LedToggle(250,2);
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
     /* Init variables and structures for device handling */
     DevicesInit();
-
 
     #if USE_BASICTIMER > 0
         /* 
@@ -182,10 +174,6 @@ int main(void)
     /* Configure the system clock to 400 MHz */
     // SystemClock_Config();
 
-    BSP_LED_Init(LED1);
-    BSP_LED_Init(LED2);
-  
-
     STATUS(1);
 
     #if DEBUG_PROFILING > 0
@@ -200,16 +188,10 @@ int main(void)
     Init_DumpAndClearResetSource();
     STATUS(4);
 
-#if 0
-    /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
-    sensitive to rising edge : Configured only once */
-    HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
-    HAL_EXTI_EdgeConfig(EXTI_LINE1 , EXTI_RISING_EDGE);
+    /* Toggle LEDs to indicate system up and running with correct SYSTICK and frquency */
+    for ( uint32_t i = 0; i < IO_UseLedGetNum(); i++ )
+        IO_UserLedBlink(i, 2, 100);
 
-    HAL_NVIC_SetPriority(EXTI1_IRQn, 0xFU, 0U);
-    HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-#endif
-    
     MPU_Dump();
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
@@ -226,15 +208,6 @@ int main(void)
     #endif
 
     
-    /* 
-     * Write address of control message buffer to RTC backup ram address 0 
-     * from there it will be read upon startup from M4 core 
-     */
-    CTRL_HOOK_ENABLE_ACCESS();
-    CTRL_BLOCK_HOOK_PUT(AMPCtrl_Block);
-    MSGBUF_HOOK_PUT(AMP_DirectBuffer);
-    CTRL_HOOK_DISABLE_ACCESS();
-
     /* Define used semaphore */
     osSemaphoreDef(SEM);  
     /* Create the semaphore */
@@ -265,20 +238,6 @@ static void prvCore1InitTask( void *pvParameters )
 {
   
     UNUSED(pvParameters);
-
-    Ipc_CM7_Init();
-
-    /* Create control message buffer */
-    /* Create data message buffer */
-    for( uint32_t x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {
-        DataMessageBuffer(x) = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, StorageBuffer_data[x], &DataStreamBuffer(x));
-        configASSERT( DataMessageBuffer(x) );
-    }
-
-    DataMessageBuffer(2) = xMessageBufferCreateStatic( mbaTASK_MESSAGE_BUFFER_SIZE, StorageBuffer_back, &DataStreamBuffer(2));
-    configASSERT( DataMessageBuffer(2) );
-
-    AMPCtrl_Block.num_xfer_used = 3;
 
     /* Start system tasks */
     TaskInitAll();

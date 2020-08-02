@@ -40,20 +40,10 @@ r05:
   ldr r1, =__DTCM_segment_end__
 r06:
   cmp r0, r1
-  beq r07
-  str r2, [r0]
-  adds r0, r0, #4
-  b r06
-
-r07:
-  ldr r0, =__SRAM3_segment_start__
-  ldr r1, =__SRAM3_segment_end__
-r08:
-  cmp r0, r1
   beq r09
   str r2, [r0]
   adds r0, r0, #4
-  b r08
+  b r06
 
 r09:
   ldr r0, =__SRAM4_segment_start__

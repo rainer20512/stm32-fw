@@ -23,7 +23,8 @@
  * Board selection
  ********************************************************************************
  */ 
-#define STM32H745NUCLEO
+//#define STM32H745NUCLEO
+#define STM32H742REF
 
 /*
  ********************************************************************************
@@ -40,7 +41,7 @@
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             1
+#define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0
@@ -70,11 +71,11 @@
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_08MHZ_0WS    /*   8 MHz, source HSI, VOSrange3, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_16MHZ_0WS    /*  16 MHz, source HSI, VOSrange3, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_32MHZ_0WS    /*  32 MHz, source HSI, VOSrange3, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_64MHZ_1WS    /*  64 MHz, source HSI, VOSrange3, 1 WS */
+#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_64MHZ_1WS    /*  64 MHz, source HSI, VOSrange3, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_100MHZ_1WS   /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_200MHZ_2WS   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_300MHZ_2WS   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
-#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_400MHZ_3WS   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_400MHZ_3WS   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG0_480MHZ_4WS   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage */
 //#define USER_CLOCKCONFIG         CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
 
@@ -112,6 +113,13 @@
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
 #endif
+
+#if defined(STM32H742REF)
+    #define  HW_HAS_HSE_CRYSTAL
+    #undef  HW_HAS_HSE_BYPASS
+    #define  HW_HSE_FREQUENCY       16000000
+#endif
+
 
 /* Can we use an HSE Clock ? */
 #if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)

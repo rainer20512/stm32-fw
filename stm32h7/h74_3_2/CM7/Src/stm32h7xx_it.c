@@ -391,6 +391,39 @@ void DebugMon_Handler(void)
   #endif
 #endif
 
+#if defined(USART6) && defined(USE_USART6)
+    #if !defined(COM6_IRQHandler) 
+        #error "IRQ names not defined for USART6" 
+    #endif
+    void COM6_IRQHandler(void)
+
+  {
+    ProfilerPush(JOB_IRQ_UART);
+    UsartIRQHandler(&HandleCOM6);
+    ProfilerPop();
+  }
+  #if defined(COM6_USE_TX_DMA) || defined(COM6_USE_RX_DMA) 
+
+    #if defined(COM6_USE_TX_DMA)
+        void COM6_DMA_TX_IRQHandler(void) 
+        {
+            ProfilerPush(JOB_IRQ_UART);
+            HAL_DMA_IRQHandler(HandleCOM6.hTxDma);
+            ProfilerPop();
+        }
+    #endif
+    #if defined(COM6_USE_RX_DMA)
+        void COM6_DMA_RX_IRQHandler(void) 
+        {
+            ProfilerPush(JOB_IRQ_UART);
+            HAL_DMA_IRQHandler(HandleCOM6.hRxDma);
+            ProfilerPop();
+        }
+    #endif
+  #endif
+#endif
+
+
 #if defined(LPUART1) && defined(USE_LPUART1)
     #if !defined(COM9_IRQHandler) 
         #error "IRQ names not defined for LPUART1" 

@@ -198,7 +198,6 @@ void Init_DefineTasks(void)
 #endif
   TaskRegisterTask(task_init_rtc, task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
   TaskRegisterTask(NULL,          task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
-  TaskRegisterTask(NULL,          CM7_handle_remote,TASK_REMOTE_CM7,JOB_TASK_REMOTE,   rmtStack, RMT_STACK_SIZE, "CM4 remote task");
   TaskRegisterTask(NULL,          task_periodic,    TASK_PERIODIC,   JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
   TaskRegisterTask(task_init_adc, task_handle_adc,  TASK_ADC,        JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0

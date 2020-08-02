@@ -74,7 +74,7 @@
       <file file_name="flash_placement_CM7.xml" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="thumb_crt0_cm7.s" />
-      <file file_name="H743VI_MemoryMap.xml" />
+      <file file_name="H742VG_MemoryMap.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="src">
@@ -94,7 +94,6 @@
           <file file_name="CM7/Src/system/devices_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
-        <file file_name="CM7/Src/msg_direct_c7.c" />
       </folder>
       <folder Name="config">
         <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
@@ -131,9 +130,6 @@
       <file file_name="doc/Howto.txt" />
     </folder>
     <folder Name="Drivers">
-      <folder Name="BSP">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
-      </folder>
       <folder Name="STM32H7xx_HAL_Driver">
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
@@ -187,7 +183,6 @@
           <file file_name="../common_h7/Src/system/hw_util.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
-        <file file_name="../common_h7/Src/ipc.c" />
       </folder>
       <folder Name="inc">
         <file file_name="../common_h7/Inc/hardware.h" />
@@ -198,7 +193,6 @@
           <file file_name="../common_h7/Inc/task/minitask.h" />
         </folder>
         <file file_name="../common_h7/Inc/debug_pwr_rcc.h" />
-        <file file_name="../common_h7/Inc/ipc.h" />
         <folder Name="devconfig">
           <file file_name="../common_h7/Inc/config/adc_config.h" />
           <file file_name="../common_h7/Inc/config/can_config.h" />
@@ -211,7 +205,6 @@
           <file file_name="../common_h7/Inc/config/uart_config.h" />
           <file file_name="../common_h7/Inc/config/eth_config.h" />
         </folder>
-        <file file_name="../common_h7/Inc/msg_direct.h" />
       </folder>
       <folder Name="task">
         <file file_name="../common_h7/Src/task/minitask.c" />
@@ -302,7 +295,7 @@
   </project>
   <configuration
     Name="Common"
-    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
+    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H742xx;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
     c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0"
     gcc_enable_all_warnings="Yes" />

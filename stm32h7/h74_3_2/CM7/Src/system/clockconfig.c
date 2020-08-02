@@ -41,7 +41,6 @@
 #include "eeprom.h"
 #include "system/clockconfig.h"
 #include "system/timer_handler.h"
-#include "msg_direct.h"
 
 
 #if DEBUG_MODE > 0
@@ -398,7 +397,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
       RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
       RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
       #if defined(HW_HAS_HSE_CRYSTAL)
-        RCC_OscInitStruct->HSEState = RCC_HSE_ON;
+        RCC_OscInitStruct.HSEState = RCC_HSE_ON;
       #else 
         /* Bypass */
         RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
@@ -727,13 +726,6 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
         #if DEBUG_MODE > 0
             DEBUG_PUTS("ERR: One or more devices did not agree to new frequency!");
         #endif
-    }
-
-    /* when IPC communication is set up, Notify CM4 core about frequency change */
-    if ( Ipc_Is_Initialized() ) {
-        MSGD_DoClockChange();
-        if (!MSGD_WaitForRemoteClockChange() ) 
-            DEBUG_PUTS("Error: Clk change event to CM4 core timed out");
     }
 
     #if DEBUG_MODE > 0

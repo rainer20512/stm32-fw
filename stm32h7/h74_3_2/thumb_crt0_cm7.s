@@ -194,13 +194,9 @@ _start:
   movs r2, #0
   bl memory_set
 
-  /* RHB additional code to zero IPC and DMA memory */
+  /* RHB additional code to zero DMA memory */
   ldr r0, =__dmamem_start__
   ldr r1, =__dmamem_end__
-  movs r2, #0
-  bl memory_set
-  ldr r0, =__ipcmem_start__
-  ldr r1, =__ipcmem_end__
   movs r2, #0
   bl memory_set
   /* RHB end of inserted code */

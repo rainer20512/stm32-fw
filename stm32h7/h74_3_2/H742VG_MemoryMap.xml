@@ -25,6 +25,7 @@
   <MemorySegment start="0x38800000" name="BackupSRAM" size="0x1000" />
   <MemorySegment start="0x38000000" name="SRAM4" size="0x10000" />
   <MemorySegment start="0x30020000" name="SRAMUNCACHED" size="0x4000" />
+  <MemorySegment start="0x30020000" name="SRAM2" size="0x4000" />
   <MemorySegment start="0x30000000" name="SRAM1" size="0x8000" />
   <MemorySegment start="0x24000000" name="AXISRAM" size="0x60000" />
   <MemorySegment start="0x20000000" name="DTCM" size="0x20000" />
@@ -36,4 +37,5 @@
 <!-- DO NOT PLACE XML COMMENT LINES WITHIN FILE - PARSE WILL STOP HERE          /--->
 <!-- RHB use SRAM2 (16k) as uncached Memory for DMA                             /--->
 <!-- RHB use 128kB of DTCM as RAM                                               /--->
+<!-- RHB SRAM2 is an alias for SRAMUNCACHED, use SRAMUNCHACED                   /--->
 
