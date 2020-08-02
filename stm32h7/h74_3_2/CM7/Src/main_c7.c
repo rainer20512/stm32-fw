@@ -121,7 +121,9 @@ int main(void)
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
 
-
+    /* PWR-CR3 must be written initially once to be able to change the VOS selection */
+    PWR->CR3 = ( PWR_CR3_SCUEN | PWR_CR3_LDOEN );
+  
     /* 
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )

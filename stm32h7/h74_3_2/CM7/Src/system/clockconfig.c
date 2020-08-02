@@ -606,8 +606,19 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   /* Set VOS range to 0 when ahb clock > 225 MHz */
   /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
   /* For lower frequencies, select scale 2, scake 1 only for high requencies */
-  uint32_t vosrange = ( ahb_clock_khz > 220000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
-
+  #if defined(STM32H745xx)
+      /* Set VOS range to 0 when ahb clock > 225 MHz */
+      /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
+      /* For lower frequencies, select scale 2, scake 1 only for high requencies */
+      uint32_t vosrange = ( ahb_clock_khz > 225000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
+  #elif defined(STM32H742xx)
+      /* Set VOS range to 0 when ahb clock > 225 MHz */
+      /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
+      /* For lower frequencies, select scale 2, scake 1 only for high requencies */
+      uint32_t vosrange = ( ahb_clock_khz > 225000 ? PWR_REGULATOR_VOLTAGE_SCALE0 :  ahb_clock_khz > 140000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
+  #else
+      #error "No VOS range determination defined"
+  #endif
   /* calculate neccessary minimum flash latency */
   uint32_t flash_latency = GetFlashLatency(vosrange, ahb_clock_khz);
 

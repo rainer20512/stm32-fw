@@ -1,6 +1,6 @@
 /*
  ******************************************************************************
- * @file    hw_util.h
+ * @file    hw_util.c
  * @author  Rainer
  * @brief   Utility Functions for Hardware access for STM32H7 family
  *          This file is platform specific
@@ -17,16 +17,29 @@
 
 /* Private macro ------------------------------------------------------------------------*/
 
-/* Stop rtc when either M7 or M4 is in debug mode */
-#define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;  } while (0)
-/* Stop LPTIMERS when either M7 or M4 is in debug mode */
-#define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1;  \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;   \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;   \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;   \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;   \
-                                         } while (0)
-
+#if defined(STM32H745xx)
+    /* Stop rtc when either M7 or M4 is in debug mode */
+    #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;   DBGMCU->APB4FZ2 |=  DBGMCU_APB4FZ2_DBG_RTC;      } while (0)
+    /* Stop LPTIMERS when either M7 or M4 is in debug mode */
+    #define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1; DBGMCU->APB1LFZ2 |= DBGMCU_APB1LFZ2_DBG_LPTIM1; \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM2;  \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM3;  \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM4;  \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM5;  \
+                                             } while (0)
+#elif defined(STM32H742xx)
+    /* Stop rtc when either M7 or M4 is in debug mode */
+    #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;  } while (0)
+    /* Stop LPTIMERS when either M7 or M4 is in debug mode */
+    #define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1;  \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;   \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;   \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;   \
+                                                 DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;   \
+                                             } while (0)
+#else
+    #error "No definition for RTC and Timer behaviour during debug stop"
+#endif
 
 
 /* Public functions ---------------------------------------------------------------------*/
@@ -418,6 +431,7 @@ char HW_GetGPIOLetter(GPIO_TypeDef *gp)
  *****************************************************************************/
 void HW_InitJtagDebug(void)
 {
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
     // HAL_GPIO_DeInit(GPIOA, GPIO_PIN_13);
     // HAL_GPIO_DeInit(GPIOA, GPIO_PIN_14);
@@ -452,20 +466,31 @@ static const char *Get_DeviceName ( uint16_t devID )
         default:    return "Unknown Device";
     }
 }
-
-static const char *Get_PackageName( uint16_t package )
-{
-    switch(package&0b1111) {
-        case 0b00010: return "UFBGA169/LQFP176";
-        case 0b00011: return "LQFP144";
-        case 0b00110: return "LQFP176";
-        case 0b00111: return "UFBGA176";
-        case 0b01001: return "LQFP208";
-        case 0b01010: return "LQFP208";
-        default: return "Unknown Package";
+#if defined(STM32H745xx)
+    static const char *Get_PackageName( uint16_t package )
+    {
+        switch(package&0b1111) {
+            case 0b00010: return "UFBGA169/LQFP176";
+            case 0b00011: return "LQFP144";
+            case 0b00110: return "LQFP176";
+            case 0b00111: return "UFBGA176";
+            case 0b01001: return "LQFP208";
+            case 0b01010: return "LQFP208";
+            default: return "Unknown Package";
+        }
     }
-}
-
+#elif defined(STM32H742xx)
+    static const char *Get_PackageName( uint16_t package )
+    {
+        switch(package&0b111) {
+            case 0b0000: return "LQFP100";
+            case 0b0010: return "TQFP144";
+            case 0b0101: return "TQFP176/UFBGA176";
+            case 0b1000: return "LQFP208/TFBGA240";
+            default: return "Unknown Package";
+        }
+    }
+#endif
 char Get_RevisionName( uint16_t devID, uint16_t revID)
 {
     char work;

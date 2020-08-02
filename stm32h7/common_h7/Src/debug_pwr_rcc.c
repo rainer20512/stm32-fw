@@ -43,7 +43,7 @@
  *************************************************************
  */
 
-const char * const vos_txt[]={"Reserved","Scale 3: 0.95V - 1.05V", "Scale 2: 1.05V - 1.15V","Scale 1: 1.15V - 1.26V"};
+const char * const vos_txt[]={"Reserved","Scale 3: 0.95V - 1.05V", "Scale 2: 1.05V - 1.15V","Scale 1: 1.15V - 1.26V", "Overdrive Scale 0: 1.26 V - 1.40 V"};
 static const char* DBG_get_pwr_vos_txt(uint32_t sel)
 {
   if ( sel < sizeof(vos_txt)/sizeof(char *) ) 
@@ -52,6 +52,20 @@ static const char* DBG_get_pwr_vos_txt(uint32_t sel)
     return "Illegal";
 }
 
+static uint32_t get_vos_value (void)
+{
+#if defined(STM32H745xx)
+    return ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
+#elif defined(STM32H742xx)
+    /* VOSrange 0 is coded as VOSrange 1 PLUS ODEN bit in SYSCFG->PWRCR set */
+    uint32_t temp = ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
+    if ( temp == 0b11 ) 
+        if (READ_BIT(SYSCFG->PWRCR, SYSCFG_PWRCR_ODEN)) temp++;
+    return temp;
+#else
+    #error "No algorithm to determine current VOS range"
+#endif
+}
 #if 0
 const char * const lpms_txt[]={"Stop 0", "Stop 1", "Stop 2", "Standby" };
 static const char* DBG_get_pwr_cr1_lpms_txt(uint32_t sel)
@@ -173,7 +187,7 @@ static void DBG_dump_pwr_cpu1cr(void)
 static void DBG_dump_pwr_d3cr(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_textvalue("current VOS lvl", DBG_get_pwr_vos_txt((PWR->D3CR & PWR_D3CR_VOS_Msk) >> PWR_D3CR_VOS_Pos));
+  DBG_dump_textvalue("current VOS lvl", DBG_get_pwr_vos_txt(get_vos_value()));
   DBG_dump_bitvalue("VOS rdy", PWR->D3CR, PWR_D3CR_VOSRDY);
 }
 
@@ -543,7 +557,7 @@ static void DBG_dump_clocks(void)
   DBG_dump_number("PCLK1",  HAL_RCC_GetPCLK1Freq());
   DBG_dump_number("PCLK2",  HAL_RCC_GetPCLK2Freq());
   HAL_RCC_GetClockConfig(&v, &f_latency);
-  DBG_dump_textvalue("Vcore value", DBG_get_pwr_vos_txt(( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos) );
+  DBG_dump_textvalue("Vcore value", DBG_get_pwr_vos_txt(get_vos_value()));
   DBG_dump_number("Flash Latency", f_latency);  
 }
 
