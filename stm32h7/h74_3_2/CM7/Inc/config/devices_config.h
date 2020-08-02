@@ -323,7 +323,7 @@
     //#define USE_USART2_DEBUG
     
     #define USE_USART6
-    //#define COM6_USE_TX_DMA
+    #define COM6_USE_TX_DMA
     //#define COM6_USE_RX_DMA
     #define USART6_CLKSOURCE         RCC_USART6CLKSOURCE_HSI
     #define USE_USART6_DEBUG

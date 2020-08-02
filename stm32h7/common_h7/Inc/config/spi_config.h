@@ -268,6 +268,8 @@
 
 #elif defined(STM32H745NUCLEO)
     // RHB tbd
+#elif defined(STM32H742REF)
+    // RHB tbd
 #else
   #error "No valid device configuration in devices_config.h"
 #endif

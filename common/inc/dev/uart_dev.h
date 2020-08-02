@@ -83,6 +83,10 @@ typedef struct UsartHandleType {
   extern const HW_DeviceType HW_COM5;
   extern UsartHandleT HandleCOM5;
 #endif
+#if defined(USART6) && defined(USE_USART6)
+  extern const HW_DeviceType HW_COM6;
+  extern UsartHandleT HandleCOM6;
+#endif
 #if defined(LPUART1) && defined(USE_LPUART1)
   extern const HW_DeviceType HW_COM9;
   extern UsartHandleT HandleCOM9;
@@ -99,6 +103,12 @@ typedef struct UsartHandleType {
     #define HW_DEBUG_UART    HW_COM4
 #elif defined(USE_UART5_DEBUG)
     #define HW_DEBUG_UART    HW_COM5
+#elif defined(USE_USART6_DEBUG)
+    #define HW_DEBUG_UART    HW_COM6
+#elif defined(USE_UART7_DEBUG)
+    #define HW_DEBUG_UART    HW_COM7
+#elif defined(USE_UART8_DEBUG)
+    #define HW_DEBUG_UART    HW_COM8
 #elif defined(USE_LPUART1_DEBUG)
     #define HW_DEBUG_UART    HW_COM9
 #else

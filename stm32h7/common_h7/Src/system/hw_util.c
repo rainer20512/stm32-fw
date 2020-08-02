@@ -18,13 +18,13 @@
 /* Private macro ------------------------------------------------------------------------*/
 
 /* Stop rtc when either M7 or M4 is in debug mode */
-#define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;   DBGMCU->APB4FZ2 |=  DBGMCU_APB4FZ2_DBG_RTC;      } while (0)
+#define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;  } while (0)
 /* Stop LPTIMERS when either M7 or M4 is in debug mode */
-#define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1; DBGMCU->APB1LFZ2 |= DBGMCU_APB1LFZ2_DBG_LPTIM1; \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM2;  \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM3;  \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM4;  \
-                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM5;  \
+#define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1;  \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;   \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;   \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;   \
+                                             DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;   \
                                          } while (0)
 
 

@@ -147,7 +147,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 
       return true;
     }
-#elif defined(STM32H745xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx)
     static bool Usart_SetClockSource(const void *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -837,26 +837,25 @@ bool COM_AllowStop(const HW_DeviceType *self)
     };
 #endif
 
-
-#if defined(LPUART1) && defined(USE_LPUART1)
-    UsartHandleT HandleCOM9;
+#if defined(USART6) && defined(USE_USART6)
+    UsartHandleT HandleCOM6;
 
     static const HW_GpioList_AF gpio_com6 = {
         .num = 2,
-        .gpio = {COM9_TX, COM9_RX} ,
+        .gpio = {COM6_TX, COM6_RX} ,
     };
 
-    #if defined(COM9_USE_TX_DMA)
+    #if defined(COM6_USE_TX_DMA)
         static DMA_HandleTypeDef hdma_com6_tx;
-        static const HW_DmaType dmatx_com6 = { &hdma_com6_tx, COM9_TX_DMA };
+        static const HW_DmaType dmatx_com6 = { &hdma_com6_tx, COM6_TX_DMA };
     #endif
-    #if defined(COM9_USE_RX_DMA)
+    #if defined(COM6_USE_RX_DMA)
         static DMA_HandleTypeDef hdma_com6_rx;
-        static const HW_DmaType dmarx_com6 = { &hdma_com6_rx, COM9_RX_DMA };
+        static const HW_DmaType dmarx_com6 = { &hdma_com6_rx, COM6_RX_DMA };
     #endif
 
     static const USART_AdditionalDataType additional_com6 = {
-        &HandleCOM9,
+        &HandleCOM6,
         DEBUG_BAUDRATE,
         UART_STOPBITS_1,
         UART_PARITY_NONE,
@@ -865,24 +864,82 @@ bool COM_AllowStop(const HW_DeviceType *self)
 
     static const HW_IrqList irq_com6 = {
         .num = 1,
+        .irq = { COM6_IRQ, },
+    };
+
+    const HW_DeviceType HW_COM6 = {
+        .devName        = "COM6",
+        .devBase        = USART6,
+        .devGpioAF      = &gpio_com6,
+        .devGpioIO      = NULL,
+        .devType        =  HW_DEVICE_UART,
+        .devData        = &additional_com6,
+        .devIrqList     = &irq_com6,
+        #if defined(COM6_USE_TX_DMA)
+            .devDmaTx = &dmatx_com6,
+        #else
+            .devDmaTx = NULL,
+        #endif
+        #if defined(COM6_USE_RX_DMA)
+            .devDmaRx = &dmarx_com6,
+        #else
+            .devDmaRx = NULL,
+        #endif
+
+        .Init           = COM_Init,
+        .DeInit         = COM_DeInit,
+        .OnFrqChange    = Usart_OnFrqChange,
+        .AllowStop      = COM_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif
+
+#if defined(LPUART1) && defined(USE_LPUART1)
+    UsartHandleT HandleCOM9;
+
+    static const HW_GpioList_AF gpio_com9 = {
+        .num = 2,
+        .gpio = {COM9_TX, COM9_RX} ,
+    };
+
+    #if defined(COM9_USE_TX_DMA)
+        static DMA_HandleTypeDef hdma_com9_tx;
+        static const HW_DmaType dmatx_com9 = { &hdma_com9_tx, COM9_TX_DMA };
+    #endif
+    #if defined(COM9_USE_RX_DMA)
+        static DMA_HandleTypeDef hdma_com9_rx;
+        static const HW_DmaType dmarx_com9 = { &hdma_com9_rx, COM9_RX_DMA };
+    #endif
+
+    static const USART_AdditionalDataType additional_com9 = {
+        &HandleCOM9,
+        DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
+    };
+
+    static const HW_IrqList irq_com9 = {
+        .num = 1,
         .irq = { COM9_IRQ, },
     };
 
     const HW_DeviceType HW_COM9 = {
         .devName        = "COM9",
         .devBase        = LPUART1,
-        .devGpioAF      = &gpio_com6,
+        .devGpioAF      = &gpio_com9,
         .devGpioIO      = NULL,
         .devType        =  HW_DEVICE_UART,
-        .devData        = &additional_com6,
-        .devIrqList     = &irq_com6,
+        .devData        = &additional_com9,
+        .devIrqList     = &irq_com9,
         #if defined(COM9_USE_TX_DMA)
-            .devDmaTx = &dmatx_com6,
+            .devDmaTx = &dmatx_com9,
         #else
             .devDmaTx = NULL,
         #endif
         #if defined(COM9_USE_RX_DMA)
-            .devDmaRx = &dmarx_com6,
+            .devDmaRx = &dmarx_com9,
         #else
             .devDmaRx = NULL,
         #endif

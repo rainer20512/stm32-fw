@@ -118,10 +118,17 @@ static void DBG_dump_pwr_cr3(void)
   DBG_dump_bitvalue("VddUSB rdy", PWR->CR3, PWR_CR3_USB33RDY);
   DBG_dump_bitvalue("VddUSB Regulator on", PWR->CR3, PWR_CR3_USBREGEN);
   DBG_dump_bitvalue("VddUSB V. detect on", PWR->CR3, PWR_CR3_USB33DEN);
+#if defined(PWR_CR3_SMPSEXTRDY)
   DBG_dump_bitvalue("Ext. SMPS rdy", PWR->CR3, PWR_CR3_SMPSEXTRDY);
+#endif
+#if defined(PWR_CR3_SCUEN)
+  DBG_dump_bitvalue("Supply upd enable", PWR->CR3, PWR_CR3_SCUEN);
+#endif
   DBG_dump_textvalue("Vbat chrg resistor", READ_BIT(PWR->CR3, PWR_CR3_VBRS) ? "1k5" : "5k0" );
   DBG_dump_bitvalue("Vbat chrg enable", PWR->CR3, PWR_CR3_VBE);
+#if defined(PWR_CR3_SMPSEN)
   DBG_dump_bitvalue("SMPS stepdown enable", PWR->CR3, PWR_CR3_SMPSEN);
+#endif
   DBG_dump_bitvalue("LDO enable", PWR->CR3, PWR_CR3_LDOEN);
   DBG_dump_bitvalue("PWR mgmt bypass", PWR->CR3, PWR_CR3_BYPASS);
 }
@@ -131,31 +138,37 @@ static void DBG_dump_pwr_cpu1cr(void)
 {
   DBG_setPadLen(24);
   DBG_dump_textvalue("D3 Stop", READ_BIT(PWR->CPUCR, PWR_CPUCR_RUN_D3) ? "keep running" : "Stop when D1 stops" );    
+#if defined(PWR_CPUCR_HOLD2)
   DBG_dump_bitvalue("Hold CPU2 after Stop", PWR->CPUCR, PWR_CPUCR_HOLD2);
+#endif
   DBG_dump_bitvalue("D2 standby flag", PWR->CPUCR, PWR_CPUCR_SBF_D2);
   DBG_dump_bitvalue("D1 standby flag", PWR->CPUCR, PWR_CPUCR_SBF_D1);
   DBG_dump_bitvalue("System standby flag", PWR->CPUCR, PWR_CPUCR_SBF);
   DBG_dump_bitvalue("System stop flag", PWR->CPUCR, PWR_CPUCR_STOPF);
+#if defined(PWR_CPUCR_HOLD2F)
   DBG_dump_bitvalue("D2 on hold flag", PWR->CPUCR, PWR_CPUCR_HOLD2F);
+#endif
   DBG_dump_textvalue("D3 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D3) ? "allow Standby" : "continue StopMode" );    
   DBG_dump_textvalue("D2 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D2) ? "allow Standby" : "continue StopMode" );    
   DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
 }
 
-static void DBG_dump_pwr_cpu2cr(void)
-{
-  DBG_setPadLen(24);
-  DBG_dump_textvalue("D3 Stop", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_RUN_D3) ? "keep running" : "Stop when D2 stops" );    
-  DBG_dump_bitvalue("Hold CPU1 after Stop", PWR->CPU2CR, PWR_CPU2CR_HOLD1);
-  DBG_dump_bitvalue("D2 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D2);
-  DBG_dump_bitvalue("D1 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D1);
-  DBG_dump_bitvalue("System standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF);
-  DBG_dump_bitvalue("System stop flag", PWR->CPU2CR, PWR_CPU2CR_STOPF);
-  DBG_dump_bitvalue("D1 on hold flag", PWR->CPU2CR, PWR_CPU2CR_HOLD1F);
-  DBG_dump_textvalue("D3 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D3) ? "allow Standby" : "continue StopMode" );    
-  DBG_dump_textvalue("D2 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D2) ? "allow Standby" : "continue StopMode" );    
-  DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
-}
+#if defined(STM32H745xx)
+    static void DBG_dump_pwr_cpu2cr(void)
+    {
+      DBG_setPadLen(24);
+      DBG_dump_textvalue("D3 Stop", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_RUN_D3) ? "keep running" : "Stop when D2 stops" );    
+      DBG_dump_bitvalue("Hold CPU1 after Stop", PWR->CPU2CR, PWR_CPU2CR_HOLD1);
+      DBG_dump_bitvalue("D2 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D2);
+      DBG_dump_bitvalue("D1 standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF_D1);
+      DBG_dump_bitvalue("System standby flag", PWR->CPU2CR, PWR_CPU2CR_SBF);
+      DBG_dump_bitvalue("System stop flag", PWR->CPU2CR, PWR_CPU2CR_STOPF);
+      DBG_dump_bitvalue("D1 on hold flag", PWR->CPU2CR, PWR_CPU2CR_HOLD1F);
+      DBG_dump_textvalue("D3 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D3) ? "allow Standby" : "continue StopMode" );    
+      DBG_dump_textvalue("D2 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D2) ? "allow Standby" : "continue StopMode" );    
+      DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPU2CR, PWR_CPU2CR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
+    }
+#endif
 
 static void DBG_dump_pwr_d3cr(void)
 {
@@ -238,12 +251,14 @@ void DBG_dump_powersetting(void)
       DBG_setIndentRel(+2);
       DBG_dump_pwr_cpu1cr();
       DBG_setIndentRel(-2);
- 
+
+#if defined(STM32H745xx) 
       DBG_printf_indent("PWR: CPU2 Control Register\n" );
       DBG_setIndentRel(+2);
       DBG_dump_pwr_cpu2cr();
       DBG_setIndentRel(-2);
- 
+#endif 
+
       DBG_printf_indent("PWR: D3 Control Register\n" );
       DBG_setIndentRel(+2);
       DBG_dump_pwr_d3cr();
@@ -610,7 +625,11 @@ void DBG_dump_when_on( const char *txt, uint32_t d1, uint32_t c1, uint32_t c2, u
         append = " CM4";
     else 
         append = "";
-    DBG_dump_onoffvalue2(txt, d1, bitmask, append);
+
+    if ( *append )
+        DBG_dump_onoffvalue2(txt, d1, bitmask, append);
+    else
+        DBG_dump_onoffvalue(txt, d1, bitmask );
 }
 
 /*
@@ -635,7 +654,9 @@ void DBG_dump_rcc_ahb1enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DBG_dump_when_on ("ETH1 Rx Clk",    d1, c1, c2, RCC_AHB1ENR_ETH1RXEN);  
   DBG_dump_when_on ("ETH1 Tx Clk",    d1, c1, c2, RCC_AHB1ENR_ETH1TXEN);  
   DBG_dump_when_on ("ETH1 MAC Clk",   d1, c1, c2, RCC_AHB1ENR_ETH1MACEN);  
+#if defined(RCC_AHB1ENR_ARTEN)
   DBG_dump_when_on ("ART Clk",        d1, c1, c2, RCC_AHB1ENR_ARTEN);  
+#endif
   DBG_dump_when_on ("ADC1,2 Clk",     d1, c1, c2, RCC_AHB1ENR_ADC12EN);  
   DBG_dump_when_on ("DMA2 Clk",       d1, c1, c2, RCC_AHB1ENR_DMA2EN);  
   DBG_dump_when_on ("DMA1 Clk",       d1, c1, c2, RCC_AHB1ENR_DMA1EN);
@@ -671,10 +692,10 @@ void DBG_dump_rcc_ahb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB3LPENR raw " : "C1_AHB3ENR raw ", c1 );  
   DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB3LPENR raw " : "C2_AHB3ENR raw ", c2 );  
 
-  DBG_dump_when_on ("AXISRAM Clk",  d1, c1, c2, RCC_AHB3ENR_AXISRAMEN);  
-  DBG_dump_when_on ("ITCM Clk",     d1, c1, c2, RCC_AHB3ENR_ITCMEN);  
-  DBG_dump_when_on ("DTCM1 Clk",    d1, c1, c2, RCC_AHB3ENR_DTCM1EN);  
-  DBG_dump_when_on ("DTCM2 Clk",    d1, c1, c2, RCC_AHB3ENR_DTCM2EN);  
+  DBG_dump_when_on ("AXISRAM Clk",  d1, c1, c2, RCC_AHB3LPENR_AXISRAMLPEN);  
+  DBG_dump_when_on ("ITCM Clk",     d1, c1, c2, RCC_AHB3LPENR_ITCMLPEN);  
+  DBG_dump_when_on ("DTCM1 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM1LPEN);  
+  DBG_dump_when_on ("DTCM2 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM2LPEN);  
   DBG_dump_when_on ("SDMMC1 Clk",   d1, c1, c2, RCC_AHB3ENR_SDMMC1EN);  
   DBG_dump_when_on ("QSPI Clk",   d1, c1, c2, RCC_AHB3ENR_QSPIEN);  
   DBG_dump_when_on ("FMC Clk",   d1, c1, c2, RCC_AHB3ENR_FMCEN);  
@@ -748,8 +769,10 @@ void DBG_dump_rcc_apb1lenr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSlee
   DBG_dump_when_on ("USART2 Clk",   d1, c1, c2, RCC_APB1LENR_USART2EN);  
   DBG_dump_when_on ("SPDIFRX Clk",  d1, c1, c2, RCC_APB1LENR_SPDIFRXEN);  
   DBG_dump_when_on ("SPI3 Clk",     d1, c1, c2, RCC_APB1LENR_SPI3EN);  
-  DBG_dump_when_on ("SPI2 Clk",     d1, c1, c2, RCC_APB1LENR_SPI2EN);  
+  DBG_dump_when_on ("SPI2 Clk",     d1, c1, c2, RCC_APB1LENR_SPI2EN); 
+#if defined(WWDG2)
   DBG_dump_when_on ("WWDG2 Clk",    d1, c1, c2, RCC_APB1LENR_WWDG2EN);  
+#endif
   DBG_dump_when_on ("LPTIM1 Clk",   d1, c1, c2, RCC_APB1LENR_LPTIM1EN);  
   DBG_dump_when_on ("TIM14 Clk",    d1, c1, c2, RCC_APB1LENR_TIM14EN);  
   DBG_dump_when_on ("TIM13 Clk",    d1, c1, c2, RCC_APB1LENR_TIM13EN);  
@@ -827,9 +850,13 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 #endif /* #if DEBUG_DUMP_PERCLK > 0 */
 
 
-
-#define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
-
+#if defined(STM32H745xx)
+    #define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
+#elif defined(STM32H742xx)
+    #define MK_3ARGS(a)     RCC->a, 0, 0 
+#else
+    #error "No RCC domain mapping defined"
+#endif
 void DBG_dump_peripheralclocksetting(bool bDumpAll)
 {
 

@@ -85,6 +85,8 @@ void TimerWatchdogReset_Internal(uint16_t num_of_ms, IWDG_TypeDef *myWD);
 void TimerWatchdogReset(uint16_t num_of_ms)
 {
    TimerWatchdogReset_Internal(num_of_ms, IWDG1);
+#if defined(IWDG2)
    TimerWatchdogReset_Internal(num_of_ms, IWDG2);
+#endif
 }
 

@@ -227,6 +227,53 @@
 #endif // COM5
 
 /************************************************************************
+ * Definition for USART6 clock resources
+ * USART6 : TX:[PC6,PG14] RX:[PC7,PG9]
+
+ */
+#ifdef USE_USART6
+  #define COM6                           USART6
+ 
+  /* Definition for COM6 Pins
+   * Alternatives for USART6 : 
+   TX:[PA9, PB6] RX:[PA10, PB7]
+   * ALTN1   TX:PG14  RX:PG9   AF7
+   * DEFAULT TX:PC7   RX:PC7   AF7
+   */
+  #ifdef USE_USART6_ALTN1
+    /* PG14/PG9 with AF7 */
+    #define COM6_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
+    #define COM6_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Rx" }
+  #else
+    /* DEFAULT TX:PB6  RX:PB7  AF8   */
+    #define COM6_TX                        { GPIO_PIN_6, GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
+    #define COM6_RX                        { GPIO_PIN_7, GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
+  #endif
+
+  #ifdef COM6_USE_TX_DMA
+    /* Definition for USART3 TX DMA */
+    #define COM6_TX_DMA                    DMA1_Stream4, DMA_REQUEST_USART6_TX, DMA1_Stream4_IRQn, DMA_PRIORITY_MEDIUM 
+    #define COM6_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
+  #endif
+  #ifdef COM6_USE_RX_DMA
+    /* Definition for USART3 RX DMA */
+    #define COM6_RX_DMA                    DMA1_Stream6, DMA_REQUEST_USART6_RX, DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
+    #define COM6_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
+  #endif
+
+  /* Definition for COM9's NVIC */
+  #if defined(USE_USART6_DEBUG)
+    #define COM6_IRQ                          { USART6_IRQn, DEBUG_IRQ_PRIO, 0    }
+  #else
+    #define COM6_IRQ                          { USART6_IRQn, USART_IRQ_PRIO, 0    }
+  #endif
+  #define COM6_IRQHandler                     USART6_IRQHandler
+
+#endif // COM9
+
+/* USART6, UART7, UART8 tbd */
+
+/************************************************************************
  * Definition for LPUART1 clock resources
  * LPUART1 : TX:[PB11,PC1,PG7] RX:[PB10,PC0,PG8]
 
