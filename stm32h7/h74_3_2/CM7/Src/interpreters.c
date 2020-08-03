@@ -1772,6 +1772,192 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(CAN);
 #endif
 
+#if USE_FMC > 0
+
+    #define BUFFER_SIZE         ((uint32_t)0x8000)
+    #define WRITE_READ_ADDR     ((uint32_t)0x0800)
+    #define SRAM_BANK_ADDR      ((uint32_t)0x60000000)
+
+    static uint16_t AXISMEM aTxBuffer[BUFFER_SIZE];
+    static uint16_t AXISMEM aRxBuffer[BUFFER_SIZE];
+
+    /* Status variables */
+    __IO bool uwWriteReadStatus = 0;
+
+    /* Counter index */
+    static uint32_t uwIndex = 0;
+
+    static void Fill_Buffer(uint16_t *pBuffer, uint32_t uwBufferLength, uint16_t uwOffset)
+    {
+      uint16_t tmpIndex = 0;
+
+      /* Put in global buffer different values */
+      for (tmpIndex = 0; tmpIndex < uwBufferLength; tmpIndex++)
+            pBuffer[tmpIndex] = uwOffset;
+      }
+
+    static bool Buffercmp(uint16_t *pBuffer1, uint16_t *pBuffer2, uint16_t BufferLength)
+    {
+      uint16_t i = 0;
+      while (i < BufferLength)
+      {
+        if (*pBuffer1 != *pBuffer2)
+        {
+          DEBUG_PRINTF("@0x%04x: Expected 0x%04x, got 0x%04x\n", i*2,*pBuffer1, *pBuffer2 );
+          return false;
+        }
+
+        pBuffer1++;
+        pBuffer2++;
+        i++;
+      }
+
+      return true;
+    }
+
+
+    static void FMC_Sram_TestWord(uint32_t ofs, uint16_t pattern)
+    {
+        uint16_t *extmemptr = (uint16_t *)(SRAM_BANK_ADDR + ofs );
+
+        
+        /* Fill the buffer to write */
+        Fill_Buffer(aTxBuffer, BUFFER_SIZE, pattern);
+
+        /* Write data to the SRAM memory */
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
+        {
+        *(extmemptr+uwIndex) = aTxBuffer[uwIndex];
+        }
+
+        /* Read back data from the SRAM memory */
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
+        {
+        aRxBuffer[uwIndex] = *(extmemptr+uwIndex);
+        }
+
+
+        /*##-3- Checking data integrity ############################################*/
+        uwWriteReadStatus = Buffercmp(aTxBuffer, aRxBuffer, BUFFER_SIZE);
+
+        if(!uwWriteReadStatus) {
+            DEBUG_PRINTTS("Sram test @0x%08x failed\n",SRAM_BANK_ADDR + ofs );
+        } else {
+            DEBUG_PRINTTS("Sram test @0x%08x ok\n",SRAM_BANK_ADDR + ofs);
+
+        }
+    }
+
+    static void FMC_Sram_TestByte(uint32_t ofs, uint16_t pattern)
+    {
+        uint8_t *extmemptr = (uint8_t *)(SRAM_BANK_ADDR + ofs );
+        uint8_t *srcptr;
+        
+        /* Fill the buffer to write */
+        Fill_Buffer(aTxBuffer, BUFFER_SIZE, pattern);
+
+        srcptr    = (uint8_t *)aTxBuffer;
+        /* Write data to the SRAM memory */
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE*2; uwIndex++)
+        {
+            *(extmemptr+uwIndex) = *(srcptr++);
+        }
+
+        /* Read back data from the SRAM memory */
+        uint8_t *destptr = (uint8_t *)aRxBuffer;
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE*2; uwIndex++)
+        {
+            *(destptr++) = *(extmemptr+uwIndex);
+        }
+
+
+        /*##-3- Checking data integrity ############################################*/
+        uwWriteReadStatus = Buffercmp(aTxBuffer, aRxBuffer, BUFFER_SIZE);
+
+        if(!uwWriteReadStatus) {
+            DEBUG_PRINTTS("Sram test @0x%08x failed\n",SRAM_BANK_ADDR + ofs );
+        } else {
+            DEBUG_PRINTTS("Sram test @0x%08x ok\n",SRAM_BANK_ADDR + ofs);
+
+        }
+    }
+
+
+    static bool FMC_Menu ( char *cmdline, size_t len, const void * arg )
+    {
+      char *word;
+      size_t wordlen;
+      uint32_t num;
+      uint32_t addr;
+      bool ret;
+      
+      UNUSED(cmdline);UNUSED(len);
+
+      switch((uint32_t)arg) {
+        case 0:
+            FMC_DumpGeometry();
+            break;
+        case 1:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Sram test <n> - test <n> blocks \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            for ( uint32_t i = 0; i < num; i++ ) {
+                FMC_Sram_TestWord(i*BUFFER_SIZE, 0x0000);
+                FMC_Sram_TestWord(i*BUFFER_SIZE, 0xFFFF);
+            }
+            break;
+        case 2:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: Sram test <n> <pattern> - test <n> blocks w pattern <pattern> \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            for ( uint32_t i = 0; i < num; i++ ) {
+                FMC_Sram_TestWord(i*BUFFER_SIZE, (uint16_t)addr);
+            }
+            break;
+        case 3:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: SramB test <n> <pattern> - test <n> blocks w BYTE pattern <pattern> \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            for ( uint32_t i = 0; i < num; i++ ) {
+                FMC_Sram_TestByte(i*BUFFER_SIZE, (uint16_t)addr);
+            }
+            break;
+        default:
+          DEBUG_PUTS("CAN_Menu: command not implemented");
+      } /* end switch */
+
+      return true;
+    }
+
+    static const char *pmtFMC (void)
+    {
+      return "Fmc";
+    }
+
+
+    static const CommandSetT cmdFMC[] = {
+        { "Dump",                     ctype_fn, .exec.fn = FMC_Menu, VOID(0), "Dump FMC Block Settings" },
+        { "SRAM Test",                ctype_fn, .exec.fn = FMC_Menu, VOID(1), "Do FMC SRAM test 0/1" },
+        { "SRAM Test pattern",        ctype_fn, .exec.fn = FMC_Menu, VOID(2), "Do FMC SRAM test w pattern" },
+        { "SRAM Byte Test pattern",   ctype_fn, .exec.fn = FMC_Menu, VOID(3), "Do FMC SRAM bytewise test w pattern" },
+    };
+    ADD_SUBMODULE(FMC);
+#endif
+
+
 #include "eeprom.h"
 
 /*********************************************************************************
@@ -1875,6 +2061,9 @@ static const CommandSetT cmdBasic[] = {
 #endif
 #if USE_CAN > 0
   { "CAN test",        ctype_sub, .exec.sub = &mdlCAN,        0,       "Test CAN functions" },
+#endif
+#if USE_FMC > 0
+  { "FMC test",        ctype_sub, .exec.sub = &mdlFMC,        0,       "Test FMC functions" },
 #endif
 };
 ADD_SUBMODULE(Basic);

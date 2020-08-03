@@ -14,6 +14,8 @@
     <ProgramSection alignment="4" load="Yes" runin=".tdata_run" name=".tdata" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:AXISRAM);SRAMA;RAMA">
+    <!-- Can be used as normal ram memory /-->
+    <ProgramSection alignment="4" load="No" name=".axismem" />
   </MemorySegment>
   <!-- Use 128kB DTCM RAM as main RAM /-->
   <MemorySegment name="$(RAM_NAME:DTCM);RAMDTCM">

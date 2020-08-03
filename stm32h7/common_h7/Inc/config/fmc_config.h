@@ -117,7 +117,10 @@
     #define FMC_CTL_NOE                     { GPIO_PIN_4,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NOE"  }
     #define FMC_CTL_NWE                     { GPIO_PIN_5,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NWE"  }
     #define FMC_CTL_NE1                     { GPIO_PIN_7,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE1"  }
+//  #define FMC_CTL_NE1                     { GPIO_PIN_7,  GPIOC, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE1"  }
     #define FMC_CTL_NE2                     { GPIO_PIN_9,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE2"  }
+//  #define FMC_CTL_NE2                     { GPIO_PIN_8,  GPIOC, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE2"  }
+//  #define FMC_CTL_NE3                     { GPIO_PIN_7,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE3"  }
     #define FMC_CTL_NE3                     { GPIO_PIN_10, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE3"  }
     #define FMC_CTL_NE4                     { GPIO_PIN_12, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE4"  }
     #define FMC_CTL_NBL0                    { GPIO_PIN_0,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL1" }

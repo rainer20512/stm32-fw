@@ -152,6 +152,9 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sram.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_nor.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">
@@ -204,6 +207,7 @@
           <file file_name="../common_h7/Inc/config/timer_config.h" />
           <file file_name="../common_h7/Inc/config/uart_config.h" />
           <file file_name="../common_h7/Inc/config/eth_config.h" />
+          <file file_name="../common_h7/Inc/config/fmc_config.h" />
         </folder>
       </folder>
       <folder Name="task">
@@ -234,6 +238,7 @@
             <file file_name="../../common/src/dev/qspi/mx25r6435f.h" />
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
+          <file file_name="../../common/src/dev/fmc_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -271,6 +276,7 @@
           <file file_name="../../common/inc/dev/timer_dev.h" />
           <file file_name="../../common/inc/dev/uart_dev.h" />
           <file file_name="../../common/inc/dev/eth_dev.h" />
+          <file file_name="../../common/inc/dev/fmc_dev.h" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />

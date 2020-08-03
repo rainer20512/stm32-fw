@@ -163,7 +163,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="CM7/Inc/eeprom.h" selected="0" top="87" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="434" useTextEdit="1" useBinaryEdit="0" left="0" path="../common_h7/Src/system/hw_util.c" selected="1" top="389" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="475" useTextEdit="1" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" selected="0" top="448" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="657" useTextEdit="1" useBinaryEdit="0" left="0" path="../../common/src/rtc.c" selected="0" top="601" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="657" useTextEdit="1" useBinaryEdit="0" left="0" path="../../common/src/rtc.c" selected="0" top="601" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/src/dev" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

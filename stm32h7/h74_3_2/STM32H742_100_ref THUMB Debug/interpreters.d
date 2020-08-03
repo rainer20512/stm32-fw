@@ -40,6 +40,9 @@ STM32H742_100_ref\ THUMB\ Debug/interpreters.o: \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_flash.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_flash_ex.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_hsem.h \
+ E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_sram.h \
+ E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_ll_fmc.h \
+ E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_nor.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_i2c.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_i2c_ex.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_iwdg.h \
@@ -70,7 +73,8 @@ STM32H742_100_ref\ THUMB\ Debug/interpreters.o: \
  ../../common/inc/dev/devices.h ../../common/inc/dev/uart_dev.h \
  ../../common/inc/dev/io_dev.h ../../common/inc/system/exti_handler.h \
  ../../common/inc/dev/spi_dev.h ../../common/inc/dev/adc_dev.h \
- ../../common/inc/dev/qspi_dev.h ../common_h7/inc/system/hw_util.h \
- ../../common/inc/dev/devices.h ../../common/inc/debug_sram.h \
- ../../common/inc/debug_gpio_exti.h ../common_h7/inc/debug_pwr_rcc.h \
- ../../common/inc/system/periodic.h CM7/Inc/eeprom.h
+ ../../common/inc/dev/qspi_dev.h ../../common/inc/dev/fmc_dev.h \
+ ../common_h7/inc/system/hw_util.h ../../common/inc/dev/devices.h \
+ ../../common/inc/debug_sram.h ../../common/inc/debug_gpio_exti.h \
+ ../common_h7/inc/debug_pwr_rcc.h ../../common/inc/system/periodic.h \
+ CM7/Inc/eeprom.h

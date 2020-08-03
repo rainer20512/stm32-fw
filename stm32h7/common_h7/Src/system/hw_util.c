@@ -250,9 +250,13 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(FDCAN1) && defined(USE_CAN1) 
    { FDCAN1, &RCC->APB1HENR, RCC_APB1HENR_FDCANEN_Pos, &RCC->APB1HRSTR, RCC_APB1HRSTR_FDCANRST_Pos, COMBINE('C', 1) },
 #endif
-/* ETH ---------------------------------------------------------------------------------------------------------------------- */
+/* ETH -------------------------------------------------------------------------------------------------------------------- */
 #if defined(USE_ETH) && defined(ETH)
    { ETH, &RCC->APB1HENR, RCC_AHB1ENR_ETH1MACEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_ETH1MACRST_Pos, COMBINE('E', 1) },
+#endif
+/* FMC -------------------------------------------------------------------------------------------------------------------- */
+#if defined(FMC_Bank1_R) && defined(USE_FMC) 
+   { FMC_Bank1_R, &RCC->AHB3ENR, RCC_AHB3ENR_FMCEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST_Pos, COMBINE('F', 1) },
 #endif
 
 };

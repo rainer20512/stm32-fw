@@ -136,7 +136,15 @@ void Init_OtherDevices(void)
             DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
       }
   #endif
-
+  #if defined(FMC_Bank1_R) && USE_FMC > 0 
+      void FMC_PostInit( const HW_DeviceType *self, void *args);
+      dev_idx = AddDevice(&HW_FMC, FMC_PostInit, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init FMC-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }       
+  #endif
 }
 
 #include "task/minitask.h"
