@@ -140,7 +140,7 @@ static void QSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
     //#define  QSpiGetClockSpeed()            GetPerClkFrequency()
     #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #else 
-    #error "No usart clock assignment defined"
+    #error "No qspi clock assignment defined"
 #endif
 
 /*
