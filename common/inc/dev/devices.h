@@ -56,6 +56,13 @@
 
 /* Exported constants --------------------------------------------------------*/
 
+/* max. number of devices we can handle */
+#define MAX_DEV                 16             
+
+/* device number for an "unregistered device, used for test purposes when     */
+/* toggling pins hardcoded and directly                                       */
+#define UNREGISTERED_DEVICE     (MAX_DEV+1)    
+
 /* Exported functions ------------------------------------------------------- */
 void     DBG_dump_devices               (bool bLong);
 void     DevicesInit                    (void);

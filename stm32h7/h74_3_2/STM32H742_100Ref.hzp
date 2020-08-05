@@ -126,8 +126,9 @@
       </folder>
     </folder>
     <folder Name="Doc">
-      <file file_name="doc/ErrorCodes.txt" />
-      <file file_name="doc/Howto.txt" />
+      <file file_name="../doc/ErrorCodes.txt" />
+      <file file_name="../doc/Howto.txt" />
+      <file file_name="../doc/NumeratedChanges.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="STM32H7xx_HAL_Driver">

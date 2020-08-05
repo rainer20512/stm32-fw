@@ -224,6 +224,7 @@ int main(void)
     STATUS(7);
 
     /* Start scheduler */
+    IO_UserLedOn(0);
     vTaskStartScheduler();
     /* We should never get here as control is now taken by the scheduler */
     for (;;);

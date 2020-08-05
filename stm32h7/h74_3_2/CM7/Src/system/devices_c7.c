@@ -29,8 +29,7 @@
   */
 
 /* Private define -----------------------------------------------------------------------*/
-#define MAX_DEV    16
-#define MAX_PRIO 0x0f
+#define MAX_PRIO            0x0f
 
 #define DEV_CORE_CM7        0
 #define DEV_CORE_CM4        1

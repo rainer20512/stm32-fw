@@ -37,7 +37,8 @@ void IO_UserLedOff          ( uint8_t idx );
 void IO_UserLedToggle       ( uint8_t idx );
 void IO_UserLedBlink        ( uint8_t idx, uint32_t toggles, uint32_t ms );
 
-
+/**** 001 **** Use gn LED as "activity LED" whoen using FreeRTOS */
+#define ACTIVITY_LED        0           
 
 /* PGlobal variables ------------------------------------------------------------*/
 extern const HW_DeviceType HW_IO;

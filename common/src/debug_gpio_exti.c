@@ -16,6 +16,7 @@
 #include "config/config.h"
 #include "debug.h"
 #include "system/hw_util.h"
+#include "dev/devices.h"
 #if DEBUG_FEATURES > 0
 
 #include <string.h>
@@ -229,7 +230,7 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
         init.Pull =  GPIO_NOPULL;
         init.Speed = GPIO_SPEED_FREQ_LOW;
         init.Pin  = pin_bitmap; 
-        GpioInitHW(63, gp, &init);
+        GpioInitHW(UNREGISTERED_DEVICE, gp, &init);
 
         for ( uint8_t i = 0; i < TOGGLES; i++ ) {
             gp->ODR  ^= pin_bitmap;
@@ -238,7 +239,7 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
 
          // restore GPIO status
          *gp = save;
-     GpioDeInitHW(63, gp, &init);
+     GpioDeInitHW(UNREGISTERED_DEVICE, gp, &init);
      }
      // Switch portclock off again, if it was off before
      if (!gp_clck_ena ) HW_SetHWClock(gp, false);
