@@ -194,6 +194,11 @@ int main(void)
     for ( uint32_t i = 0; i < IO_UseLedGetNum(); i++ )
         IO_UserLedBlink(i, 2, 100);
 
+    #if USE_EEPROM_EMUL > 0
+        if ( Config_GetEmulationStatus() == false )
+            DEBUG_PUTS("EEPROM emulation: Corrupted data"); 
+    #endif
+
     MPU_Dump();
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 

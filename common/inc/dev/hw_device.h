@@ -176,6 +176,7 @@ typedef struct {
 typedef struct HWDTS {
     bool (*Init)            ( const HW_DeviceType *self );
     void (*DeInit)          ( const HW_DeviceType *self );
+    void (*BeforeFrqChange) ( const HW_DeviceType *self );
     bool (*OnFrqChange)     ( const HW_DeviceType *self );
     bool (*AllowStop)       ( const HW_DeviceType *self );
     bool (*OnSleep)         ( const HW_DeviceType *self );

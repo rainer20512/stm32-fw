@@ -688,6 +688,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
     bClockSettingVolatile = false;         
     RestoreFn             = NULL;
 
+    /* Inform about outstanding frq change */
+    DevicesBeforeFrqChange();
+
     switch ( clk_config_byte ) {
         case  CLK_HSI_VRNG3_08MHZ_0WS:
             SystemClock_HSI_VOSrange_3(8000);

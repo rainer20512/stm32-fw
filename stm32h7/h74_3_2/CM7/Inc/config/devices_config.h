@@ -394,7 +394,11 @@
       #define QSPI_DEV          HW_QSPI1
       #define QSPI_HND          QSpi1Handle
       #define USE_QSPI1
-      #define QSPI1_CLKSPEED    1000000      // Use low clk rates on breadboard
+      /* 
+       * Use low clk rates on breadboard, up to 1 MHz
+       * use clk rates up to 50MHz on PCB
+       */ 
+      #define QSPI1_CLKSPEED    50000000      
       #define USE_QSPI1_ALTN1
       #define QSPI1_USE_IRQ
       // #define QSPI1_USE_DMA Not implemented yet 

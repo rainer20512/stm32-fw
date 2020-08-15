@@ -56,13 +56,26 @@ static uint16_t MX25_GetType                 (QSpiHandleT *myHandle);
 
 /* Exported functions -------------------------------------------------------*/
 
+static bool QSpi_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
+{
+    bool ret = MX25RXX35_HighPerfMode(hqspi, bHPerf ? QSPI_HIGH_PERF_ENABLE : QSPI_HIGH_PERF_DISABLE);
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        if ( !ret ) 
+            DEBUG_PRINTF("QSpi - Error: Unable to set %s mode\n", bHPerf ? "high perf.":"ultra low power");
+        else
+            DEBUG_PRINTF("QSpi: Set %s mode\n", bHPerf ? "high perf.":"ultra low power");
+    #endif
+    return ret;
+}
+
+
+
 /******************************************************************************
  * Setup the QSPI prescaler, so that the achieved operating freqency is at or
  * below ( due to the granularity of the prescaler ) "desired_frq"
  * This routine dowes not check for max. Frq. in Ultra low power mode ( 33MHz )
  * It is the callers responsibility to do so
  *****************************************************************************/
-
 static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
 {  
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
@@ -70,9 +83,9 @@ static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t
     bool hperf_enable;
 
     /* calculate prescaler,so that the initial frequency is at or below max. ULP frequency */ 
-    uint32_t prescaler = QSpiGetClockSpeed() / desired_frq;
-
+    uint32_t prescaler = ( QSpiGetClockSpeed() + desired_frq - 1 ) / desired_frq;
     if ( prescaler > 0 ) prescaler--;
+    desired_frq = QSpiGetClockSpeed() / (prescaler+1);
 
     if ( prescaler > 255 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
@@ -82,20 +95,14 @@ static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t
     }
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTF("Qspi: Clk=%d\n", QSpiGetClockSpeed() / (prescaler+1) );
+        DEBUG_PRINTF("Qspi: Clk=%d\n", desired_frq );
     #endif
 
     /* if not first init, then if selected operating speed is higher than max. ULP speed, select high performance mode */
     /* on first init, the caller has to assure, that "desired_frq" is at or below QSPI_MAX_ULP_FREQUENCY */
     if ( !bFirstInit && MX25_GetType(myHandle) == MX25R6435F_DEVID ) {
         hperf_enable = desired_frq > QSPI_MAX_ULP_FREQUENCY;
-        ret = MX25RXX35_HighPerfMode(hqspi, hperf_enable ? QSPI_HIGH_PERF_ENABLE : QSPI_HIGH_PERF_DISABLE);
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            if ( !ret ) 
-                DEBUG_PRINTF("QSpi_BasicInit - Error: Unable to set %s mode\n", hperf_enable ? "high perf.":"ultra low power");
-            else
-                DEBUG_PRINTF("QSpi: Set %s mode\n", hperf_enable ? "high perf.":"ultra low power");
-        #endif
+        ret = QSpi_HPerfMode( hqspi, hperf_enable);
         if ( !ret ) return false;
     }
 
@@ -113,6 +120,11 @@ static bool QSpi_BasicInit(QSpiHandleT *myHandle, uint32_t desired_frq, uint32_t
         #endif
         return false;
     }
+
+    /* Update Quadspi clkspeed to the actual speed*/
+    prescaler = ( QUADSPI->CR & QUADSPI_CR_PRESCALER_Msk ) >> QUADSPI_CR_PRESCALER_Pos;
+    myHandle->clkspeed = desired_frq;
+
     return true;
 }
 

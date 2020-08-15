@@ -36,6 +36,7 @@ const EE_LimitsT eelimits[]= EELIMITS;   /* Array on default, min, max values */
             
 static uint32_t ee_element_num;          /* number of elements in settings array */
 static __IO uint32_t ErasingOnGoing = 0; /* flag for "erase operation in progress" */
+uint8_t  bEeConfigValid;                 /* flag for "eeprom emulation is valid    */
 
 #if USE_EEPROM_EMUL > 0
     static uint8_t ee_cleanup_required =  0; /* flag for "cleanup is required"    */
@@ -60,7 +61,12 @@ void Config_Dump(void)
    uint32_t i;
    const char *cp;
    const EE_LimitsT *ptr;
-   DEBUG_PUTS("Persistent EEPROM settings, all values are HEX!");
+
+   if ( !bEeConfigValid ) {
+       DEBUG_PUTS("Emulated EEPROM invalid - No EEPROM persistence for config Data!");
+   }
+
+   DEBUG_PUTS("Config settings, all values are HEX!");
    DEBUG_PUTS("No. Actual  Minimum  Maximum  Help");
    ptr = eelimits;
    for ( i = 0; i < ee_element_num; i++ ) {
@@ -78,7 +84,6 @@ void Config_Dump(void)
 
 bool Config_SetVal(uint8_t idx, uint8_t newval)
 {
-    
     /* check validity of index */
     if ( idx >= ee_element_num ) return false;
 
@@ -130,6 +135,11 @@ bool Config_GetValMinMax(uint8_t idx, EE_LimitsT *ret )
 
 uint32_t Config_GetCnt(void)
 {
+   /* check sanity of emulated eeprom */
+   if ( !bEeConfigValid ) {
+       DEBUG_PUTS("Invalid emulated EEPROM configuration!");
+       return 0;
+   }    
     return ee_element_num;
 }
 
@@ -157,11 +167,13 @@ static void configInit(void)
     *(config_raw+i) = eelimits[i].deflt;
 
   #if USE_EEPROM_EMUL > 0
-      uint8_t ret;
-      /* Read eeprom settings */
-      for ( i=0; i< ee_element_num; i++ )
-        if ( eeprom_read_config_byte(i, &ret ) )
-           *(config_raw+i) = ret;
+      if ( bEeConfigValid ) {
+          uint8_t ret;
+          /* Read eeprom settings */
+          for ( i=0; i< ee_element_num; i++ )
+            if ( eeprom_read_config_byte(i, &ret ) )
+               *(config_raw+i) = ret;
+      }
   #endif  
 }
 
@@ -223,6 +235,11 @@ bool eeprom_write_config_byte(uint8_t cfg_idx, uint8_t val)
  ******************************************************************************/
 bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval)
 {
+   /* check sanity of emulated EEPROM first */
+   if ( !bEeConfigValid ) {
+       DEBUG_PUTS("Invalid emulated EEPROM configuration!");
+       return false;
+   }    
     uint8_t temp;
     if ( eeprom_read_config_byte(cfg_idx, &temp) && temp == newval ) return true;
 
@@ -297,6 +314,9 @@ void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue)
 void Config_Init(void)
 {
 
+  /* Assume emulated eeprom config is invalid as long as not positively validated */
+  bEeConfigValid = false;
+
   #if USE_EEPROM_EMUL > 0
 
       ee_initstatus = EE_OK;
@@ -344,23 +364,29 @@ void Config_Init(void)
         /* System reset comes from a power-on reset: Forced Erase */
         /* Initialize EEPROM emulation driver (mandatory) */
         ee_initstatus = EE_Init(VirtAddVarTab, EE_FORCED_ERASE);
-        if(ee_initstatus != EE_OK) {Error_Handler_XX(-20, __FILE__, __LINE__);}
+        /* Debug output not initialized at this point, so just do termination work */
+        if(ee_initstatus != EE_OK) goto ee_terminate;
       }
       else
       {    
         /* System reset comes from a STANDBY wakeup: Conditional Erase*/
         /* Initialize EEPROM emulation driver (mandatory) */
         ee_initstatus = EE_Init(VirtAddVarTab, EE_CONDITIONAL_ERASE);
-        if(ee_initstatus != EE_OK) {Error_Handler_XX(-21, __FILE__, __LINE__);}
+        /* Debug output not initialized at this point, so just return */
+        if(ee_initstatus != EE_OK) goto ee_terminate;
       }
   
       /* Lock the Flash Program Erase controller */
       EE_FinalizeWrite();
 
+      /* Flag a correctly initialized emulated eeprom */
+      bEeConfigValid = true;
+
       /* Schedule a periodic check for eeprom cleanup */
       AtSecond(29, eeprom_check_cleanup, (void *)0, "EEPROM emul check for cleanup");
   #endif
 
+ee_terminate:
   /* Schedule the check for an reset request */
   AtSecond(10, configCheckForReset, (void *)0, "Check reset request");
 

@@ -930,7 +930,7 @@ bool QSpi_Init(const HW_DeviceType *self)
            because there is only one dma channel                                      */
 
         /* put flash chip into deep sleep mode  */
-        QSpi_EnterDeepPowerDown(myHandle);
+        // QSpi_EnterDeepPowerDown(myHandle);
     }
 
 
@@ -963,6 +963,20 @@ bool QSpi_AllowStop(const HW_DeviceType *self)
     QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
     return ! (adt->myQSpiHandle->hqspi.Instance->SR & QUADSPI_SR_BUSY);
 }
+
+
+/******************************************************************************
+ * Callback _before_ frequency changes: To be on the safe side, switch to
+ * high performance mode
+ *****************************************************************************/
+void QSpi_BeforeFrqChange(const HW_DeviceType *self)
+{
+    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
+    QSpiHandleT *myHandle           = adt->myQSpiHandle;  
+
+    QSpi_HPerfMode( &myHandle->hqspi, true);
+}
+
 
 /******************************************************************************
  * Callback _after_ frequency changes: Recalculate the QUADSPI hardware 
@@ -1036,6 +1050,7 @@ const HW_DeviceType HW_QSPI1 = {
     .devDmaTx       = NULL,         /* .devDmaTx  is never used */
     .Init           = QSpi_Init,
     .DeInit         = QSpi_DeInit,
+    .BeforeFrqChange= QSpi_BeforeFrqChange,
     .OnFrqChange    = QSpi_OnFrqChange,
     .AllowStop      = QSpi_AllowStop,
     .OnSleep        = NULL,

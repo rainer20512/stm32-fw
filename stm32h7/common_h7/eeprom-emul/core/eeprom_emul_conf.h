@@ -60,7 +60,7 @@
 /* Private constants ---------------------------------------------------------*/
 
 /* Configuration of eeprom emulation in flash, can be custom */
-#if defined (STM32H745xx)
+#if defined (STM32H745xx) || defined (STM32H742xx)
     #define START_PAGE_ADDRESS      0x7F8000   /*!< Last 8 sectors of 4kiByte size each = 0x7f8000 .. 0x7fffff */
 #else
     #error "No Start Page for EEPROM emulation set!"

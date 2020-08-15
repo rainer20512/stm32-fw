@@ -71,6 +71,7 @@ void     BasicDevInit                   (void);
 bool     DeviceInitByIdx                (uint32_t dev_idx, void *arg);
 void     DeviceDeInitByIdx              (uint32_t dev_idx);
 bool     DevicesInhibitStop             (void);
+void     DevicesBeforeFrqChange         (void);
 bool     DevicesInhibitFrqChange        (void);
 
 const HW_DeviceType *FindDevByBaseAddr  (uint32_t , void *pAddress );

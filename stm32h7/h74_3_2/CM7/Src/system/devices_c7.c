@@ -503,13 +503,34 @@ bool DevicesInhibitStop(void)
     return false;
 }
 
+
+/******************************************************************************
+ * Inform all devices about an outstanding frequency change 
+ * to "newSysClk"
+ ******************************************************************************/
+void DevicesBeforeFrqChange(void)
+{
+    /* inform all devices, which have implemented the BeforeFrqChange method */
+    /* Only regard my own devices */
+    for( uint32_t i = 0; i < act_devices; i++ ) {
+        if ( devCoreNum[i] == DEV_CORE_CM7 && devices[i]->BeforeFrqChange ) 
+            devices[i]->BeforeFrqChange(devices[i]);
+    }
+
+}
+
 /******************************************************************************
  * Returns true, if any device does NOT allow a system clock frequency change 
  * to "newSysClk"
  ******************************************************************************/
 bool DevicesInhibitFrqChange(void)
 {
+
     bool ret = false;
+
+    /*  first inform about the outstanding frequency change */
+    DevicesBeforeFrqChange();
+
     /* Check every device with AllowStop method implemented for denial of stop */
     /* Only regard my own devices */
     for( uint32_t i = 0; i < act_devices; i++ ) {

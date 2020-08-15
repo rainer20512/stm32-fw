@@ -1368,7 +1368,8 @@ ADD_SUBMODULE(Test);
             printf("   sector count= . %d\n", QSpi1Handle.geometry.EraseSectorsNumber);
             printf("Write page size= . %d Byte\n", QSpi1Handle.geometry.ProgPageSize);
             printf("   page count= ... %d\n", QSpi1Handle.geometry.ProgPagesNumber);
-            printf("pages per sector=  %d\n", QSpi1Handle.geometry.EraseSectorSize/QSpi1Handle.geometry.ProgPageSize);            
+            printf("pages per sector=  %d\n", QSpi1Handle.geometry.EraseSectorSize/QSpi1Handle.geometry.ProgPageSize);   
+            printf("Qspi Clock= ...... %d kHz\n", QSpi1Handle.clkspeed / 1000 );
             break;
         case 1:
             if ( CMD_argc() < 1 ) {

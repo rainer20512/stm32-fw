@@ -144,6 +144,8 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 #endif
 
 extern EE_ConfigT config;
+extern uint8_t    bEeConfigValid;                 /* flag for "eeprom emulation is valid    */
+
 
 void     Config_Init  (void);
 void     Config_Dump  (void);
@@ -151,6 +153,7 @@ bool     Config_SetVal(uint8_t idx, uint8_t newval);
 uint8_t  Config_GetVal(uint8_t idx);
 bool     Config_GetValMinMax(uint8_t idx, EE_LimitsT *ret );
 uint32_t Config_GetCnt(void);
+#define  Config_GetEmulationStatus()    bEeConfigValid
 
 
 #ifdef __cplusplus
