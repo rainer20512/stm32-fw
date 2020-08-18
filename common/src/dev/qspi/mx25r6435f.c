@@ -30,6 +30,10 @@
 #define QSPI_HIGH_PERF_DISABLE  0x0
 #define QSPI_HIGH_PERF_ENABLE   0x1
 
+#define QSPI_DLY_TO_SLEEP       30              /* min time [us] the flash needs to enter deep sleep */
+#define QSPI_DLY_FM_SLEEP       45              /* min time [us] the flash needs to exit deep sleep  */
+                                                /* this is the highr value when in high perf mode    */
+
 /* Maximum frequency in Ultra low power mode */
 #define QSPI_MAX_ULP_FREQUENCY  33000000
 
@@ -46,12 +50,12 @@
 
 
 /* Private functions ---------------------------------------------------------*/
-static uint8_t  MX25_GetStatus      (QSPI_HandleTypeDef *hqspi);
+static uint8_t  MX25_GetStatus               (QSPI_HandleTypeDef *hqspi);
 static bool     QSPI_Specific_WriteEnable    (QSPI_HandleTypeDef *hqspi);
        bool     QSpi_WaitForWriteDone        (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
 static bool     MX25_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
 static bool     MX25_GetGeometry             (QSpiHandleT *myHandle);
-static bool     MX25RXX35_HighPerfMode   (QSPI_HandleTypeDef *hqspi, uint8_t Operation);
+static bool     MX25RXX35_HighPerfMode       (QSPI_HandleTypeDef *hqspi, uint8_t Operation);
 static uint16_t MX25_GetType                 (QSpiHandleT *myHandle); 
 
 /* Exported functions -------------------------------------------------------*/
@@ -325,6 +329,12 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle)
      */
     uint32_t init_speed = ( clkspeed < QSPI_INITIAL_SPEED ? clkspeed : QSPI_INITIAL_SPEED );
 
+    /* Setup the deep sleep timing parameters, if deep sleep is supported */
+    if ( myHandle->dsInfo ) {
+        myHandle->dsInfo->dlyFmSleep = QSPI_DLY_FM_SLEEP;
+        myHandle->dsInfo->dlyToSleep = QSPI_DLY_TO_SLEEP;
+    }
+
     /* Basic Initialization with a safe speed and minimum flash size to readout ID data */
     if ( !QSpi_BasicInit(myHandle, init_speed, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
 
@@ -373,6 +383,10 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle)
   */
 bool QSpi_EnterDeepPowerDown(QSpiHandleT *myHandle)
 {
+
+  /* check for deep sleep capbility */
+  if (!myHandle->dsInfo ) return false;
+
   QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
   
@@ -393,7 +407,7 @@ bool QSpi_EnterDeepPowerDown(QSpiHandleT *myHandle)
   /* ---          Memory takes 10us max to enter deep power down          --- */
   /* --- At least 30us should be respected before leaving deep power down --- */
 
-  myHandle->bIsDeepSleep = true;
+  myHandle->dsInfo->bIsDeepSleep = true;
   return true;
 }
 
@@ -403,6 +417,9 @@ bool QSpi_EnterDeepPowerDown(QSpiHandleT *myHandle)
   */
 bool QSpi_LeaveDeepPowerDown(QSpiHandleT *myHandle)
 {
+  /* check for deep sleep capbility */
+  if (!myHandle->dsInfo ) return false;
+
   QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
   
@@ -424,7 +441,7 @@ bool QSpi_LeaveDeepPowerDown(QSpiHandleT *myHandle)
   /* On MX25R devices, the nCS signal going low is sufficient to wake up device                    */
   /* Memory takes 35us min to leave deep power down                                                */
   
-  myHandle->bIsDeepSleep = false;
+  myHandle->dsInfo->bIsDeepSleep = false;
   return true;
 }
 
@@ -438,8 +455,8 @@ bool QSpi_EnableMemoryMappedMode(QSpiHandleT *myHandle)
   QSPI_CommandTypeDef      sCommand;
   QSPI_MemoryMappedTypeDef sMemMappedCfg;
 
-  /* Wake up device, if in deep sleep */
-  if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+  /* Wake up device, if deep sleep capability and in in deep sleep */
+  if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
 
   /* Configure the command for the read instruction */
   sCommand.InstructionMode    = QSPI_INSTRUCTION_1_LINE;

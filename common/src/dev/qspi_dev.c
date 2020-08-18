@@ -40,8 +40,9 @@ typedef enum QSpiDmaDirectionEnum {
 
 
 typedef struct {
-    QSpiHandleT *myQSpiHandle;       /* my associated handle */
-    uint32_t default_speed;          /* default speed in MHz */
+    QSpiHandleT     *myQSpiHandle;   /* my associated handle */
+    uint32_t        default_speed;   /* default speed in MHz */
+    QSpiDeepSleepT  *myDsInfo;       /*ptr to dsInfo iff deep sleep is supported, else NULL */
 } QSpi_AdditionalDataType;
 
 
@@ -271,7 +272,7 @@ bool Qspi_SetSpeed (QSpiHandleT *myHandle, uint32_t new_clkspeed)
  *************************************************************************************/
 void QSpi_DumpStatus(QSpiHandleT *myHandle)
 {
-    bool sleep = myHandle->bIsDeepSleep;
+    bool sleep = myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep;
     /* Wake up device, if in deep sleep */
     if ( sleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
@@ -309,8 +310,8 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
     bool ret;
 
-    /* Wake up device, if in deep sleep */
-    if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+    /* Wake up device, if it has deep sleep capability and is in deep sleep */
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
 
     /* Send the read command */
     if ( !QSpi_ReadCMD(hqspi, ReadAddr, Size) ) return false;
@@ -457,8 +458,8 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
         DEBUG_PRINTTS("Write Init, area: 0x%08x ... 0x%08x, written in %d steps\n", WriteAddr,smData.WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
     #endif
 
-    /* Wake up device, if in deep sleep */
-    if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+    /* Wake up device, if it has deep sleep capability and is in deep sleep */
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
 
     return true;
 }
@@ -703,8 +704,8 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
         DEBUG_PRINTTS("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d\n", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
     #endif
 
-    /* Wake up device, if in deep sleep */
-    if ( myHandle->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
+    /* Wake up device, if it has deep sleep capability and is in deep sleep */
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpi_LeaveDeepPowerDown(myHandle) ) return false;
 
     return true;
 }
@@ -900,7 +901,14 @@ bool QSpi_Init(const HW_DeviceType *self)
     QSpiHandleT *myHandle           = adt->myQSpiHandle;  
     QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
     hqspi->Instance                 = (QUADSPI_TypeDef*)self->devBase;
-    myHandle->bIsDeepSleep          = false;
+    /* If deep sleep is supported, setup the deep sleep information block */
+    if ( adt->myDsInfo ) {
+        myHandle->dsInfo            = adt->myDsInfo;
+        myHandle->dsInfo->bIsDeepSleep = false;
+        myHandle->dsInfo->bInDsTransit = false;
+    } else {
+        myHandle->dsInfo            = NULL;    
+    }
     myHandle->bAsyncBusy            = false;
     myHandle->bIsMemoryMapped       = false;
     myHandle->clkspeed              = adt->default_speed;
@@ -929,8 +937,8 @@ bool QSpi_Init(const HW_DeviceType *self)
         /* dma channel initiialization has to be done before every rd or wr operation
            because there is only one dma channel                                      */
 
-        /* put flash chip into deep sleep mode  */
-        // QSpi_EnterDeepPowerDown(myHandle);
+        /* If deep sleep is supported, put flash chip into deep sleep mode */
+        if ( adt->myDsInfo ) QSpi_EnterDeepPowerDown(myHandle);
     }
 
 
@@ -997,6 +1005,10 @@ bool QSpi_OnFrqChange(const HW_DeviceType *self)
 #if defined(QUADSPI) && defined(USE_QSPI1)
     QSpiHandleT QSpi1Handle;
 
+    #if defined(QSPI1_HAS_LP_MODE)
+        static QSpiDeepSleepT ds_qspi1;
+    #endif
+
     #ifdef QSPI1_USE_DMA
       static DMA_HandleTypeDef hdma_qspi1;
       static const HW_DmaType dma_qspi1 = { &hdma_qspi1, QSPI1_DMA };
@@ -1020,9 +1032,16 @@ bool QSpi_OnFrqChange(const HW_DeviceType *self)
     };
 
 
+
     static const QSpi_AdditionalDataType additional_qspi1 = {
         .myQSpiHandle       = &QSpi1Handle,
         .default_speed      = QSPI1_CLKSPEED,                 
+        .myDsInfo           =
+            #if defined(QSPI1_HAS_LP_MODE)
+                &ds_qspi1
+            #else
+                NULL,
+            #endif
     };
 
 

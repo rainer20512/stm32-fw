@@ -80,8 +80,8 @@ overhead of message buffers. */
      * as the access functions are executed early at program start, we can safely 
      * assume, that RTC clock is not activated yet.
      */
-
     static uint32_t ulCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z3")));
+
 #if 0
     MessageBufferHandle_t xControlMessageBuffer __attribute__((section(".RAM_D3_Z1")));
     MessageBufferHandle_t xDataMessageBuffers[ mbaNUMBER_OF_CORE_2_TASKS ] __attribute__ ((section (".RAM_D3_Z2")));

@@ -314,8 +314,13 @@ void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue)
 void Config_Init(void)
 {
 
+#if defined(STM32H745xx) && defined(CORE_CM4)
+  /* Core CM4 in dual core config gets its persistend settings from CM7 core */
+  bEeConfigValid = true;
+#else
   /* Assume emulated eeprom config is invalid as long as not positively validated */
   bEeConfigValid = false;
+#endif
 
   #if USE_EEPROM_EMUL > 0
 
@@ -384,9 +389,9 @@ void Config_Init(void)
 
       /* Schedule a periodic check for eeprom cleanup */
       AtSecond(29, eeprom_check_cleanup, (void *)0, "EEPROM emul check for cleanup");
+ee_terminate:
   #endif
 
-ee_terminate:
   /* Schedule the check for an reset request */
   AtSecond(10, configCheckForReset, (void *)0, "Check reset request");
 

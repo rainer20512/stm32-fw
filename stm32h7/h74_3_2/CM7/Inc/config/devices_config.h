@@ -401,6 +401,7 @@
       #define QSPI1_CLKSPEED    50000000      
       #define USE_QSPI1_ALTN1
       #define QSPI1_USE_IRQ
+      #define QSPI1_HAS_LP_MODE
       // #define QSPI1_USE_DMA Not implemented yet 
   #endif
 

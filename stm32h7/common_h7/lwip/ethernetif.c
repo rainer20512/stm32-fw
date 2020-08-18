@@ -185,13 +185,11 @@ static void low_level_init(struct netif *netif)
   osThreadDef(EthIf, ethernetif_input, osPriorityRealtime, 0, INTERFACE_THREAD_STACK_SIZE);
   osThreadCreate (osThread(EthIf), netif);
   
-  DEBUG_PUTS("8742 Init Start\n");
   /* Set PHY IO functions */
   LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
   
   /* Initialize the LAN8742 ETH PHY */
   LAN8742_Init(&LAN8742);
-  DEBUG_PUTS("8742 Init Done\n");
   
   PHYLinkState = LAN8742_GetLinkState(&LAN8742);
   

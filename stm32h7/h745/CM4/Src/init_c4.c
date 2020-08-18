@@ -124,7 +124,6 @@ void task_handle_qspi (uint32_t);
 #define CMD_STACK_SIZE  256
 #define OUT_STACK_SIZE  256
 #define PER_STACK_SIZE  256
-#define ADC_STACK_SIZE  128
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];
@@ -132,7 +131,6 @@ static StackType_t rmtStack[RMT_STACK_SIZE];
 static StackType_t cmdStack[CMD_STACK_SIZE];
 static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
-static StackType_t adcStack[ADC_STACK_SIZE];
 
 
 /******************************************************************************

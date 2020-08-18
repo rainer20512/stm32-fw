@@ -49,19 +49,26 @@ typedef struct QSpiGeometryType {
 
 } QSpiGeometryT;
 
+typedef struct QSpiDeepSleepType {
+    uint16_t            dlyToSleep;      /* min time [us] to enter deep sleep                 */
+    uint16_t            dlyFmSleep;      /* min time [us] to exit from deep sleep             */   
+    uint8_t             bIsDeepSleep;    /* true, iff external flash chip is in deepsleep     */
+    uint8_t             bInDsTransit;    /* true, iff in transit from or to deep sleep        */
+} QSpiDeepSleepT;
+
 typedef struct QSpiHandleType QSpiHandleT;
 typedef void (*QSpiCallbackT ) ( QSpiHandleT* );
 typedef struct QSpiHandleType {
-    QSPI_HandleTypeDef  hqspi;           /* Embedded HAL QSpi_HandleTypedef Structure     */
-    QSpiGeometryT       geometry;        /* actual flash chip geometry                    */
-    uint8_t             id[4];           /* Flash memories ID bytes ( only first 3 used ) */
-    uint32_t            clkspeed;        /* Desired Clock Speed in MHz                    */
-    QSpiCallbackT       QSpi_RdDoneCB;   /* Callback for any successful read              */
-    QSpiCallbackT       QSpi_WrDoneCB;   /* Callback for any successful write/erare       */
-    QSpiCallbackT       QSpi_ErrorCB;    /* Callback for any Error in QSPI transaction    */
-    bool                bIsDeepSleep;    /* true, iff external flash chip is in deepsleep */
-    bool                bAsyncBusy;      /* Flag for "Async operation (_IT, _DMA) ongoing */
-    bool                bIsMemoryMapped; /* true, iff in memory mapped mode               */
+    QSPI_HandleTypeDef  hqspi;           /* Embedded HAL QSpi_HandleTypedef Structure         */
+    QSpiGeometryT       geometry;        /* actual flash chip geometry                        */
+    uint8_t             id[4];           /* Flash memories ID bytes ( only first 3 used )     */
+    uint32_t            clkspeed;        /* Desired Clock Speed in MHz                        */
+    QSpiCallbackT       QSpi_RdDoneCB;   /* Callback for any successful read                  */
+    QSpiCallbackT       QSpi_WrDoneCB;   /* Callback for any successful write/erare           */
+    QSpiCallbackT       QSpi_ErrorCB;    /* Callback for any Error in QSPI transaction        */
+    QSpiDeepSleepT*     dsInfo;          /* if deep sleep is supported, the ds info, else NULL*/
+    uint8_t             bAsyncBusy;      /* Flag for "Async operation (_IT, _DMA) ongoing     */
+    uint8_t             bIsMemoryMapped; /* true, iff in memory mapped mode                   */
 } QSpiHandleT; 
 
 void QSPI_GetGeometry           (QSpiHandleT *myHandle, QSpiGeometryT *pInfo);

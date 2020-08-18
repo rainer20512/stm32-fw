@@ -92,7 +92,7 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg);
 void HtmlSetCM4         ( struct netconn *conn, void *arg); 
 
 /**********************************************************************************************************************************
-/* Web pages file and menu structures
+ * Web pages file and menu structures
  * @note: Home page has to be the first entry -> see HOME_PAGE_IDX
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
@@ -344,7 +344,6 @@ static void ParseParams(char *buf, u16_t buflen, HttpGetParamT *p )
 {
     char *src;
     char *dest;
-    char *next;
     uint32_t i = 0;
     uint32_t pcnt = 0;
 
@@ -506,6 +505,7 @@ static void http_server_netconn_thread8088(void *arg)
   struct netconn *conn, *newconn;
   err_t err, accept_err;
   
+  UNUSED(arg);
   /* Create a new TCP connection handle */
   conn = netconn_new(NETCONN_TCP);
   if (conn!= NULL)
@@ -538,6 +538,7 @@ static void http_server_netconn_thread80(void *arg)
   struct netconn *conn, *newconn;
   err_t err, accept_err;
   
+  UNUSED(arg);
   /* Create a new TCP connection handle */
   conn = netconn_new(NETCONN_TCP);
   
@@ -750,6 +751,9 @@ void HtmlSettingsTEST    ( struct netconn *conn, void *arg)
 void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
 {
     MSgSettingItemT *ret;
+
+    UNUSED(arg);
+    
     /* remote settings */
     netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
@@ -796,7 +800,6 @@ int32_t GetTagIndex( char *tagstr )
  *****************************************************************************/
 int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
 {
-    uint32_t val;
     char *uuu;
     /* decode all kinds of decimal values */
     switch ( type ) {
@@ -831,10 +834,12 @@ int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
 void HtmlSetCM7         ( struct netconn *conn, void *arg)
 {
     HttpGetParamT *p = (HttpGetParamT *)arg;
-    uint32_t idx;
+    int32_t idx;
     uint32_t val;
     uint32_t num_settings;
     MSgSettingItemT *ret;
+
+    UNUSED(conn);
 
     /* Read first element of CM7 settings to get the number of setting items */
     MSGD_GetSettingsLine(true);
@@ -870,6 +875,8 @@ static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
 void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
 {
     MSgSettingItemT ret;
+    UNUSED(arg);
+
     /* remote settings */
     netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
@@ -887,8 +894,10 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg)
 void HtmlSetCM4         ( struct netconn *conn, void *arg)
 {
     HttpGetParamT *p = (HttpGetParamT *)arg;
-    uint32_t idx;
+    int32_t idx;
     uint32_t val;
+
+    UNUSED(conn);
 
     for ( uint32_t i = 0; i < p->num_params; i++ ) {
         idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);

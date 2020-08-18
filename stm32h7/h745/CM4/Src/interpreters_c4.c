@@ -87,6 +87,7 @@ static bool Config_Menu ( char *cmdline, size_t len, const void * arg )
   size_t wordlen;
   uint32_t ret;
 
+  UNUSED(cmdline); UNUSED(len);
   switch( (uint32_t)arg )  {
     case 0:
       DEBUG_PUTS("Not implemented here");
