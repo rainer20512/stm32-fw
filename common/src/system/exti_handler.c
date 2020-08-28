@@ -111,6 +111,7 @@ void Exti_ConfigIrq( GPIO_TypeDef *gpio, uint16_t pin, uint32_t extiTrigger )
     uint32_t gpioidx;       /* Index of GPIO structure (0..9) */
     uint32_t pinidx;        /* index of pin ( 0..15) */
     uint32_t regval;
+
     /* configure EXTI for rising and/or falling edge */
     if ( extiTrigger &  EXTI_TRIGGER_RISING ) {
         SET_BIT(EXTI->RTSR1, (uint32_t)pin);
@@ -146,8 +147,8 @@ void Exti_ConfigIrq( GPIO_TypeDef *gpio, uint16_t pin, uint32_t extiTrigger )
  ******************************************************************************************************/
 uint16_t Exti_DisableIrq( uint16_t pin )
 {
-    uint16_t ret = EXTI->IMR1 & pin;
-    CLEAR_BIT(EXTI->IMR1, (uint32_t)pin );
+    uint16_t ret = EXTI_GET_IMR1() & pin;
+    EXTI_DISABLE_IRQ( pin );
     return ret;
 }
 
@@ -157,11 +158,10 @@ uint16_t Exti_DisableIrq( uint16_t pin )
 void Exti_EnableIrq( uint16_t pin )
 {
     /* clear pending interrupts */
-    EXTI->PR1 = pin;
+    EXTI_CLEAR_PR1(pin);
     
     /* Enable interrupts */
-    SET_BIT(EXTI->IMR1, (uint32_t)pin );
-
+    EXTI_ENABLE_IRQ(pin );
 }
 
 
@@ -180,8 +180,8 @@ static void EXTI_HandleIRQ(uint16_t GPIO_Pin)
 {
   // DEBUG_PRINTF("h%02d", HW_GetIdxFromPin(GPIO_Pin));
   /* EXTI line interrupt detected */
-  if(__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != 0x00u) {
-    __HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
+  if((EXTI_GET_PR1()&GPIO_Pin) != 0x00u) {
+    EXTI_CLEAR_PR1(GPIO_Pin);
     uint16_t line = HW_GetIdxFromPin(GPIO_Pin);
     uint16_t pinvalue = *idr[line] & GPIO_Pin;
     // DEBUG_PRINTF("H%02d", line);
@@ -198,7 +198,7 @@ void EXTI15_10_IRQHandler(void)
 {
   ProfilerPush(JOB_IRQ_EXTI);
   /* Get the Interrupt source */
-  uint32_t src = EXTI->PR1 & EXTI_15_10_MASK; 
+  uint32_t src = EXTI_GET_PR1() & EXTI_15_10_MASK; 
   
   /* And for every single bit call the HAL Handler ( which will call the user callback for every bit ) */
   uint32_t position = EXTI_15_10_MSB;
@@ -219,8 +219,7 @@ void EXTI9_5_IRQHandler(void)
 {
   ProfilerPush(JOB_IRQ_EXTI);
   /* Get the Interrupt source */
-  uint32_t src = EXTI->PR1 & EXTI_9_5_MASK; 
-  
+  uint32_t src = EXTI_GET_PR1()  & EXTI_9_5_MASK; 
   /* And for every single bit call the HAL Handler ( which will call the user callback for every bit ) */
   uint32_t position = EXTI_9_5_MSB;
   while (1) {

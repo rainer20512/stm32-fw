@@ -17,6 +17,22 @@
 #endif
 
 #define EXTI_LINENUM    16      
+
+/* Some macros to handle exti interrupts correctly in dual core environment */
+#if defined(DUAL_CORE) && defined(CORE_CM4)
+    #define EXTI_CLEAR_PR1(bitpos)      EXTI->C2PR1 = bitpos
+    #define EXTI_GET_PR1()              EXTI->C2PR1
+    #define EXTI_ENABLE_IRQ(bitpos)     SET_BIT(EXTI->C2IMR1,   (uint32_t)(bitpos) )
+    #define EXTI_DISABLE_IRQ(bitpos)    CLEAR_BIT(EXTI->C2IMR1, (uint32_t)(bitpos) )
+    #define EXTI_GET_IMR1()             EXTI->C2IMR1
+#else
+    #define EXTI_CLEAR_PR1(bitpos)      EXTI->PR1 = bitpos
+    #define EXTI_GET_PR1()              EXTI->PR1
+    #define EXTI_ENABLE_IRQ(bitpos)     SET_BIT(EXTI->IMR1,   (uint32_t)(bitpos) )
+    #define EXTI_DISABLE_IRQ(bitpos)    CLEAR_BIT(EXTI->IMR1, (uint32_t)(bitpos) )
+    #define EXTI_GET_IMR1()             EXTI->IMR1
+#endif
+
 typedef void ( *ExtIrqCB )( uint16_t pinnumber, uint16_t pinvalue, void *arg );
 
 bool     Exti_Register_Callback      ( uint16_t GPIO_Pin, __IO uint32_t *gpioidr, ExtIrqCB cb, void *arg );

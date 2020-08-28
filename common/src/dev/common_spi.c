@@ -44,50 +44,50 @@ static void SpiResetMyData ( SpiDataT *data )
 /* Public functions -----------------------------------------------------------------*/
 void MISO_IRQ_Clear( SpiHandleT *self )
 {
-    EXTI->PR1   = self->data->miso_bitpos; 
+    EXTI_CLEAR_PR1(self->data->miso_bitpos); 
 }
 
 void MISO_IRQ_Enable( SpiHandleT *self )
 {
-    EXTI->IMR1 |= self->data->miso_bitpos; 
+    EXTI_ENABLE_IRQ(self->data->miso_bitpos); 
 
 }
 
 void MISO_IRQ_Disable( SpiHandleT *self  )
 {
-   EXTI->IMR1 &= ~( self->data->miso_bitpos );
+   EXTI_DISABLE_IRQ(self->data->miso_bitpos );
 }
 
 void BUSY_IRQ_Clear( SpiHandleT *self )
 {
-    EXTI->PR1   = self->data->busy_bitpos; 
+    EXTI_CLEAR_PR1(self->data->busy_bitpos); 
 }
 
 void BUSY_IRQ_Enable( SpiHandleT *self )
 {
-    EXTI->IMR1 |= self->data->busy_bitpos; 
+    EXTI_ENABLE_IRQ(self->data->busy_bitpos); 
 
 }
 
 void BUSY_IRQ_Disable( SpiHandleT *self  )
 {
-   EXTI->IMR1 &= ~( self->data->busy_bitpos );
+   EXTI_DISABLE_IRQ( self->data->busy_bitpos );
 }
 
 void INP_IRQ_Clear( SpiHandleT *self )
 {
-    EXTI->PR1   = self->data->inp_bitpos; 
+    EXTI_CLEAR_PR1(self->data->inp_bitpos); 
 }
 
 void INP_IRQ_Enable( SpiHandleT *self )
 {
-    EXTI->IMR1 |= self->data->inp_bitpos; 
+    EXTI_ENABLE_IRQ(self->data->inp_bitpos); 
 
 }
 
 void INP_IRQ_Disable( SpiHandleT *self  )
 {
-   EXTI->IMR1 &= ~( self->data->inp_bitpos );
+   EXTI_DISABLE_IRQ( self->data->inp_bitpos );
 }
 
 

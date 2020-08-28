@@ -1182,7 +1182,7 @@ bool RTC_StopWatch_InUse(void)
       ProfilerPush(JOB_IRQ_RTC);
 
       /* Clear exti interrupt bit */
-      EXTI->PR1 = EXTI_PR1_PIF18;
+      EXTI_CLEAR_PR1(EXTI_PR1_PIF18);
 
       /* Only Alarm A and B are handeled */
       #define RTC_ALARMS ( RTC_ISR_ALRAF | RTC_ISR_ALRBF )
@@ -1206,7 +1206,7 @@ bool RTC_StopWatch_InUse(void)
       ProfilerPush(JOB_IRQ_TMR);
 
       /* Clear exti wakeup interrupt bit */
-      EXTI->PR1 = EXTI_PR1_PIF20;
+      EXTI_CLEAR_PR1(EXTI_PR1_PIF20);
 
       /* Only WakeUp is handeled */
       #define RTC_WKUP   ( RTC_ISR_WUTF )

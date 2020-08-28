@@ -64,6 +64,128 @@ void OnError          (SPI_HandleTypeDef *hspi);
 void OnTxComplete     (SPI_HandleTypeDef *hspi);
 void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
 
+/**************************************************************************************
+ * Some Devices support different clock sources for QSPI. Make sure, that             *   
+  * QQSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+ *************************************************************************************/
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    /* STM32L4xx has no clock mux for SPI devices */
+    #define SpiSetClockSource(a)           (true)
+    uint32_t SpiGetClockSpeed(const void *hw)
+    {
+        /* SPI1 = PCLK2,  SPI2, SPI3, SPI4 -> PCLK1 */
+        if ( hw == SPI1 ) 
+            return HAL_RCC_GetPCLK2Freq();
+        else
+            return HAL_RCC_GetPCLK1Freq();
+    }
+                 
+#elif defined(STM32H745xx) || defined(STM32H742xx)
+    static bool SpiSetClockSource(SPI_TypeDef *hw)
+    {
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      PeriphClkInit.PeriphClockSelection = 0;
+      switch ( (uint32_t)hw ) {
+    #if defined(SPI1) && defined(USE_SPI1)
+        case SPI1_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI1;
+        PeriphClkInit.Spi123ClockSelection = SPI123_CLKSOURCE_SET;
+        break;
+    #endif
+    #if defined(SPI2) && defined(USE_SPI2)
+        case SPI2_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI2;
+        PeriphClkInit.Spi123ClockSelection = SPI123_CLKSOURCE_SET;
+        break;
+    #endif
+    #if defined(SPI3) && defined(USE_SPI3)
+        case SPI3_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI3;
+        PeriphClkInit.Spi123ClockSelection = SPI123_CLKSOURCE_SET;
+        break;
+    #endif
+    #if defined(SPI4) && defined(USE_SPI4)
+        case SPI4_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI4;
+        PeriphClkInit.Spi45ClockSelection = SPI45_CLKSOURCE_SET;
+        break;
+    #endif
+    #if defined(SPI5) && defined(USE_SPI5)
+        case SPI5_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI5;
+        PeriphClkInit.Spi45ClockSelection = SPI45_CLKSOURCE_SET;
+        break;
+    #endif
+    #if defined(SPI6) && defined(USE_SPI6) || 1
+        case SPI6_BASE:
+        PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SPI6;
+        PeriphClkInit.Spi6ClockSelection = SPI6_CLKSOURCE_SET;
+        break;
+    #endif
+        default:
+            DEBUG_PRINTF("No Clock source set receipe for SPI HW base 0x%08x\n", (uint32_t)hw );
+            return false;
+      } // switch
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PRINTF("failed to set source for SPI HW base 0x%08x\n", (uint32_t)hw );
+        return false;
+      }
+
+      return true;
+    }
+
+    uint32_t SpiGetClockSpeed(SPI_TypeDef *hw)
+    {
+      switch ( (uint32_t)hw ) {
+    #if defined(SPI1) && defined(USE_SPI1)
+        case SPI1_BASE:
+    #endif
+    #if defined(SPI2) && defined(USE_SPI2)
+        case SPI2_BASE:
+    #endif
+    #if defined(SPI3) && defined(USE_SPI3)
+        case SPI3_BASE:
+    #endif
+        return SPI123_CLKSOURCE_GET;
+    #if defined(SPI4) && defined(USE_SPI4)
+        case SPI4_BASE:
+    #endif
+    #if defined(SPI5) && defined(USE_SPI5)
+        case SPI5_BASE:
+    #endif
+        return SPI45_CLKSOURCE_GET;
+    #if defined(SPI6) && defined(USE_SPI6)
+        case SPI6_BASE:
+        return SPI6_CLKSOURCE_GET;
+    #endif
+        default:
+            DEBUG_PRINTF("No Clock source getter SPI HW base 0x%08x\n", (uint32_t)hw );
+            return 0;
+      } // switch
+
+    }
+#else 
+    #error "No SPI clock assignment defined"
+#endif
+
+/*
+ * Init or DeInit Clock / clocksource 
+ */
+bool SpiClockInit(const HW_DeviceType *self, bool bDoInit)
+{
+    /* Select clock source on init*/
+    if ( bDoInit ) {
+        if ( !SpiSetClockSource( ( SPI_TypeDef*)self->devBase ) ) return false;
+    }
+
+    /* Enable/Disable clock */
+    HW_SetHWClock( ( SPI_TypeDef*)self->devBase, bDoInit );
+    
+    return true;
+}
+
 
 
 /*----------------------------------------------------------------------
@@ -75,16 +197,16 @@ static uint32_t HwSpiGetBRPrescaler(SPI_TypeDef *hspi, uint32_t baudrate )
     #define ABS_RETURN(x)                             (((x) < 0) ? -(x) : (x))
     
     uint32_t i;
-    uint32_t pclk;
+    uint32_t spiclk;
     uint32_t frq_error = UINT32_MAX;
     uint32_t curr_error;
     uint32_t min_idx = 0xff;
 
     /* Get the bus clock, it depends from the SPI device */
-    pclk = ( (uint32_t)hspi == (uint32_t)SPI1 ? HAL_RCC_GetPCLK2Freq() : HAL_RCC_GetPCLK1Freq() );
+    spiclk = SpiGetClockSpeed(hspi);
 
     for ( i=0; i < 8; i++ ) {
-        curr_error = ABS_RETURN(   (int32_t)(baudrate -( pclk>>(i+1) )));
+        curr_error = ABS_RETURN(   (int32_t)(baudrate -( spiclk>>(i+1) )));
         if ( curr_error < frq_error ) {
             frq_error = curr_error;
             min_idx = i;
@@ -93,10 +215,43 @@ static uint32_t HwSpiGetBRPrescaler(SPI_TypeDef *hspi, uint32_t baudrate )
 
     if ( min_idx == 0xff ) DEBUG_PUTS("Error: No vaild SPI prescaler found");
 
-    DEBUG_PRINTF("SPI prescaler=%d, resulting in baudrate %d\n", 2 << min_idx, pclk >> ( min_idx+1) ); 
+    DEBUG_PRINTF("SPI prescaler=%d, resulting in baudrate %d\n", 2 << min_idx, spiclk >> ( min_idx+1) ); 
     
-    return min_idx;
+#if defined(STM32L476xx)|| defined(STM32L496xx)
+   return min_idx << SPI_CR1_BR_Pos;
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+   return min_idx << SPI_CFG1_MBR_Pos;
+#else
+    #error "No receipe to set baudrate prescaler"
+#endif
 }  
+
+/******************************************************************************
+ * Provide a function to directly modify the baudrate prescaler in case of    *
+ * dynamically changed system frequency                                       *
+ *****************************************************************************/
+void HwSpiSetPrescaler (SPI_TypeDef *hspi, uint32_t baudrate )
+{
+    uint32_t newPscVal = HwSpiGetBRPrescaler(hspi, baudrate );
+#if defined(STM32L476xx)|| defined(STM32L496xx)
+   MODIFY_REG(hspi->CR1, SPI_CR1_BR_Msk, newPscVal);
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+   MODIFY_REG(hspi->CFG1, SPI_CFG1_MBR_Msk, newPscVal);
+#else
+    #error "No receipe to set baudrate prescaler"
+#endif
+}
+
+static uint32_t HwGetDataSize ( uint8_t plainDataSize ) 
+{
+#if defined(STM32L476xx)|| defined(STM32L496xx)
+   return  ((uint16_t)plainDataSize - 1) << 8;
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+   return  ((uint16_t)plainDataSize - 1);
+#else
+    #error "No receipe to set baudrate prescaler"
+#endif
+}
 
 static bool HwSpiSetDefaultParams(SpiDataT *data )
 {
@@ -108,10 +263,10 @@ static bool HwSpiSetDefaultParams(SpiDataT *data )
 
   /* Set the SPI parameters */
   hspi->Instance               = spi;
-  hspi->Init.BaudRatePrescaler = prescaler << SPI_CR1_BR_Pos;
+  hspi->Init.BaudRatePrescaler = HwSpiGetBRPrescaler(spi, hndhw->myBaudrate);
   hspi->Init.CLKPhase          = SPI_PHASE_1EDGE;
   hspi->Init.CLKPolarity       = SPI_POLARITY_LOW;
-  hspi->Init.DataSize          = ((uint16_t)data->datasize - 1) << 8;
+  hspi->Init.DataSize          = HwGetDataSize(data->datasize);
   hspi->Init.FirstBit          = SPI_FIRSTBIT_MSB;
   hspi->Init.TIMode            = SPI_TIMODE_DISABLE;
   hspi->Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
@@ -157,94 +312,137 @@ static void HwSpiSetTxDMAMemInc(SPI_HandleTypeDef *hspi, bool bDoIncrement )
     /* Reenable */
     __HAL_DMA_ENABLE(hspi->hdmatx);
 }
-
-/**
-  * @brief DMA UART transmit process complete callback.
-  * @param hdma DMA handle.
-  * @retval None
-  */
-static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
-{
-  SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
+#if defined(STM32L476xx) || defined(STM32L496xx) 
+    /**
+      * @brief DMA UART transmit process complete callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
+    {
+      SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
   
-  /* DMA Normal mode */
-  //debug_putchar('x');
-  if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) ) {  
-    /* Disable the DMA transfer for transmit request by resetting the DMAT bit
-    in the UART CR3 register */
-    CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_TXDMAEN);
+      /* DMA Normal mode */
+      if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) ) {  
+        /* Disable the DMA transfer for transmit request by resetting the DMAT bit
+        in the UART CR3 register */
+        CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_TXDMAEN);
     
-    /* Enable the UART Transmit Complete Interrupt */
-    SET_BIT(hSpi->Instance->CR1, SPI_CR2_TXEIE);
-  } else {
-    /* DMA Circular mode, not implemented */
-    Error_Handler(__FILE__, __LINE__);
-  }
-}
+        /* Enable the UART Transmit Complete Interrupt */
+        SET_BIT(hSpi->Instance->CR1, SPI_CR2_TXEIE);
+      } else {
+        /* DMA Circular mode, not implemented */
+        Error_Handler(__FILE__, __LINE__);
+      }
+    }
 
-/**
-  * @brief DMA UART receive process complete callback.
-  * @param hdma DMA handle.
-  * @retval None
-  */
-static void SPI_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
-{
-  SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
+    /**
+      * @brief DMA UART receive process complete callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void SPI_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
+    {
+      SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
 
-  /* DMA Normal mode */
-  if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) )
-  {
+      /* DMA Normal mode */
+      if ( HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC) )
+      {
     
-    /* Disable ERR interrupts */
-    SET_BIT(hSpi->Instance->CR2, SPI_CR2_RXNEIE);
-    //CLEAR_BIT(hSpi->Instance->CR3, SPI_CR2_ERRIE);
+        /* Disable ERR interrupts */
+        SET_BIT(hSpi->Instance->CR2, SPI_CR2_RXNEIE);
+        //CLEAR_BIT(hSpi->Instance->CR3, SPI_CR2_ERRIE);
     
-    /* Disable the DMA transfer for the receiver request by resetting the DMAR bit
-       in the UART CR3 register */
-    CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_RXDMAEN);
+        /* Disable the DMA transfer for the receiver request by resetting the DMAR bit
+           in the UART CR3 register */
+        CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_RXDMAEN);
     
-  }
+      }
   
-  // RHB todo: User-callback on receive
-}
+      // RHB todo: User-callback on receive
+    }
 
-void SpiStopTx(SPI_HandleTypeDef *hSpi)
-{
-  CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_TXEIE);
-}
+    void SpiStopTx(SPI_HandleTypeDef *hSpi)
+    {
+      CLEAR_BIT(hSpi->Instance->CR2, SPI_CR2_TXEIE);
+    }
 
-void SpiStopRx(SPI_HandleTypeDef *hSpi)
-{
-  CLEAR_BIT(hSpi->Instance->CR2, (SPI_CR2_RXNEIE | SPI_CR2_ERRIE));
-}
+    void SpiStopRx(SPI_HandleTypeDef *hSpi)
+    {
+      CLEAR_BIT(hSpi->Instance->CR2, (SPI_CR2_RXNEIE | SPI_CR2_ERRIE));
+    }
 
-/**
-  * @brief DMA UART communication error callback.
-  * @param hdma DMA handle.
-  * @retval None
-  */
-static void SPI_DMAError(DMA_HandleTypeDef *hdma)
-{
-  SpiDataT *data = (SpiDataT *)(hdma->Parent);
-  SPI_HandleTypeDef *hSpi = &data->hw.myHalHandle;
+    /**
+      * @brief DMA UART communication error callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void SPI_DMAError(DMA_HandleTypeDef *hdma)
+    {
+      SpiDataT *data = (SpiDataT *)(hdma->Parent);
+      SPI_HandleTypeDef *hSpi = &data->hw.myHalHandle;
     
-  /* Stop UART DMA Tx request if ongoing */
-  if (HAL_IS_BIT_SET(hSpi->Instance->CR2, SPI_CR2_TXDMAEN) ) {
-    SpiStopTx(hSpi);
-  }
+      /* Stop UART DMA Tx request if ongoing */
+      if (HAL_IS_BIT_SET(hSpi->Instance->CR2, SPI_CR2_TXDMAEN) ) {
+        SpiStopTx(hSpi);
+      }
   
-  /* Stop UART DMA Rx request if ongoing */
-  if ( HAL_IS_BIT_SET(hSpi->Instance->CR2, SPI_CR2_RXDMAEN) ) {
-    SpiStopRx(hSpi);
-  }
+      /* Stop UART DMA Rx request if ongoing */
+      if ( HAL_IS_BIT_SET(hSpi->Instance->CR2, SPI_CR2_RXDMAEN) ) {
+        SpiStopRx(hSpi);
+      }
   
-  /* RHB todo
-  if ( uhandle->OnError ) {
-    uhandle->last_errors |= HAL_SPI_ERROR_DMA;
-    uhandle->OnError(uhandle);
-  }
-  */
-}
+      /* RHB todo
+      if ( uhandle->OnError ) {
+        uhandle->last_errors |= HAL_SPI_ERROR_DMA;
+        uhandle->OnError(uhandle);
+      }
+      */
+    }
+
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
+    {
+      SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
+      //RHB TODO  
+    }
+
+    /**
+      * @brief DMA UART receive process complete callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void SPI_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
+    {
+      SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;
+      //RHB TODO  
+    }
+
+    void SpiStopTx(SPI_HandleTypeDef *hSpi)
+    {
+      //RHB TODO  
+    }
+
+    void SpiStopRx(SPI_HandleTypeDef *hSpi)
+    {
+      //RHB TODO  
+    }
+
+    /**
+      * @brief DMA UART communication error callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void SPI_DMAError(DMA_HandleTypeDef *hdma)
+    {
+      SpiDataT *data = (SpiDataT *)(hdma->Parent);
+      SPI_HandleTypeDef *hSpi = &data->hw.myHalHandle;
+    
+      //RHB TODO  
+    }
+#else
+    #error "No receipe to set baudrate prescaler"
+#endif
 
 static void HwSpiDmaChannelInit(SpiDataT *myspi, const HW_DmaType *dma, SpiDmaDirectionEnumType dmadir )
 {
@@ -392,7 +590,7 @@ uint8_t Spi8TxRxByte_hw(SpiHandleT *self, uint8_t outval)
 }
 
 /*******************************************************************************
- *  Bitbanged 16-bit SPI 
+ *  Hardware 16-bit SPI 
  *  Transfer may be uni- or bidirectional, this can be configured in bb_spi_config.h
  *  Setting of ChipSelect and so on has to be done outside of this routine
  *  Shift Direction is from MSB to LSB, Signal not inverted
@@ -412,9 +610,19 @@ void Spi8TxByte_hw(SpiHandleT *self, uint8_t outval)
     HAL_SPI_Transmit(&self->data->hw.myHalHandle, &outval, 1, SPIx_TIMEOUT_MAX);
 }
 
-void Spi8TxVector_hw(SpiHandleT *self, uint8_t *vector, uint16_t size)
+
+void Spi8TxRxVector_hw(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
 {
-    HAL_SPI_Transmit(&self->data->hw.myHalHandle, vector, size, SPIx_TIMEOUT_MAX);
+
+    if ( !vectorIn && !vectorOut ) return;
+
+    if ( ! vectorIn ) {
+        HAL_SPI_Transmit(&self->data->hw.myHalHandle, vectorOut, size, SPIx_TIMEOUT_MAX);
+    } else if ( !vectorOut ) {
+        HAL_SPI_Receive(&self->data->hw.myHalHandle, vectorIn, size, SPIx_TIMEOUT_MAX);
+    } else {
+        HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, vectorOut, vectorIn, size, SPIx_TIMEOUT_MAX);
+    } 
 }
 
 void Spi9TxByte_hw(SpiHandleT *self, uint16_t outval)
@@ -507,7 +715,7 @@ const SpiFunctionT SpiFns_hw = {
    .Spi9TxByte         = Spi9TxByte_hw,
    .Spi8TxByte         = Spi8TxByte_hw,
    .Spi8TxRxByte       = Spi8TxRxByte_hw,
-   .Spi8TxVector       = Spi8TxVector_hw,
+   .Spi8TxRxVector     = Spi8TxRxVector_hw,
    .Spi8TxVector_IT    = Spi8TxVector_IT_hw,
    .Spi9TxVector       = Spi9TxVector_hw,
    .Spi9TxConstant     = Spi9TxConstant_hw,

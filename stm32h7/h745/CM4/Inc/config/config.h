@@ -50,6 +50,11 @@
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_ETH                     1
 
+/* Choose one in case of USE_ETH == 1  */
+#define USE_ETY_PHY_LAN8742         0
+#define USE_ETH_PHY_ENC28J60        1
+
+
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
 #define DEBUG_BAUDRATE      38400        // When waking up from stop, the max baudrate is about 45kBaud
@@ -108,6 +113,14 @@
 /* Can we use an HSE Clock ? */
 #if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)
     #define HW_HAS_HSE
+#endif
+
+
+/* Exactly one eth phy defined ? */
+#if USE_ETH > 0
+    #if USE_ETY_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 == 0 || USE_ETY_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 > 1
+        #error "must define exactly one Eth Phy!"
+    #endif
 #endif
 
 /*

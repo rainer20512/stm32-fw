@@ -59,7 +59,14 @@ void Init_OtherDevices(void)
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }
-
+  #endif
+  #if defined(USE_SPI1)
+      dev_idx = AddDevice(&HW_SPI1, NULL, NULL );
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init SPI1-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
   #endif
   #if USE_QSPI > 0
       dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);

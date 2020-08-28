@@ -95,7 +95,6 @@
         <folder Name="STM32H745I_Nucleo">
           <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
         </folder>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/lan8742/lan8742.c" />
       </folder>
       <folder Name="CMSIS">
         <file file_name="../common_h7/Src/system_stm32h7xx.c" />
@@ -121,6 +120,7 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">
@@ -202,11 +202,29 @@
           <file file_name="../common_h7/lwip/ip_addr.h" />
         </folder>
         <folder Name="ProjectSrc">
-          <file file_name="../common_h7/lwip/ethernetif.c" />
           <file file_name="../common_h7/lwip/app_ethernet.c" />
           <file file_name="../common_h7/lwip/httpserver_netconn.c" />
           <file file_name="../common_h7/lwip/lwip_start.c" />
           <file file_name="../common_h7/lwip/heap_mem.c" />
+          <folder Name="lan8742">
+            <file file_name="../common_h7/lwip/lan8742/ethernetif.c">
+              <configuration
+                Name="THUMB Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../common_h7/lwip/lan8742/lan8742.c" />
+            <file file_name="../common_h7/lwip/lan8742/lan8742.h" />
+          </folder>
+          <folder Name="enc28j60">
+            <file file_name="../common_h7/lwip/enc28j60/ethernetif.c" />
+            <file file_name="../common_h7/lwip/enc28j60/File1.c">
+              <configuration
+                Name="THUMB Debug"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../common_h7/lwip/enc28j60/enc28j60.c" />
+            <file file_name="../common_h7/lwip/enc28j60/enc28j60.h" />
+          </folder>
         </folder>
       </folder>
     </folder>
@@ -232,6 +250,10 @@
           <file file_name="../../common/src/dev/eth_dev.c">
             <configuration Name="THUMB Debug" build_exclude_from_build="No" />
           </file>
+          <file file_name="../../common/src/dev/bitbang_spi.c" />
+          <file file_name="../../common/src/dev/common_spi.c" />
+          <file file_name="../../common/src/dev/spi_dev.c" />
+          <file file_name="../../common/src/dev/hw_spi.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />

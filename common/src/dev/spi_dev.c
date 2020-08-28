@@ -42,6 +42,13 @@
 typedef struct {
     SpiHandleT      *mySpiHandle;   /* My associated Spi-handle */
     uint32_t        baudrate;       /* Baudrate to use (approx ) */
+    /* Interrupt modes for any additional input pins: May be one of
+     * GPIO_MODE_IT_RISING,  GPIO_MODE_IT_FALLING,  GPIO_MODE_IT_RISING_FALLING,
+     * GPIO_MODE_EVT_RISING, GPIO_MODE_EVT_FALLING, GPIO_MODE_EVT_RISING_FALLING
+     * or 0. In this case GPIO_MODE_IT_RISING_FALLING is used by default */
+    uint32_t        busy_irq_mode;  /* Interrupt mode for busy line, if used */   
+    uint32_t        inp_irq_mode;   /* Interrupt mode for inp line, if used */ 
+    uint32_t        hw_irq_mode;    /* Interrupt mode for hw line, if used */ 
     uint8_t         use_nss;        /* Use hardware nss ( only for HW SPI */
     uint8_t         use_miso;       /* Use miso line ? */
     uint8_t         use_miso_irq;   /* let change in Miso line generate an pin change interrupt ? */
@@ -93,15 +100,15 @@ uint8_t SPI_HasInpIRQ(const HW_DeviceType *self)
  *               other are optional
  * @note identical for HW and BB SPI
  *****************************************************************************/
-static void SPI_GPIO_InitOther(SPI_AdditionalDataType *adt, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef  *Init )
+static void SPI_GPIO_InitOther(uint32_t devIdx, SPI_AdditionalDataType *adt, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef  *Init )
 {
     Init->Mode = GPIO_MODE_OUTPUT_PP;
     Init->Speed = GPIO_SPEED_FREQ_LOW;   /* Up to 1MHz LO is ok */
     /* if used, D/C output also as PushPull output,initially low */
-    if (adt->use_dnc ) GpioAFInitOneWithPreset( &gpio[DNC_IDX] , Init, HW_OUTPUT_LOW);
+    if (adt->use_dnc ) GpioAFInitOneWithPreset( devIdx, &gpio[DNC_IDX] , Init, HW_OUTPUT_LOW);
 
     /* if used, reset output also as PushPull output, initially high */
-    if (adt->use_rst ) GpioAFInitOneWithPreset( &gpio[RST_IDX] , Init, HW_OUTPUT_HIGH);
+    if (adt->use_rst ) GpioAFInitOneWithPreset( devIdx, &gpio[RST_IDX] , Init, HW_OUTPUT_HIGH);
 
     /* 
      * if used, configure MISO as Input, if interrupt trigger is selected,
@@ -114,18 +121,21 @@ static void SPI_GPIO_InitOther(SPI_AdditionalDataType *adt, const HW_Gpio_AF_Typ
         // Busy is active High
         Init->Pull = GPIO_PULLDOWN;
         if ( adt->use_busy_irq ) {
-            Init->Mode = GPIO_MODE_IT_RISING_FALLING;
+            if ( adt->busy_irq_mode != 0 ) 
+                Init->Mode = adt->busy_irq_mode;
+            else
+                Init->Mode = GPIO_MODE_IT_RISING_FALLING;
         } else {
             Init->Mode = GPIO_MODE_INPUT;
         }
-        GpioAFInitOne( &gpio[BUSY_IDX] , Init);    
+        GpioAFInitOne( devIdx, &gpio[BUSY_IDX] , Init);    
         
         /* 
          * finally, disable the pin interrupt in exti->imr1 
          * it has to be enabled by user manually
          */
         if ( adt->use_busy_irq ) {
-            EXTI->IMR1 &= ~( gpio[BUSY_IDX].pin );
+            EXTI_DISABLE_IRQ( gpio[BUSY_IDX].pin );
         }
     }
 
@@ -133,18 +143,21 @@ static void SPI_GPIO_InitOther(SPI_AdditionalDataType *adt, const HW_Gpio_AF_Typ
         // Do not Pull additional Input up or down
         Init->Pull = GPIO_NOPULL;
         if ( adt->use_inp_irq ) {
-            Init->Mode = GPIO_MODE_IT_RISING_FALLING;
+            if ( adt->inp_irq_mode != 0 ) 
+                Init->Mode = adt->inp_irq_mode;
+            else
+                Init->Mode = GPIO_MODE_IT_RISING_FALLING;
         } else {
             Init->Mode = GPIO_MODE_INPUT;
         }
-        GpioAFInitOne( &gpio[INP_IDX] , Init);    
+        GpioAFInitOne( devIdx, &gpio[INP_IDX] , Init);    
         
         /* 
          * finally, disable the pin interrupt in exti->imr1 
          * it has to be enabled by user manually
          */
         if ( adt->use_inp_irq ) {
-            EXTI->IMR1 &= ~( gpio[INP_IDX].pin );
+            EXTI_DISABLE_IRQ( gpio[INP_IDX].pin );
         }
     }
 
@@ -162,6 +175,8 @@ static void SPI_GPIO_InitHW(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
 
     SPI_AdditionalDataType *adt =  SPI_GetAdditionalData(self);
 
+    uint32_t devIdx = GetDevIdx(self);
+
     /* Enable SPI clock */
     HW_SetHWClock((SPI_TypeDef*)self->devBase, 1);
 
@@ -171,17 +186,17 @@ static void SPI_GPIO_InitHW(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
      */
     Init.Mode = GPIO_MODE_AF_PP;
     Init.Speed = GPIO_SPEED_FREQ_LOW;   /* Up to 1MHz LO is ok */
-    GpioAFInitOneWithPreset( &gpio[MOSI_IDX] , &Init, HW_OUTPUT_HIGH);
-    GpioAFInitOneWithPreset( &gpio[SCK_IDX] , &Init,  HW_OUTPUT_LOW);
+    GpioAFInitOneWithPreset(devIdx, &gpio[MOSI_IDX] , &Init, HW_OUTPUT_HIGH);
+    GpioAFInitOneWithPreset(devIdx, &gpio[SCK_IDX] , &Init,  HW_OUTPUT_LOW);
     
     if ( adt->use_miso ) {
         /* if MISO is used, configure identical to MOSI, SCK */
-        GpioAFInitOne( &gpio[MISO_IDX] , &Init);    
+        GpioAFInitOne(devIdx, &gpio[MISO_IDX] , &Init);    
         if ( adt->use_miso_irq ) {
             /* If miso irq is configured, configure interrupt on rising Miso line */
             Exti_ConfigIrq(gpio[MISO_IDX].gpio, gpio[MISO_IDX].pin, EXTI_TRIGGER_RISING );
-            /* Do not enable yetg */
-            EXTI->IMR1 &= ~( gpio[MISO_IDX].pin );
+            /* Do not enable yet */
+            EXTI_DISABLE_IRQ( gpio[MISO_IDX].pin );
         }
     }
 
@@ -192,10 +207,10 @@ static void SPI_GPIO_InitHW(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
        /* NSEL Pin is any gpio pin, configure for OpenDrain output */
        Init.Mode = GPIO_MODE_OUTPUT_PP;
     }
-    GpioAFInitOneWithPreset( &gpio[NSEL_IDX] , &Init, HW_OUTPUT_HIGH);
+    GpioAFInitOneWithPreset(devIdx, &gpio[NSEL_IDX] , &Init, HW_OUTPUT_HIGH);
 
      /* Configure DnC, nRST and BUSY, if specified */
-    SPI_GPIO_InitOther( adt, gpio, &Init );
+    SPI_GPIO_InitOther(devIdx,  adt, gpio, &Init );
 }
 
 /******************************************************************************
@@ -210,6 +225,7 @@ static void SPI_GPIO_InitBB(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
 
     SPI_AdditionalDataType *adt =  SPI_GetAdditionalData(self);
 
+    uint32_t devIdx = GetDevIdx(self);
   
     /* 
      * Configure the MOSI, SCK and NSEL as Pushpull-Outputs, 
@@ -217,9 +233,9 @@ static void SPI_GPIO_InitBB(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
      */
     Init.Mode = GPIO_MODE_OUTPUT_PP;
     Init.Speed = GPIO_SPEED_FREQ_LOW;   /* Up to 1MHz LO is ok */
-    GpioAFInitOneWithPreset( &gpio[MOSI_IDX] , &Init, HW_OUTPUT_HIGH);
-    GpioAFInitOneWithPreset( &gpio[SCK_IDX] , &Init,  HW_OUTPUT_LOW);
-    GpioAFInitOneWithPreset( &gpio[NSEL_IDX] , &Init, HW_OUTPUT_HIGH);
+    GpioAFInitOneWithPreset( devIdx, &gpio[MOSI_IDX] , &Init, HW_OUTPUT_HIGH);
+    GpioAFInitOneWithPreset( devIdx, &gpio[SCK_IDX] , &Init,  HW_OUTPUT_LOW);
+    GpioAFInitOneWithPreset( devIdx, &gpio[NSEL_IDX] , &Init, HW_OUTPUT_HIGH);
 
     /* 
      * if used, configure MISO as Input, if interrupt trigger is selected,
@@ -235,19 +251,19 @@ static void SPI_GPIO_InitBB(const HW_DeviceType *self, const HW_Gpio_AF_Type *gp
         } else {
             Init.Mode = GPIO_MODE_INPUT;
         }
-        GpioAFInitOne( &gpio[MISO_IDX] , &Init);    
+        GpioAFInitOne( devIdx, &gpio[MISO_IDX] , &Init);    
         
         /* 
          * finally, disable the pin interrupt in exti->imr1 
          * it has to be enabled by user manually
          */
         if ( adt->use_miso_irq ) {
-            EXTI->IMR1 &= ~( gpio[MISO_IDX].pin );
+            EXTI_DISABLE_IRQ( gpio[MISO_IDX].pin );
         }
     }
 
      /* Configure DnC, nRST and BUSY, if specified */
-     SPI_GPIO_InitOther( adt, gpio, &Init );
+     SPI_GPIO_InitOther( devIdx, adt, gpio, &Init );
 
 }
 
@@ -256,14 +272,16 @@ static void SPI_GPIO_DeInit(const HW_DeviceType *self)
     SPI_AdditionalDataType *adt =  SPI_GetAdditionalData(self);
     const HW_Gpio_AF_Type *gpio = self->devGpioAF->gpio;
 
+    uint32_t devIdx = GetDevIdx(self);
+
     /* Disable all SPI GPIO pins Pins */
     for ( uint32_t i = 0; i <= NSEL_IDX; i++ )
-        GpioAFDeInitOne( &gpio[i] );
-    if ( adt->use_miso ) GpioAFDeInitOne( &gpio[MISO_IDX] );
-    if ( adt->use_dnc  ) GpioAFDeInitOne( &gpio[DNC_IDX]  );
-    if ( adt->use_rst  ) GpioAFDeInitOne( &gpio[RST_IDX]  );
-    if ( adt->use_busy ) GpioAFDeInitOne( &gpio[BUSY_IDX]  );
-    if ( adt->use_inp  ) GpioAFDeInitOne( &gpio[INP_IDX]  );
+        GpioAFDeInitOne( devIdx, &gpio[i] );
+    if ( adt->use_miso ) GpioAFDeInitOne( devIdx, &gpio[MISO_IDX] );
+    if ( adt->use_dnc  ) GpioAFDeInitOne( devIdx, &gpio[DNC_IDX]  );
+    if ( adt->use_rst  ) GpioAFDeInitOne( devIdx, &gpio[RST_IDX]  );
+    if ( adt->use_busy ) GpioAFDeInitOne( devIdx, &gpio[BUSY_IDX]  );
+    if ( adt->use_inp  ) GpioAFDeInitOne( devIdx, &gpio[INP_IDX]  );
 }
 
 extern const SpiFunctionT SpiFns_hw;
@@ -346,6 +364,7 @@ bool SPI_Init(const HW_DeviceType *self)
     if ( bIsBbSpi ) {
         SPI_GPIO_InitBB( self, gpio );
     } else {
+        SpiClockInit( self, true);
         SPI_GPIO_InitHW( self, gpio );
     }
 
@@ -404,12 +423,34 @@ void SPI_DeInit(const HW_DeviceType *self)
 }
 
 /******************************************************************************
+ * Callback AFTER the system frequency has been altered
+ *****************************************************************************/
+bool SPI_OnFrqChange(const HW_DeviceType *self)
+{
+  SpiHandleT *hnd = SPI_GetAdditionalData(self)->mySpiHandle;
+  SpiDataHW *hndhw = &hnd->data->hw;
+  SPI_TypeDef *spi    = (SPI_TypeDef*)hnd->data->mySpiDev->devBase;
+
+  HwSpiSetPrescaler (spi, hndhw->myBaudrate );  
+  return true;
+}
+
+
+/******************************************************************************
  * Check, whether the system may enter Stop 2 mode. 
  * This is the case, if neither transmit nor receive are active
  *****************************************************************************/
 bool SPI_AllowStop(const HW_DeviceType *self)
 {
+#if defined(STM32L476xx)|| defined(STM32L496xx)
+    /* Allow sleep, if not busy */
     return (((SPI_TypeDef *)self->devBase)->SR & SPI_SR_BSY_Msk ) == 0;
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    /* Allow sleep, if not enabled */
+    return (((SPI_TypeDef *)self->devBase)->CR1 & SPI_CR1_SPE ) == 0;
+#else
+    #error "No receipe to allow stop by SPI device"
+#endif
 }
 
 
@@ -504,6 +545,12 @@ bool SPI_AllowStop(const HW_DeviceType *self)
             #else
                 0,
             #endif
+        .busy_irq_mode = 
+            #if defined(SPI1_USE_BUSY_IRQ) && defined(SPI1_BUSY_IRQ_MODE) 
+                SPI1_BUSY_IRQ_MODE,
+            #else
+                0,
+            #endif
         .use_inp = 
             #ifdef SPI1_USE_INP
                 1,
@@ -513,6 +560,12 @@ bool SPI_AllowStop(const HW_DeviceType *self)
         .use_inp_irq = 
             #ifdef SPI1_USE_INP_IRQ 
                 1,
+            #else
+                0,
+            #endif
+        .inp_irq_mode = 
+            #if defined(SPI1_USE_INP_IRQ) && defined(SPI1_INP_IRQ_MODE) 
+                SPI1_INP_IRQ_MODE,
             #else
                 0,
             #endif
@@ -583,11 +636,12 @@ bool SPI_AllowStop(const HW_DeviceType *self)
         #endif
         .Init           = SPI_Init,
         .DeInit         = SPI_DeInit,
-        .OnFrqChange    = NULL,
 #if SPIDEV1_TYPE == HW_DEVICE_HWSPI
-        .AllowStop     = SPI_AllowStop,
+        .OnFrqChange    = SPI_OnFrqChange,
+        .AllowStop      = SPI_AllowStop,
 #else
-        .AllowStop     = NULL,
+        .OnFrqChange    = NULL,
+        .AllowStop      = NULL,
 #endif
         .OnSleep        = NULL,
         .OnWakeUp       = NULL,

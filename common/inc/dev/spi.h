@@ -80,13 +80,13 @@ typedef struct SpiFunctionType {
     void     ( *Spi9TxByte         ) (SpiHandleT *, uint16_t );
     void     ( *Spi8TxByte         ) (SpiHandleT *, uint8_t  );
     uint8_t  ( *Spi8TxRxByte       ) (SpiHandleT *, uint8_t  );
-    void     ( *Spi8TxVector       ) (SpiHandleT *self, uint8_t  *, uint16_t);
-    void     ( *Spi8TxVector_IT    ) (SpiHandleT *self, uint8_t  *, uint16_t);
-    void     ( *Spi9TxVector       ) (SpiHandleT *self, uint16_t *, uint16_t);
-    void     ( *Spi9TxConstant     ) (SpiHandleT *self, uint16_t  , uint16_t);
-    void     ( *Spi9TxVector_IT    ) (SpiHandleT *self, uint16_t *, uint16_t);
-    void     ( *Spi9TxVector_DMA   ) (SpiHandleT *self, uint16_t *, uint16_t);
-    void     ( *Spi9TxConstant_DMA ) (SpiHandleT *self, uint16_t  , uint16_t);
+    void     ( *Spi8TxRxVector     ) (SpiHandleT *self, uint8_t  *, uint8_t  *, uint16_t);
+    void     ( *Spi8TxVector_IT    ) (SpiHandleT *self, uint8_t  *,             uint16_t);
+    void     ( *Spi9TxVector       ) (SpiHandleT *self, uint16_t *,             uint16_t);
+    void     ( *Spi9TxConstant     ) (SpiHandleT *self, uint16_t  ,             uint16_t);
+    void     ( *Spi9TxVector_IT    ) (SpiHandleT *self, uint16_t *,             uint16_t);
+    void     ( *Spi9TxVector_DMA   ) (SpiHandleT *self, uint16_t *,             uint16_t);
+    void     ( *Spi9TxConstant_DMA ) (SpiHandleT *self, uint16_t  ,             uint16_t);
 } SpiFunctionT;
 
 
@@ -107,10 +107,19 @@ typedef struct SpiHandleType {
  *****************************************************************************/
 SpiHandleT *SPI_GetHandleFromDev(const HW_DeviceType *self);
 
+/*
+ * The IRQ-Callback fns must have the following signature: 
+ * uint16_t pin, uint16_t pinvalue, void *arg 
+ * where pin is the pinnumber, that is associated with the interrupt
+ *       pinvalue is the current pin input value ( 0 or 1 )
+ *       arg is an optional  user defineable argument to the callback
+ */
 typedef void ( *pFnIrqCB )( uint16_t, uint16_t, void * );
 
 bool SpiInit            (SpiHandleT *, const HW_DeviceType *);
 void SpiDeInit          (SpiHandleT *, const HW_DeviceType *);
+bool SpiClockInit       (const HW_DeviceType *self, bool bDoInit);
+void HwSpiSetPrescaler  (SPI_TypeDef *hspi, uint32_t baudrate );
 
 void SpiSetMisoCB       (SpiHandleT *, pFnIrqCB);
 void SpiSetBusyCB       (SpiHandleT *, pFnIrqCB);
@@ -138,7 +147,7 @@ void SpiRstHigh         (SpiHandleT *);
 #define Spi9TxByte(hnd, ... )         hnd->fns->Spi9TxByte          (hnd, __VA_ARGS__ )
 #define Spi8TxByte(hnd, ... )         hnd->fns->Spi8TxByte          (hnd, __VA_ARGS__ )  
 #define Spi8TxRxByte(hnd, ... )       hnd->fns->Spi8TxRxByte        (hnd, __VA_ARGS__ )
-#define Spi8TxVector(hnd, ... )       hnd->fns->Spi8TxVector        (hnd, __VA_ARGS__ )
+#define Spi8TxRxVector(hnd, ... )     hnd->fns->Spi8TxRxVector      (hnd, __VA_ARGS__ )
 #define Spi8TxVector_IT(hnd, ... )    hnd->fns->Spi8TxVector_IT     (hnd, __VA_ARGS__ )
 #define Spi9TxVector(hnd, ... )       hnd->fns->Spi9TxVector        (hnd, __VA_ARGS__ )
 #define Spi9TxConstant(hnd, ... )     hnd->fns->Spi9TxConstant      (hnd, __VA_ARGS__ )

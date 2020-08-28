@@ -33,36 +33,36 @@
 /* ----- Fixed part, don't change -------------------------------------------------- */
 #if defined(USE_SPI1) && defined(SPI1)
     #if defined(USE_SPI1_ALTN1)
-        /* NSS: PA4/AF0, SCK: PA5/AF0, MSIO: PA6/AF0, MOSI:  PA7/AF0 */
-        #define SPI1_NSS                         { GPIO_PIN_4,  GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
-        #define SPI1_SCK                         { GPIO_PIN_5,  GPIOA, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
-        #define SPI1_MISO                        { GPIO_PIN_6,  GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
+        /* NSS: PA4/AF5, SCK: PA5/AF5, MSIO: PA6/AF5, MOSI:  PA7/AF5 */
+        #define SPI1_NSS                         { GPIO_PIN_4,   GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
+        #define SPI1_SCK                         { GPIO_PIN_5,   GPIOA, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
+        #define SPI1_MISO                        { GPIO_PIN_6,   GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
         #define SPI1_MISO_IRQ                    { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
-        #define SPI1_MOSI                        { GPIO_PIN_7,  GPIOA, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
+        #define SPI1_MOSI                        { GPIO_PIN_7,   GPIOA, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
     #elif defined(USE_SPI1_ALTN2)
-        /* NSS: PA15/AF0, SCK: PB3/AF0, MSIO: PB4/AF0, MOSI:  PB5/AF0 */
-        #define SPI1_NSS                         { GPIO_PIN_15, GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
-        #define SPI1_SCK                         { GPIO_PIN_3,  GPIOB, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
-        #define SPI1_MISO                        { GPIO_PIN_4,  GPIOB, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
-        #define SPI1_MISO_IRQ                    { EXTI4_IRQn,  SPI_IRQ_PRIO, 0 }
-        #define SPI1_MOSI                        { GPIO_PIN_5,  GPIOB, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
+        /* NSS: PA15/AF5, SCK: PB3/AF5, MSIO: PB4/AF5, MOSI:  PB5/AF5 */
+        #define SPI1_NSS                         { GPIO_PIN_15,  GPIOA, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
+        #define SPI1_SCK                         { GPIO_PIN_3,   GPIOB, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
+        #define SPI1_MISO                        { GPIO_PIN_4,   GPIOB, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
+        #define SPI1_MISO_IRQ                    { EXTI4_IRQn,   SPI_IRQ_PRIO, 0 }
+        #define SPI1_MOSI                        { GPIO_PIN_5,   GPIOB, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
     #elif defined(USE_SPI1_ALTN3)
-        /* NSS: PE12/AF2, SCK: PE13/AF2, MSIO: PE14/AF2, MOSI:  PE15/AF2 */
-        #define SPI1_NSS                         { GPIO_PIN_12, GPIOE, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
-        #define SPI1_SCK                         { GPIO_PIN_13, GPIOE, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
-        #define SPI1_MISO                        { GPIO_PIN_14, GPIOE, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
-        #define SPI1_MISO_IRQ                    { EXTI15_10_IRQn, SPI_IRQ_PRIO, 0 }
-        #define SPI1_MOSI                        { GPIO_PIN_15, GPIOE, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
+        /* NSS: PG10/AF5, SCK: PG11/AF5, MSIO: PG9/AF5, MOSI:  PD7/AF5 */
+        #define SPI1_NSS                         { GPIO_PIN_10,  GPIOG, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_nSS" }
+        #define SPI1_SCK                         { GPIO_PIN_11,  GPIOG, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Sck" }
+        #define SPI1_MISO                        { GPIO_PIN_9,   GPIOG, GPIO_AF5_SPI1, GPIO_PULLUP, "Spi1_Miso" }
+        #define SPI1_MISO_IRQ                    { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
+        #define SPI1_MOSI                        { GPIO_PIN_7,   GPIOD, GPIO_AF5_SPI1, GPIO_NOPULL, "Spi1_Mosi" } 
     #else
         #error("No config for SPI1 found");
     #endif 
     /* Definition for SPIx's NVIC */
     #define SPI1_HW_IRQ                          { SPI1_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI1_IRQHandler                      SPI1_IRQHandler
-    #define SPI1_TX_DMA                          DMA1_Channel3, DMA_REQUEST_1, DMA1_Channel3_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI1_RX_DMA                          DMA1_Channel2, DMA_REQUEST_1, DMA1_Channel2_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI1_DMA_TX_IRQHandler               DMA1_Channel3_IRQHandler
-    #define SPI1_DMA_RX_IRQHandler               DMA1_Channel2_IRQHandler
+    #define SPI1_TX_DMA                          DMA1_Stream3, DMA_REQUEST_SPI1_TX, DMA1_Stream3_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI1_RX_DMA                          DMA1_Stream2, DMA_REQUEST_SPI1_RX, DMA1_Stream2_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI1_DMA_TX_IRQHandler               DMA1_Stream3_IRQHandler
+    #define SPI1_DMA_RX_IRQHandler               DMA1_Stream2_IRQHandler
 #endif /* SPI1 */
 
 #if defined(USE_SPI2) && defined(SPI2)
@@ -94,10 +94,10 @@
     #define SPI2_HW_IRQ                          { SPI2_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI2_IRQHandler                      SPI2_IRQHandler
     /* Definition for SPIDEV2's DMA */
-    #define SPI2_TX_DMA                          DMA1_Channel5, DMA_REQUEST_1, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI2_RX_DMA                          DMA1_Channel4, DMA_REQUEST_1, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI2_DMA_TX_IRQHandler               DMA1_Channel5_IRQHandler
-    #define SPI2_DMA_RX_IRQHandler               DMA1_Channel4_IRQHandler
+    #define SPI2_TX_DMA                          DMA1_Stream5, DMA_REQUEST_SPI2_TX, DMA1_Stream5_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI2_RX_DMA                          DMA1_Stream4, DMA_REQUEST_SPI2_RX, DMA1_Stream4_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI2_DMA_TX_IRQHandler               DMA1_Stream5_IRQHandler
+    #define SPI2_DMA_RX_IRQHandler               DMA1_Stream4_IRQHandler
 #endif /* SPI2 */
 
 #if defined(USE_SPI3) && defined(SPI3)
@@ -122,10 +122,10 @@
     #define SPI3_IRQ                             { SPI3_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI3_IRQHandler                      SPI3_IRQHandler
     /* Definition for SPIDEV3's DMA */
-    #define SPI3_TX_DMA                          DMA2_Channel2, DMA_REQUEST_3, DMA2_Channel2_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI3_RX_DMA                          DMA2_Channel1, DMA_REQUEST_3, DMA2_Channel1_IRQn, DMA_PRIORITY_MEDIUM
-    #define SPI3_DMA_TX_IRQHandler               DMA2_Channel2_IRQHandler
-    #define SPI3_DMA_RX_IRQHandler               DMA2_Channel1_IRQHandler
+    #define SPI3_TX_DMA                          DMA2_Stream2, DMA_REQUEST_SPI3_TX, DMA2_Stream2_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI3_RX_DMA                          DMA2_Stream1, DMA_REQUEST_SPI3_RX, DMA2_Stream1_IRQn, DMA_PRIORITY_MEDIUM
+    #define SPI3_DMA_TX_IRQHandler               DMA2_Stream2_IRQHandler
+    #define SPI3_DMA_RX_IRQHandler               DMA2_Stream1_IRQHandler
 #endif /* SPI3 */
 /* ----- End of Fixed part, change below  -------------------------------------------- */
 
@@ -145,6 +145,12 @@
     #define SPI1_BUSY                       { GPIO_PIN_8 , GPIOC, 0, GPIO_NOPULL, "Spi1_BusyIn" }
     #ifdef SPI1_USE_BUSY_IRQ
       #define SPI1_BUSY_IRQ                 { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
+    #endif
+  #endif
+  #ifdef SPI1_USE_INP 
+    #define SPI1_INP                        { GPIO_PIN_6 , GPIOB, 0, GPIO_PULLUP, "Spi1_EncInt" }
+    #ifdef SPI1_USE_INP_IRQ
+      #define SPI1_INP_IRQ                  { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
     #endif
   #endif
 #endif // SPIDEV1

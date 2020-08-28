@@ -123,17 +123,6 @@ void Spi8TxByte_bb(SpiHandleT *self, uint8_t outval)
 }
 
 /*******************************************************************************
- *  Bitbanged 8-bit SPI Transmit of a vector of bytes
- *  Setting of ChipSelect and so on has to be done outside of this routine
- *  Shift Direction is from MSB to LSB, Signal not inverted
- ******************************************************************************/
-void Spi8TxVector_bb(SpiHandleT *self, uint8_t *vector, uint16_t size)
-{
-    for ( uint16_t i = 0; i < size; i++ )
-        Spi8TxByte(self, vector[i]);
-}
-
-/*******************************************************************************
  *  Bitbanged 8-bit SPI 
  *  Transfer may be uni- or bidirectional, this can be configured in bb_spi_config.h
  *  Setting of ChipSelect and so on has to be done outside of this routine
@@ -167,6 +156,27 @@ uint8_t Spi8TxRxByte_bb(SpiHandleT *self, uint8_t outval)
   } // for loop
   
   return outval;
+}
+
+/*******************************************************************************
+ *  Bitbanged 8-bit SPI Transmit of a vector of bytes
+ *  Setting of ChipSelect and so on has to be done outside of this routine
+ *  Shift Direction is from MSB to LSB, Signal not inverted
+ *  Either vectorIn or vectorOut may be NULL; in wich case data is only shifted 
+ *  out or shifted in respectively. 
+ ******************************************************************************/
+void Spi8TxRxVector_bb(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
+{
+    uint32_t i;
+    if ( !vectorIn && !vectorOut ) return;
+
+    if        ( !vectorIn ) {
+        for ( i = 0; i < size; i++ ) Spi8TxByte_bb(self, vectorOut[i]);
+    } else if ( !vectorOut ) {
+        for ( i = 0; i < size; i++ ) vectorIn[i] = Spi8TxRxByte_bb(self, 0);
+    } else {
+        for ( i = 0; i < size; i++ ) vectorIn[i] = Spi8TxRxByte_bb(self, vectorOut[i]);
+    }    
 }
 
 /*******************************************************************************
@@ -210,7 +220,7 @@ const SpiFunctionT SpiFns_bb = {
    .Spi9TxByte         = Spi9TxByte_bb,
    .Spi8TxByte         = Spi8TxByte_bb,
    .Spi8TxRxByte       = Spi8TxRxByte_bb,
-   .Spi8TxVector       = Spi8TxVector_bb,
+   .Spi8TxRXVector     = Spi8TxVector_bb,
    .Spi8TxVector_IT    = NULL,                  /* all these are not implemented as BitBanging functions ! */
    .Spi9TxVector       = NULL,
    .Spi9TxConstant     = NULL,

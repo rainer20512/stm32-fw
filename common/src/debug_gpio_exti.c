@@ -350,6 +350,7 @@ const char * const exti_domain_name[]= { "EXTI   " };
 #define GET_IMR(d,i)  ( i > 31 ? EXTI->IMR2  : EXTI->IMR1 )
 #define GET_EMR(d,i)  ( i > 31 ? EXTI->EMR2  : EXTI->EMR1 )
 #define GET_PR(d,i)   ( i > 31 ? EXTI->PR2   : EXTI->PR1 )
+
 #define GET_FTSR(i)   ( i > 31 ? EXTI->FTSR2 : EXTI->FTSR1 )
 #define GET_RTSR(i)   ( i > 31 ? EXTI->RTSR2 : EXTI->RTSR1 )
 
