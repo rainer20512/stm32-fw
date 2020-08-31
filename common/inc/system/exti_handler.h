@@ -22,12 +22,14 @@
 #if defined(DUAL_CORE) && defined(CORE_CM4)
     #define EXTI_CLEAR_PR1(bitpos)      EXTI->C2PR1 = bitpos
     #define EXTI_GET_PR1()              EXTI->C2PR1
+    #define EXTI_IRQ_ENABLED(bitpos)    READ_BIT(EXTI->C2IMR1,   (uint32_t)(bitpos) )
     #define EXTI_ENABLE_IRQ(bitpos)     SET_BIT(EXTI->C2IMR1,   (uint32_t)(bitpos) )
     #define EXTI_DISABLE_IRQ(bitpos)    CLEAR_BIT(EXTI->C2IMR1, (uint32_t)(bitpos) )
     #define EXTI_GET_IMR1()             EXTI->C2IMR1
 #else
     #define EXTI_CLEAR_PR1(bitpos)      EXTI->PR1 = bitpos
     #define EXTI_GET_PR1()              EXTI->PR1
+    #define EXTI_IRQ_ENABLED(bitpos)    READ_BIT(EXTI->IMR1,   (uint32_t)(bitpos) )
     #define EXTI_ENABLE_IRQ(bitpos)     SET_BIT(EXTI->IMR1,   (uint32_t)(bitpos) )
     #define EXTI_DISABLE_IRQ(bitpos)    CLEAR_BIT(EXTI->IMR1, (uint32_t)(bitpos) )
     #define EXTI_GET_IMR1()             EXTI->IMR1

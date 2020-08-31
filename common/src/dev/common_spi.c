@@ -79,6 +79,12 @@ void INP_IRQ_Clear( SpiHandleT *self )
     EXTI_CLEAR_PR1(self->data->inp_bitpos); 
 }
 
+bool INP_IRQ_Enabled(SpiHandleT *self )
+{
+   return EXTI_IRQ_ENABLED( self->data->inp_bitpos ) != 0;
+}
+
+
 void INP_IRQ_Enable( SpiHandleT *self )
 {
     EXTI_ENABLE_IRQ(self->data->inp_bitpos); 

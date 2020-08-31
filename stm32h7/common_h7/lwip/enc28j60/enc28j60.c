@@ -976,6 +976,13 @@ void ENC_WriteBuffer(void *buffer, uint16_t buflen)
    * buffer at the position of the EWRPT register.
    */
 
+  /* 
+   * Disable ENC-Interrupts temporarily, because SPI-Operations are not atomic and should not
+   * be interrupted by ENC interrupt, which will trigger SPI operations itself
+   */
+  bool enc_is_ena = INP_IRQ_Enabled(SPI_HANDLE);
+  if ( enc_is_ena )  INP_IRQ_Disable(SPI_HANDLE);
+
   /* Select ENC28J60 chip
    *
    * "The WBM command is started by lowering the CS pin. ..."
@@ -1017,6 +1024,9 @@ void ENC_WriteBuffer(void *buffer, uint16_t buflen)
    * done in ENC_SPI_SendBuf callback
    */
 
+  /* Reenable ENC interrupts again, if they were enabled before */
+  if ( enc_is_ena )  INP_IRQ_Enable(SPI_HANDLE);
+
 }
 
 /****************************************************************************
@@ -1039,8 +1049,14 @@ void ENC_WriteBuffer(void *buffer, uint16_t buflen)
 
 static void enc_rdbuffer(void *buffer, int16_t buflen)
 {
-  /* Select ENC28J60 chip */
+  /* 
+   * Disable ENC-Interrupts temporarily, because SPI-Operations are not atomic and should not
+   * be interrupted by ENC interrupt, which will trigger SPI operations itself
+   */
+  bool enc_is_ena = INP_IRQ_Enabled(SPI_HANDLE);
+  if ( enc_is_ena )  INP_IRQ_Disable(SPI_HANDLE);
 
+  /* Select ENC28J60 chip */
   ENC_SPI_Select(true);
 
   /* Send the read buffer memory command (ignoring the response) */
@@ -1051,7 +1067,10 @@ static void enc_rdbuffer(void *buffer, int16_t buflen)
 
   ENC_SPI_SendBuf(NULL, buffer, buflen);
 
-  /* De-select ENC28J60 chip: done in ENC_SPI_SendBuf callback */
+  /* De-select ENC28J60 chip: done in ENC_SPI_SendBuf */
+
+  /* Reenable ENC interrupts again, if they were enabled before */
+  if ( enc_is_ena )  INP_IRQ_Enable(SPI_HANDLE);
 }
 
 /****************************************************************************
@@ -1252,14 +1271,8 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
     uint16_t pktlen;
     uint16_t rxstat;
 
-    uint8_t pktcnt;
-
     bool result = true;
 
-    pktcnt = enc_rdbreg(handle, ENC_EPKTCNT);
-    if (pktcnt == 0) {
-        return false;
-    };
 
     /* Set the read pointer to the start of the received packet (ERDPT) */
 
@@ -1287,6 +1300,8 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
     pktlen        = (uint16_t)rsv[3] << 8 | (uint16_t)rsv[2];
     rxstat        = (uint16_t)rsv[5] << 8 | (uint16_t)rsv[4];
 
+    ENCDEBUG("RxFrame: Have packet of len=%d\n", pktlen);
+
   /* Check if the packet was received OK */
 
     if ((rxstat & RXSTAT_OK) == 0) {
@@ -1300,18 +1315,18 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
             priv->stats.rxpktlen++;
     #endif
             result = false;
-        } else { /* Otherwise, read and process the packet */
-            /* Save the packet length (without the 4 byte CRC) in handle->RxFrameInfos.length*/
+        } else { 
+            /* Otherwise, read and process the packet, rxbuff may be NULL in case of no more */
+            /* free rxbuffers to allocate, in this case do not copy                          */
+            if ( rxbuff ) {
+                /* Save the packet length (without the 4 byte CRC) in handle->RxFrameInfos.length*/
+                *rxlen = pktlen - 4;
 
-            *rxlen = pktlen - 4;
-
-            /* Copy the data data from the receive buffer to priv->dev.d_buf.
-            * ERDPT should be correctly positioned from the last call to to
-            * end_rdbuffer (above).
-            */
-
-            enc_rdbuffer(rxbuff, *rxlen);
-
+                /* Copy the data data from the receive buffer to priv->dev.d_buf.
+                 * ERDPT should be correctly positioned from the last call to to
+                 * end_rdbuffer (above). */
+                enc_rdbuffer(rxbuff, *rxlen);
+            }
         }
     }
 
@@ -1339,6 +1354,31 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
 
     return result;
 }
+
+/****************************************************************************
+ * Function: ENC_RxPacketAvailable
+ *
+ * Description:
+ *  Return the number of Rx packets available in the Rx queue
+ *
+ * Parameters:
+ *   handle  - Reference to the driver state structure
+ *
+ * Returned Value:
+ *   Number of Rx packets fully received
+ *
+ * Assumptions:
+ *
+ ****************************************************************************/
+uint8_t ENC_RxPacketAvailable(ENC_HandleTypeDef *handle )
+{
+    uint8_t pktcnt;
+
+    pktcnt = enc_rdbreg(handle, ENC_EPKTCNT);
+    ENCDEBUG("RxPackets: %d waiting\n",pktcnt);
+    return pktcnt;
+}
+
 
 /****************************************************************************
  * Function: enc_linkstatus
@@ -1377,8 +1417,16 @@ static void enc_linkstatus(ENC_HandleTypeDef *handle)
 
 int32_t ENC_GetLinkState(ENC_HandleTypeDef *handle)
 {
-  enc_linkstatus(handle);  
   
+  uint8_t eir = enc_rdgreg(ENC_EIR) & EIR_ALLINTS;
+  uint8_t eie = enc_rdgreg(ENC_EIE);
+  bool pcint = INP_IRQ_Enabled(SPI_HANDLE);
+  if ( eir ) ENCDEBUG("EIE=0x%02x,EIR=0x%02x,GIE=%d\n", eie, eir, pcint);
+  
+
+  enc_linkstatus(handle);  
+
+
   /* Check linkstatus bit */
   if ( handle->LinkStatus & PHSTAT2_LSTAT ) {
     /* If set, check fullduplex bit */
@@ -1456,20 +1504,25 @@ void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
     /* PKTIF is not reliable, check PKCNT instead */
     uint8_t inCount = enc_rdbreg(myEncHandle, ENC_EPKTCNT);
     if ( inCount != 0) {
-        ENCDEBUG("Queued Rx-Packets: %d\n", inCount );
+        ENCDEBUG("Enc IRQ: Queued Rx-Packets: %d\n", inCount );
+        if ( inCount == 128 ) {
+            ENCDEBUG("Spurious Interrupt\n", inCount );
+        }
         /* Manage EIR_PKTIF by software */
         eir |= EIR_PKTIF;
         ENC_RxCpltCallback();
+
+        /* Do not process other interrupts, they will be handled by another ENC interrupt */
+        return;
     }
 
     /* Store interrupt flags in handle */
     myEncHandle->interruptFlags = eir;
 
-    ENCDEBUG("ENC_IRQHandler, flags = 0x%02x\n", eir);
-
     /* If link status has changed, read it */
     if ((eir & EIR_LINKIF) != 0) /* Link change interrupt */
     {
+        ENCDEBUG("Enc IRQ: Link change\n" );
         enc_rdphy(myEncHandle, ENC_PHIR);  /* Clear the LINKIF interrupt */
         enc_linkstatus(myEncHandle);       /* Get current link status */
         /* Enable Ethernet interrupts */
@@ -1543,9 +1596,20 @@ uint8_t ENC_SPI_SendWithoutSelection(uint8_t command)
 
 uint8_t ENC_SPI_Send(uint8_t command)
 {
+    /* 
+     * Disable ENC-Interrupts temporarily, because SPI-Operations are not atomic and should not
+     * be interrupted by ENC interrupt, which will trigger SPI operations itself
+     */
+    bool enc_is_ena = INP_IRQ_Enabled(SPI_HANDLE);
+    if ( enc_is_ena )  INP_IRQ_Disable(SPI_HANDLE);
+
     ENC_SPI_Select(true);
     uint8_t ret = ENC_SPI_SendWithoutSelection(command);
     ENC_SPI_Select(false);
+   
+    /* Reenable ENC interrupts again, if they were enabled before */
+    if ( enc_is_ena )  INP_IRQ_Enable(SPI_HANDLE);
+
     return ret;
 }
 
@@ -1558,9 +1622,19 @@ uint8_t ENC_SPI_Send(uint8_t command)
 
 void ENC_SPI_SendBuf(uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize)
 {
+    /* 
+     * Disable ENC-Interrupts temporarily, because SPI-Operations are not atomic and should not
+     * be interrupted by ENC interrupt, which will trigger SPI operations itself
+     */
+    bool enc_is_ena = INP_IRQ_Enabled(SPI_HANDLE);
+    if ( enc_is_ena )  INP_IRQ_Disable(SPI_HANDLE);
+
     ENC_SPI_Select(true);
     Spi8TxRxVector(SPI_HANDLE, master2slave, slave2master, bufferSize);
     ENC_SPI_Select(false);
+
+    /* Reenable ENC interrupts again, if they were enabled before */
+    if ( enc_is_ena )  INP_IRQ_Enable(SPI_HANDLE);
 }
 
 

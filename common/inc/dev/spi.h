@@ -130,6 +130,7 @@ void MISO_IRQ_Disable   (SpiHandleT *);
 void BUSY_IRQ_Enable    (SpiHandleT *);
 void BUSY_IRQ_Clear     (SpiHandleT *);
 void BUSY_IRQ_Disable   (SpiHandleT *);
+bool INP_IRQ_Enabled    (SpiHandleT *);
 void INP_IRQ_Enable     (SpiHandleT *);
 void INP_IRQ_Clear      (SpiHandleT *);
 void INP_IRQ_Disable    (SpiHandleT *);
