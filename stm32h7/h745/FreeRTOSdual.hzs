@@ -2,7 +2,7 @@
 <session>
  <Bookmarks/>
  <Breakpoints groups="Breakpoints;V7M Exceptions" active_group="Breakpoints">
-  <BreakpointListItem trigger="" line="1597" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common_h7/lwip/enc28j60/enc28j60.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="1609" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="../common_h7/lwip/enc28j60/enc28j60.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="121" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="CM7/Src/main_c7.c" useHWbreakpoint="false"/>
   <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
@@ -120,10 +120,10 @@
    <Watchpoint expression="data" name="data" radix="-1" linenumber="269" filename="../../common/src/dev/hw_spi.c"/>
    <Watchpoint expression="EXTI" name="EXTI" radix="-1" linenumber="224" filename="../../common/src/system/exti_handler.c"/>
    <Watchpoint expression="SYSCFG" name="SYSCFG" radix="-1" linenumber="132" filename="../../common/src/system/exti_handler.c"/>
-   <Watchpoint expression="handle" name="handle" radix="-1" linenumber="1364" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
-   <Watchpoint expression="rxbuff" name="rxbuff" radix="-1" linenumber="1417" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
+   <Watchpoint expression="handle" name="handle" radix="-1" linenumber="1373" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
+   <Watchpoint expression="rxbuff" name="rxbuff" radix="-1" linenumber="1426" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
    <Watchpoint expression="rxBuf" name="rxBuf" radix="-1" linenumber="359" filename="../common_h7/lwip/enc28j60/ethernetif.c"/>
-   <Watchpoint expression="buffer" name="buffer" radix="16" linenumber="1076" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
+   <Watchpoint expression="buffer" name="buffer" radix="16" linenumber="1069" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -136,8 +136,8 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="54" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Inc/config/config.h" selected="0" top="30" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="38" y="234" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/hw_spi.c" useBinaryEdit="0" left="0" path="CM4/Inc/config/devices_config.h" selected="1" top="218" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Inc/config/config.h" selected="0" top="30" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="234" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/hw_spi.c" useBinaryEdit="0" left="0" path="CM4/Inc/config/devices_config.h" selected="0" top="218" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/main_c4.c" selected="0" top="47" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="129" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/msg_direct_c4.c" selected="0" top="103" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="134" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/msg_direct_c7.c" selected="0" top="92" codecName="Default"/>
@@ -174,14 +174,14 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/ip_addr.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="414" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/lan8742/lan8742.c" useBinaryEdit="0" left="0" path="../common_h7/lwip/lan8742/lan8742.h" selected="0" top="235" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="22" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/lan8742/lan8742.c" selected="0" top="22" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="24" y="1296" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/ethernetif.c" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/enc28j60.c" selected="0" top="1254" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="550" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/ethernetif_enc28j60.c" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/enc28j60.h" selected="0" top="524" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1166" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/ethernetif_enc28j60.c" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/enc28j60.c" selected="0" top="1131" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="687" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/enc28j60.c" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/enc28j60.h" selected="0" top="680" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="40" y="833" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/File1.c" selected="0" top="793" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="38" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/spi_dev.h" selected="0" top="23" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="8" y="149" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/enc28j60.c" useBinaryEdit="0" left="0" path="../../common/inc/dev/spi.h" selected="0" top="110" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="577" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/dev/spi_dev.c" selected="0" top="424" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1034" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/dev/uart_dev.c" selected="0" top="1009" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="89" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/enc28j60.c" useBinaryEdit="0" left="0" path="../../common/src/dev/common_spi.c" selected="0" top="63" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="82" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/enc28j60.c" useBinaryEdit="0" left="0" path="../../common/src/dev/common_spi.c" selected="0" top="63" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="135" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/spi_config.h" selected="0" top="104" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="157" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/inc/system/exti_handler.h" useBinaryEdit="0" left="0" path="../../common/src/system/exti_handler.c" selected="0" top="154" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="364" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/debug_gpio_exti.c" selected="0" top="336" codecName="Default"/>
@@ -196,8 +196,8 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="463" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/enc28j60/ethernetif.c" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/pbuf.c" selected="0" top="420" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="604" useTextEdit="1" openedFrom="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/pbuf.c" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include/lwip/opt.h" selected="0" top="578" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="185" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/inc/system/exti_handler.h" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h" selected="0" top="155" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="159" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/lwipopts.h" selected="0" top="132" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="204" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/ethernetif_enc28j60.c" selected="0" top="179" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="160" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/lwipopts.h" selected="0" top="132" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="3" y="199" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/enc28j60/ethernetif_enc28j60.c" selected="1" top="176" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM4" fileDialogDefaultFilter="" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/stm32h7/common_h7/lwip/lan8742" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

@@ -101,7 +101,8 @@ uint8_t ENC_SPI_Send(uint8_t command);
   * retval none
   */
 
-void ENC_SPI_SendBuf(uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
+void ENC_SPI_SendBuf               (uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
+void ENC_SPI_SendBufWithoutSelection(uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
 
 /* Exported types ------------------------------------------------------------*/
 /** @defgroup ETH_Exported_Types ETH Exported Types
@@ -148,7 +149,6 @@ typedef struct
 
   uint8_t                   bank;          /*!< Currently selected bank     */
   uint8_t                   interruptFlags;/*!< The last value of interrupts flags */
-  uint8_t                   pktCnt;         /*!< The number of pending receive packets */
   uint16_t                  nextpkt;       /*!< Next packet address         */
   uint16_t                  LinkStatus;    /*!< Ethernet link status        */
   // uint16_t                  transmitLength;/*!< The length of ip frame to transmit */
@@ -683,28 +683,8 @@ void ENC_SetMacAddr(ENC_HandleTypeDef *handle);
  *
  ****************************************************************************/
 
-bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, uint8_t *buffer, uint16_t buflen);
+bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p);
 
-/****************************************************************************
- * Function: ENC_RestoreTXBuffer
- *
- * Description:
- *   Prepare TX buffer
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *   len     - length of buffer
- *
- * Returned Value:
- *    ERR_OK          0    No error, everything OK.
- *    ERR_MEM        -1    Out of memory error.
- *    ERR_TIMEOUT    -3    Timeout.
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-int8_t ENC_RestoreTXBuffer(ENC_HandleTypeDef *handle, uint16_t len);
 
 /****************************************************************************
  * Function: ENC_PrepareBuffer
@@ -732,7 +712,7 @@ int8_t ENC_RestoreTXBuffer(ENC_HandleTypeDef *handle, uint16_t len);
  *
  ****************************************************************************/
 
-int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, uint8_t *buffer, uint16_t buflen);
+int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle,struct pbuf *p);
 
 /****************************************************************************
  * Function: ENC_Transmit
@@ -826,23 +806,6 @@ void ENC_EnableInterrupts(void);
 
 int32_t ENC_GetLinkState(ENC_HandleTypeDef *handle);
 
-/****************************************************************************
- * Function: ENC_GetPkcnt
- *
- * Description:
- *   Get the number of pending receive packets
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *
- * Returned Value:
- *   the number of receive packet not processed yet
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-void ENC_GetPkcnt(ENC_HandleTypeDef *handle);
 
 
 /****************************************************************************

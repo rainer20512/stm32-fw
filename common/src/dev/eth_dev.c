@@ -11,7 +11,7 @@
 
 #include "config/devices_config.h"
 
-#if USE_ETH > 0 
+#if USE_ETH > 0 && USE_ETY_PHY_LAN8742 > 0
 
 #if DEBUG_MODE > 0
     #define DEBUG_ETH               1

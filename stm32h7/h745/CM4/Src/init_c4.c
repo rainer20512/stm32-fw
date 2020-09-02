@@ -87,7 +87,7 @@ void Init_OtherDevices(void)
             SENSOR_IO_Init(&USER_I2C_HANDLE, NULL);
       }
   #endif
-  #if defined (USE_ETH)
+  #if defined (USE_ETH) && USE_ETY_PHY_LAN8742 > 0
       dev_idx = AddDevice(&ETH_DEV, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PRINTF("Failed to add ETH device %s\n", ETH_DEV.devName );

@@ -49,7 +49,6 @@
 #define IFNAME1 't'
 
 #define ETH_RX_BUFFER_SIZE                     (CONFIG_NET_ETH_MTU+36)
-#define ETH_TX_BUFFER_SIZE                     (CONFIG_NET_ETH_MTU+36)
 
 #define ETH_DMA_TRANSMIT_TIMEOUT                (20U)
 
@@ -78,14 +77,6 @@ typedef struct {
     uint32_t rxID;
 } RxBufferT;
 
-/* my private tx buffers -----------------------------------------------------*/
-typedef struct {
-    /* Must be the first element in structure!                                */    
-    uint8_t  txBytes[ETH_TX_BUFFER_SIZE];      /* rx buffer                   */
-    uint32_t bIsUsed;                          /* Flag for "buffer in use     */
-    uint32_t txBuffLen;                        /* actual length of buffer     */
-} TxBufferT;
-
 
 /* Private function prototypes -----------------------------------------------*/
 static void ethernetif_input( void const * argument );
@@ -96,7 +87,6 @@ void        FreeRxBuffer(RxBufferT *rx);
 
 static ENC_HandleTypeDef enc28j60;
 static RxBufferT RxBuffer[RX_BUFF_CNT]  __attribute__((section(".uncached100"))); 
-static TxBufferT TxBuffer               __attribute__((section(".uncached100")));
 
 LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF pool");
 
@@ -194,27 +184,10 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
 
   UNUSED(netif);
 
-  /* determine required total transmit buffer size */
-  for(i=0, q = p; q != NULL; q = q->next) {
-    framelen += q->len;
-    i++;
+  if ( !ENC_TransmitBuffer ( &enc28j60, p ) ) {
+    DEBUG_PRINTF("ENC_Transmit failed\n");
+    errval = ERR_IF;
   }
-
-  /* check total length */
-  #if DEBUG_ETHERNETIF > 0 
-    DEBUG_PRINTF("LL Out: %d segments, total size %d(computed) %d(coded)\n", i, p->tot_len);
-  #endif
-  if ( framelen > ETH_TX_BUFFER_SIZE ) return ERR_MEM;
-
-  /* build linear buffer */
-  for(i=0, q = p; q != NULL; q = q->next) {
-    memcpy(TxBuffer.txBytes + i, q->payload, q->len);
-    i += q->len;
-  }
-  TxBuffer.txBuffLen = i;
-  TxBuffer.bIsUsed   = true;
-
-  if ( !ENC_TransmitBuffer ( &enc28j60, TxBuffer.txBytes, TxBuffer.txBuffLen ) ) errval = ERR_IF;
 
   return errval;
 }

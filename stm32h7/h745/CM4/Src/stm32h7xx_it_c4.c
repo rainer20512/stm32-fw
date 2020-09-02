@@ -627,6 +627,7 @@ void DebugMon_Handler(void)
     #endif
 #endif
 
+#if USE_ETH > 0 && USE_ETY_PHY_LAN8742 > 0 
 extern ETH_HandleTypeDef EthHandle;
 /**
   * @brief  This function handles Ethernet interrupt request.
@@ -637,7 +638,7 @@ void ETH_IRQHandler(void)
 {
   HAL_ETH_IRQHandler(&EthHandle);
 }
-
+#endif
 
 /**
   * @brief  This function handles PPP interrupt request.
