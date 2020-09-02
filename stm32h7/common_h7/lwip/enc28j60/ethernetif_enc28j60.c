@@ -21,6 +21,8 @@
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
+#define DEBUG_ETHERNETIF        1
+
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
 #include "lwip/timeouts.h"
@@ -47,6 +49,7 @@
 #define IFNAME1 't'
 
 #define ETH_RX_BUFFER_SIZE                     (CONFIG_NET_ETH_MTU+36)
+#define ETH_TX_BUFFER_SIZE                     (CONFIG_NET_ETH_MTU+36)
 
 #define ETH_DMA_TRANSMIT_TIMEOUT                (20U)
 
@@ -75,6 +78,14 @@ typedef struct {
     uint32_t rxID;
 } RxBufferT;
 
+/* my private tx buffers -----------------------------------------------------*/
+typedef struct {
+    /* Must be the first element in structure!                                */    
+    uint8_t  txBytes[ETH_TX_BUFFER_SIZE];      /* rx buffer                   */
+    uint32_t bIsUsed;                          /* Flag for "buffer in use     */
+    uint32_t txBuffLen;                        /* actual length of buffer     */
+} TxBufferT;
+
 
 /* Private function prototypes -----------------------------------------------*/
 static void ethernetif_input( void const * argument );
@@ -84,8 +95,8 @@ RxBufferT*  AllocRxBuffer(void);
 void        FreeRxBuffer(RxBufferT *rx);
 
 static ENC_HandleTypeDef enc28j60;
-static RxBufferT RxBuffer[RX_BUFF_CNT] __attribute__((section(".uncached100"))); 
-
+static RxBufferT RxBuffer[RX_BUFF_CNT]  __attribute__((section(".uncached100"))); 
+static TxBufferT TxBuffer               __attribute__((section(".uncached100")));
 
 LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF pool");
 
@@ -180,54 +191,31 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
   uint32_t i=0, framelen = 0;
   struct pbuf *q;
   err_t errval = ERR_OK;
-  #if 0
-  ETH_BufferTypeDef Txbuffer[ETH_TX_DESC_CNT];
-  
-  memset(Txbuffer, 0 , ETH_TX_DESC_CNT*sizeof(ETH_BufferTypeDef));
-  
-  for(q = p; q != NULL; q = q->next)
-  {
-    if(i >= ETH_TX_DESC_CNT)	
-      return ERR_IF;
-    
-    Txbuffer[i].buffer = q->payload;
-    Txbuffer[i].len = q->len;
 
+  UNUSED(netif);
+
+  /* determine required total transmit buffer size */
+  for(i=0, q = p; q != NULL; q = q->next) {
     framelen += q->len;
-    
-#if 0
-    DEBUG_PRINTF("out %d len=%d:", i, q->len);
-    for ( uint32_t kk = 0; kk < q->len; kk++ ) {
-        DEBUG_PRINTF("%02x", ((uint8_t*)(q->payload))[kk]);
-    }
-    DEBUG_PRINTF("\n");
-#endif
-
-    if(i>0)
-    {
-      Txbuffer[i-1].next = &Txbuffer[i];
-    }
-    
-    if(q->next == NULL)
-    {
-      Txbuffer[i].next = NULL;
-    }
-
     i++;
   }
 
-  TxConfig.Length = framelen;
-  TxConfig.TxBuffer = Txbuffer;
-
-  /* RHB added Synchronzize data */
-  // __DSB();
-
-  i = HAL_ETH_Transmit(&EthHandle, &TxConfig, ETH_DMA_TRANSMIT_TIMEOUT);
-  if ( i != HAL_OK ) {
-    DEBUG_PRINTF("ETH Tx Err %d, Code=%d\n", i, EthHandle.ErrorCode );
-  }
-  // DEBUG_PRINTF("DMACSR=0x%08x\n", EthHandle.Instance->DMACSR);
+  /* check total length */
+  #if DEBUG_ETHERNETIF > 0 
+    DEBUG_PRINTF("LL Out: %d segments, total size %d(computed) %d(coded)\n", i, p->tot_len);
   #endif
+  if ( framelen > ETH_TX_BUFFER_SIZE ) return ERR_MEM;
+
+  /* build linear buffer */
+  for(i=0, q = p; q != NULL; q = q->next) {
+    memcpy(TxBuffer.txBytes + i, q->payload, q->len);
+    i += q->len;
+  }
+  TxBuffer.txBuffLen = i;
+  TxBuffer.bIsUsed   = true;
+
+  if ( !ENC_TransmitBuffer ( &enc28j60, TxBuffer.txBytes, TxBuffer.txBuffLen ) ) errval = ERR_IF;
+
   return errval;
 }
 
@@ -258,7 +246,6 @@ static struct pbuf * low_level_input(struct netif *netif)
 
     p = pbuf_alloced_custom(PBUF_RAW, rxBuff->rxBuffLen, PBUF_REF, custom_pbuf, rxBuff, ETH_RX_BUFFER_SIZE);
 
-    if ( p->payload != rxBuff ) DEBUG_PRINTF("No match!!\n");
   } else {
     /* if no frame is delivered to IP stack, rxBuff has to bee freed immediately */
     FreeRxBuffer(rxBuff);
@@ -395,6 +382,7 @@ void ethernet_link_thread( void const * argument )
   for(;;)
   {
     
+ 
     PHYLinkState = ENC_GetLinkState(&enc28j60);
     
     if(netif_is_link_up(netif) && (PHYLinkState <= ENC_STATUS_LINK_DOWN))
@@ -424,7 +412,9 @@ RxBufferT* AllocRxBuffer(void)
     for ( uint32_t i = 0; i < RX_BUFF_CNT; i ++ ) {
         if ( RxBuffer[i].bIsUsed == 0 ) {
             RxBuffer[i].bIsUsed = 1;
-            DEBUG_PRINTF("AllocRX #%d @0x%08x\n",i,&RxBuffer[i] );
+              #if DEBUG_ETHERNETIF > 1
+                DEBUG_PRINTF("AllocRX #%d @0x%08x\n",i,&RxBuffer[i] );
+              #endif
             RxBuffer[i].rxID = i;    
             return &RxBuffer[i];
         }
@@ -461,9 +451,13 @@ void FreeRxBuffer(RxBufferT *rx)
 
     if ( work ) {
         work->bIsUsed = 0;
-        DEBUG_PRINTF("FreeRX #%d @0x%08x\n", work->rxID, work);
+        #if DEBUG_ETHERNETIF > 1
+            DEBUG_PRINTF("FreeRX #%d @0x%08x\n", work->rxID, work);
+        #endif
     } else {
-        DEBUG_PRINTF("FreeRX @0x%08x - illegal pointer\n", work);
+        #if DEBUG_ETHERNETIF > 1
+            DEBUG_PRINTF("FreeRX @0x%08x - illegal pointer\n", work);
+        #endif
     }
 }
    

@@ -207,16 +207,11 @@
           <file file_name="../common_h7/lwip/lwip_start.c" />
           <file file_name="../common_h7/lwip/heap_mem.c" />
           <folder Name="lan8742">
-            <file file_name="../common_h7/lwip/lan8742/ethernetif.c">
-              <configuration
-                Name="THUMB Debug"
-                build_exclude_from_build="Yes" />
-            </file>
             <file file_name="../common_h7/lwip/lan8742/lan8742.c" />
             <file file_name="../common_h7/lwip/lan8742/lan8742.h" />
+            <file file_name="../common_h7/lwip/lan8742/ethernetif_lan8742.c" />
           </folder>
           <folder Name="enc28j60">
-            <file file_name="../common_h7/lwip/enc28j60/ethernetif.c" />
             <file file_name="../common_h7/lwip/enc28j60/File1.c">
               <configuration
                 Name="THUMB Debug"
@@ -224,6 +219,7 @@
             </file>
             <file file_name="../common_h7/lwip/enc28j60/enc28j60.c" />
             <file file_name="../common_h7/lwip/enc28j60/enc28j60.h" />
+            <file file_name="../common_h7/lwip/enc28j60/ethernetif_enc28j60.c" />
           </folder>
         </folder>
       </folder>

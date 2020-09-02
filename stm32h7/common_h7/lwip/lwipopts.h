@@ -153,11 +153,11 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 
 #ifdef CHECKSUM_BY_HARDWARE
   /* CHECKSUM_GEN_IP==0: Generate checksums by hardware for outgoing IP packets.*/
-  #define CHECKSUM_GEN_IP                 0
-  /* CHECKSUM_GEN_UDP==0: Generate checksums by hardware for outgoing UDP packets.*/
-  #define CHECKSUM_GEN_UDP                0
+  #define CHECKSUM_GEN_IP                 1
+  /* CHECKSUM_GEN_UDP==0: Generate checksu1s by hardware for outgoing UDP packets.*/
+  #define CHECKSUM_GEN_UDP                1
   /* CHECKSUM_GEN_TCP==0: Generate checksums by hardware for outgoing TCP packets.*/
-  #define CHECKSUM_GEN_TCP                0 
+  #define CHECKSUM_GEN_TCP                1 
   /* CHECKSUM_CHECK_IP==0: Check checksums by hardware for incoming IP packets.*/
   #define CHECKSUM_CHECK_IP               0
   /* CHECKSUM_CHECK_UDP==0: Check checksums by hardware for incoming UDP packets.*/
@@ -189,7 +189,7 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
   #define CHECKSUM_CHECK_ICMP             1
 #endif
 
-#define LWIP_DEBUG                      0
+#define LWIP_DEBUG                      1
 #define TCP_DEBUG                       LWIP_DBG_OFF
 #define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
 #define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
@@ -209,7 +209,7 @@ The STM32H7xx allows computing and verifying the IP, UDP, TCP and ICMP checksums
 #define API_LIB_DEBUG                   LWIP_DBG_OFF
 #define API_MSG_DEBUG                   LWIP_DBG_OFF
 #define SOCKETS_DEBUG                   LWIP_DBG_OFF
-#define RAW_DEBUG                       LWIP_DBG_OFF
+#define RAW_DEBUG                       LWIP_DBG_ON
 #define SYS_DEBUG                       LWIP_DBG_OFF
 
 

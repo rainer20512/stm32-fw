@@ -151,7 +151,7 @@ typedef struct
   uint8_t                   pktCnt;         /*!< The number of pending receive packets */
   uint16_t                  nextpkt;       /*!< Next packet address         */
   uint16_t                  LinkStatus;    /*!< Ethernet link status        */
-  uint16_t                  transmitLength;/*!< The length of ip frame to transmit */
+  // uint16_t                  transmitLength;/*!< The length of ip frame to transmit */
   uint32_t                  startTime;     /*!< The start time of the current timer */
   uint32_t                  duration;      /*!< The duration of the current timer in ms */
   uint16_t                  retries;       /*!< The number of transmission retries left to do */
@@ -664,6 +664,28 @@ bool ENC_Start(ENC_HandleTypeDef *handle);
 void ENC_SetMacAddr(ENC_HandleTypeDef *handle);
 
 /****************************************************************************
+ * Function: ENC_TransmitBuffer
+ *
+ * Description:
+ *   Transmit a buffer of data.
+ *
+ * Parameters:
+ *   handle  - Reference to the driver state structure
+ *   buffer  - A pointer to the buffer to write from
+ *   buflen  - The number of bytes to write
+ *
+ * Returned Value:
+ *   true      On success
+ *   false     On failuer
+ *
+ * Assumptions:
+ *   Read pointer is set to the correct address
+ *
+ ****************************************************************************/
+
+bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, uint8_t *buffer, uint16_t buflen);
+
+/****************************************************************************
  * Function: ENC_RestoreTXBuffer
  *
  * Description:
@@ -685,24 +707,32 @@ void ENC_SetMacAddr(ENC_HandleTypeDef *handle);
 int8_t ENC_RestoreTXBuffer(ENC_HandleTypeDef *handle, uint16_t len);
 
 /****************************************************************************
- * Function: ENC_WriteBuffer
+ * Function: ENC_PrepareBuffer
  *
  * Description:
- *   Write a buffer of data.
+ *   Prepare the TX buffer by resetting TX buffer start, by setting
+ *   ENC_ETXNDL to the passed buflen + 1 ( due to control byte )
+ *   and by by setting ENC_EWRPT to TX buffer start
+ *
+ *   Thereafter write the control byte and the data bytes to the
+ *   ENC transmit buffer
  *
  * Parameters:
+ *   handle  - Reference to the driver state structure
  *   buffer  - A pointer to the buffer to write from
  *   buflen  - The number of bytes to write
  *
  * Returned Value:
- *   None
+ *   ENC_ERR_OK         on success
+ *   ENC_ERR_TIMEOUT    on timeout during wait for completion of ongoing transmisson
+ *   END_ERR_MEM        on internal TX buffer overrun ( due to too large tx packet )
  *
  * Assumptions:
  *   Read pointer is set to the correct address
  *
  ****************************************************************************/
 
-void ENC_WriteBuffer(void *buffer, uint16_t buflen);
+int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, uint8_t *buffer, uint16_t buflen);
 
 /****************************************************************************
  * Function: ENC_Transmit
@@ -724,11 +754,7 @@ void ENC_WriteBuffer(void *buffer, uint16_t buflen);
  *
  ****************************************************************************/
 
-#ifdef USE_PROTOTHREADS
-PT_THREAD(ENC_Transmit(struct pt *pt, ENC_HandleTypeDef *handle));
-#else
-void ENC_Transmit(ENC_HandleTypeDef *handle);
-#endif
+bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength );
 
  /**
   * @}
