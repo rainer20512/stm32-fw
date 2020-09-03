@@ -1351,6 +1351,10 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
     pktlen        = (uint16_t)rsv[3] << 8 | (uint16_t)rsv[2];
     rxstat        = (uint16_t)rsv[5] << 8 | (uint16_t)rsv[4];
 
+    if ( pktlen > 1540 ) {
+        ENCRXDEBUG("RxFrame: Spurious length %d\n", pktlen);
+    }
+
     ENCRXDEBUG("RxFrame: Have packet of len=%d\n", pktlen);
 
   /* Check if the packet was received OK */
@@ -1577,23 +1581,10 @@ void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
         /* Manage EIR_PKTIF by software */
         eir |= EIR_PKTIF;
         ENC_RxCpltCallback();
-
-        /* Do not process other interrupts, they will be handled by another ENC interrupt */
-        return;
     }
 
     /* Store interrupt flags in handle */
     myEncHandle->interruptFlags = eir;
-
-    /* If link status has changed, read it */
-    if ((eir & EIR_LINKIF) != 0) /* Link change interrupt */
-    {
-        ENCDEBUG("Enc IRQ: Link change\n" );
-        enc_rdphy(myEncHandle, ENC_PHIR);  /* Clear the LINKIF interrupt */
-        enc_linkstatus(myEncHandle);       /* Get current link status */
-        /* Enable Ethernet interrupts */
-        enc_bfsgreg(ENC_EIE, EIE_INTIE);
-    }
 
     /* Reset ENC28J60 interrupt flags, except PKTIF form which interruption is deasserted when PKTCNT reaches 0 */
     enc_bfcgreg(ENC_EIR, EIR_ALLINTS);
