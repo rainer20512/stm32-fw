@@ -43,17 +43,10 @@
 #define ENC28J60_H_INCLUDED
 
 #include <stdint.h>
-#include <stdbool.h>
 
-#ifdef USE_PROTOTHREADS
-#include "pt.h"
-#else
-#define PT_BEGIN(x)
-#define PT_END(x)
-#endif
 
 #ifndef NULL
-#define NULL ((void *)0)
+    #define NULL ((void *)0)
 #endif
 
 /* Ethernet frames are between 64 and 1518 bytes long */
@@ -123,7 +116,7 @@ typedef struct
    uint32_t             ChecksumMode;              /*!< Selects if the checksum is check by hardware or by software.
                                                          This parameter can be a value of @ref ETH_Checksum_Mode */
 
-   uint8_t              InterruptEnableBits;       /*!< Selects the enabled interrupts */
+   // uint8_t              InterruptEnableBits;       /*!< Selects the enabled interrupts */
 } ENC_InitTypeDef;
 
 
@@ -148,10 +141,10 @@ typedef struct
   ENC_InitTypeDef           Init;          /*!< Ethernet Init Configuration */
 
   uint8_t                   bank;          /*!< Currently selected bank     */
-  uint8_t                   interruptFlags;/*!< The last value of interrupts flags */
+  uint8_t                   irq_ena;       /*!< The interrupt enable status when irq routine was called */
   uint16_t                  nextpkt;       /*!< Next packet address         */
   uint16_t                  LinkStatus;    /*!< Ethernet link status        */
-  // uint16_t                  transmitLength;/*!< The length of ip frame to transmit */
+  uint16_t                  RxLength;      /*!< Length of the last received package */
   uint32_t                  startTime;     /*!< The start time of the current timer */
   uint32_t                  duration;      /*!< The duration of the current timer in ms */
   uint16_t                  retries;       /*!< The number of transmission retries left to do */
@@ -174,7 +167,8 @@ typedef struct
 #define ENC_ERR_OK          0    /* No error, everything OK. */
 #define ENC_ERR_MEM        -1    /* Out of memory error.     */
 #define ENC_ERR_BUF        -2    /* Buffer error.            */
-#define ENC_ERR_TIMEOUT    -3    /* Timeout.                 */
+#define ENC_ERR_RX         -3    /* Receive Err              */
+#define ENC_ERR_TIMEOUT    -4    /* Timeout.                 */
 
 /* ENC28J60 Commands ********************************************************/
 /* A total of seven instructions are implemented on the ENC28J60.  Where:

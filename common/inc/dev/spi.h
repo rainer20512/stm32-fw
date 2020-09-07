@@ -134,8 +134,6 @@ bool INP_IRQ_Enabled    (SpiHandleT *);
 void INP_IRQ_Enable     (SpiHandleT *);
 void INP_IRQ_Clear      (SpiHandleT *);
 void INP_IRQ_Disable    (SpiHandleT *);
-bool SpiMisoGet         (SpiHandleT *);
-bool SpiInpGet          (SpiHandleT *);
 bool SpiIsBusy          (SpiHandleT *);
 void SpiNSelLow         (SpiHandleT *);
 void SpiNSelHigh        (SpiHandleT *);
@@ -143,6 +141,8 @@ void SpiDnCLow          (SpiHandleT *);
 void SpiDnCHigh         (SpiHandleT *);
 void SpiRstLow          (SpiHandleT *);
 void SpiRstHigh         (SpiHandleT *);
+uint32_t SpiMisoGet     (SpiHandleT *);
+uint32_t SpiInpGet      (SpiHandleT *);
 
 #define Spi16TxRx(hnd, ... )          hnd->fns->Spi16TxRx           (hnd, __VA_ARGS__ )
 #define Spi9TxByte(hnd, ... )         hnd->fns->Spi9TxByte          (hnd, __VA_ARGS__ )

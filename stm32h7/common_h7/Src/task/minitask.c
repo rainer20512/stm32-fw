@@ -232,9 +232,9 @@ void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint3
             break;
         case 1:
             #if DEBUG_PROFILING > 0
-                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  HighWaterMark           Consumed time",prefixstr);
+                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  UnusedStack           Consumed time",prefixstr);
             #else
-                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  HighWaterMark",prefixstr);
+                snprintf(buffer ,buflen, "%s   Core No Prio St            Name  UnusedStack  ",prefixstr);
             #endif
             break;
         default:

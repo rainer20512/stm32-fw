@@ -259,8 +259,6 @@ static bool HwSpiSetDefaultParams(SpiDataT *data )
   SPI_TypeDef *spi    = (SPI_TypeDef*)data->mySpiDev->devBase;
   SPI_HandleTypeDef* hspi = &hndhw->myHalHandle;
 
-  uint32_t prescaler = HwSpiGetBRPrescaler(spi, hndhw->myBaudrate);
-
   /* Set the SPI parameters */
   hspi->Instance               = spi;
   hspi->Init.BaudRatePrescaler = HwSpiGetBRPrescaler(spi, hndhw->myBaudrate);
@@ -585,7 +583,10 @@ uint8_t Spi8TxRxByte_hw(SpiHandleT *self, uint8_t outval)
 {
     uint8_t ret;
     
-    HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, &outval, &ret, 1, SPIx_TIMEOUT_MAX);
+    HAL_StatusTypeDef spiret = HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, &outval, &ret, 1, SPIx_TIMEOUT_MAX);
+    if ( spiret != HAL_OK ) {
+        DEBUG_PRINTF("Spi8TxRxVector_hw failed with code %d\n", spiret );
+    }
     return ret;
 }
 
@@ -613,16 +614,21 @@ void Spi8TxByte_hw(SpiHandleT *self, uint8_t outval)
 
 void Spi8TxRxVector_hw(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
 {
-
+HAL_StatusTypeDef ret;
     if ( !vectorIn && !vectorOut ) return;
 
+    // DEBUG_PRINTF("S");
     if ( ! vectorIn ) {
-        HAL_SPI_Transmit(&self->data->hw.myHalHandle, vectorOut, size, SPIx_TIMEOUT_MAX);
+        ret = HAL_SPI_Transmit(&self->data->hw.myHalHandle, vectorOut, size, SPIx_TIMEOUT_MAX);
     } else if ( !vectorOut ) {
-        HAL_SPI_Receive(&self->data->hw.myHalHandle, vectorIn, size, SPIx_TIMEOUT_MAX);
+        ret = HAL_SPI_Receive(&self->data->hw.myHalHandle, vectorIn, size, SPIx_TIMEOUT_MAX);
     } else {
-        HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, vectorOut, vectorIn, size, SPIx_TIMEOUT_MAX);
+        ret = HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, vectorOut, vectorIn, size, SPIx_TIMEOUT_MAX);
     } 
+    if ( ret != HAL_OK ) {
+        DEBUG_PRINTF("Spi8TxRxVector_hw failed with code %d\n", ret );
+    }
+    // DEBUG_PRINTF("Q");
 }
 
 void Spi9TxByte_hw(SpiHandleT *self, uint16_t outval)

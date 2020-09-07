@@ -129,15 +129,15 @@ void SpiRstHigh(SpiHandleT *self)
 
 bool SpiIsBusy(SpiHandleT *self)
 {
-    return SPI_IS_BUSY(self->data);
+    return SPI_IS_BUSY(self->data) != 0;
 }
 
-bool SpiMisoGet(SpiHandleT *self)
+uint32_t SpiMisoGet(SpiHandleT *self)
 {
     return SPI_MISO_GET(self->data);
 }
 
-bool SpiInpGet(SpiHandleT *self)
+uint32_t SpiInpGet(SpiHandleT *self)
 {
     return SPI_INP_GET(self->data);
 }

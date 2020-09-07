@@ -21,7 +21,7 @@
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
-#define DEBUG_ETHERNETIF        1
+#define DEBUG_ETHERNETIF       0
 
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
@@ -141,7 +141,6 @@ static void low_level_init(struct netif *netif)
   enc28j60.Init.ChecksumMode        = ETH_CHECKSUM_BY_HARDWARE;
   enc28j60.Init.DuplexMode          = ETH_MODE_FULLDUPLEX;
   enc28j60.Init.MACAddr             = macaddress;
-  enc28j60.Init.InterruptEnableBits = EIE_PKTIE;    /* Interrupt only on packet reception */
 
   /* Initialize the ENC28J60, set MAC address, configure interrupts and enable receiver */
   ENC_Start(&enc28j60);
@@ -210,6 +209,8 @@ static struct pbuf * low_level_input(struct netif *netif)
   rxBuff = AllocRxBuffer();
   if ( !rxBuff ) {
     DEBUG_PRINTF("low_level_input - Error: No more RxBuffers\n");
+    /* Get the rx packet from hardware to free rx buffer space - rx packet is lost */
+    ENC_GetReceivedFrame(&enc28j60, NULL, 0);
     return NULL;
   }
 
@@ -218,10 +219,11 @@ static struct pbuf * low_level_input(struct netif *netif)
     custom_pbuf->custom_free_function = pbuf_free_custom;
 
     p = pbuf_alloced_custom(PBUF_RAW, rxBuff->rxBuffLen, PBUF_REF, custom_pbuf, rxBuff, ETH_RX_BUFFER_SIZE);
-
+    DEBUG_PRINTF("Rx: Got %d bytes\n", rxBuff->rxBuffLen );
   } else {
     /* if no frame is delivered to IP stack, rxBuff has to bee freed immediately */
     FreeRxBuffer(rxBuff);
+    DEBUG_PRINTF("Rx: No bytes\n");
   }
 
   return p;
@@ -238,27 +240,29 @@ static struct pbuf * low_level_input(struct netif *netif)
   */
 void ethernetif_input( void const * argument )
 {
-  struct pbuf *p;
-  struct netif *netif = (struct netif *) argument;
-  
-  for( ;; ){
-    if (osSemaphoreWait( RxPktSemaphore, TIME_WAITING_FOR_INPUT)==osOK){
-      while ( ENC_RxPacketAvailable(&enc28j60) ) {
-        LOCK_TCPIP_CORE();
-        
-        p = low_level_input( netif );
-        if (p != NULL) {
-          if (netif->input( p, netif) != ERR_OK ) {
-            pbuf_free(p);
-          }
-        }
+    struct pbuf *p;
+    struct netif *netif = (struct netif *) argument;
 
-        UNLOCK_TCPIP_CORE();
-        
-      } 
-      ENC_EnableInterrupts();
+    for( ;; ){
+        if (osSemaphoreWait( RxPktSemaphore, TIME_WAITING_FOR_INPUT)==osOK){
+            ENC_DisableInterrupts();    
+            ENC_clear_irqflags();
+            ENC_EnableInterrupts();
+            DEBUG_PRINTF("Start Receive\n");
+            LOCK_TCPIP_CORE();
+            while ( ENC_RxPacketAvailable(&enc28j60) ) {
+                p = low_level_input( netif );
+                if (p != NULL) {
+                    if (netif->input( p, netif) != ERR_OK ) {
+                        pbuf_free(p);
+                    }
+                }
+            } 
+            DEBUG_PRINTF("eeeee - End Receive\n");
+            ENC_restore_irq(enc28j60.irq_ena);
+            UNLOCK_TCPIP_CORE();
+        }
     }
-  }
 }
 
 /**
@@ -355,7 +359,7 @@ void ethernet_link_thread( void const * argument )
   for(;;)
   {
     
- 
+/* 
     PHYLinkState = ENC_GetLinkState(&enc28j60);
     
     if(netif_is_link_up(netif) && (PHYLinkState <= ENC_STATUS_LINK_DOWN))
@@ -372,8 +376,8 @@ void ethernet_link_thread( void const * argument )
         netif_set_up(netif);
         netif_set_link_up(netif);
     }
-    
-    osDelay(10);
+*/   
+    osDelay(500);
   }
 }
 
