@@ -68,27 +68,12 @@ static uint8_t macaddress[6]= {ETH_MAC_ADDR0, ETH_MAC_ADDR1, ETH_MAC_ADDR2, ETH_
 
 osSemaphoreId RxPktSemaphore = NULL; /* Semaphore to signal incoming packets */
 
-/* my private rx buffers -----------------------------------------------------*/
-typedef struct {
-    /* Must be the first element in structure!                                */    
-    uint8_t  rxBytes[ETH_RX_BUFFER_SIZE];      /* rx buffer                   */
-    uint32_t bIsUsed;                          /* Flag for "buffer in use     */
-    uint32_t rxBuffLen;                        /* actual length of buffer     */
-    uint32_t rxID;
-} RxBufferT;
-
 
 /* Private function prototypes -----------------------------------------------*/
 static void ethernetif_input( void const * argument );
 u32_t       sys_now(void);
 void        pbuf_free_custom(struct pbuf *p);
-RxBufferT*  AllocRxBuffer(void);
-void        FreeRxBuffer(RxBufferT *rx);
-
 static ENC_HandleTypeDef enc28j60;
-static RxBufferT RxBuffer[RX_BUFF_CNT]  __attribute__((section(".uncached100"))); 
-
-LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF pool");
 
 /* Private functions ---------------------------------------------------------*/
 /*******************************************************************************
@@ -103,7 +88,6 @@ LWIP_MEMPOOL_DECLARE(RX_POOL, 10, sizeof(struct pbuf_custom), "Zero-copy RX PBUF
   */
 static void low_level_init(struct netif *netif)
 {
-  uint32_t i;
   int32_t PHYLinkState;
     
   /* set MAC hardware address length */
@@ -124,13 +108,6 @@ static void low_level_init(struct netif *netif)
   /* don't set NETIF_FLAG_ETHARP if this device is not an ethernet one */
   netif->flags |= NETIF_FLAG_BROADCAST | NETIF_FLAG_ETHARP;
     
-  /* Initialize the RX POOL */
-  LWIP_MEMPOOL_INIT(RX_POOL);
-
-  /* all RxBuffers are unused */
-  for ( i = 0; i < RX_BUFF_CNT; i++ )
-    RxBuffer[i].bIsUsed = false;
-     
   /* create a binary semaphore used for informing ethernetif of frame reception */
   RxPktSemaphore = xSemaphoreCreateBinary();
   
@@ -203,26 +180,11 @@ static struct pbuf * low_level_input(struct netif *netif)
 {
   UNUSED(netif);
   struct pbuf *p = NULL;
-  struct pbuf_custom* custom_pbuf;
-  RxBufferT *rxBuff;
-  
-  rxBuff = AllocRxBuffer();
-  if ( !rxBuff ) {
-    DEBUG_PRINTF("low_level_input - Error: No more RxBuffers\n");
-    /* Get the rx packet from hardware to free rx buffer space - rx packet is lost */
-    ENC_GetReceivedFrame(&enc28j60, NULL, 0);
-    return NULL;
-  }
 
-  if( ENC_GetReceivedFrame(&enc28j60, rxBuff->rxBytes, &rxBuff->rxBuffLen) ) {
-    custom_pbuf  = (struct pbuf_custom*)LWIP_MEMPOOL_ALLOC(RX_POOL);
-    custom_pbuf->custom_free_function = pbuf_free_custom;
-
-    p = pbuf_alloced_custom(PBUF_RAW, rxBuff->rxBuffLen, PBUF_REF, custom_pbuf, rxBuff, ETH_RX_BUFFER_SIZE);
-    DEBUG_PRINTF("Rx: Got %d bytes\n", rxBuff->rxBuffLen );
+  if( ENC_read_into_pbuf(&enc28j60, &p ) ) {
+    DEBUG_PRINTF("Rx: Got %d bytes\n", p->tot_len );
   } else {
     /* if no frame is delivered to IP stack, rxBuff has to bee freed immediately */
-    FreeRxBuffer(rxBuff);
     DEBUG_PRINTF("Rx: No bytes\n");
   }
 
@@ -310,24 +272,6 @@ err_t ethernetif_init(struct netif *netif)
 }
 
 /**
-  * @brief  Custom Rx pbuf free callback
-  * @param  pbuf: pbuf to be freed
-  * @retval None
-  */
-void pbuf_free_custom(struct pbuf *p)
-{
-  struct pbuf_custom* custom_pbuf = (struct pbuf_custom*)p;
-  RxBufferT *rxBuf = (RxBufferT *)p->payload;
-    
-  FreeRxBuffer(rxBuf);
-#if defined(CORE_CM7)
-  /* invalidate data cache: lwIP and/or application may have written into buffer */
-  SCB_InvalidateDCache_by_Addr((uint32_t *)p->payload, p->tot_len);
-#endif
-  LWIP_MEMPOOL_FREE(RX_POOL, custom_pbuf);
-}
-
-/**
   * @brief  Returns the current time in milliseconds
   *         when LWIP_TIMERS == 1 and NO_SYS == 1
   * @param  None
@@ -380,63 +324,5 @@ void ethernet_link_thread( void const * argument )
     osDelay(500);
   }
 }
-
-/******************************************************************************
- * Find an unused RxBuffer 
- *****************************************************************************/
-RxBufferT* AllocRxBuffer(void)
-{
-    for ( uint32_t i = 0; i < RX_BUFF_CNT; i ++ ) {
-        if ( RxBuffer[i].bIsUsed == 0 ) {
-            RxBuffer[i].bIsUsed = 1;
-              #if DEBUG_ETHERNETIF > 1
-                DEBUG_PRINTF("AllocRX #%d @0x%08x\n",i,&RxBuffer[i] );
-              #endif
-            RxBuffer[i].rxID = i;    
-            return &RxBuffer[i];
-        }
-    }
-    /* No free RxBuffer found */
-    return NULL;
-}
-
-/******************************************************************************
- * Free a previously allocated RxBuffer
- *****************************************************************************/
-void FreeRxBuffer(RxBufferT *rx)
-{
-    RxBufferT *work=NULL;
-    uint8_t *start;
-
-    /* Search for rx pointing to begin of RxBuffer-Element */
-    for ( uint32_t i = 0; i < RX_BUFF_CNT; i ++ ) {    
-        if ( RxBuffer+i == rx ) {
-            work = rx;    
-            break;
-        }
-    }
-    /* if not found, search for rx pointing somewhere into RxBuffer-Element */
-    if ( !work ) {
-        for ( uint32_t i = 0; i < RX_BUFF_CNT; i ++ ) {    
-            start = (uint8_t *)(RxBuffer+i);
-            if ( (uint8_t*)rx <= start + sizeof(RxBufferT) - 1 ) {
-                work = (RxBufferT *)start;    
-                break;
-            }
-        }
-    }
-
-    if ( work ) {
-        work->bIsUsed = 0;
-        #if DEBUG_ETHERNETIF > 1
-            DEBUG_PRINTF("FreeRX #%d @0x%08x\n", work->rxID, work);
-        #endif
-    } else {
-        #if DEBUG_ETHERNETIF > 1
-            DEBUG_PRINTF("FreeRX @0x%08x - illegal pointer\n", work);
-        #endif
-    }
-}
-   
 
 #endif /* USE_ETH_PHY_ENC28J60  */

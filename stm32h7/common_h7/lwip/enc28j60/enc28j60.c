@@ -784,9 +784,6 @@ void ENC_restore_irq(bool bEna )
   if ( bEna ) {
     /* Manually trigger interrupt handler if interrupt currently is asserted */
     if ( SpiInpGet(SPI_HANDLE) == 0 ) {
-        ENC_DisableInterrupts();    
-        ENC_clear_irqflags();
-        ENC_EnableInterrupts();
         ENC_IRQHandler( 0, 0, NULL );
 
     } 
@@ -1495,6 +1492,29 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
         }
     }
 
+    ENC_ReceiveFinish(handle);
+
+    ENCRXDEBUG("RxFrame: Done\n");
+
+    return ret;
+}
+bool ENC_read_into_pbuf(ENC_HandleTypeDef *handle, struct pbuf **buf)
+{
+    bool ret = false;
+
+    if ( ENC_ReceiveStart(handle) == ENC_ERR_OK ) {
+        /* allocate pbuf fro received data */
+	*buf = pbuf_alloc(PBUF_RAW, handle->RxLength, PBUF_RAM);
+        /* if successful allocated,copy data */
+	if (*buf) {
+            enc_rdbuffer((*buf)->payload, handle->RxLength);
+            ret = true;
+	} else {
+            DEBUG_PRINTF("failed to allocate pbuf of length %u, discarding\n", handle->RxLength);
+        }
+    }
+
+    /* Free ENC28J60 memory in receive buffer in any case */
     ENC_ReceiveFinish(handle);
 
     ENCRXDEBUG("RxFrame: Done\n");
