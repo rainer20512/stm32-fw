@@ -93,7 +93,7 @@ Errata 18 is implemented in lwip stack
 #include "enc28j60.h"
 #include "dev/spi.h"
 
-#define DEBUG_ENCRX         0      /* Debug Rx path */
+#define DEBUG_ENCRX         2      /* Debug Rx path */
 #define DEBUG_ENCTX         1       /* Debug Tx path */
 #define DEBUG_ENC           1       /* Debug common  */
 
@@ -781,14 +781,17 @@ void ENC_clear_irqflags(void)
 void ENC_restore_irq(bool bEna )
 {
   /* Restore ENC interrupt enable status */
+  #if 0
   if ( bEna ) {
     /* Manually trigger interrupt handler if interrupt currently is asserted */
     if ( SpiInpGet(SPI_HANDLE) == 0 ) {
         ENC_IRQHandler( 0, 0, NULL );
 
-    } 
-    INP_IRQ_Enable(SPI_HANDLE);
+    }
+    
   }
+  #endif
+  INP_IRQ_Enable(SPI_HANDLE);
 }
 
 
@@ -1035,9 +1038,6 @@ bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
 {
     bool ret=false;
 
-    /* No ENC Interrupts during execution */
-    bool enc_irq_save = ENC_disable_irq();
-
     #if DEBUG_ENCTX > 0
         ENCTXDEBUG("Transmission start\n");
     #endif
@@ -1051,8 +1051,6 @@ bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
         ENCTXDEBUG("Transmission finished\n");
     #endif
 
-    /* Restore ENC interrupt enable status */
-    ENC_restore_irq(enc_irq_save);
     return ret;
 
 }
@@ -1598,9 +1596,6 @@ int32_t ENC_GetLinkState(ENC_HandleTypeDef *handle)
 {
   int32_t ret;
 
-  /* Inhibit ENC interrupts dureing execution */
-  bool enc_irq_save = ENC_disable_irq();
-
   enc_linkstatus(handle);  
 
   /* Check linkstatus bit */
@@ -1611,9 +1606,6 @@ int32_t ENC_GetLinkState(ENC_HandleTypeDef *handle)
     /* Return Link Down status */
     ret=  ENC_STATUS_LINK_DOWN;    
   }    
-
-  /* Restore ENC interrupt enable status */
-  ENC_restore_irq(enc_irq_save);
 
   return ret;
 }
@@ -1667,7 +1659,20 @@ void ENC_EnableRxPacketInterrupts(void)
     enc_bfsgreg(ENC_EIE, EIE_PKTIE );
 }
 
-void ENC_RxCpltCallback(void);
+void ENC_RxCpltCallback(bool);
+
+void ENC_Check_RxIRQ(void)
+{
+    /* Manually trigger interrupt handler if interrupt currently is asserted */
+    if ( SpiInpGet(SPI_HANDLE) == 0 ) {
+        ENC_disable_irq();
+
+        ENCDEBUG("-----\n");
+
+        ENC_RxCpltCallback(false);
+
+    }
+}
 
 /****************************************************************************
  * Function: ENC_IRQHandler
@@ -1694,42 +1699,11 @@ void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
 {
     UNUSED(pin); UNUSED(pinvalue); UNUSED(arg);
 
+    ENC_disable_irq();
 
-    /* Disable further interrupts by clearing the global interrupt enable bit.
-     * "After an interrupt occurs, the host controller should clear the global
-     * enable bit for the interrupt pin before servicing the interrupt. Clearing
-     * the enable bit will cause the interrupt pin to return to the non-asserted
-     * state (high). Doing so will prevent the host controller from missing a
-     * falling edge should another interrupt occur while the immediate interrupt
-     * is being serviced."
-     */
+    ENCDEBUG("iiiii\n");
 
-    // ENC_DisableInterrupts();
-
-    if ( pin == 0 )
-        ENCDEBUG("-----\n");
-    else
-        ENCDEBUG("iiiii\n");
-
-    myEncHandle->irq_ena = ENC_disable_irq();
-
-    #if 0
-    /* PKTIF is not reliable, check PKCNT instead */
-    uint8_t inCount = enc_rdbreg(myEncHandle, ENC_EPKTCNT);
-    if ( inCount != 0) {
-        ENCRXDEBUG("Enc IRQ: Queued Rx-Packets: %d\n", inCount );
-        if ( inCount == 128 ) {
-            ENCRXDEBUG("Spurious Interrupt\n", inCount );
-        }
-        /* Packet reception in other task. Other task MUST finally enable global interrupts again */
-        ENC_RxCpltCallback();
-    } else {
-        /* If nothing to do, enable global interrupts again */ 
-        ENCDEBUG("+++++\n");
-    }
-    #endif
-
-    ENC_RxCpltCallback();
+    ENC_RxCpltCallback(true);
 }
 
 
