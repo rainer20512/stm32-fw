@@ -80,7 +80,7 @@ typedef struct SpiFunctionType {
     void     ( *Spi9TxByte         ) (SpiHandleT *, uint16_t );
     void     ( *Spi8TxByte         ) (SpiHandleT *, uint8_t  );
     uint8_t  ( *Spi8TxRxByte       ) (SpiHandleT *, uint8_t  );
-    void     ( *Spi8TxRxVector     ) (SpiHandleT *self, uint8_t  *, uint8_t  *, uint16_t);
+    bool     ( *Spi8TxRxVector     ) (SpiHandleT *self, uint8_t  *, uint8_t  *, uint16_t);
     void     ( *Spi8TxVector_IT    ) (SpiHandleT *self, uint8_t  *,             uint16_t);
     void     ( *Spi9TxVector       ) (SpiHandleT *self, uint16_t *,             uint16_t);
     void     ( *Spi9TxConstant     ) (SpiHandleT *self, uint16_t  ,             uint16_t);
