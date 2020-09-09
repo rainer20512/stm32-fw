@@ -21,7 +21,7 @@
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
-#define DEBUG_ETHERNETIF       0
+#define DEBUG_IF            0
 
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
@@ -32,15 +32,23 @@
 #include "lwip/snmp.h"
 #include "lwip/tcpip.h"
 #include "ethernetif.h"
+#include "lwip/pbuf.h"
 #include <string.h>
-
-// RHB Added
+#include "stm32h7xx_hal.h"
 #include "debug_helper.h"
+
+#if DEBUG_ENCTX > 0 
+    #define IFDEBUG(...)   DEBUG_PRINTF(__VA_ARGS__)
+#else
+    #define IFDEBUG(...)   
+#endif
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* The time to block waiting for input. */
 #define TIME_WAITING_FOR_INPUT                 ( osWaitForever )
+#define TIME_WAITING_SPI_SEMAPHORE             ( osWaitForever ) 
 /* Stack size of the interface thread */
 #define INTERFACE_THREAD_STACK_SIZE            ( 350 )
 
@@ -67,7 +75,7 @@
 static uint8_t macaddress[6]= {ETH_MAC_ADDR0, ETH_MAC_ADDR1, ETH_MAC_ADDR2, ETH_MAC_ADDR3, ETH_MAC_ADDR4, ETH_MAC_ADDR5};
 
 osSemaphoreId RxPktSemaphore = NULL; /* Semaphore to signal incoming packets */
-
+osSemaphoreId SpiSemaphore   = NULL; /* Semaphore to guard SPI function access */
 
 /* Private function prototypes -----------------------------------------------*/
 static void ethernetif_input( void const * argument );
@@ -110,13 +118,17 @@ static void low_level_init(struct netif *netif)
     
   /* create a binary semaphore used for informing ethernetif of frame reception */
   RxPktSemaphore = xSemaphoreCreateBinary();
+
+  SpiSemaphore   = xSemaphoreCreateBinary();
+  xSemaphoreGive(SpiSemaphore);
   
   /* create the task that handles the ETH_MAC */
   osThreadDef(EthIf, ethernetif_input, osPriorityRealtime, 0, INTERFACE_THREAD_STACK_SIZE);
   osThreadCreate (osThread(EthIf), netif);
   
+  memset(&enc28j60, 0, sizeof(ENC_HandleTypeDef) );
   enc28j60.Init.ChecksumMode        = ETH_CHECKSUM_BY_HARDWARE;
-  enc28j60.Init.DuplexMode          = ETH_MODE_FULLDUPLEX;
+  enc28j60.Init.DuplexMode          = ETH_MODE_HALFDUPLEX;
   enc28j60.Init.MACAddr             = macaddress;
 
   /* Initialize the ENC28J60, set MAC address, configure interrupts and enable receiver */
@@ -126,11 +138,11 @@ static void low_level_init(struct netif *netif)
   
   /* Get link state */  
   if(PHYLinkState <= ENC_STATUS_LINK_DOWN) {
-    DEBUG_PUTS("Link initially down\n");
+    IFDEBUG("Link initially down\n");
     netif_set_link_down(netif);
     netif_set_down(netif);
   } else {
-    DEBUG_PUTS("Link initially up\n");
+    IFDEBUG("Link initially up\n");
     netif_set_up(netif);
     netif_set_link_up(netif);
   }
@@ -151,19 +163,18 @@ static void low_level_init(struct netif *netif)
   *       to become available since the stack doesn't retry to send a packet
   *       dropped because of memory failure (except for the TCP timers).
   */
-#include "debug_helper.h"
+
 static err_t low_level_output(struct netif *netif, struct pbuf *p)
 {
-  uint32_t i=0, framelen = 0;
-  struct pbuf *q;
   err_t errval = ERR_OK;
-
   UNUSED(netif);
 
+  xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
   if ( !ENC_TransmitBuffer ( &enc28j60, p ) ) {
-    DEBUG_PRINTF("ENC_Transmit failed\n");
+    IFDEBUG("ENC_Transmit failed\n");
     errval = ERR_IF;
   }
+  xSemaphoreGive(SpiSemaphore);
 
   return errval;
 }
@@ -182,10 +193,14 @@ static struct pbuf * low_level_input(struct netif *netif)
   struct pbuf *p = NULL;
 
   if( ENC_read_into_pbuf(&enc28j60, &p ) ) {
-    DEBUG_PRINTF("Rx: Got %d bytes\n", p->tot_len );
+    #if DEBUG_IF > 1
+        IFDEBUG("Rx: Got %d bytes\n", p->tot_len );
+    #endif
   } else {
     /* if no frame is delivered to IP stack, rxBuff has to bee freed immediately */
-    DEBUG_PRINTF("Rx: No bytes\n");
+    #if DEBUG_IF > 0
+        IFDEBUG("Rx: No bytes\n");
+    #endif
   }
 
   return p;
@@ -207,11 +222,14 @@ void ethernetif_input( void const * argument )
 
     for( ;; ){
         if (osSemaphoreWait( RxPktSemaphore, TIME_WAITING_FOR_INPUT)==osOK){
-            ENC_DisableInterrupts();    
-            ENC_clear_irqflags();
-            ENC_EnableInterrupts();
-            DEBUG_PRINTF("Start Receive\n");
+            #if DEBUG_IF > 2
+                IFDEBUG("wait Receive\n");
+            #endif
             LOCK_TCPIP_CORE();
+            xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
+            #if DEBUG_IF > 2
+                IFDEBUG("Start Receive\n");
+            #endif
             while ( ENC_RxPacketAvailable(&enc28j60) ) {
                 p = low_level_input( netif );
                 if (p != NULL) {
@@ -220,9 +238,16 @@ void ethernetif_input( void const * argument )
                     }
                 }
             } 
-            DEBUG_PRINTF("eeeee - End Receive\n");
-            ENC_restore_irq(enc28j60.irq_ena);
+            #if DEBUG_IF > 2
+                IFDEBUG("eeeee - End Receive\n");
+            #endif
+
+            ENC_RetriggerRxInterrupt(&enc28j60);
+
+            xSemaphoreGive(SpiSemaphore);
             UNLOCK_TCPIP_CORE();
+
+            // ENC_restore_irq(true);
         }
     }
 }
@@ -302,27 +327,59 @@ void ethernet_link_thread( void const * argument )
   
   for(;;)
   {
-    
-/* 
+     
+    xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
+
+    /* Get Linkstate */
     PHYLinkState = ENC_GetLinkState(&enc28j60);
     
     if(netif_is_link_up(netif) && (PHYLinkState <= ENC_STATUS_LINK_DOWN))
     {
-      // RHB TODO HAL_ETH_Stop_IT(&EthHandle);
-      DEBUG_PUTS("Link down\n");
+      ENC_Stop(&enc28j60);
+      IFDEBUG("Link down\n");
+      xSemaphoreGive(SpiSemaphore);
       netif_set_down(netif);
       netif_set_link_down(netif);
+      xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
+      if ( enc28j60.errstat ) enc28j60.errstat->linkChngCnt++;
     }
     else if(!netif_is_link_up(netif) && (PHYLinkState > ENC_STATUS_LINK_DOWN))
     {
-        //RHB TODO HAL_ETH_Start_IT(&EthHandle);
-        DEBUG_PUTS("Link up\n");
+        ENC_Restart(&enc28j60);
+        IFDEBUG("Link up\n");
+        xSemaphoreGive(SpiSemaphore);
         netif_set_up(netif);
         netif_set_link_up(netif);
+        xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
+        if ( enc28j60.errstat ) enc28j60.errstat->linkChngCnt++;
     }
-*/   
+
+    /* Check Rx Status */
+    ENC_CheckRxStatus(&enc28j60);
+
+    /* 
+     * If Rx packet interrupt flag is set and more than 8 packets are waiting, 
+     * we ass ume that the Rx packet interrupt was suppressed and we trigger
+     * it manually
+     */
+    if ( enc28j60.PktCnt > 8 && ( enc28j60.eir & EIR_PKTIF ) != 0 ) {
+        #if DEBUG_IF > 2
+            IFDEBUG("-----\n");
+        #endif
+        ENC_RxCpltCallback();
+    } 
+
+    xSemaphoreGive(SpiSemaphore);
+
     osDelay(500);
-  }
+  } // for
+}
+
+void ethernetif_statistic ( void )
+{
+   DEBUG_PRINTF("ENC28J60 Ethernet Interface Statistics");
+   DEBUG_PRINTF("%5d restarts\n", enc28j60.restarts );
+   ENC_DumpStatistic(&enc28j60);
 }
 
 #endif /* USE_ETH_PHY_ENC28J60  */

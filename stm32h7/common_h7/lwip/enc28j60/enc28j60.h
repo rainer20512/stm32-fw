@@ -44,6 +44,7 @@
 
 #include <stdint.h>
 
+#include "lwip/pbuf.h"
 
 #ifndef NULL
     #define NULL ((void *)0)
@@ -54,12 +55,69 @@
 #define MIN_FRAMELEN      64
 #define MAX_FRAMELEN      1518
 
+/* Exported types ------------------------------------------------------------*/
+/** @defgroup ETH_Exported_Types ETH Exported Types
+  * @{
+  */
+
+/**
+  * @brief  ETH Init Structure definition
+  */
+
+typedef struct
+{
+   uint32_t             DuplexMode;                /*!< Selects the MAC duplex mode: Half-Duplex or Full-Duplex mode
+                                                        This parameter can be a value of @ref ETH_Duplex_Mode */
+   uint8_t              *MACAddr;                   /*!< MAC Address of used Hardware: must be pointer on an array of 6 bytes */
+   uint32_t             ChecksumMode;              /*!< Selects if the checksum is check by hardware or by software.                                                         This parameter can be a value of @ref ETH_Checksum_Mode */
+} ENC_InitTypeDef;
+
+/*  Error counters for any kind of errors         */
+typedef struct {
+  uint16_t                  rxErrCnt;      /*!< Hardware receive error         */
+  uint16_t                  rxLenErr;      /*!< Spurious packet len in RxStatusVector */
+  uint16_t                  rxHwLenErr;    /*!< Rx Packet size out of limits    */
+  uint16_t                  rxPbufErr;     /*!< Error when allocating lwip pbuf */
+  uint16_t                  txErrCnt;      /*!< Hardware transmit error         */
+  uint16_t                  txLateColl;    /*!< Late collision error            */
+  uint16_t                  txSizErr;      /*!< wrong size in TxStatusVector    */
+  uint16_t                  txRetries;     /*!< Tx retries due to tx errors     */
+  uint16_t                  tmoErrCnt;     /*!< Timeout during wait             */
+  uint16_t                  txOvrSizCnt;   /*!< Oversized IP                    */
+  uint16_t                  spiBusyCnt;    /*!< Found unexpected busy SPI       */
+  uint16_t                  spiErrCnt;     /*!< Hardware SPI error              */
+  uint16_t                  linkChngCnt;
+
+  uint32_t                  txOkCnt;
+  uint32_t                  rxOkCnt;
+} ENC_ErrStatusTypeDef;
+
+/**
+  * @brief  ENC28J60 Handle Structure definition
+  */
+
+typedef struct
+{
+  ENC_InitTypeDef           Init;          /*!< Ethernet Init Configuration */
+  uint8_t                   bank;          /*!< Currently selected bank     */
+  uint8_t                   eir;           /*!< actual EIR register content */
+  uint8_t                   PktCnt;        /*!< number of waiting RX packets*/
+  uint16_t                  nextpkt;       /*!< Next packet address         */
+  uint16_t                  LinkStatus;    /*!< Ethernet link status        */
+  uint16_t                  RxLength;      /*!< Length of the last received package */
+  uint16_t                  retries;       /*!< The number of transmission retries left to do */
+  uint16_t                  restarts;      /*!< Number of driver restarts due to excessive errors */
+  ENC_ErrStatusTypeDef      *errstat;      /*!< Ptr to the error and statistic counters */                                        
+} ENC_HandleTypeDef;
+
 
 /* External functions --------------------------------------------------------*/
 void HAL_Delay(volatile uint32_t Delay);
 uint32_t HAL_GetTick(void);
 
 /* Callback  functions  *********************************************************/
+
+
 
 /**
   * Implement SPI Slave selection and deselection. Must be provided by user code
@@ -93,64 +151,8 @@ uint8_t ENC_SPI_Send(uint8_t command);
   * param  slave2master: answer from ENC28J60 to host, can be NULL if we only want to send data to slave
   * retval none
   */
-
-void ENC_SPI_SendBuf               (uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
-void ENC_SPI_SendBufWithoutSelection(uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
-
-/* Exported types ------------------------------------------------------------*/
-/** @defgroup ETH_Exported_Types ETH Exported Types
-  * @{
-  */
-
-/**
-  * @brief  ETH Init Structure definition
-  */
-
-typedef struct
-{
-   uint32_t             DuplexMode;                /*!< Selects the MAC duplex mode: Half-Duplex or Full-Duplex mode
-                                                           This parameter can be a value of @ref ETH_Duplex_Mode */
-
-   uint8_t              *MACAddr;                   /*!< MAC Address of used Hardware: must be pointer on an array of 6 bytes */
-
-   uint32_t             ChecksumMode;              /*!< Selects if the checksum is check by hardware or by software.
-                                                         This parameter can be a value of @ref ETH_Checksum_Mode */
-
-   // uint8_t              InterruptEnableBits;       /*!< Selects the enabled interrupts */
-} ENC_InitTypeDef;
-
-
-/**
-  * @brief  Received Frame Informations structure definition
-  */
-typedef struct
-{
-  uint32_t length;                       /*!< Frame length */
-
-  uint8_t buffer[MAX_FRAMELEN+20];                       /*!< Frame buffer */
-
-} ENC_RxFrameInfos;
-
-
-/**
-  * @brief  ENC28J60 Handle Structure definition
-  */
-
-typedef struct
-{
-  ENC_InitTypeDef           Init;          /*!< Ethernet Init Configuration */
-
-  uint8_t                   bank;          /*!< Currently selected bank     */
-  uint8_t                   irq_ena;       /*!< The interrupt enable status when irq routine was called */
-  uint16_t                  nextpkt;       /*!< Next packet address         */
-  uint16_t                  LinkStatus;    /*!< Ethernet link status        */
-  uint16_t                  RxLength;      /*!< Length of the last received package */
-  uint32_t                  startTime;     /*!< The start time of the current timer */
-  uint32_t                  duration;      /*!< The duration of the current timer in ms */
-  uint16_t                  retries;       /*!< The number of transmission retries left to do */
-
-  ENC_RxFrameInfos          RxFrameInfos;  /*!< last Rx frame infos         */
-} ENC_HandleTypeDef;
+void ENC_SPI_SendBuf                (ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
+void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
 
  /**
   * @}

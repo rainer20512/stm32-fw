@@ -232,7 +232,7 @@
     #define USE_SPI1_ALTN2
     // #define SPIDEV1_USE_IRQ
     #define SPI1_USE_MISO
-    #define SPI1_BAUDRATE            1000000
+    #define SPI1_BAUDRATE            8000000
     #define USE_SPI1_MASTER
     #define SPI1_USE_INP             /* Interrupt pin of enc28j60 */
     #define SPI1_USE_INP_IRQ

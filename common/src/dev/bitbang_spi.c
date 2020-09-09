@@ -165,7 +165,7 @@ uint8_t Spi8TxRxByte_bb(SpiHandleT *self, uint8_t outval)
  *  Either vectorIn or vectorOut may be NULL; in wich case data is only shifted 
  *  out or shifted in respectively. 
  ******************************************************************************/
-void Spi8TxRxVector_bb(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
+bool Spi8TxRxVector_bb(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
 {
     uint32_t i;
     if ( !vectorIn && !vectorOut ) return;
@@ -176,7 +176,8 @@ void Spi8TxRxVector_bb(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, 
         for ( i = 0; i < size; i++ ) vectorIn[i] = Spi8TxRxByte_bb(self, 0);
     } else {
         for ( i = 0; i < size; i++ ) vectorIn[i] = Spi8TxRxByte_bb(self, vectorOut[i]);
-    }    
+    }
+    return true;
 }
 
 /*******************************************************************************

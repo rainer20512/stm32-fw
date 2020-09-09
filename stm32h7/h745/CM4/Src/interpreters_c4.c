@@ -666,6 +666,11 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 #endif
 #include "system/periodic.h"
 void stats_display(void);
+
+#if USE_ETH > 0
+  void ethernetif_statistic ( void );
+#endif
+
 /*********************************************************************************
   * @brief  Submenu for system functions
   *         
@@ -687,7 +692,11 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
     case 2:
         stats_display();
         break;
-
+#if USE_ETH > 0 && USE_ETH_PHY_ENC28J60 > 0
+    case 3:
+        ethernetif_statistic();
+        break;
+#endif
     /* sample entry
     case 1:
         if ( CMD_argc() < 1 ) {
@@ -734,6 +743,9 @@ static const CommandSetT cmdTest[] = {
 #endif
 #if USE_EEPROM_EMUL > 0
   { "Write config ",   ctype_fn, .exec.fn = Test_Menu,      VOID(3), "Write config[31] x times"}, 
+#endif
+#if defined(USE_ETH)
+  { "ETH IF statistic",ctype_fn, .exec.fn = System_Menu,    VOID(3), "Show ETH Interface stats"},   
 #endif
 };
 ADD_SUBMODULE(Test);
