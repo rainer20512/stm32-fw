@@ -139,27 +139,27 @@ void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
     uint32_t SpiGetClockSpeed(SPI_TypeDef *hw)
     {
       switch ( (uint32_t)hw ) {
-    #if defined(SPI1) && defined(USE_SPI1)
-        case SPI1_BASE:
-    #endif
-    #if defined(SPI2) && defined(USE_SPI2)
-        case SPI2_BASE:
-    #endif
-    #if defined(SPI3) && defined(USE_SPI3)
-        case SPI3_BASE:
-    #endif
-        return SPI123_CLKSOURCE_GET;
-    #if defined(SPI4) && defined(USE_SPI4)
-        case SPI4_BASE:
-    #endif
-    #if defined(SPI5) && defined(USE_SPI5)
-        case SPI5_BASE:
-    #endif
-        return SPI45_CLKSOURCE_GET;
-    #if defined(SPI6) && defined(USE_SPI6)
-        case SPI6_BASE:
-        return SPI6_CLKSOURCE_GET;
-    #endif
+        #if defined(SPI1) && defined(USE_SPI1)
+            case SPI1_BASE:
+        #endif
+        #if defined(SPI2) && defined(USE_SPI2)
+            case SPI2_BASE:
+        #endif
+        #if defined(SPI3) && defined(USE_SPI3)
+            case SPI3_BASE:
+        #endif
+            return SPI123_CLKSOURCE_GET;
+        #if defined(SPI4) && defined(USE_SPI4)
+            case SPI4_BASE:
+        #endif
+        #if defined(SPI5) && defined(USE_SPI5)
+            case SPI5_BASE:
+        #endif
+            return SPI45_CLKSOURCE_GET;
+        #if defined(SPI6) && defined(USE_SPI6)
+            case SPI6_BASE:
+            return SPI6_CLKSOURCE_GET;
+        #endif
         default:
             DEBUG_PRINTF("No Clock source getter SPI HW base 0x%08x\n", (uint32_t)hw );
             return 0;
