@@ -14,6 +14,36 @@
   */
 
 #include "config/config.h"
+#include <stdio.h>
+/*******************************************************************************
+ * @name    ProfilerFormatTime
+ *
+ * @brief   Format a time value to a fixed time format within a char array 
+ * @param   time64 - time in milliseconds or microseconds, see "bAreUs"
+ *          buffer - buffer to write to
+            buflen - available chars in buffer
+            bAreUs - true, if time unit are microseconds, false for milli s.
+ * @note    returned time str is always 17 chars  long
+ ******************************************************************************/
+void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreUs)
+{
+  /* convert to ms */
+  if ( bAreUs) time64  /= 1000;
+
+  uint32_t ms    = time64 % 1000;
+  /* convert to second, uint32_t is sufficient */
+  uint32_t temp32 = time64 / 1000; 
+  uint32_t secs = temp32 % 60;
+  temp32 /= 60;
+  uint32_t mins = temp32 % 60;
+  temp32 /= 60;
+  /* Temp contains hrs now */
+  uint32_t hrs = temp32 % 24;
+  temp32 /= 24;
+  /* temp32 now contains days */
+  snprintf(buffer, buflen, "%3dd %02d:%02d:%02d.%03ds", temp32, hrs, mins, secs,ms);
+}
+
 #if DEBUG_PROFILING  > 0
 
  /* 
@@ -195,26 +225,6 @@ void ProfilerPop()
   __enable_irq();
 }
 
-static char buffer[25];
-void ProfilerDumpTime(uint64_t time64, char *text)
-{
-  /* convert to ms */
-  time64  /= 1000;
-  uint32_t ms    = time64 % 1000;
-  /* convert to second, uint32_t is sufficient */
-  uint32_t temp32 = time64 / 1000; 
-  uint32_t secs = temp32 % 60;
-  temp32 /= 60;
-  uint32_t mins = temp32 % 60;
-  temp32 /= 60;
-  /* Temp contains hrs now */
-  uint32_t hrs = temp32 % 24;
-  temp32 /= 24;
-  /* temp32 now contains days */
-  sprintf(buffer, "%3dd %02d:%02d:%02d.%03ds", temp32, hrs, mins, secs,ms);
-  DBG_dump_textvalue(text, buffer );
-}
-
 /*********************************************************************************
   * @brief  Increment the time, the processor spent in Stop mode. This can't be 
   *         done by normal profiling functions, because the microsecond timer is
@@ -234,9 +244,13 @@ void ProfilerIncrementStopTime( uint32_t stop_us, uint32_t StopMode )
 bool ProfilerDump(char *cmdline, size_t len, const void * arg )
 {
   UNUSED(cmdline);UNUSED(len);UNUSED(arg);
+
+  char buffer[25];
+  char *text;
+
   uint64_t time;
   uint64_t sum=0;
-  char *text;
+
   DBG_printf_indent("Profiling Data\n" );
   DBG_setIndentRel(+2);
   DBG_setPadLen(18);
@@ -244,9 +258,12 @@ bool ProfilerDump(char *cmdline, size_t len, const void * arg )
      time = ProfilerTimes[i];
      text = jobnames[i];
      sum += time;
-     ProfilerDumpTime(time, text);
+     ProfilerFormatTime(time, buffer, 25, true);
+     DBG_dump_textvalue(text, buffer);
+
   }
-  ProfilerDumpTime(sum, "*** total ***");
+  ProfilerFormatTime(sum, buffer, 25, true );
+  DBG_dump_textvalue("*** total ***",buffer );
   DBG_dump_number("Max. stack depth", STACK_DEPTH-jStackMin);
   DBG_setIndentRel(-2);
 

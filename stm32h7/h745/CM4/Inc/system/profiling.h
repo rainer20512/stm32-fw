@@ -19,6 +19,9 @@
 #endif
 
 
+/* commonly useable time formatter function */
+void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreUs);
+
 
   /* Define the timer that will be used as microsecond timer */
   /* Change all defines, if counter is changed !             */

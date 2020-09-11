@@ -401,6 +401,25 @@ typedef struct
   * @}
   */ 
 
+/******************************************************************************
+ * Typedefs and Enums to generate Ethernet Interface hardware statistics
+ * to be displayed via debug or HTML page
+ *****************************************************************************/
+typedef enum {
+    FMT_NULL    = 0,
+    FMT_UINT8   = 1,
+    FMT_UINT16  = 2,
+    FMT_UINT32  = 4,
+} FmtItemTypeE;
+
+typedef struct {
+    const char*   fmtStr;
+    const void*   fmtVal;
+    FmtItemTypeE  fmtType;
+} FmtItemT;
+
+
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions --------------------------------------------------------*/
 /** @defgroup LAN8742_Exported_Functions LAN8742 Exported Functions

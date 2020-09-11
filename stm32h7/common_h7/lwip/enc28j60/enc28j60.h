@@ -111,57 +111,26 @@ typedef struct
 } ENC_HandleTypeDef;
 
 
-/* External functions --------------------------------------------------------*/
-void HAL_Delay(volatile uint32_t Delay);
-uint32_t HAL_GetTick(void);
+/******************************************************************************
+ * Typedefs and Enums to generate Ethernet Interface hardware statistics
+ * to be displayed via debug or HTML page
+ *****************************************************************************/
+typedef enum {
+    FMT_NULL    = 0,
+    FMT_UINT8   = 1,
+    FMT_UINT16  = 2,
+    FMT_UINT32  = 4,
+} FmtItemTypeE;
 
-/* Callback  functions  *********************************************************/
+typedef struct {
+    const char*   fmtStr;
+    const void*   fmtVal;
+    FmtItemTypeE  fmtType;
+} FmtItemT;
 
 
-
-/**
-  * Implement SPI Slave selection and deselection. Must be provided by user code
-  * param  select: true if the ENC28J60 slave SPI if selected, false otherwise
-  * retval none
-  */
-
-void ENC_SPI_Select(bool select);
-
-/**
-  * Implement SPI single byte send and receive.
-  * The ENC28J60 slave SPI must already be selected and wont be deselected after transmission
-  * Must be provided by user code
-  * param  command: command or data to be sent to ENC28J60
-  * retval answer from ENC28J60
-  */
-
-uint8_t ENC_SPI_SendWithoutSelection(uint8_t command);
-
-/**
-  * Implement SPI single byte send and receive. Must be provided by user code
-  * param  command: command or data to be sent to ENC28J60
-  * retval answer from ENC28J60
-  */
-
-uint8_t ENC_SPI_Send(uint8_t command);
-
-/**
-  * Implement SPI buffer send and receive. Must be provided by user code
-  * param  master2slave: data to be sent from host to ENC28J60, can be NULL if we only want to receive data from slave
-  * param  slave2master: answer from ENC28J60 to host, can be NULL if we only want to send data to slave
-  * retval none
-  */
-void ENC_SPI_SendBuf                (ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
-void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
-
- /**
-  * @}
-  */
 
 /* Exported constants --------------------------------------------------------*/
-/** @defgroup ETH_Exported_Constants ETH Exported Constants
-  * @{
-  */
 /* Size of the Ethernet header */
 #define ETH_HDRLEN      14     /* Minimum size: 2*6 + 2 */
 
@@ -255,10 +224,10 @@ void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2
 
 #define ECON1_BSEL_SHIFT    (0)      /* Bits 0-1: Bank select */
 #define ECON1_BSEL_MASK     (3 << ECON1_BSEL_SHIFT)
-#  define ECON1_BSEL_BANK0  (0 << ECON1_BSEL_SHIFT) /* Bank 0 */
-#  define ECON1_BSEL_BANK1  (1 << ECON1_BSEL_SHIFT) /* Bank 1 */
-#  define ECON1_BSEL_BANK2  (2 << ECON1_BSEL_SHIFT) /* Bank 2 */
-#  define ECON1_BSEL_BANK3  (3 << ECON1_BSEL_SHIFT) /* Bank 3 */
+#define ECON1_BSEL_BANK0    (0 << ECON1_BSEL_SHIFT) /* Bank 0 */
+#define ECON1_BSEL_BANK1    (1 << ECON1_BSEL_SHIFT) /* Bank 1 */
+#define ECON1_BSEL_BANK2    (2 << ECON1_BSEL_SHIFT) /* Bank 2 */
+#define ECON1_BSEL_BANK3    (3 << ECON1_BSEL_SHIFT) /* Bank 3 */
 #define ECON1_RXEN          (1 << 2) /* Bit 2: Receive Enable */
 #define ECON1_TXRTS         (1 << 3) /* Bit 3: Transmit Request to Send */
 #define ECON1_CSUMEN        (1 << 4) /* Bit 4: DMA Checksum Enable */
@@ -574,10 +543,6 @@ void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2
 /* TSV bit definitions */
 #define TSV_LATECOL       (1 << 5) /* Bit 5: Late Collision Error, RSV byte 3 */
 
-/** @defgroup ENC_Status ENC28J60 Status
-  * @{
-  */    
-
 #define  ENC_STATUS_READ_ERROR            ((int32_t)-5)
 #define  ENC_STATUS_WRITE_ERROR           ((int32_t)-4)
 #define  ENC_STATUS_ADDRESS_ERROR         ((int32_t)-3)
@@ -588,238 +553,43 @@ void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2
 #define  ENC_STATUS_10MBITS_FULLDUPLEX    ((int32_t) 4)
 #define  ENC_STATUS_10MBITS_HALFDUPLEX    ((int32_t) 5)
 
-/**
-  * @}
-  */
+#define ETH_MODE_FULLDUPLEX               ((uint32_t)0x00000800)
+#define ETH_MODE_HALFDUPLEX               ((uint32_t)0x00000000)
 
 
-/** @defgroup ETH_Duplex_Mode ETH Duplex Mode
-  * @{
-  */
-#define ETH_MODE_FULLDUPLEX       ((uint32_t)0x00000800)
-#define ETH_MODE_HALFDUPLEX       ((uint32_t)0x00000000)
-/**
-  * @}
-  */
+#define ETH_RXPOLLING_MODE                ((uint32_t)0x00000000)
+#define ETH_RXINTERRUPT_MODE              ((uint32_t)0x00000001)
 
-/** @defgroup ETH_Rx_Mode ETH Rx Mode
-  * @{
-  */
-#define ETH_RXPOLLING_MODE      ((uint32_t)0x00000000)
-#define ETH_RXINTERRUPT_MODE    ((uint32_t)0x00000001)
-/**
-  * @}
-  */
-
-/** @defgroup ETH_Checksum_Mode ETH Checksum Mode
-  * @{
-  */
-#define ETH_CHECKSUM_BY_HARDWARE      ((uint32_t)0x00000000)
-#define ETH_CHECKSUM_BY_SOFTWARE      ((uint32_t)0x00000001)
-/**
-  * @}
-  */
-
-/* Exported functions --------------------------------------------------------*/
-/** @addtogroup SPI_Exported_Functions
-  * @{
-  */
-
-/** @addtogroup SPI_Exported_Functions_Group1
-  * @{
-  */
-/* Initialization/de-initialization functions  **********************************/
+#define ETH_CHECKSUM_BY_HARDWARE          ((uint32_t)0x00000000)
+#define ETH_CHECKSUM_BY_SOFTWARE          ((uint32_t)0x00000001)
 
 
-/**
-  * Initialize the enc28j60 and configure the needed hardware resources
-  * param  handle: Handle on data configuration.
-  * retval None
-  */
 
-bool ENC_Start(ENC_HandleTypeDef *handle);
+/* Exported functions */
 
-/****************************************************************************
- * Function: ENC_SetMacAddr
- *
- * Description:
- *   Set the MAC address to the configured value.  This is done after ifup
- *   or after a TX timeout.  Note that this means that the interface must
- *   be down before configuring the MAC addr.
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *
- * Returned Value:
- *   None
- *
- * Assumptions:
- *
- ****************************************************************************/
+/* Initialization/de-initialization functions  *******************************/
+bool ENC_Start      (ENC_HandleTypeDef *handle, uint32_t bfirstInit);
+void ENC_Restart    (ENC_HandleTypeDef *handle);
+void ENC_Stop       (ENC_HandleTypeDef *handle);
+void ENC_SetMacAddr (ENC_HandleTypeDef *handle);
 
-void ENC_SetMacAddr(ENC_HandleTypeDef *handle);
-
-/****************************************************************************
- * Function: ENC_TransmitBuffer
- *
- * Description:
- *   Transmit a buffer of data.
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *   buffer  - A pointer to the buffer to write from
- *   buflen  - The number of bytes to write
- *
- * Returned Value:
- *   true      On success
- *   false     On failuer
- *
- * Assumptions:
- *   Read pointer is set to the correct address
- *
- ****************************************************************************/
-
+/* ETH IF transmit functions  ************************************************/
 bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p);
 
+/* ETH IF receive functions  *************************************************/
+void ENC_RetriggerRxInterrupt   (ENC_HandleTypeDef *handle);
+bool ENC_GetReceivedFrame       (ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *rxlen);
+bool ENC_ReceiveIntoPbuf        (ENC_HandleTypeDef *handle, struct pbuf **buf);
+uint8_t ENC_RxPacketAvailable   (ENC_HandleTypeDef *handle );
+void ENC_CheckRxStatus          (ENC_HandleTypeDef *handle);
 
-/****************************************************************************
- * Function: ENC_PrepareBuffer
- *
- * Description:
- *   Prepare the TX buffer by resetting TX buffer start, by setting
- *   ENC_ETXNDL to the passed buflen + 1 ( due to control byte )
- *   and by by setting ENC_EWRPT to TX buffer start
- *
- *   Thereafter write the control byte and the data bytes to the
- *   ENC transmit buffer
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *   buffer  - A pointer to the buffer to write from
- *   buflen  - The number of bytes to write
- *
- * Returned Value:
- *   ENC_ERR_OK         on success
- *   ENC_ERR_TIMEOUT    on timeout during wait for completion of ongoing transmisson
- *   END_ERR_MEM        on internal TX buffer overrun ( due to too large tx packet )
- *
- * Assumptions:
- *   Read pointer is set to the correct address
- *
- ****************************************************************************/
-
-int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle,struct pbuf *p);
-
-/****************************************************************************
- * Function: ENC_Transmit
- *
- * Description:
- *   Start hardware transmission.  Called either from:
- *
- *   -  pkif interrupt when an application responds to the receipt of data
- *      by trying to send something, or
- *   -  From watchdog based polling.
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *
- * Returned Value:
- *   none
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength );
-
- /**
-  * @}
-  */
-
- /**
-  * @}
-  */
-
-/****************************************************************************
- * Function: ENC_GetReceivedFrame
- *
- * Description:
- *   Check if we have received packet, and if so, retrive them.
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *   rxbuff  - receive buffer to copy received data into
- *   rxlen   - ptr to variable to receive the actual data length
- *
- * Returned Value:
- *   true if new packet is available; false otherwise
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *rxlen);
-
-/****************************************************************************
- * Function: ENC_IRQHandler
- *
- * Description:
- *   Perform interrupt handling logic outside of the interrupt handler (on
- *   the work queue thread).
- *
- * Parameters, all unused:
- *   pin      - pin number of the associated interrupt pin
- *   pinvalue - value of the associated interrupt pin ( 0 or 1 )
- *   arg - optional user defined argument
- *
- * Returned Value:
- *   None
- *
- * Assumptions:
- *
- ****************************************************************************/
-void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg );
-
-/****************************************************************************
- * Function: ENC_EnableInterrupts
- *
- * Description:
- *   Enable individual ENC28J60 interrupts
- *
- * Parameters:
- *   bits - The individual bits to enable
- *
- * Returned Value:
- *   None
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-void ENC_EnableInterrupts(void);
-
-
-
+/* ETH IF Link status  *******************************************************/
 int32_t ENC_GetLinkState(ENC_HandleTypeDef *handle);
 
+/* ETH Statistic functions  **************************************************/
+uint32_t ENCSTAT_GetLineCount   (void);
+FmtItemT *ENCSTAT_GetLine       ( uint32_t idx );
 
 
-/****************************************************************************
- * Function: up_udelay
- *
- * Description:
- *   wait us µs
- *
- * Parameters:
- *   us  - The amount of time to wait in µs
- *
- * Returned Value:
- *   none
- *
- * Assumptions:
- *
- ****************************************************************************/
-
-static __inline void up_udelay(uint32_t us);
 
 #endif /* ENC28J60_H_INCLUDED */

@@ -40,11 +40,6 @@
   */
 
 #include "config/config.h"
-#include "debug_helper.h"
-
-#include "lwip/pbuf.h"
-
-
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
@@ -94,50 +89,93 @@ Errata 18 is implemented in lwip stack
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
 #include "dev/spi.h"
+#include "debug_helper.h"
 
-#define DEBUG_ENCRX         0      /* Debug Rx path */
-#define DEBUG_ENCTX         0       /* Debug Tx path */
-#define DEBUG_ENC           0       /* Debug common  */
+/* for struct pbuf */
+#include "lwip/pbuf.h"
 
-#if DEBUG_ENCRX > 0 
-    #define ENCRXDEBUG(...)   DEBUG_PRINTF(__VA_ARGS__)
+/* for osDelay */
+#include "cmsis_os.h"
+
+#define DEBUG_ENCRX         4       /* Debug Rx path */
+#define DEBUG_ENCTX         4       /* Debug Tx path */
+#define DEBUG_ENC           4       /* Debug common  */
+
+//#define DEBUG_OUTPUT(lvl,...)             DEBUG_PRINTF(__VA_ARGS__)  
+
+#define DEBUG_OUTPUT(lvl,...)             do if ( debuglevel > lvl ) { DEBUG_PRINTF(__VA_ARGS__); } while(0)  
+
+#define ENCDEBUG(...)                     DEBUG_OUTPUT(0, __VA_ARGS__)
+#define ENCRXDEBUG(...)                   DEBUG_OUTPUT(0, __VA_ARGS__)
+#define ENCTXDEBUG(...)                   DEBUG_OUTPUT(0, __VA_ARGS__)
+
+#if DEBUG_ENCTX > 0   /***** Tx Lvl 1 *****/
+    #define ENCTX1DEBUG(...)              DEBUG_OUTPUT(1,__VA_ARGS__)
 #else
-    #define ENCRXDEBUG(...)   
+    #define ENCTX1DEBUG(...)   
 #endif
-#if DEBUG_ENCTX > 0 
-    #define ENCTXDEBUG(...)   DEBUG_PRINTF(__VA_ARGS__)
+#if DEBUG_ENCTX > 1   /***** Tx Lvl 2 *****/
+    #define ENCTX2DEBUG(...)              DEBUG_OUTPUT(2,__VA_ARGS__)
 #else
-    #define ENCTXDEBUG(...)   
+    #define ENCTX2DEBUG(...)   
 #endif
-#if DEBUG_ENC > 0 
-    #define ENCDEBUG(...)   DEBUG_PRINTF(__VA_ARGS__)
+#if DEBUG_ENCTX > 2   /***** Tx Lvl 3 *****/
+    #define ENCTX3DEBUG(...)              DEBUG_OUTPUT(3,__VA_ARGS__)
 #else
-    #define ENCDEBUG(...)   
+    #define ENCTX3DEBUG(...)   
+#endif
+#if DEBUG_ENCTX > 3   /***** Tx Lvl 4 *****/
+    #define ENCTX4DEBUG(...)              DEBUG_OUTPUT(4,__VA_ARGS__)
+#else
+    #define ENCTX4DEBUG(...)   
 #endif
 
-/** @defgroup ENC28J60
-  * @{
-  */
+#if DEBUG_ENCRX > 0   /***** Rx Lvl 1 *****/
+    #define ENCRX1DEBUG(...)              DEBUG_OUTPUT(1, __VA_ARGS__)
+#else
+    #define ENCRX1DEBUG(...)   
+#endif
+#if DEBUG_ENCRX > 1   /***** Rx Lvl 2 *****/
+    #define ENCRX2DEBUG(...)              DEBUG_OUTPUT(2, __VA_ARGS__)
+#else
+    #define ENCRX2DEBUG(...)   
+#endif
+#if DEBUG_ENCRX > 2   /***** Rx Lvl 3 *****/
+    #define ENCRX3DEBUG(...)              DEBUG_OUTPUT(3, __VA_ARGS__)
+#else
+    #define ENCRX3DEBUG(...)   
+#endif
+#if DEBUG_ENCRX > 3   /***** Rx Lvl 4 *****/
+    #define ENCRX4DEBUG(...)              DEBUG_OUTPUT(4, __VA_ARGS__)
+#else
+    #define ENCRX4DEBUG(...)   
+#endif
 
-/** @defgroup ENC28J60_Private_Types_Definitions
-  * @{
-  */
-
-/** @defgroup ENC28J60_Private_Defines
-  * @{
-  */
+#if DEBUG_ENC > 0   /***** Lvl 1 *****/
+    #define ENC1DEBUG(...)              DEBUG_OUTPUT(1, __VA_ARGS__)
+#else
+    #define ENC1DEBUG(...)   
+#endif
+#if DEBUG_ENC > 1   /***** Lvl 2 *****/
+    #define ENC2DEBUG(...)              DEBUG_OUTPUT(2, __VA_ARGS__)
+#else
+    #define ENC2DEBUG(...)   
+#endif
+#if DEBUG_ENC > 2   /***** Lvl 3 *****/
+    #define ENC3DEBUG(...)              DEBUG_OUTPUT(3, __VA_ARGS__)
+#else
+    #define ENC3DEBUG(...)   
+#endif
+#if DEBUG_ENC > 3   /***** Lvl 4 *****/
+    #define ENC4DEBUG(...)              DEBUG_OUTPUT(4, __VA_ARGS__)
+#else
+    #define ENC4DEBUG(...)   
+#endif
 
 /* Poll timeout */
 
 #define ENC_POLLTIMEOUT 50
 
-/**
-  * @}
-  */
-
-/** @defgroup ENC28J60_Private_Macros
-  * @{
-  */
 
 /* Max Rx packet size ********************************************************/
 #define ETH_MAX_RX_FRAMESIZE                   (CONFIG_NET_ETH_MTU+18)
@@ -162,16 +200,7 @@ Errata 18 is implemented in lwip stack
 #define enc_bfcgreg(hnd, ctrlreg,clrbits)    enc_wrgreg2(hnd, ENC_BFC | GETADDR(ctrlreg), clrbits)
 #define enc_bfsgreg(hnd, ctrlreg,setbits)    enc_wrgreg2(hnd, ENC_BFS | GETADDR(ctrlreg), setbits)
 
-/**
-  * @}
-  */
 
-/** @defgroup ENC28J60_Private_Variables
-  * @{
-  */
-
-  /* Stores how many iterations the microcontroller can do in 1 탎 */
-static uint32_t iter_per_us=0;
 
 #if DO_ENC_STATISTIC > 0
     /* Create an error statistic record if configured */
@@ -181,24 +210,23 @@ static uint32_t iter_per_us=0;
     #define INC(a)
 #endif
 
-/**
-  * @}
-  */
+/* External functions --------------------------------------------------------*/
+void HAL_Delay(volatile uint32_t Delay);
+uint32_t HAL_GetTick(void);
 
-/** @defgroup ENC28J60_Private_Function_Prototypes
-  * @{
-  */
-/**
-  * @}
-  */
+/* Forward declarations *********************************************************/
+static void    ENC_SPI_Select                 (bool select);
+static uint8_t ENC_SPI_Send                   (uint8_t command);
+static uint8_t ENC_SPI_SendWithoutSelection   (uint8_t command);
+static void    ENC_SPI_SendBuf                (ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
+static void    ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize);
+static int32_t ENC_SPI_CheckFree              (ENC_HandleTypeDef *handle);
+static void    ENC_IRQHandler                 ( uint16_t pin, uint16_t pinvalue , void *arg );
 
-/** @defgroup ENC28J60_Private_Functions
-  * @{
-  */
+static __inline void up_udelay(uint32_t us);
 
-/**
-   Calibrate the constant time
- **/
+/* Stores how many iterations the microcontroller can do in 1 탎 */
+static uint32_t iter_per_us=0;
 
 static void calibrate(void)
 {
@@ -218,10 +246,10 @@ static void calibrate(void)
     ENCDEBUG("EncCalibrate: %d iter per us\n", iter_per_us);
 }
 
-/**
- * Software delay in 탎
+/******************************************************************************
+ * active delay function for very short delays 
  *  us: the number of 탎 to wait
- **/
+ *****************************************************************************/
 static __inline void up_udelay(uint32_t us)
 {
     volatile uint32_t i;
@@ -229,6 +257,7 @@ static __inline void up_udelay(uint32_t us)
     for (i=0; i<us*iter_per_us; i++) {
     }
 }
+
 /****************************************************************************
  * Function: enc_rdgreg2
  *
@@ -245,7 +274,6 @@ static __inline void up_udelay(uint32_t us)
  * Assumptions:
  *
  ****************************************************************************/
-
 static uint8_t enc_rdgreg2(ENC_HandleTypeDef *handle, uint8_t cmd)
 {
     uint8_t cmdpdata[2];
@@ -278,13 +306,11 @@ static uint8_t enc_rdgreg2(ENC_HandleTypeDef *handle, uint8_t cmd)
  * Assumptions:
  *
  ****************************************************************************/
-
 static void enc_wrgreg2(ENC_HandleTypeDef *handle, uint8_t cmd, uint8_t wrdata)
 {
     uint8_t cmdpdata[2];
     cmdpdata[0] = cmd;
     cmdpdata[1] = wrdata;
-
 
     /* Send the write command and data.  The sequence requires 16-clocks:
      * 8 to clock out the cmd + 8 to clock out the data.
@@ -312,7 +338,6 @@ static void enc_wrgreg2(ENC_HandleTypeDef *handle, uint8_t cmd, uint8_t wrdata)
  * Assumptions:
  *
  ****************************************************************************/
-
 static bool enc_waitgreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
                         uint8_t bits, uint8_t value)
 {
@@ -322,17 +347,16 @@ static bool enc_waitgreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
 
   /* Loop until the exit condition is met */
 
-  do
-    {
+  do {
       /* Read the byte from the requested banked register */
 
       rddata  = enc_rdgreg(handle, ctrlreg);
       elapsed = HAL_GetTick() - start;
-    }
-  while ((rddata & bits) != value && elapsed < ENC_POLLTIMEOUT);
+  } while ((rddata & bits) != value && elapsed < ENC_POLLTIMEOUT);
 
   return (rddata & bits) == value;
 }
+
 
 /****************************************************************************
  * Function: enc_waitwhilegreg
@@ -352,7 +376,6 @@ static bool enc_waitgreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
  * Assumptions:
  *
  ****************************************************************************/
-
 static bool enc_waitwhilegreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
                         uint8_t bits, uint8_t value)
 {
@@ -362,35 +385,52 @@ static bool enc_waitwhilegreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
 
   /* Loop until the exit condition is met */
 
-  do
-    {
+  do {
       /* Read the byte from the requested banked register */
 
       rddata  = enc_rdgreg(handle, ctrlreg);
       elapsed = HAL_GetTick() - start;
-    }
-  while ((rddata & bits) == value && elapsed < ENC_POLLTIMEOUT);
+  } while ((rddata & bits) == value && elapsed < ENC_POLLTIMEOUT);
 
   return (rddata & bits) != value;
 }
 
-/**
-  * @brief  Perform a soft reset on enc28j60
-  * Description:
-  *   Send the single byte system reset command (SRC).
-  *
-  *   "The System Reset Command (SRC) allows the host controller to issue a
-  *    System Soft Reset command.  Unlike other SPI commands, the SRC is
-  *    only a single byte command and does not operate on any register. The
-  *    command is started by pulling the CS pin low. The SRC opcode is the
-  *    sent, followed by a 5-bit Soft Reset command constant of 1Fh. The
-  *    SRC operation is terminated by raising the CS pin."
-  *
-  * @param  None
-  * @retval None
-  */
-void enc_reset(ENC_HandleTypeDef *handle) {
+/******************************************************************************
+ * @brief  Perform a hard reset on enc28j60 RST pin
+ * Description:
+ * @param  None
+ * @retval None
+ *****************************************************************************/
+static void enc_hwreset(ENC_HandleTypeDef *handle) {
 
+    ENCDEBUG("HW-Reset\n");
+    SpiRstLow(SPI_HANDLE);
+    /* Minimal RST low pulse length is 400 ns, so 2us is safe */
+    up_udelay( 2 );
+    SpiRstHigh(SPI_HANDLE);
+    /* Minimal 2us to next reset pulse */
+    up_udelay( 2 );
+}
+
+
+/******************************************************************************
+ * @brief  Perform a soft reset on enc28j60
+ * Description:
+ *   Send the single byte system reset command (SRC).
+ *
+ *   "The System Reset Command (SRC) allows the host controller to issue a
+ *    System Soft Reset command.  Unlike other SPI commands, the SRC is
+ *    only a single byte command and does not operate on any register. The
+ *    command is started by pulling the CS pin low. The SRC opcode is the
+ *    sent, followed by a 5-bit Soft Reset command constant of 1Fh. The
+ *    SRC operation is terminated by raising the CS pin."
+ *
+ * @param  None
+ * @retval None
+ *****************************************************************************/
+static void enc_swreset(ENC_HandleTypeDef *handle) {
+
+  ENCDEBUG("SW-Reset\n");
   /* Send the system reset command. */
   ENC_SPI_Send(ENC_SRC);
 
@@ -405,9 +445,9 @@ void enc_reset(ENC_HandleTypeDef *handle) {
    */
 
   handle->bank = 0; /* Initialize the trace on the current selected bank */
-  //up_mdelay(2);
   HAL_Delay(2); /* >1000 탎, conforms to errata #2 */
 }
+
 
 /****************************************************************************
  * Function: enc_setbank
@@ -428,8 +468,7 @@ void enc_reset(ENC_HandleTypeDef *handle) {
  * Assumptions:
  *
  ****************************************************************************/
-
-void enc_setbank(ENC_HandleTypeDef *handle, uint8_t bank) {
+static void enc_setbank(ENC_HandleTypeDef *handle, uint8_t bank) {
 
   if (bank != handle->bank) {
       // ENCDEBUG("Set bank %d\n", bank);
@@ -447,6 +486,7 @@ void enc_setbank(ENC_HandleTypeDef *handle, uint8_t bank) {
   } 
 }
 
+
 /****************************************************************************
  * Function: enc_rdbreg
  *
@@ -463,7 +503,6 @@ void enc_setbank(ENC_HandleTypeDef *handle, uint8_t bank) {
  * Assumptions:
  *
  ****************************************************************************/
-
 static uint8_t enc_rdbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg)
 {
   uint8_t data[3];
@@ -487,6 +526,7 @@ static uint8_t enc_rdbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg)
   return (ISPHYMAC(ctrlreg))?data[2]:data[1];
 }
 
+
 /****************************************************************************
  * Function: enc_wrbreg
  *
@@ -506,7 +546,6 @@ static uint8_t enc_rdbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg)
  * Assumptions:
  *
  ****************************************************************************/
-
 static void enc_wrbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
                        uint8_t wrdata)
 {
@@ -525,6 +564,7 @@ static void enc_wrbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
 
   ENC_SPI_SendBuf(handle, data, NULL, 2);
 }
+
 
 /****************************************************************************
  * Function: enc_waitbreg
@@ -545,7 +585,6 @@ static void enc_wrbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
  * Assumptions:
  *
  ****************************************************************************/
-
 static bool enc_waitbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
                         uint8_t bits, uint8_t value)
 {
@@ -584,7 +623,6 @@ static bool enc_waitbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
  * Assumptions:
  *
  ****************************************************************************/
-
 static uint16_t enc_rdphy(ENC_HandleTypeDef *handle, uint8_t phyaddr)
 {
   uint16_t data = 0;
@@ -611,14 +649,9 @@ static uint16_t enc_rdphy(ENC_HandleTypeDef *handle, uint8_t phyaddr)
    *      clear itself.
    */
 
-//  volatile int i;
-//  for (i=0; i<12*17; i++) {
-//  }
-
   up_udelay(12);
 
-  if (enc_waitbreg(handle, ENC_MISTAT, MISTAT_BUSY, 0x00))
-    {
+  if (enc_waitbreg(handle, ENC_MISTAT, MISTAT_BUSY, 0x00)) {
       /* 4. Clear the MICMD.MIIRD bit. */
 
       enc_wrbreg(handle, ENC_MICMD, 0x00);
@@ -629,10 +662,11 @@ static uint16_t enc_rdphy(ENC_HandleTypeDef *handle, uint8_t phyaddr)
 
       data  = (uint16_t)enc_rdbreg(handle, ENC_MIRDL);
       data |= (uint16_t)enc_rdbreg(handle, ENC_MIRDH) << 8;
-    }
+  }
 
   return data;
 }
+
 
 /****************************************************************************
  * Function: enc_wrphy
@@ -651,7 +685,6 @@ static uint16_t enc_rdphy(ENC_HandleTypeDef *handle, uint8_t phyaddr)
  * Assumptions:
  *
  ****************************************************************************/
-
 static void enc_wrphy(ENC_HandleTypeDef *handle, uint8_t phyaddr,
                       uint16_t phydata)
 {
@@ -684,13 +717,10 @@ static void enc_wrphy(ENC_HandleTypeDef *handle, uint8_t phyaddr,
    */
 
   /* wait for approx 12 탎 */
-//  volatile int i;
-//  for (i=0; i<12*17; i++) {
-//  }
-
   up_udelay(12);
   enc_waitbreg(handle, ENC_MISTAT, MISTAT_BUSY, 0x00);
 }
+
 
 /****************************************************************************
  * Function: enc_rdbuffer
@@ -709,7 +739,6 @@ static void enc_wrphy(ENC_HandleTypeDef *handle, uint8_t phyaddr,
  *   Read pointer is set to the correct address
  *
  ****************************************************************************/
-
 static void enc_rdbuffer(ENC_HandleTypeDef *handle, void *buffer, int16_t buflen)
 {
 
@@ -717,24 +746,22 @@ static void enc_rdbuffer(ENC_HandleTypeDef *handle, void *buffer, int16_t buflen
   ENC_SPI_Select(true);
 
   /* Send the read buffer memory command (ignoring the response) */
-
   ENC_SPI_SendWithoutSelection(ENC_RBM);
 
   /* Then read the buffer data */
-
   ENC_SPI_SendBuf(handle, NULL, buffer, buflen);
 
   /* De-select ENC28J60 chip: done in ENC_SPI_SendBuf */
-
 }
 
 
-/**
-  * @brief  Initialize the enc28j60 and configure the needed hardware resources
-  * @param  handle: Handle on data configuration.
-  * @retval None
-  */
-bool ENC_Start(ENC_HandleTypeDef *handle)
+/******************************************************************************
+ * @brief  Initialize the enc28j60 and configure the needed hardware resources
+ * @param  handle:      Handle on data configuration.
+ * @param  bFirstInit:  flag for "this is the first init"
+ * @retval None
+ *****************************************************************************/
+bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
 {
     /* register value */
     uint8_t regval;
@@ -742,16 +769,22 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
     /* Calibrate time constant */
     calibrate();
 
+    /* If we have an hardware reset line, do hardware reset */
+    if ( SPI_HANDLE->data->use_rst != 0 ) {
+        enc_hwreset(handle);
+    }
     /* System reset */
-	enc_reset(handle);
+    enc_swreset(handle);
 
-	/* Use bank 0 */
-	enc_setbank(handle, 0);
+    /* Use bank 0 */
+    enc_setbank(handle, 0);
 
     #if DO_ENC_STATISTIC > 0
-        /* Reset error counters and assign counter record to handle */
-        memset(&errstat,0, sizeof(ENC_ErrStatusTypeDef));
-        handle->errstat = &errstat;
+        if ( bFirstInit ) {
+            /* Reset error counters and assign counter record to handle */
+            memset(&errstat,0, sizeof(ENC_ErrStatusTypeDef));
+            handle->errstat = &errstat;
+        }
     #endif
     /* Check if we are actually communicating with the ENC28J60.  If its
      * 0x00 or 0xff, then we are probably not communicating correctly
@@ -760,133 +793,97 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
 
     regval = enc_rdbreg(handle, ENC_EREVID);
     if (regval == 0x00 || regval == 0xff) {
-      ENCDEBUG("ENC_Start: ENC28J60 not responding\n");
-      return false;
+        ENCDEBUG("ENC_Start: ENC28J60 not responding\n");
+        return false;
     }
     ENCDEBUG("ENC28J60 Rev. %d\n", regval);
 
+#if DEBUG_ENC > 0
     uint16_t phyid1 = enc_rdphy(handle, ENC_PHID1);
     uint16_t phyid2 = enc_rdphy(handle, ENC_PHID2);
-    ENCDEBUG("ENC28J60 PhyID1,2= 0x%04x,0x%04x\n", phyid1, phyid2);
+    ENC1DEBUG("ENC28J60 PhyID1,2= 0x%04x,0x%04x\n", phyid1, phyid2);
+#endif
 
-    /* Initialize ECON2: Enable address auto increment.
-     */
-
+    /* Initialize ECON2: Enable address auto increment. */
     enc_wrgreg(handle, ENC_ECON2, ECON2_AUTOINC /* | ECON2_VRPS*/);
 
     /* Initialize receive buffer.
      * First, set the receive buffer start address.
      */
-
     handle->nextpkt = PKTMEM_RX_START;
     enc_wrbreg(handle, ENC_ERXSTL, PKTMEM_RX_START & 0xff);
     enc_wrbreg(handle, ENC_ERXSTH, PKTMEM_RX_START >> 8);
 
     #if DEBUG_ENC > 1
-        ENCDEBUG("RX Start=0x%04x ", PKTMEM_RX_START);
+        ENC2DEBUG("RX Start=0x%04x ", PKTMEM_RX_START);
     #endif
 
     /* Set the receive data pointer */
-
     /* Errata 14 */
     enc_wrbreg(handle, ENC_ERXRDPTL, PKTMEM_RX_END & 0xff);
     enc_wrbreg(handle, ENC_ERXRDPTH, PKTMEM_RX_END >> 8);
-/*
-    enc_wrbreg(handle, ENC_ERXRDPTL, PKTMEM_RX_START & 0xff);
-    enc_wrbreg(handle, ENC_ERXRDPTH, PKTMEM_RX_START >> 8);
-*/
 
     /* Set the receive buffer end. */
-
     enc_wrbreg(handle, ENC_ERXNDL, PKTMEM_RX_END & 0xff);
     enc_wrbreg(handle, ENC_ERXNDH, PKTMEM_RX_END >> 8);
 
     #if DEBUG_ENC > 1
-        ENCDEBUG("RX End=0x%04x\n", PKTMEM_RX_END);
+        ENC2DEBUG("RX End=0x%04x\n", PKTMEM_RX_END);
     #endif
 
     /* Set transmit buffer start. */
-
-    // handle->transmitLength = 0;
     enc_wrbreg(handle, ENC_ETXSTL, PKTMEM_TX_START & 0xff);
     enc_wrbreg(handle, ENC_ETXSTH, PKTMEM_TX_START >> 8);
 
     /* Set filter mode: unicast OR broadcast AND crc valid */
-
     enc_wrbreg(handle, ENC_ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
 
-	do {
-		HAL_Delay(10); /* Wait for 10 ms to let the clock be ready */
-		regval = enc_rdbreg(handle, ENC_ESTAT);
-	} while ((regval & ESTAT_CLKRDY) == 0);
+    do {
+            HAL_Delay(10); /* Wait for 10 ms to let the clock be ready */
+            regval = enc_rdbreg(handle, ENC_ESTAT);
+    } while ((regval & ESTAT_CLKRDY) == 0);
 
     /* Enable MAC receive */
-
     enc_wrbreg(handle, ENC_MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
 
     /* Enable automatic padding and CRC operations */
-
     if (handle->Init.DuplexMode == ETH_MODE_HALFDUPLEX) {
-      enc_wrbreg(handle, ENC_MACON3,
-                 ((handle->Init.ChecksumMode == ETH_CHECKSUM_BY_HARDWARE)?MACON3_PADCFG0 | MACON3_TXCRCEN:0) |
-                 MACON3_FRMLNEN);
-      enc_wrbreg(handle, ENC_MACON4, MACON4_DEFER);        /* Defer transmission enable */
+        enc_wrbreg(handle, ENC_MACON3,
+        ( handle->Init.ChecksumMode == ETH_CHECKSUM_BY_HARDWARE ? MACON3_PADCFG0 | MACON3_TXCRCEN : 0 ) | MACON3_FRMLNEN);
+        enc_wrbreg(handle, ENC_MACON4, MACON4_DEFER);        /* Defer transmission enable */
 
-      /* Set Non-Back-to-Back Inter-Packet Gap */
+        /* Set Non-Back-to-Back Inter-Packet Gap */
+        enc_wrbreg(handle, ENC_MAIPGL, 0x12);
+        enc_wrbreg(handle, ENC_MAIPGH, 0x0c);
 
-      enc_wrbreg(handle, ENC_MAIPGL, 0x12);
-      enc_wrbreg(handle, ENC_MAIPGH, 0x0c);
-
-      /* Set Back-to-Back Inter-Packet Gap */
-
-      enc_wrbreg(handle, ENC_MABBIPG, 0x12);
+        /* Set Back-to-Back Inter-Packet Gap */
+        enc_wrbreg(handle, ENC_MABBIPG, 0x12);
     } else {
-      /* Set filter mode: unicast OR broadcast AND crc valid AND Full Duplex */
+        /* Set filter mode: unicast OR broadcast AND crc valid AND Full Duplex */
+        enc_wrbreg(handle, ENC_MACON3,
+        (handle->Init.ChecksumMode == ETH_CHECKSUM_BY_HARDWARE ? MACON3_PADCFG0 | MACON3_TXCRCEN : 0 ) | MACON3_FRMLNEN | MACON3_FULDPX);
 
-      enc_wrbreg(handle, ENC_MACON3,
-                ((handle->Init.ChecksumMode == ETH_CHECKSUM_BY_HARDWARE)?MACON3_PADCFG0 | MACON3_TXCRCEN:0) |
-                MACON3_FRMLNEN | MACON3_FULDPX);
+        /* Set Non-Back-to-Back Inter-Packet Gap */
+        enc_wrbreg(handle, ENC_MAIPGL, 0x12);
 
-      /* Set Non-Back-to-Back Inter-Packet Gap */
-
-      enc_wrbreg(handle, ENC_MAIPGL, 0x12);
-
-      /* Set Back-to-Back Inter-Packet Gap */
-
-      enc_wrbreg(handle, ENC_MABBIPG, 0x15);
+        /* Set Back-to-Back Inter-Packet Gap */
+        enc_wrbreg(handle, ENC_MABBIPG, 0x15);
     }
 
     /* Set the maximum packet size which the controller will accept */
-
     enc_wrbreg(handle, ENC_MAMXFLL, ETH_MAX_RX_FRAMESIZE & 0xff);
     enc_wrbreg(handle, ENC_MAMXFLH, ETH_MAX_RX_FRAMESIZE >> 8);
 
-  /* Configure LEDs (No, just use the defaults for now) */
-  /* enc_wrphy(priv, ENC_PHLCON, ??); */
-
-    /* Setup up PHCON1 & 2 */
-
     if (handle->Init.DuplexMode == ETH_MODE_HALFDUPLEX) {
-      enc_wrphy(handle, ENC_PHCON1, 0x00);
-      enc_wrphy(handle, ENC_PHCON2, PHCON2_HDLDIS); /* errata 9 workaround */
+        enc_wrphy(handle, ENC_PHCON1, 0x00);
+        enc_wrphy(handle, ENC_PHCON2, PHCON2_HDLDIS); /* errata 9 workaround */
     } else {
-      enc_wrphy(handle, ENC_PHCON1, PHCON1_PDPXMD); /* errata 10 workaround */
-      enc_wrphy(handle, ENC_PHCON2, 0x00);
+        enc_wrphy(handle, ENC_PHCON1, PHCON1_PDPXMD); /* errata 10 workaround */
+        enc_wrphy(handle, ENC_PHCON2, 0x00);
     }
-
-    /* Not used Restore normal operation mode
-    enc_pwrfull(handle); */
 
     /* Set MAC address */
     ENC_SetMacAddr(handle);
-
-#if 0
-    /* Process interrupt settings */
-    if (handle->Init.InterruptEnableBits & EIE_LINKIE) {
-      /* Enable link change interrupt in PHY module */
-      enc_wrphy(handle, ENC_PHIE, PHIE_PGEIE | PHIE_PLNKIE);
-    }
-#endif
 
     /* Since we not modify PHLCON register, we don't fall in errata 11 case */
 
@@ -908,24 +905,35 @@ bool ENC_Start(ENC_HandleTypeDef *handle)
     return true;
 }
 
+/******************************************************************************
+ * Restart ENC28J60 Receiver after link up
+ *****************************************************************************/
 void ENC_Restart(ENC_HandleTypeDef *handle)
 {
     /* Reset Rx interrupt flags */
-    ENC_RetriggerRxInterrupt();
+    ENC_RetriggerRxInterrupt(handle);
 
     /* Reenable the receiver */
     enc_bfsgreg(handle, ENC_ECON1, ECON1_RXEN);
+
+    /* Set Interrupt Callback and enable interrupts*/
+    SpiSetInpCB(SPI_HANDLE, ENC_IRQHandler);
+    INP_IRQ_Enable(SPI_HANDLE);
+
 }
 
+/******************************************************************************
+ * Stop ENC28J60 Receiver on link down
+ *****************************************************************************/
 void ENC_Stop(ENC_HandleTypeDef *handle)
 {
-    /* Reenable the receiver */
+    /* Disable the receiver */
     enc_bfcgreg(handle, ENC_ECON1, ECON1_RXEN);
-}
 
-/**
-  * @}
-  */
+    /* Reset Interrupt Callback and disable interrupts*/
+    INP_IRQ_Disable(SPI_HANDLE);
+    SpiSetInpCB(SPI_HANDLE, NULL);
+}
 
 /****************************************************************************
  * Function: ENC_SetMacAddr
@@ -966,52 +974,6 @@ void ENC_SetMacAddr(ENC_HandleTypeDef *handle)
 
 
 /****************************************************************************
- * Function: ENC_TransmitBuffer
- *
- * Description:
- *   Transmit a buffer of data.
- *
- * Parameters:
- *   handle  - Reference to the driver state structure
- *   p       - A pointer to lwip's pbuf transmit buffer stuct
- *
- * Returned Value:
- *   true      On success
- *   false     On failuer
- *
- * Assumptions:
- *   Disable ENC interrupts during execution. This is due to IRQ handler
- *   itself will interrogate ENC registers, which is a non-atomic SPI-Operation
- *
- ****************************************************************************/
-
-bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
-{
-    bool ret=false;
-
-    /* No ENC Interrupts during execution */
-    // bool enc_irq_save = ENC_disable_irq();
-
-    #if DEBUG_ENCTX > 0
-        ENCTXDEBUG("Transmission start\n");
-    #endif
-
-    //  if ( ENC_RestoreTXBuffer(handle, buflen) == ENC_ERR_OK ) {
-    if ( ENC_PrepareTxBuffer(handle, p) == ENC_ERR_OK ) {
-        ret = ENC_Transmit(handle, p->tot_len);
-    }
-
-    #if DEBUG_ENCTX > 0
-        ENCTXDEBUG("Transmission finished\n");
-    #endif
-
-    /* Restore ENC interrupt enable status */
-    // ENC_restore_irq(enc_irq_save);
-    return ret;
-
-}
-
-/****************************************************************************
  * Function: ENC_PrepareBuffer
  *
  * Description:
@@ -1036,129 +998,125 @@ bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
  *   Read pointer is set to the correct address
  *
  ****************************************************************************/
-
-int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
+static int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
 {
-  uint16_t buflen, txend;
+    uint16_t buflen, txend;
 
-  struct pbuf *work;
+    struct pbuf *work;
 
-  /* Wait while TX is busy */
-  if (!enc_waitgreg(handle, ENC_ECON1, ECON1_TXRTS, 0)) {
-    INC(tmoErrCnt);
-    return ENC_ERR_TIMEOUT;
-  }
+    /* Wait while TX is busy */
+    if (!enc_waitgreg(handle, ENC_ECON1, ECON1_TXRTS, 0)) {
+        INC(tmoErrCnt);
+        return ENC_ERR_TIMEOUT;
+    }
 
-  /* Verify that the hardware is ready to send another packet.  The driver
-   * starts a transmission process by setting ECON1.TXRTS. When the packet is
-   * finished transmitting or is aborted due to an error/cancellation, the
-   * ECON1.TXRTS bit will be cleared.
-   */
+    /* Verify that the hardware is ready to send another packet.  The driver
+    * starts a transmission process by setting ECON1.TXRTS. When the packet is
+    * finished transmitting or is aborted due to an error/cancellation, the
+    * ECON1.TXRTS bit will be cleared.
+    */
 
-  /* Set transmit buffer start (is this necessary?). */
+    /* Set transmit buffer start (is this necessary?). */
 
-  enc_wrbreg(handle, ENC_ETXSTL, PKTMEM_TX_START & 0xff);
-  enc_wrbreg(handle, ENC_ETXSTH, PKTMEM_TX_START >> 8);
+    enc_wrbreg(handle, ENC_ETXSTL, PKTMEM_TX_START & 0xff);
+    enc_wrbreg(handle, ENC_ETXSTH, PKTMEM_TX_START >> 8);
 
-  #if DEBUG_ENCTX > 2
-    ENCTXDEBUG("Tx Start=0x%04x ", PKTMEM_TX_START);
-    ENCTXDEBUG("Tx MaxEnd=0x%04x\n", PKTMEM_TX_ENDP1);
-  #endif
+    #if DEBUG_ENCTX > 2
+        ENCTX3DEBUG("Tx Start=0x%04x ", PKTMEM_TX_START);
+        ENCTX3DEBUG("Tx MaxEnd=0x%04x\n", PKTMEM_TX_ENDP1);
+    #endif
 
   /* Reset the write pointer to start of transmit buffer */
 
-  enc_wrbreg(handle, ENC_EWRPTL, PKTMEM_TX_START & 0xff);
-  enc_wrbreg(handle, ENC_EWRPTH, PKTMEM_TX_START >> 8);
+    enc_wrbreg(handle, ENC_EWRPTL, PKTMEM_TX_START & 0xff);
+    enc_wrbreg(handle, ENC_EWRPTH, PKTMEM_TX_START >> 8);
 
-   buflen = p->tot_len;
-   txend = PKTMEM_TX_START + buflen;
+    buflen = p->tot_len;
+    txend = PKTMEM_TX_START + buflen;
 
-   /* Ensure, the whole buffer will fit into ENC's transmit buffer area */
-   if (txend + 8 > PKTMEM_TX_ENDP1) {
-    INC(txOvrSizCnt);
-    return ENC_ERR_MEM;
-  }
+    /* Ensure, the whole buffer will fit into ENC's transmit buffer area */
+    if (txend + 8 > PKTMEM_TX_ENDP1) {
+        INC(txOvrSizCnt);
+        return ENC_ERR_MEM;
+    }
 
-  /* Select ENC28J60 chip
-   *
-   * "The WBM command is started by lowering the CS pin. ..."
-   * We explicitly select the ENC28J60 chip because we have to transmits several pieces of
-   * information while keeping CS low
-   *
-   */
+    /* Select ENC28J60 chip
+    *
+    * "The WBM command is started by lowering the CS pin. ..."
+    * We explicitly select the ENC28J60 chip because we have to transmits several pieces of
+    * information while keeping CS low
+    *
+    */
 
-  ENC_SPI_Select(true);
+    ENC_SPI_Select(true);
 
-  /* Send the write buffer memory command (ignoring the response)
-   *
-   * "...The [3-bit]WBM opcode should then be sent to the ENC28J60,
-   *  followed by the 5-bit constant, 1Ah."
-   */
-  ENC_SPI_SendWithoutSelection(ENC_WBM);
+    /* Send the write buffer memory command (ignoring the response)
+    *
+    * "...The [3-bit]WBM opcode should then be sent to the ENC28J60,
+    *  followed by the 5-bit constant, 1Ah."
+    */
+    ENC_SPI_SendWithoutSelection(ENC_WBM);
 
-  /* "...the ENC28J60 requires a single per packet control byte to
-   * precede the packet for transmission."
-   *
-   * POVERRIDE: Per Packet Override bit (Not set):
-   *   1 = The values of PCRCEN, PPADEN and PHUGEEN will override the
-   *       configuration defined by MACON3.
-   *   0 = The values in MACON3 will be used to determine how the packet
-   *       will be transmitted
-   * PCRCEN: Per Packet CRC Enable bit (Set, but won't be used because
-   *   POVERRIDE is zero).
-   * PPADEN: Per Packet Padding Enable bit (Set, but won't be used because
-   *   POVERRIDE is zero).
-   * PHUGEEN: Per Packet Huge Frame Enable bit (Set, but won't be used
-   *   because POVERRIDE is zero).
-   */
-   ENC_SPI_SendWithoutSelection(PKTCTRL_PCRCEN | PKTCTRL_PPADEN | PKTCTRL_PHUGEEN);
+    /* "...the ENC28J60 requires a single per packet control byte to
+    * precede the packet for transmission."
+    *
+    * POVERRIDE: Per Packet Override bit (Not set):
+    *   1 = The values of PCRCEN, PPADEN and PHUGEEN will override the
+    *       configuration defined by MACON3.
+    *   0 = The values in MACON3 will be used to determine how the packet
+    *       will be transmitted
+    * PCRCEN: Per Packet CRC Enable bit (Set, but won't be used because
+    *   POVERRIDE is zero).
+    * PPADEN: Per Packet Padding Enable bit (Set, but won't be used because
+    *   POVERRIDE is zero).
+    * PHUGEEN: Per Packet Huge Frame Enable bit (Set, but won't be used
+    *   because POVERRIDE is zero).
+    */
+    ENC_SPI_SendWithoutSelection(PKTCTRL_PCRCEN | PKTCTRL_PPADEN | PKTCTRL_PHUGEEN);
 
-  /* Send the buffer
-   *
-   * "... After the WBM command and constant are sent, the data to
-   *  be stored in the memory pointed to by EWRPT should be shifted
-   *  out MSb first to the ENC28J60. After 8 data bits are received,
-   *  the Write Pointer will automatically increment if AUTOINC is
-   *  set. The host controller can continue to provide clocks on the
-   *  SCK pin and send data on the SI pin, without raising CS, to
-   *  keep writing to the memory. In this manner, with AUTOINC
-   *  enabled, it is possible to continuously write sequential bytes
-   *  to the buffer memory without any extra SPI command
-   *  overhead.
-   */
-   {
-#if DEBUG_ENCTX > 3 
-      uint16_t chklen = 0, segCnt=0;
-#endif
-      for ( work = p; work != NULL; work = work->next ) {
-        ENC_SPI_SendBufWithoutSelection(handle, (uint8_t *)work->payload, NULL, work->len);
-#if DEBUG_ENCTX > 3 
-        chklen += work->len;
-        segCnt++;
-        ENCTXDEBUG("Tx write Seg#%d Len=%d\n", segCnt, work->len);
-#endif
-      }
-      /* De-select ENC28J60 chip */
-      ENC_SPI_Select(false);
+    /* Send the buffer
+    *
+    * "... After the WBM command and constant are sent, the data to
+    *  be stored in the memory pointed to by EWRPT should be shifted
+    *  out MSb first to the ENC28J60. After 8 data bits are received,
+    *  the Write Pointer will automatically increment if AUTOINC is
+    *  set. The host controller can continue to provide clocks on the
+    *  SCK pin and send data on the SI pin, without raising CS, to
+    *  keep writing to the memory. In this manner, with AUTOINC
+    *  enabled, it is possible to continuously write sequential bytes
+    *  to the buffer memory without any extra SPI command
+    *  overhead.
+    */
 
-#if DEBUG_ENCTX > 3
-      ENCTXDEBUG("Tx %d segments of total sitze %d\n", segCnt, chklen);
-#endif
-   }    
-  /* Set the TX End pointer based on the size of the packet to send. Note
-   * that the offset accounts for the control byte at the beginning the
-   * buffer plus the size of the packet data.
-   * txend has to point to the LAST byte of the tx data stream 
-   */
+    {
+        #if DEBUG_ENCTX > 3 
+              uint16_t chklen = 0, segCnt=0;
+        #endif
+        for ( work = p; work != NULL; work = work->next ) {
+            ENC_SPI_SendBufWithoutSelection(handle, (uint8_t *)work->payload, NULL, work->len);
+            #if DEBUG_ENCTX > 3 
+                chklen += work->len;
+                segCnt++;
+                ENCTX4DEBUG("Tx write Seg#%d Len=%d\n", segCnt, work->len);
+            #endif
+        }
+        /* De-select ENC28J60 chip */
+        ENC_SPI_Select(false);
 
-  enc_wrbreg(handle, ENC_ETXNDL, txend & 0xff);
-  enc_wrbreg(handle, ENC_ETXNDH, txend >> 8);
+        ENCTX4DEBUG("Tx %d segments of total sitze %d\n", segCnt, chklen);
+    }    
 
-#if DEBUG_ENCTX > 2
-    ENCTXDEBUG("Tx End=0x%04x ", txend);
-#endif
+    /* Set the TX End pointer based on the size of the packet to send. Note
+    * that the offset accounts for the control byte at the beginning the
+    * buffer plus the size of the packet data.
+    * txend has to point to the LAST byte of the tx data stream 
+    */
+    enc_wrbreg(handle, ENC_ETXNDL, txend & 0xff);
+    enc_wrbreg(handle, ENC_ETXNDH, txend >> 8);
 
-  return ENC_ERR_OK;
+    ENCTX3DEBUG("Tx End=0x%04x ", txend);
+
+    return ENC_ERR_OK;
 }
 
 
@@ -1183,9 +1141,10 @@ int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
  * Assumptions:
  *
  ****************************************************************************/
-bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
+static bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
 {
-    uint8_t tsv[7];  
+    uint8_t eir, tsv[7];  
+    uint16_t work;
 
     /* A frame is ready for transmission */
     /* Set TXRTS to send the packet in the transmit buffer */
@@ -1202,12 +1161,12 @@ bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
         start |= (uint16_t)enc_rdbreg(handle, ENC_ETXSTH) << 8;
         stop  =  enc_rdbreg(handle, ENC_ETXNDL);
         stop  |= (uint16_t)enc_rdbreg(handle, ENC_ETXNDH) << 8;
-        ENCTXDEBUG("TxBuffer [%04x..%04x], Len=%d\n", start, stop, stop-start+1);
+        ENCTX3DEBUG("TxBuffer [%04x..%04x], Len=%d\n", start, stop, stop-start+1);
     }
     #endif
     do {
         #if DEBUG_ENCTX > 2
-            ENCTXDEBUG("Transmit: Try#%d, len=%d", 17-handle->retries, transmitLength);
+            ENCTX3DEBUG("Transmit: Try#%d, len=%d", 17-handle->retries, transmitLength);
         #endif
         enc_bfsgreg(handle, ENC_ECON1, ECON1_TXRST);
         enc_bfcgreg(handle, ENC_ECON1, ECON1_TXRST);
@@ -1222,90 +1181,87 @@ bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
         /* Stop transmission */
         enc_bfcgreg(handle, ENC_ECON1, ECON1_TXRTS);
 
-        {
-            uint16_t work;
-            uint8_t eir,estat;
-
-             /* read eir and first 4 tytes of tsv */
-
-            eir   = enc_rdgreg(handle, ENC_EIR);
-            estat = enc_rdgreg(handle, ENC_ESTAT);
-
+        #if DEBUG_ENCTX > 1
+            /* Sanity check: Is ERDPT there where it ought to be ? */
             work =  enc_rdbreg(handle, ENC_ERDPTL);
             work |= (uint16_t)enc_rdbreg(handle, ENC_ERDPTH) << 8;
-            ENCTXDEBUG("ERDPT at %04x\n", work );
+            ENCTX2DEBUG("ERDPT at %04x\n", work );
+        #endif
 
-            work = PKTMEM_TX_START + transmitLength + 1;
+        work = PKTMEM_TX_START + transmitLength + 1;
 
-            enc_wrbreg(handle, ENC_ERDPTL, work & 0xff);
-            enc_wrbreg(handle, ENC_ERDPTH, work >> 8);
+        enc_wrbreg(handle, ENC_ERDPTL, work & 0xff);
+        enc_wrbreg(handle, ENC_ERDPTH, work >> 8);
 
+        #if DEBUG_ENCTX > 1
+            /* Sanity check: Is ERDPT now a t beginning of TSV ? */
             work =  enc_rdbreg(handle, ENC_ERDPTL);
             work |= (uint16_t)enc_rdbreg(handle, ENC_ERDPTH) << 8;
-            ENCTXDEBUG("ERDPT at %04x\n", work );
-   
-            #if DEBUG_ENCTX > 2
-                ENCTXDEBUG("Read TSV at %04x\n", work );
-            #endif
+            ENCTX2DEBUG("ERDPT at %04x\n", work );
+        #endif
 
-            enc_rdbuffer(handle, tsv, 4);
+        ENCTX3DEBUG("Read TSV at %04x\n", work );
 
+         /* read eir and first 4 tytes of tsv */
+        enc_rdbuffer(handle, tsv, 4);
+        eir = enc_rdgreg(handle, ENC_EIR);
+
+        #if DEBUG_ENCTX > 2
+            /* Sanity check: EIR and ESTAT correct ? */
+            uint8_t estat = enc_rdgreg(handle, ENC_ESTAT);
+
+            ENCTX3DEBUG("TSV:");
+            for ( uint32_t i = 0; i < 4; i++ )
+                ENCTX3DEBUG(" %02x", tsv[i]);
+            ENCTX3DEBUG(", EIR=0x%02x, ESTAT=0x%02x\n", eir,estat );
+        #endif
+        
+        /* get transmitted frame length */
+        work = tsv[1]; work = (work << 8) + tsv[0];
+
+        /* 
+         * If the TSV looks suspicious, due to illegal transmitted frame length, do
+         * not retry anymore, but return immediately                           
+         */
+        if (work > CONFIG_NET_ETH_MTU+36) {
+            /* Debug: Dump the whole suspicious transmit block */
             #if DEBUG_ENCTX > 2
-                ENCTXDEBUG("TSV:");
-                for ( uint32_t i = 0; i < 4; i++ )
-                    ENCTXDEBUG(" %02x", tsv[i]);
-                ENCTXDEBUG(", EIR=0x%02x, ESTAT=0x%02x\n", eir,estat );
-            #endif
-            
-            /* get transmitted frame length */
-            work = tsv[1]; work = (work << 8) + tsv[0];
-            if (work > CONFIG_NET_ETH_MTU+36) {
-                INC(txSizErr);
-                /* 
-                 * If the TSV looks suspicious, due to illegal transmitted frame length, do
-                 * not retry anymore, but return immediately                           
-                 */
-#if DEBUG_ENCTX > 2
                 uint8_t buff[16];    
-                ENCTXDEBUG("Transmit: Frame Len Err, this is the whole frame:\n");
+                ENCTX3DEBUG("Transmit: Frame Len Err, this is the whole frame:\n");
                 work = PKTMEM_TX_START;
                 enc_wrbreg(handle, ENC_ERDPTL, work & 0xff);
                 enc_wrbreg(handle, ENC_ERDPTH, work >> 8);
                 for ( uint32_t i = 0; i <= transmitLength; i += 16 ) {
                     enc_rdbuffer(handle, buff, MIN(i + 16, (uint32_t)transmitLength+1)-i);
-                    ENCTXDEBUG("Txbuff @0x%04x", i+work );
+                    ENCTX3DEBUG("Txbuff @0x%04x", i+work );
                     for ( uint32_t j = i;  j < MIN(i + 16, (uint32_t)transmitLength+1) ; j++ ) 
-                        ENCTXDEBUG(" %02x", buff[j] );
-                    ENCTXDEBUG("\n");
+                        ENCTX3DEBUG(" %02x", buff[j] );
+                    ENCTX3DEBUG("\n");
                 } 
-                ENCTXDEBUG("Transmit: This is the whole TSV:\n");
+                ENCTX3DEBUG("Transmit: This is the whole TSV:\n");
                 enc_rdbuffer(handle, buff,7);
                 for ( uint32_t i=0; i < 7; i++ )
-                    ENCTXDEBUG(" %02x", buff[i] );
-                ENCTXDEBUG("\n");
-#endif
-                return false;
-            } else if ( (eir & EIR_TXERIF) != 0 || (tsv[3] & TSV_LATECOL) != 0 ) {
-                if (eir & EIR_TXERIF) { 
-                    INC(txErrCnt); 
-                    #if DEBUG_ENCTX > 0
-                        ENCTXDEBUG("Transmit: TxErr\n");
-                    #endif
-                }
-                if (tsv[3] & TSV_LATECOL) {
-                    INC(txLateColl);
-                    #if DEBUG_ENCTX > 0
-                       ENCTXDEBUG("Transmit: Coll\n");
-                    #endif
-                }
-            } else {
-                #if DEBUG_ENCTX > 1
-                    ENCTXDEBUG("Transmit: Tx ok\n");
-                #endif
-               INC(txOkCnt);
-               return true;
+                    ENCTX3DEBUG(" %02x", buff[i] );
+                ENCTX3DEBUG("\n");
+            #endif
+            INC(txSizErr);
+            return false;
+        } else if ( (eir & EIR_TXERIF) != 0 || (tsv[3] & TSV_LATECOL) != 0 ) {
+            /* Check for Hardware Tx error and late collision */
+            if (eir & EIR_TXERIF) { 
+                INC(txErrCnt); 
+                ENCTX1DEBUG("Transmit: TxErr\n");
             }
+            if (tsv[3] & TSV_LATECOL) {
+                INC(txLateColl);
+                ENCTX1DEBUG("Transmit: Coll\n");
+            }
+        } else {
+            ENCTX2DEBUG("Transmit: Tx ok\n");
+           INC(txOkCnt);
+           return true;
         }
+
         handle->retries--;
         INC(txRetries);
     } while (handle->retries > 0);
@@ -1315,24 +1271,66 @@ bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
 }
 
 /****************************************************************************
- * Function: ENC_GetReceivedFrame
+ * Function: ENC_TransmitBuffer
  *
  * Description:
- *   Check if we have received packet, and if so, retrieve them.
+ *   Transmit a buffer of data.
  *
  * Parameters:
  *   handle  - Reference to the driver state structure
- *   rxbuff  - receive buffer to copy received data into
- *   rxlen   - ptr to variable to receive the actual data length
-  *
+ *   p       - A pointer to lwip's pbuf transmit buffer stuct
+ *
  * Returned Value:
- *   true if new packet is available; false otherwise
+ *   true      On success
+ *   false     On failuer
  *
  * Assumptions:
+ *   Disable ENC interrupts during execution. This is due to IRQ handler
+ *   itself will interrogate ENC registers, which is a non-atomic SPI-Operation
+ *
+ ****************************************************************************/
+bool ENC_TransmitBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
+{
+    bool ret=false;
+
+    ENCTX1DEBUG("Transmission start\n");
+
+    if ( ENC_PrepareTxBuffer(handle, p) == ENC_ERR_OK ) {
+        ret = ENC_Transmit(handle, p->tot_len);
+    }
+
+    ENCTX1DEBUG("Transmission finished\n");
+
+    return ret;
+}
+
+
+
+/****************************************************************************
+ * Function: ENC_ReceiveStart
+ *
+ * Description:
+ *   Set the ENC read pointer to the start of the received packet and 
+ *   read the RSV.
+ *   Extract the next rx packet start from rsv and store into handle
+ *   Extract the actual packet length from rsv  and store into handle
+ *   Read the rx packet status and check fro being ok
+ *   If packet is ok, decreas size by 4 ( ie stripoff CRC bytes )
+ *
+ * Parameters:
+ *   handle  - Reference to the driver state structure
+ *
+ * Returned Value:
+ *   ENC_ERR_RX if rx packet is erroneous or out of legal size
+ *   ENC_ERR_OK if rx packet is ok
+ *
+ * Assumptions:
+ *   Even if an error is reported, user MUST call "ENC_ReceiveFinish"
+ *   in any case to free the occupied rx memory
  *
  ****************************************************************************/
 
-int32_t ENC_ReceiveStart(ENC_HandleTypeDef *handle)
+static int32_t ENC_ReceiveStart(ENC_HandleTypeDef *handle)
 {
     uint8_t  rsv[6];
     uint16_t rxstat;
@@ -1370,24 +1368,20 @@ int32_t ENC_ReceiveStart(ENC_HandleTypeDef *handle)
         return ENC_ERR_RX;
     }
 
-    ENCRXDEBUG("RxFrame: Have packet of len=%d\n", pktlen);
+    ENCRX1DEBUG("RxFrame: Have packet of len=%d\n", pktlen);
 
   /* Check if the packet was received OK */
 
     if ((rxstat & RXSTAT_OK) == 0) {
         INC(rxErrCnt);
-        #if DEBUG_ENCRX > 0
-            ENCRXDEBUG("RxFrame: Not Ok\n");
-        #endif 
+        ENCRX1DEBUG("RxFrame: Not Ok\n");
         return ENC_ERR_RX;
     } 
 
     /* regard 4 CRC bytes whecn checking max Rx packet size */
     if (pktlen > ETH_MAX_RX_FRAMESIZE + 4  || pktlen <= (ETH_HDRLEN + 4)) {
        INC(rxHwLenErr);
-        #if DEBUG_ENCRX > 0
-            ENCRXDEBUG("RxFrame: Illegal Frame size\n");
-        #endif
+        ENCRX1DEBUG("RxFrame: Illegal Frame size\n");
         return ENC_ERR_RX;
     }
 
@@ -1401,21 +1395,21 @@ int32_t ENC_ReceiveStart(ENC_HandleTypeDef *handle)
  * Function: ENC_GetReceivedFrame
  *
  * Description:
- *   Check if we have received packet, and if so, retrieve them.
- *
+ *  
+ *   Finalize a frame reception, ie move ERXRDPT to start of next packet and
+ *   decrement rx packet counter by 1
+ *   This will free the rx memory up to ERXRDPT. 
+ *  
  * Parameters:
  *   handle  - Reference to the driver state structure
- *   rxbuff  - receive buffer to copy received data into
- *   rxlen   - ptr to variable to receive the actual data length
-  *
+ *
  * Returned Value:
- *   true if new packet is available; false otherwise
+ *   None
  *
  * Assumptions:
  *
  ****************************************************************************/
-
-void ENC_ReceiveFinish(ENC_HandleTypeDef *handle)
+static void ENC_ReceiveFinish(ENC_HandleTypeDef *handle)
 {
     uint16_t work =  handle->nextpkt;
 
@@ -1438,11 +1432,13 @@ void ENC_ReceiveFinish(ENC_HandleTypeDef *handle)
 
 }
     
+
 /****************************************************************************
  * Function: ENC_GetReceivedFrame
  *
  * Description:
- *   Check if we have received packet, and if so, retrieve them.
+ *   Check if we have received packet, and if so, retrieve it
+ *   into passed buffer
  *
  * Parameters:
  *   handle  - Reference to the driver state structure
@@ -1453,9 +1449,9 @@ void ENC_ReceiveFinish(ENC_HandleTypeDef *handle)
  *   true if new packet is available; false otherwise
  *
  * Assumptions:
+ *   we assume, that rxbuff is of sufficient length
  *
  ****************************************************************************/
-
 bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *rxlen)
 {
     bool ret = false;
@@ -1470,17 +1466,38 @@ bool ENC_GetReceivedFrame(ENC_HandleTypeDef *handle, uint8_t *rxbuff, uint32_t *
              * ERDPT should be correctly positioned from the last call to to
              * end_rdbuffer (above). */
             enc_rdbuffer(handle, rxbuff, *rxlen);
+            INC(rxOkCnt);
             ret = true;
         }
     }
 
     ENC_ReceiveFinish(handle);
 
-    ENCRXDEBUG("RxFrame: Done\n");
+    ENCRX1DEBUG("RxFrame: Done\n");
 
     return ret;
 }
-bool ENC_read_into_pbuf(ENC_HandleTypeDef *handle, struct pbuf **buf)
+
+
+/****************************************************************************
+ * Function:   ENC_ReceiveIntoPbuf
+ *
+ * Description:
+ *   Recevie function to be used in cooperation with LWIP:
+ *   Check if we have received packet, and if so, retrieve it into
+ *   a new allocated pbuf
+ *
+ * Parameters:
+ *   handle  - Reference to the driver state structure
+ *   pbuf    - ptr to pbuf variable, which will return the newly
+ *             allocated pbuf
+ * Returned Value:
+ *   true if new packet is available; false otherwise
+ *
+ * Assumptions:
+ *
+ ****************************************************************************/
+bool  ENC_ReceiveIntoPbuf(ENC_HandleTypeDef *handle, struct pbuf **buf)
 {
     bool ret = false;
 
@@ -1494,18 +1511,14 @@ bool ENC_read_into_pbuf(ENC_HandleTypeDef *handle, struct pbuf **buf)
             ret = true;
 	} else {
             INC(rxPbufErr);
-            #if DEBUG_ENCRX > 0
-                ENCRCDEBUG("failed to allocate pbuf of length %u, discarding\n", handle->RxLength);
-            #endif
+            ENCRX1DEBUG("failed to allocate pbuf of length %u, discarding\n", handle->RxLength);
         }
     }
 
     /* Free ENC28J60 memory in receive buffer in any case */
     ENC_ReceiveFinish(handle);
 
-    #if DEBUG_ENCRX > 0
-        ENCRXDEBUG("RxFrame: Done\n");
-    #endif
+    ENCRX1DEBUG("RxFrame: Done\n");
 
     return ret;
 }
@@ -1530,9 +1543,8 @@ uint8_t ENC_RxPacketAvailable(ENC_HandleTypeDef *handle )
     uint8_t pktcnt;
 
     pktcnt = enc_rdbreg(handle, ENC_EPKTCNT);
-    #if DEBUG_ENCRX > 1
-        ENCRXDEBUG("RxPackets: %d waiting\n",pktcnt);
-    #endif
+    ENCRX2DEBUG("RxPackets: %d waiting\n",pktcnt);
+
     return pktcnt;
 }
 
@@ -1545,7 +1557,7 @@ uint8_t ENC_RxPacketAvailable(ENC_HandleTypeDef *handle )
  *   PHSTAT2.LSTAT.
  *
  * Parameters:
- *   priv    - Reference to the driver state structure
+ *   handle  - Reference to the driver state structure
  *
  * Returned Value:
  *   None
@@ -1558,13 +1570,30 @@ static void enc_linkstatus(ENC_HandleTypeDef *handle)
   handle->LinkStatus = enc_rdphy(handle, ENC_PHSTAT2);
 }
 
+/****************************************************************************
+ * Function: ENC_CheckRxStatus
+ *
+ * Description:
+ *   Check the rx packet counter and EIR register and store their values
+ *   in then handle variable
+ *
+ * Parameters:
+ *   handle  - Reference to the driver state structure
+ *
+ * Returned Value:
+ *   None
+ *
+ * Assumptions:
+ *
+ ****************************************************************************/
 void ENC_CheckRxStatus(ENC_HandleTypeDef *handle)
 {
-  handle->PktCnt = enc_rdbreg(handle, ENC_EPKTCNT);
-  handle->eir = enc_rdgreg(handle, ENC_EIR);
-  uint8_t eie = enc_rdgreg(handle, ENC_EIE);
-
-  ENCDEBUG("EIE=%02x, EIR=%02x, PktCnt=%0d\n", eie, handle->eir, handle->PktCnt);
+    handle->PktCnt = enc_rdbreg(handle, ENC_EPKTCNT);
+    handle->eir = enc_rdgreg(handle, ENC_EIR);
+    #if DEBUG_ENC > 0
+        uint8_t eie = enc_rdgreg(handle, ENC_EIE);
+        ENC1DEBUG("EIE=%02x, EIR=%02x, PktCnt=%0d\n", eie, handle->eir, handle->PktCnt);
+    #endif
 }
 
 
@@ -1682,7 +1711,7 @@ void ENC_RxCpltCallback(void);
  *   which is a non-atomic operation
  *
  ****************************************************************************/
-void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
+static void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
 {
     UNUSED(pin); UNUSED(pinvalue); UNUSED(arg);
 
@@ -1696,7 +1725,7 @@ void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
      * is being serviced."
      */
 
-    ENCDEBUG("iiiii\n");
+    ENC1DEBUG("iiiii\n");
 
     ENC_RxCpltCallback();
 }
@@ -1714,7 +1743,7 @@ void ENC_IRQHandler( uint16_t pin, uint16_t pinvalue , void *arg )
   * retval none
   */
 
-void ENC_SPI_Select(bool select)
+static void ENC_SPI_Select(bool select)
 {
     if ( select ) {
         SpiNSelLow(SPI_HANDLE);
@@ -1731,7 +1760,7 @@ void ENC_SPI_Select(bool select)
   * retval answer from ENC28J60
   */
 
-uint8_t ENC_SPI_SendWithoutSelection(uint8_t command)
+static uint8_t ENC_SPI_SendWithoutSelection(uint8_t command)
 {
     return Spi8TxRxByte(SPI_HANDLE, command);
 }
@@ -1742,7 +1771,7 @@ uint8_t ENC_SPI_SendWithoutSelection(uint8_t command)
   * retval answer from ENC28J60
   */
 
-uint8_t ENC_SPI_Send(uint8_t command)
+static uint8_t ENC_SPI_Send(uint8_t command)
 {
     ENC_SPI_Select(true);
     uint8_t ret = ENC_SPI_SendWithoutSelection(command);
@@ -1752,36 +1781,6 @@ uint8_t ENC_SPI_Send(uint8_t command)
 }
 
 
-int32_t ENC_SPI_CheckBusy(ENC_HandleTypeDef *handle)
-{
-  uint32_t start = HAL_GetTick();
-  uint32_t elapsed;
-  bool spi_busy;
-
-  /* Loop until the exit condition is met */
-  do {
-      spi_busy = ( SPI_HANDLE->data->hw.myHalHandle.Lock != HAL_UNLOCKED || SPI_HANDLE->data->hw.myHalHandle.State != HAL_SPI_STATE_READY );
-      elapsed = HAL_GetTick() - start;
-  } while (spi_busy && elapsed < ENC_POLLTIMEOUT);
-
-  if ( elapsed >= ENC_POLLTIMEOUT ) {
-    if ( SPI_HANDLE->data->hw.myHalHandle.Lock != HAL_UNLOCKED ) {
-        #if DEBUG_ENC > 0
-            ENCDEBUG("Spi locked\n");
-        #endif
-    }
-    if (SPI_HANDLE->data->hw.myHalHandle.State != HAL_SPI_STATE_READY ) {
-        #if DEBUG_ENC > 0
-            ENCDEBUG("Spi not ready\n");
-        #endif
-    }
-    INC(spiBusyCnt);
-    return ENC_ERR_TIMEOUT;
-  } else {
-    return ENC_ERR_OK;
-  }
-}  
-
 /**
   * Implement SPI buffer send and receive. Must be provided by user code
   * param  master2slave: data to be sent from host to ENC28J60, can be NULL if we only want to receive data from slave
@@ -1789,18 +1788,16 @@ int32_t ENC_SPI_CheckBusy(ENC_HandleTypeDef *handle)
   * retval none
   */
 
-void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize)
+static void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize)
 {
-    if ( ENC_SPI_CheckBusy(handle) != ENC_ERR_OK ) {
-            ENCDEBUG("SPI Send Error: SPI busy\n");        
+    if ( ENC_SPI_CheckFree(handle) != ENC_ERR_OK ) {
+            ENC1DEBUG("SPI Send Error: SPI busy\n");        
     }
     if ( !Spi8TxRxVector(SPI_HANDLE, master2slave, slave2master, bufferSize) ) {
-        if (  HAL_SPI_Abort(&SPI_HANDLE->data->hw.myHalHandle ) != HAL_OK ) ENCDEBUG("SPI IO cannot abort\n");
+        if (  HAL_SPI_Abort(&SPI_HANDLE->data->hw.myHalHandle ) != HAL_OK ) { ENCDEBUG("SPI IO cannot abort\n"); }
         if ( !Spi8TxRxVector(SPI_HANDLE, master2slave, slave2master, bufferSize) ) {
             INC(spiErrCnt);
-            #if DEBUG_ENC > 0
-                ENCDEBUG("SPI IO failed\n");
-            #endif
+            ENC1DEBUG("SPI IO failed\n");
         }
     }
 }
@@ -1813,7 +1810,7 @@ void ENC_SPI_SendBufWithoutSelection(ENC_HandleTypeDef *handle, uint8_t *master2
   * retval none
   */
 
-void ENC_SPI_SendBuf(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize)
+static void ENC_SPI_SendBuf(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *slave2master, uint16_t bufferSize)
 {
     ENC_SPI_Select(true);
     ENC_SPI_SendBufWithoutSelection(handle, master2slave, slave2master, bufferSize);
@@ -1821,31 +1818,77 @@ void ENC_SPI_SendBuf(ENC_HandleTypeDef *handle, uint8_t *master2slave, uint8_t *
 }
 
 
-void ENC_DumpStatistic(ENC_HandleTypeDef *handle)
+/******************************************************************************
+ * Check the Hardware SPI interface for being free. If not, wait for becoming
+ * free.
+ * 
+ * Returns: ENC_ERR_TIMEOUT if SPI Hardware is currently locked
+ *          ENC_ERR_OK      if SPI hardware is in idle
+ * 
+ *****************************************************************************/
+static int32_t ENC_SPI_CheckFree(ENC_HandleTypeDef *handle)
 {
+    uint32_t start = HAL_GetTick();
+    uint32_t elapsed;
+    bool spi_busy;
+
+    /* Loop until the exit condition is met */
+    do {
+        spi_busy =   ( SPI_HANDLE->data->hw.myHalHandle.Lock != HAL_UNLOCKED 
+                  || SPI_HANDLE->data->hw.myHalHandle.State != HAL_SPI_STATE_READY );
+        elapsed = HAL_GetTick() - start;
+    } while (spi_busy && elapsed < ENC_POLLTIMEOUT);
+
+    if ( elapsed >= ENC_POLLTIMEOUT ) {
+        if ( SPI_HANDLE->data->hw.myHalHandle.Lock != HAL_UNLOCKED ) {
+            ENC1DEBUG("Spi locked\n");
+        }
+        if (SPI_HANDLE->data->hw.myHalHandle.State != HAL_SPI_STATE_READY ) {
+            ENC1DEBUG("Spi not ready\n");
+        }
+        INC(spiBusyCnt);
+        return ENC_ERR_TIMEOUT;
+    } else {
+        return ENC_ERR_OK;
+    }
+}  
+
+
+static FmtItemT statItems[] = {
     #if DO_ENC_STATISTIC > 0
-        ENC_ErrStatusTypeDef *e = handle->errstat;
-        DEBUG_PRINTF("Receive statistics: %d packets received ok\n", e->rxOkCnt);
-        DEBUG_PRINTF("%5d Hardware receive errors\n",e->rxErrCnt);
-        DEBUG_PRINTF("%5d Spurious packet len in RxStatusVector\n",e->rxLenErr);
-        DEBUG_PRINTF("%5d Rx Packet size out of limits\n",e->rxHwLenErr);
-        DEBUG_PRINTF("%5d Error allocating lwip pbuf\n",e->rxPbufErr);
-        DEBUG_PRINTF("%5d Error allocating lwip pbuf\n",e->rxPbufErr);
-        DEBUG_PRINTF("Transmit statistics: %d packets transmitted ok\n",e->txOkCnt);
-        DEBUG_PRINTF("%5d Hardware transmit error\n",e->txErrCnt);
-        DEBUG_PRINTF("%5d Late collision\n",e->txLateColl);
-        DEBUG_PRINTF("%5d Wrong size in TxStatusVector\n",e->txSizErr);
-        DEBUG_PRINTF("%5d Tx retries due to tx errors\n",e->txRetries);
-        DEBUG_PRINTF("%5d Timeouts during wait\n",e->tmoErrCnt);
-        DEBUG_PRINTF("%5d Oversized Packets\n",e->txOvrSizCnt);
-        DEBUG_PRINTF("%5d Unexpected busy SPI\n",e->spiBusyCnt);
-        DEBUG_PRINTF("%5d Hardware SPI error\n",e->spiErrCnt);
-        DEBUG_PRINTF("%5d Link status changes\n",e->linkChngCnt);
+        {"%5d Link status changes\n",                       &errstat.linkChngCnt,FMT_UINT16 },
+        {"Receive statistics: %d packets received ok\n",    &errstat.rxOkCnt,    FMT_UINT32 },
+        {"%5d Hardware receive errors\n",                   &errstat.rxErrCnt,   FMT_UINT16 },
+        {"%5d Spurious packet len in RxStatusVector\n",     &errstat.rxLenErr,   FMT_UINT16 },
+        {"%5d Rx Packet size out of limits\n",              &errstat.rxHwLenErr, FMT_UINT16 },
+        {"%5d Error allocating lwip pbuf\n",                &errstat.rxPbufErr,  FMT_UINT16 },
+        {"Transmit statistics: %d packets transmitted ok\n",&errstat.txOkCnt,    FMT_UINT32 },
+        {"%5d Hardware transmit error\n",                   &errstat.txErrCnt,   FMT_UINT16 },
+        {"%5d Late collision\n",                            &errstat.txLateColl, FMT_UINT16 },
+        {"%5d Wrong size in TxStatusVector\n",              &errstat.txSizErr,   FMT_UINT16 },
+        {"%5d Tx retries due to tx errors\n",               &errstat.txRetries,  FMT_UINT16 },
+        {"%5d Timeouts during wait\n",                      &errstat.tmoErrCnt,  FMT_UINT16 },
+        {"%5d Oversized Packets\n",                         &errstat.txOvrSizCnt,FMT_UINT16 },
+        {"%5d Unexpected busy SPI\n",                       &errstat.spiBusyCnt, FMT_UINT16 },
+        {"%5d Hardware SPI error\n",                        &errstat.spiErrCnt,  FMT_UINT16 },
     #else
-        DEBUG_PRINTF("Statistics not configured\n");
+        {"Statistics not configured\n",                     NULL,               FMT_NULL },
     #endif
+
+};
+
+uint32_t ENCSTAT_GetLineCount(void)
+{
+    return sizeof(statItems) / sizeof(FmtItemT);
 }
 
+FmtItemT *ENCSTAT_GetLine( uint32_t idx )
+{
+    if ( idx >= ENCSTAT_GetLineCount() ) 
+        return NULL;
+    else
+        return statItems+idx;
+}
 
 #endif /* USE_ETH_PHY_ENC28J60 == 1  */
 

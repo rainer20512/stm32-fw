@@ -21,7 +21,7 @@
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
-#define DEBUG_IF            0
+#define DEBUG_IF            5
 
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
@@ -37,10 +37,28 @@
 #include "stm32h7xx_hal.h"
 #include "debug_helper.h"
 
-#if DEBUG_ENCTX > 0 
-    #define IFDEBUG(...)   DEBUG_PRINTF(__VA_ARGS__)
+#define DEBUG_OUTPUT(lvl,...)             do if ( debuglevel > lvl ) { DEBUG_PRINTF(__VA_ARGS__); } while(0)  
+#define IFDEBUG(...)                     DEBUG_OUTPUT(0, __VA_ARGS__)
+
+#if DEBUG_IF > 0   /***** Tx Lvl 1 *****/
+    #define IF1DEBUG(...)              DEBUG_OUTPUT(1,__VA_ARGS__)
 #else
-    #define IFDEBUG(...)   
+    #define IF1DEBUG(...)   
+#endif
+#if DEBUG_IF > 1   /***** Tx Lvl 2 *****/
+    #define IF2DEBUG(...)              DEBUG_OUTPUT(2,__VA_ARGS__)
+#else
+    #define IF2DEBUG(...)   
+#endif
+#if DEBUG_IF > 2   /***** Tx Lvl 3 *****/
+    #define IF3DEBUG(...)              DEBUG_OUTPUT(3,__VA_ARGS__)
+#else
+    #define IF3DEBUG(...)   
+#endif
+#if DEBUG_IF > 3   /***** Tx Lvl 4 *****/
+    #define IF4DEBUG(...)              DEBUG_OUTPUT(4,__VA_ARGS__)
+#else
+    #define IF4DEBUG(...)   
 #endif
 
 
@@ -125,21 +143,22 @@ static void low_level_init(struct netif *netif)
   
   memset(&enc28j60, 0, sizeof(ENC_HandleTypeDef) );
   enc28j60.Init.ChecksumMode        = ETH_CHECKSUM_BY_HARDWARE;
+  /* Halfduplex is faster than fullduplex, no idea why. But it is */
   enc28j60.Init.DuplexMode          = ETH_MODE_HALFDUPLEX;
   enc28j60.Init.MACAddr             = macaddress;
 
   /* Initialize the ENC28J60, set MAC address, configure interrupts and enable receiver */
-  ENC_Start(&enc28j60);
+  ENC_Start(&enc28j60,true);
   
   PHYLinkState = ENC_GetLinkState(&enc28j60);
   
   /* Get link state */  
   if(PHYLinkState <= ENC_STATUS_LINK_DOWN) {
-    IFDEBUG("Link initially down\n");
+    IF1DEBUG("Link initially down\n");
     netif_set_link_down(netif);
     netif_set_down(netif);
   } else {
-    IFDEBUG("Link initially up\n");
+    IF1DEBUG("Link initially up\n");
     netif_set_up(netif);
     netif_set_link_up(netif);
   }
@@ -189,15 +208,11 @@ static struct pbuf * low_level_input(struct netif *netif)
   UNUSED(netif);
   struct pbuf *p = NULL;
 
-  if( ENC_read_into_pbuf(&enc28j60, &p ) ) {
-    #if DEBUG_IF > 1
-        IFDEBUG("Rx: Got %d bytes\n", p->tot_len );
-    #endif
+  if(  ENC_ReceiveIntoPbuf(&enc28j60, &p ) ) {
+    IF2DEBUG("Rx: Got %d bytes\n", p->tot_len );
   } else {
     /* if no frame is delivered to IP stack, rxBuff has to bee freed immediately */
-    #if DEBUG_IF > 0
-        IFDEBUG("Rx: No bytes\n");
-    #endif
+    IF1DEBUG("Rx: No bytes\n");
   }
 
   return p;
@@ -219,14 +234,10 @@ void ethernetif_input( void const * argument )
 
     for( ;; ){
         if (osSemaphoreWait( RxPktSemaphore, TIME_WAITING_FOR_INPUT)==osOK){
-            #if DEBUG_IF > 2
-                IFDEBUG("wait Receive\n");
-            #endif
+            IF3DEBUG("wait Receive\n");
             LOCK_TCPIP_CORE();
             xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
-            #if DEBUG_IF > 2
-                IFDEBUG("Start Receive\n");
-            #endif
+            IF3DEBUG("Start Receive\n");
             while ( ENC_RxPacketAvailable(&enc28j60) ) {
                 p = low_level_input( netif );
                 if (p != NULL) {
@@ -235,9 +246,7 @@ void ethernetif_input( void const * argument )
                     }
                 }
             } 
-            #if DEBUG_IF > 2
-                IFDEBUG("eeeee - End Receive\n");
-            #endif
+            IF3DEBUG("eeeee - End Receive\n");
 
             ENC_RetriggerRxInterrupt(&enc28j60);
 
@@ -342,7 +351,7 @@ void ethernet_link_thread( void const * argument )
     }
     else if(!netif_is_link_up(netif) && (PHYLinkState > ENC_STATUS_LINK_DOWN))
     {
-        ENC_Restart(&enc28j60);
+        ENC_Start(&enc28j60, false);
         IFDEBUG("Link up\n");
         xSemaphoreGive(SpiSemaphore);
         netif_set_up(netif);
@@ -360,23 +369,96 @@ void ethernet_link_thread( void const * argument )
      * it manually
      */
     if ( enc28j60.PktCnt > 8 && ( enc28j60.eir & EIR_PKTIF ) != 0 ) {
-        #if DEBUG_IF > 2
-            IFDEBUG("-----\n");
-        #endif
+        IF3DEBUG("-----\n");
+
         ENC_RxCpltCallback();
     } 
 
     xSemaphoreGive(SpiSemaphore);
 
-    osDelay(500);
+    osDelay(200);
   } // for
+}
+
+
+static FmtItemT statItems[] = {
+    {"ENC28J60 Ethernet Interface Statistics\n", NULL, FMT_NULL },
+    {"%5d restarts\n", &enc28j60.restarts, sizeof(enc28j60.restarts) },
+};
+
+
+#define MY_LINECOUNT    (sizeof(statItems) / sizeof(FmtItemT))
+
+uint32_t ETHSTAT_GetLineCount(void)
+{
+    return MY_LINECOUNT + ENCSTAT_GetLineCount();
+}
+
+char *ETHSTAT_GetLine( char *retbuf, size_t buflen, uint32_t idx )
+{
+    FmtItemT *current;
+
+    if ( idx >= MY_LINECOUNT ) {
+        current = ENCSTAT_GetLine(idx-MY_LINECOUNT);
+    } else {
+        current = statItems + idx;
+    }
+
+    if ( current->fmtVal == NULL ) {
+        strncpy(retbuf, current->fmtStr, buflen);
+        return retbuf;
+    }
+    
+    uint32_t numval;
+
+    switch ( current->fmtType ) {
+        case FMT_UINT8:
+            numval = *((uint8_t*)(current->fmtVal));
+            break;
+        case FMT_UINT16:
+            numval = *((uint16_t*)(current->fmtVal));
+            break;
+        case FMT_UINT32:
+            numval = *((uint32_t*)(current->fmtVal));
+            break;
+        default:
+            return "Illegal Type specifier\n";
+    }
+
+    snprintf(retbuf, buflen, current->fmtStr, numval );
+    return retbuf;
 }
 
 void ethernetif_statistic ( void )
 {
-   DEBUG_PRINTF("ENC28J60 Ethernet Interface Statistics");
-   DEBUG_PRINTF("%5d restarts\n", enc28j60.restarts );
-   ENC_DumpStatistic(&enc28j60);
+   char line[80];
+   uint32_t linecount = ETHSTAT_GetLineCount();
+
+   for ( uint32_t i=0; i < linecount; i++ )
+   {
+        if ( ETHSTAT_GetLine(line, 80, i ) ) DEBUG_PRINTF(line);
+   }
 }
+
+#if 0
+/******************************************************************************
+ * Reset / Restart then ENC28J60 
+ *****************************************************************************/
+void ethernetif_restart ( void )
+{
+   /* Shutdown interface */
+   if(netif_is_link_up(netif) {
+      ENC_Stop(&enc28j60);
+      IFDEBUG("Link down\n");
+      xSemaphoreGive(SpiSemaphore);
+      netif_set_down(netif);
+      netif_set_link_down(netif);
+   }
+    
+   
+}
+#endif    
+
+
 
 #endif /* USE_ETH_PHY_ENC28J60  */

@@ -153,6 +153,9 @@
       #define SPI1_INP_IRQ                  { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
     #endif
   #endif
+  #ifdef SPI1_USE_RST 
+    #define SPI1_RST                        { GPIO_PIN_4 , GPIOA, 0, GPIO_NOPULL, "Spi1_Rst" }
+  #endif
 #endif // SPIDEV1
 
 #if defined(USE_SPI2) && defined (SPI2)

@@ -54,16 +54,16 @@
 
 /* Clock sources for SPI1, SPI2, SPI3 */
 /* Choose one SET/GET pair */
-//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL     
-//#define SPI123_CLKSOURCE_GET         RHB ToDo
-//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL2
-//#define SPI123_CLKSOURCE_GET         RHB ToDo
-//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL3
-//#define SPI123_CLKSOURCE_GET         RHB ToDo
-//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PIN
-//#define SPI123_CLKSOURCE_GET         RHB ToDo
-#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_CLKP
+#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL     
 #define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL2
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL3
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PIN
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_CLKP
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
 
 /* Clock sources for SPI4, SPI5 */
 /* Choose one SET/GET pair */
@@ -232,9 +232,10 @@
     #define USE_SPI1_ALTN2
     // #define SPIDEV1_USE_IRQ
     #define SPI1_USE_MISO
-    #define SPI1_BAUDRATE            8000000
+    #define SPI1_BAUDRATE            10000000
     #define USE_SPI1_MASTER
     #define SPI1_USE_INP             /* Interrupt pin of enc28j60 */
+    #define SPI1_USE_RST             /* Hardware Rest Pin of enc28j60 */
     #define SPI1_USE_INP_IRQ
     #define SPI1_INP_IRQ_MODE        GPIO_MODE_IT_FALLING
 

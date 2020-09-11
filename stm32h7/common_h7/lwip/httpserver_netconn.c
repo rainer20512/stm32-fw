@@ -90,6 +90,7 @@ void HtmlSettingsCM7    ( struct netconn *conn, void *arg);
 void HtmlSetCM7         ( struct netconn *conn, void *arg); 
 void HtmlSettingsCM4    ( struct netconn *conn, void *arg); 
 void HtmlSetCM4         ( struct netconn *conn, void *arg); 
+void HtmlShowEthIf      ( struct netconn *conn, void *arg);
 
 /**********************************************************************************************************************************
  * Web pages file and menu structures
@@ -97,9 +98,10 @@ void HtmlSetCM4         ( struct netconn *conn, void *arg);
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
     { "STM32H745 WebServer", "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
-    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList, .SetterCB = NULL },
+    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList,    .SetterCB = NULL },
     { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7, .SetterCB = HtmlSetCM7 },
     { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4, .SetterCB = HtmlSetCM4 },
+    { "ETH IF Statistic",    "ETH Interface","/eth_if.html",         0, NULL,              PDdynamic, .DetailCB = HtmlShowEthIf,   .SetterCB = NULL },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -260,7 +262,6 @@ static void HtmlPage(struct netconn *conn, uint32_t page_idx, HttpGetParamT *p )
     static const char PageErr[] = "<br><br> No PageType implementation found<br>";
 
     // assert(page_idx < sizeof(WebPages)/sizeof(OnePageT));
-    const OnePageT *actpage = &WebPages[page_idx];
     HtmlHeader(conn, page_idx);
     switch ( WebPages[page_idx].PageType ) {
         case PDstatic:
@@ -485,7 +486,6 @@ static void http_server_serve(struct netconn *conn)
 static void http_server_session ( void *arg )
 {
     struct netconn *current = (struct netconn *)arg;
-    struct tcp_pcb *tcp;
     uint16_t remote = current->pcb.tcp->remote_port;
 
     /* serve connection */    
@@ -533,41 +533,6 @@ static void http_server_netconn_thread8088(void *arg)
   }
 }
 
-static void http_server_netconn_thread80(void *arg)
-{ 
-  struct netconn *conn, *newconn;
-  err_t err, accept_err;
-  
-  UNUSED(arg);
-  /* Create a new TCP connection handle */
-  conn = netconn_new(NETCONN_TCP);
-  
-  if (conn!= NULL)
-  {
-    /* Bind to port 80 (HTTP) with default IP address */
-    err = netconn_bind(conn, NULL, 8888);
-    
-    if (err == ERR_OK)
-    {
-      /* Put the connection into LISTEN state */
-      netconn_listen(conn);
-  
-      while(1) 
-      {
-        /* accept any icoming connection */
-        accept_err = netconn_accept(conn, &newconn);
-        if(accept_err == ERR_OK)
-        {
-          /* serve connection */
-          http_server_serve(newconn);
-
-          /* delete connection */
-          netconn_delete(newconn);
-        }
-      }
-    }
-  }
-}
 
 /**
   * @brief  Initialize the HTTP server (start its thread) 
@@ -576,7 +541,6 @@ static void http_server_netconn_thread80(void *arg)
   */
 void http_server_netconn_init()
 {
-//  sys_thread_new("HTTP80", http_server_netconn_thread80, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
   sys_thread_new("HTTP8088", http_server_netconn_thread8088, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
 }
 
@@ -699,6 +663,7 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
 
 const char cm7_header[]     ="<p><b>Core CM7 Settings</b></p>";
 const char cm4_header[]     ="<p><b>Core CM4 Settings</b></p>";
+const char ethif_header[]   ="<p><b>Eth interface statistic</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
 #define  TAG_PREFIX         "V"
@@ -735,6 +700,7 @@ void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
 
 void HtmlSettingsTEST    ( struct netconn *conn, void *arg) 
 {
+    UNUSED(arg);
     netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
     HtmlStaticFile(conn, ONLY_CHNG_JS );
@@ -849,7 +815,7 @@ void HtmlSetCM7         ( struct netconn *conn, void *arg)
     /* Iterate thru all PV-pairs */
     for ( uint32_t i = 0; i < p->num_params; i++ ) {
         idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
-        if ( idx > num_settings ) {
+        if ( (uint32_t)idx > num_settings ) {
             DEBUG_PRINTF("SetCM7: Index %d out of bounds\n", idx  );
             continue;
         }
@@ -890,7 +856,6 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg)
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
 
-
 void HtmlSetCM4         ( struct netconn *conn, void *arg)
 {
     HttpGetParamT *p = (HttpGetParamT *)arg;
@@ -901,7 +866,7 @@ void HtmlSetCM4         ( struct netconn *conn, void *arg)
 
     for ( uint32_t i = 0; i < p->num_params; i++ ) {
         idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
-        if ( idx > Config_GetCnt() ) {
+        if ( (uint32_t)idx > Config_GetCnt() ) {
             DEBUG_PRINTF("SetCM4: Index %d out of bounds\n", idx  );
             continue;
         }
@@ -912,6 +877,34 @@ void HtmlSetCM4         ( struct netconn *conn, void *arg)
     }
 }
 
+/* Ethernet driver must implement these two statistic functions */
+uint32_t ETHSTAT_GetLineCount ( void );
+char*    ETHSTAT_GetLine      ( char *retbuf, size_t buflen, uint32_t idx );
+
+/******************************************************************************
+ * HTML function to dump ETH interface statistics
+ *****************************************************************************/
+void HtmlShowEthIf ( struct netconn *conn, void *arg) 
+{
+    UNUSED(arg);
+
+    /* remote settings */
+    netconn_write(conn, ethif_header, strlen(ethif_header), NETCONN_NOCOPY );
+
+    portCHAR line[MAXLEN];
+    uint32_t linecount;
+    char *ret;
+
+    /* Task List */
+    netconn_write(conn, "<pre>", 5, NETCONN_COPY);
+
+    linecount = ETHSTAT_GetLineCount();
+    for ( uint32_t i=0; i < linecount; i++ ) {
+        ret = ETHSTAT_GetLine(line, MAXLEN, i );
+        if ( ret ) netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    }
+    
+}
 
 
 #if 0

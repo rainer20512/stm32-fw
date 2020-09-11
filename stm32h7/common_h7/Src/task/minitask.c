@@ -231,7 +231,7 @@ void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint3
             snprintf(buffer ,buflen, "%sTask List (%2d Tasks)----------------------------------------------------", prefixstr, nroftasks);
             break;
         case 1:
-            #if DEBUG_PROFILING > 0
+            #if configGENERATE_RUN_TIME_STATS > 0
                 snprintf(buffer ,buflen, "%s   Core No Prio St            Name  UnusedStack           Consumed time",prefixstr);
             #else
                 snprintf(buffer ,buflen, "%s   Core No Prio St            Name  UnusedStack  ",prefixstr);
@@ -241,17 +241,23 @@ void TaskFormatHeader( char* buffer, size_t buflen, const char *prefixstr, uint3
             *buffer='\0';
     }
 }
+/* Macros to convert 100 microsecond ticks to seconds/milliseconds */
+#define GET_SECONDS(time)   (   time / 10000UL )
+#define GET_MILLIS(time)    ( ( time / 10 ) % 1000 )
 
 void TaskFormatBody( char* buffer, size_t buflen, const char *prefixstr, uint32_t i, const char *corename )
 {
     if ( i < nroftasks ) {
-        #if DEBUG_PROFILING > 0
-            snprintf(buffer, buflen,"%s   %s %3d %4d %2s %15s %4d",
-                     prefixstr, corename, i, taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
-        #else
-            snprintf(buffer, buflen,"%s   %s %3d %4d %2s %15s %4d",
-                     prefixstr, corename, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
-        #endif   
+        snprintf(buffer, buflen,"%s   %s %3d %4d %2s %15s %4d",
+                 prefixstr, corename, i,taskstatus[i].uxCurrentPriority, TaskState(taskstatus[i].eCurrentState),  taskstatus[i].pcTaskName,taskstatus[i].usStackHighWaterMark );
+        /* Append 6 blanks and time statistics, if configured */
+        #if configGENERATE_RUN_TIME_STATS > 0
+            #define NUMBLANKS   14
+            char *next = buffer + strlen(buffer);
+            for ( uint32_t i=0; i < NUMBLANKS; i++ ) *(next++) = ' ';
+            *next='\0';
+            ProfilerFormatTime((uint64_t)taskstatus[i].ulRunTimeCounter/10, next, buflen - strlen(buffer), false);
+        #endif
     } else {
         *buffer = '\0';
     }

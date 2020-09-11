@@ -123,7 +123,7 @@ typedef struct {
     GPIO_TypeDef *gpio;         //!< GPIO-Port ( GPIOA ... GPIOx )
     uint8_t af_mode;            //!< Alternate function as defined in ..._hal_gpio-h
     uint8_t  pull;              //!< pull as defined in ..._hal_gpio.h
-    const char *dbg_name;           //!< Pin function ( for debug purposes only )
+    const char *dbg_name;       //!< Pin function ( for debug purposes only )
 } HW_Gpio_AF_Type;
 
 

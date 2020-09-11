@@ -68,9 +68,18 @@ void vCore1SignalControlBufToSend( void * xUpdatedMessageBuffer );
 #define configUSE_MALLOC_FAILED_HOOK            0
 #define configUSE_APPLICATION_TASK_TAG          0
 #define configUSE_COUNTING_SEMAPHORES           1
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS           1
 
+/* RHB added*/ 
 #define configSUPPORT_STATIC_ALLOCATION         1
+
+/* RHB added due to configGENERATE_RUN_TIME_STATS */
+/* FreeRTOS does not have to configure a timer    */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+/* That timer counts microseconds */
+#define portGET_RUN_TIME_COUNTER_VALUE()        (BASTMR_GetMicrosecond(&BASTIM_HANDLE)/100)
+
+
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES                   0
 #define configMAX_CO_ROUTINE_PRIORITIES         ( 2 )

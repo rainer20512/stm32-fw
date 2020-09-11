@@ -694,4 +694,63 @@ void HAL_ETH_MACErrorCallback(ETH_HandleTypeDef *heth)
   DEBUG_PRINTF("ETH MAC err\n");    
 }
 
+static FmtItemT statItems[] = {
+    {"Internal ETH and LAN8742 interface Statistics\n", NULL, FMT_NULL },
+    {" *** Not configured ***",                         NULL, FMT_NULL }, 
+};
+
+
+#define MY_LINECOUNT    (sizeof(statItems) / sizeof(FmtItemT))
+
+uint32_t ETHSTAT_GetLineCount(void)
+{
+    return MY_LINECOUNT /* + ENCSTAT_GetLineCount() */;
+}
+
+char *ETHSTAT_GetLine( char *retbuf, size_t buflen, uint32_t idx )
+{
+    FmtItemT *current;
+
+    if ( idx >= MY_LINECOUNT ) {
+        current = NULL; // ENCSTAT_GetLine(idx-MY_LINECOUNT);
+    } else {
+        current = statItems + idx;
+    }
+
+    if ( current->fmtVal == NULL ) {
+        strncpy(retbuf, current->fmtStr, buflen);
+        return retbuf;
+    }
+    
+    uint32_t numval;
+
+    switch ( current->fmtType ) {
+        case FMT_UINT8:
+            numval = *((uint8_t*)(current->fmtVal));
+            break;
+        case FMT_UINT16:
+            numval = *((uint16_t*)(current->fmtVal));
+            break;
+        case FMT_UINT32:
+            numval = *((uint32_t*)(current->fmtVal));
+            break;
+        default:
+            return "Illegal Type specifier\n";
+    }
+
+    snprintf(retbuf, buflen, current->fmtStr, numval );
+    return retbuf;
+}
+
+void ethernetif_statistic ( void )
+{
+   char line[80];
+   uint32_t linecount = ETHSTAT_GetLineCount();
+
+   for ( uint32_t i=0; i < linecount; i++ )
+   {
+        if ( ETHSTAT_GetLine(line, 80, i ) ) DEBUG_PRINTF(line);
+   }
+}
+
 #endif /* USE_ETY_PHY_LAN8742 == 1  */

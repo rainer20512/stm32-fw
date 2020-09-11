@@ -238,7 +238,6 @@
           <file file_name="../../common/src/debug_sram.c" />
         </folder>
         <folder Name="dev">
-          <file file_name="../../common/src/dev/adc_dev.c" />
           <file file_name="../../common/src/dev/hw_device.c" />
           <file file_name="../../common/src/dev/io_dev.c" />
           <file file_name="../../common/src/dev/timer_dev.c" />
@@ -250,10 +249,12 @@
           <file file_name="../../common/src/dev/common_spi.c" />
           <file file_name="../../common/src/dev/spi_dev.c" />
           <file file_name="../../common/src/dev/hw_spi.c" />
+          <file file_name="../../common/src/dev/i2c_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
           <file file_name="../../common/src/system/exti_handler.c" />
+          <file file_name="../../common/src/system/profiling.c" />
         </folder>
       </folder>
       <folder Name="inc">
