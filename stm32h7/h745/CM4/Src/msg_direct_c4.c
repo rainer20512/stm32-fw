@@ -17,6 +17,7 @@
 
 #include "dev/hw_device.h"
 #include "task/minitask.h"
+#include "system/clockconfig_cm4.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
@@ -96,11 +97,15 @@ void CM4_handle_remote(uint32_t arg )
  *****************************************************************************/
 void Handle_Receive_1025(void)
 {
-    if ( DevicesInhibitFrqChange() ) {
-        DEBUG_PUTS("Error: One or more CM4 devices disagreed to frq change!");
-    }
-    /* Set status to "received" */
+    /* 
+     * Set status to "received". 
+     * Do this first, otherwise timeout on CM/ core
+     * would occur due to long execution time of clock calibration
+     */
     AMP_DctBuf_Ptr->msg_status = MSGSTATUS_CM7_TO_CM4_DONE;
+
+    /* Perform clock change operations on CM4 core */
+    ClockChangePerform();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -440,24 +440,18 @@ void ethernetif_statistic ( void )
    }
 }
 
-#if 0
+
 /******************************************************************************
  * Reset / Restart then ENC28J60 
  *****************************************************************************/
 void ethernetif_restart ( void )
 {
-   /* Shutdown interface */
-   if(netif_is_link_up(netif) {
-      ENC_Stop(&enc28j60);
-      IFDEBUG("Link down\n");
-      xSemaphoreGive(SpiSemaphore);
-      netif_set_down(netif);
-      netif_set_link_down(netif);
-   }
-    
-   
+    xSemaphoreTake(SpiSemaphore, TIME_WAITING_SPI_SEMAPHORE);    
+    ENC_Stop(&enc28j60);
+    ENC_Start(&enc28j60, false);
+    xSemaphoreGive(SpiSemaphore);
 }
-#endif    
+    
 
 
 

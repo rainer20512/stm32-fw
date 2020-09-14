@@ -91,6 +91,12 @@ Errata 18 is implemented in lwip stack
 #include "dev/spi.h"
 #include "debug_helper.h"
 
+#if defined(DUAL_CORE) && defined(CORE_CM4)
+    #include "system/clockconfig_cm4.h"
+#else
+    #include "system/clockconfig.h"
+#endif
+
 /* for struct pbuf */
 #include "lwip/pbuf.h"
 
@@ -228,8 +234,10 @@ static __inline void up_udelay(uint32_t us);
 /* Stores how many iterations the microcontroller can do in 1 µs */
 static uint32_t iter_per_us=0;
 
-static void calibrate(void)
+static void calibrate(uint32_t newclk)
 {
+    UNUSED(newclk);
+
     uint32_t time;
     volatile uint32_t i;
 
@@ -401,8 +409,9 @@ static bool enc_waitwhilegreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
  * @param  None
  * @retval None
  *****************************************************************************/
-static void enc_hwreset(ENC_HandleTypeDef *handle) {
-
+static void enc_hwreset(ENC_HandleTypeDef *handle) 
+{
+    UNUSED(handle);
     ENCDEBUG("HW-Reset\n");
     SpiRstLow(SPI_HANDLE);
     /* Minimal RST low pulse length is 400 ns, so 2us is safe */
@@ -428,8 +437,9 @@ static void enc_hwreset(ENC_HandleTypeDef *handle) {
  * @param  None
  * @retval None
  *****************************************************************************/
-static void enc_swreset(ENC_HandleTypeDef *handle) {
-
+static void enc_swreset(ENC_HandleTypeDef *handle) 
+{
+  UNUSED(handle);
   ENCDEBUG("SW-Reset\n");
   /* Send the system reset command. */
   ENC_SPI_Send(ENC_SRC);
@@ -767,7 +777,7 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
     uint8_t regval;
 
     /* Calibrate time constant */
-    calibrate();
+    calibrate(HAL_RCC_GetSysClockFreq());
 
     /* If we have an hardware reset line, do hardware reset */
     if ( SPI_HANDLE->data->use_rst != 0 ) {
@@ -779,13 +789,17 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
     /* Use bank 0 */
     enc_setbank(handle, 0);
 
-    #if DO_ENC_STATISTIC > 0
-        if ( bFirstInit ) {
-            /* Reset error counters and assign counter record to handle */
-            memset(&errstat,0, sizeof(ENC_ErrStatusTypeDef));
-            handle->errstat = &errstat;
-        }
-    #endif
+    if ( bFirstInit ) {
+        /* Register callback on clock changes for recalibration of wait loop */
+        ClockRegisterForClockChange(calibrate);
+
+        #if DO_ENC_STATISTIC > 0
+                /* Reset error counters and assign counter record to handle */
+                memset(&errstat,0, sizeof(ENC_ErrStatusTypeDef));
+                handle->errstat = &errstat;
+        #endif
+    }
+
     /* Check if we are actually communicating with the ENC28J60.  If its
      * 0x00 or 0xff, then we are probably not communicating correctly
      * via SPI.

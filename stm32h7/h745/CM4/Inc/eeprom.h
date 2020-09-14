@@ -67,7 +67,7 @@ extern const EE_LimitsT eelimits[];
     /* 03 */ {                 1,   0,   1, EEType_OnOff,       "FSK-Mode (0=off, 1=On)" },                                \
     /* 04 */ {                 5,   1,  60, EEType_Uint8_Dec,   "Send data interval [min]" },                              \
     /* 05 */ {                 1,   0,   1, EEType_OnOff,       "Dump detailled\nTimestamps (0=off, 1=On)" },              \
-    /* 06 */ {                 1,   1,   9, EEType_Uint8_Dec,   "Debug-Level, reqires\nDEBUG_MODE > 0" },                  \
+    /* 06 */ {                 4,   1,   9, EEType_Uint8_Dec,   "Debug-Level, reqires\nDEBUG_MODE > 0" },                  \
     /* 07 */ {                 9,   0, 255, EEType_Uint8_Dec,   "Correction value to correct\nlocal pressure to MSL" },    \
     /* 08 */ {                 1,   0,  31, EEType_Uint8_Dec,   "Backlight intensity" },                                   \
     /* 09 */ {                 1,   0,   3, EEType_Uint8_Dec,   "LCD display scheme to use" },                             \

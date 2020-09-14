@@ -1,39 +1,14 @@
 /**
   ******************************************************************************
-  * @file    clockconfig.c
+  * @file    clockconfig_cm4.c
   * @author  Rainer
   * @brief   Several Clock Configurations with different sources, SYSCLK 
   *          frequencies and correct Vcore settings and NVM Wait states
   *
-  *          Available configurations
-  *          1a. HSI-Clock based with parameterized clk value of 8,16,32,64 MHz
-  *              and 24 MHz,                Vcore Range 2, 0-3 WS
-  *          1b. MSI-Clock based with parameterized clk value between 100kHz
-  *              and 48 MHz,                Vcore Range 1, 0-2 WS
-  *          2.  HSE Bypass mode, 8MHz,     Range 2, 0 WS
-  *              ( this is specially for Nucleo-Boards ) 
-  *          3a. HSI based, 16MHz,          Range 2, 1 WS
-  *          3b. HSI based, 16MHz,          Range 1, 0 WS
-  *          4.  PLL/HSI based, 32-80 MHz,  Range 1, 1-4 WS
-  *         
-  * @note    In every configuration there are only identical clock values for
-  *          all types of sore clocks ( SYSCLK, HCLK, APB1 and APB2 CLK ) 
-  *
-  ******************************************************************************
-  * Coarse Performance estimation
-  * MSI  2MHZ Clocks, Scale 3, 0WS :  63700 Increments per second
-  * MSI  4MHZ Clocks, Scale 3, 0WS : 129200 Increments per second
-  * HSE  8MHZ Clocks, Scale 2, 0WS : 248100 Increments per second
-  * HSI 16MHZ Clocks, Scale 2, 1WS : 430300 Increments per second
-  * HSI 16MHZ Clocks, Scale 1, 0WS : 498000 Increments per second
-  * PLL 32MHZ Clocks, Scale 1, 0WS : 862200 Increments per second
+  * 
   ******************************************************************************
   */
 
-
-/** @addtogroup CLOCK_CONFIG
-  * @{
-  */
 
 #include "hardware.h"
 #include "config/config.h"
@@ -48,10 +23,15 @@
     #include "debug_helper.h"
 #endif
 
-#if DEBUG_PROFILING > 0
-    #include "system/profiling.h"
-#endif
-
+/*
+ *************************************************************************************
+ * All the stuff for clock change notification callback management
+ * ( aside of callbacks in devices )
+ ************************************************************************************/
+#define MAX_CLKCHG_CB                4
+static ClockChangeCB clkCB[MAX_CLKCHG_CB];/* Array of registered clk chng callbacks */
+static int32_t numClkchangeCB = 0;      /* Number of "    "    "      "      "      */
+void   ClockNotifyCallbacks(uint32_t);  /* forward declaration                      */
 
 /*
  *************************************************************************************
@@ -736,6 +716,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
             DEBUG_PUTS("Error: Clk change event to CM4 core timed out");
     }
 
+    /* Notify all registered callbacks */
+    ClockNotifyCallbacks(HAL_RCC_GetSysClockFreq());
+
     #if DEBUG_MODE > 0
         DEBUG_PRINTF("SYSCLK nom. %d\n", HAL_RCC_GetSysClockFreq());
         uint32_t sysclk = Get_SysClockFrequency();
@@ -808,6 +791,38 @@ void HSIClockConfig(bool bHSIon)
       Error_Handler(__FILE__, __LINE__);
   
 }
+
+
+/******************************************************************************
+ * @brief Register a clock change callback
+ * @param changeCB callback function to be notified on clock changes
+ * @returns 0  on success
+ *          -1 ERR_: no more room to register callback
+ *          -2 error: callback must no be NULL
+ * @note Once registered a function, it can never be unregistered again
+ *****************************************************************************/
+int32_t ClockRegisterForClockChange ( ClockChangeCB changeCB )
+{
+    /* Space left in array ? */
+    if ( numClkchangeCB >= MAX_CLKCHG_CB - 1 ) return -1;
+
+    /* CB must not be NULL */
+    if ( changeCB == 0 ) return -2;
+
+    clkCB[numClkchangeCB++] = changeCB;
+    return 0;
+}
+
+/******************************************************************************
+ * @brief Notify all registered callbacks on Clock change
+ * @param newclk  new clock frequncy in Hz
+ *****************************************************************************/
+void   ClockNotifyCallbacks(uint32_t newclk)
+{
+    for ( int32_t i = 0; i < numClkchangeCB; i++ ) 
+        clkCB[i](newclk);
+}
+
 
 
 /******************************************************************************

@@ -669,6 +669,7 @@ void stats_display(void);
 
 #if USE_ETH > 0
   void ethernetif_statistic ( void );
+  void ethernetif_restart   ( void );
 #endif
 
 /*********************************************************************************
@@ -695,6 +696,10 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
 #if USE_ETH > 0 && USE_ETH_PHY_ENC28J60 > 0
     case 3:
         ethernetif_statistic();
+        break;
+    case 4:
+        DEBUG_PUTS("Reset Ethernet IF hardware");
+        ethernetif_restart();
         break;
 #endif
     /* sample entry
@@ -746,6 +751,7 @@ static const CommandSetT cmdTest[] = {
 #endif
 #if defined(USE_ETH)
   { "ETH IF statistic",ctype_fn, .exec.fn = System_Menu,    VOID(3), "Show ETH Interface stats"},   
+  { "ETH IF reset",    ctype_fn, .exec.fn = System_Menu,    VOID(4), "Reset ETH Interface"},   
 #endif
 };
 ADD_SUBMODULE(Test);

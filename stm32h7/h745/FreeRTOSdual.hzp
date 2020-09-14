@@ -66,6 +66,7 @@
         <file file_name="../common_h7/Src/system/error.c" />
         <folder Name="system">
           <file file_name="CM4/Src/system/devices_cm4.c" />
+          <file file_name="CM4/Src/system/clockconfig_cm4.c" />
         </folder>
         <file file_name="CM4/Src/msg_direct_c4.c" />
       </folder>
@@ -73,6 +74,7 @@
         <folder Name="system">
           <file file_name="CM4/Inc/system/ram_preset.inc" />
           <file file_name="CM4/Inc/system/profiling.h" />
+          <file file_name="CM4/Inc/system/clockconfig_cm4.h" />
         </folder>
         <file file_name="CM4/Inc/debug.h" />
         <file file_name="CM4/Inc/error.h" />
@@ -215,6 +217,9 @@
             <file file_name="../common_h7/lwip/enc28j60/File1.c">
               <configuration
                 Name="THUMB Debug"
+                build_exclude_from_build="Yes" />
+              <configuration
+                Name="THUMB Release"
                 build_exclude_from_build="Yes" />
             </file>
             <file file_name="../common_h7/lwip/enc28j60/enc28j60.c" />

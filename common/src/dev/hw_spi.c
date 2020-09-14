@@ -615,7 +615,7 @@ void Spi8TxByte_hw(SpiHandleT *self, uint8_t outval)
 bool Spi8TxRxVector_hw(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
 {
 HAL_StatusTypeDef ret;
-    if ( !vectorIn && !vectorOut ) return;
+    if ( !vectorIn && !vectorOut ) return HAL_OK;
 
     // DEBUG_PRINTF("S");
     if ( ! vectorIn ) {
@@ -626,7 +626,7 @@ HAL_StatusTypeDef ret;
         ret = HAL_SPI_TransmitReceive(&self->data->hw.myHalHandle, vectorOut, vectorIn, size, SPIx_TIMEOUT_MAX);
     } 
     if ( ret != HAL_OK ) {
-        DEBUG_PRINTF("Spi8TxRxVector_hw failed with code %d\n", ret );
+        DEBUG_PRINTF("Spi8TxRxVector_hw failed with code %d VectorLen=%d\n", ret, size );
     }
     return ret == HAL_OK;
 }

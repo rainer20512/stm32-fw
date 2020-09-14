@@ -136,6 +136,7 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+    debuglevel = config.dbg_level;
 
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
