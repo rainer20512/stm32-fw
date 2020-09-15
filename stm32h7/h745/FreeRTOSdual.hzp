@@ -88,10 +88,6 @@
         <file file_name="CM4/Inc/FreeRTOSConfig.h" />
       </folder>
     </folder>
-    <folder Name="Doc">
-      <file file_name="./../readme.txt" />
-      <file file_name="Howto.txt" />
-    </folder>
     <folder Name="Drivers">
       <folder Name="BSP">
         <folder Name="STM32H745I_Nucleo">
@@ -320,6 +316,11 @@
         </folder>
         <file file_name="../common_h7/Src/ipc.c" />
       </folder>
+      <folder Name="Doc">
+        <file file_name="../doc/ErrorCodes.txt" />
+        <file file_name="../doc/Howto.txt" />
+        <file file_name="../doc/NumeratedChanges.txt" />
+      </folder>
     </folder>
   </project>
   <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />
@@ -447,10 +448,6 @@
           <file file_name="../common_h7/eeprom-emul/porting/stm32h7/flash_interface.h" />
         </folder>
       </folder>
-    </folder>
-    <folder Name="Doc">
-      <file file_name="doc/ErrorCodes.txt" />
-      <file file_name="doc/Howto.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">

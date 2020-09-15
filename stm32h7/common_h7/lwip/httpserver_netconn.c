@@ -500,7 +500,7 @@ static void http_server_session ( void *arg )
     for ( ;; );
 }
 
-static void http_server_netconn_thread8088(void *arg)
+static void http_server_netconn_thread(void *arg)
 { 
   struct netconn *conn, *newconn;
   err_t err, accept_err;
@@ -525,7 +525,7 @@ static void http_server_netconn_thread8088(void *arg)
         accept_err = netconn_accept(conn, &newconn);
         if(accept_err == ERR_OK)
         {
-            sys_thread_new("HTTPD", http_server_session, newconn, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO+1);
+            sys_thread_new("HTTP Server", http_server_session, newconn, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO+1);
             taskYIELD();
         }
       }
@@ -541,7 +541,7 @@ static void http_server_netconn_thread8088(void *arg)
   */
 void http_server_netconn_init()
 {
-  sys_thread_new("HTTP8088", http_server_netconn_thread8088, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
+  sys_thread_new("HTTP Listener", http_server_netconn_thread, NULL, DEFAULT_THREAD_STACKSIZE, WEBSERVER_THREAD_PRIO);
 }
 
 
