@@ -27,6 +27,34 @@
 #include "cmsis_os.h"
 #include "debug_helper.h"
 
+#define DEBUG_HTTPSRV         0       /* Debug Http server level */
+
+//#define DEBUG_OUTPUT(lvl,...)             DEBUG_PRINTF(__VA_ARGS__)  
+#define DEBUG_OUTPUT(lvl,...)             do if ( debuglevel > lvl ) { DEBUG_PRINTF(__VA_ARGS__); } while(0)  
+
+#define HTTPDDEBUG(...)                   DEBUG_OUTPUT(0, __VA_ARGS__)
+
+#if DEBUG_HTTPSRV > 0   /***** Lvl 1 *****/
+    #define HTTPD1DEBUG(...)              DEBUG_OUTPUT(1, __VA_ARGS__)
+#else
+    #define HTTPD1DEBUG(...)   
+#endif
+#if DEBUG_HTTPSRV > 1   /***** Lvl 2 *****/
+    #define HTTPD2DEBUG(...)              DEBUG_OUTPUT(2, __VA_ARGS__)
+#else
+    #define HTTPD2DEBUG(...)   
+#endif
+#if DEBUG_HTTPSRV > 2   /***** Lvl 3 *****/
+    #define HTTPD3DEBUG(...)              DEBUG_OUTPUT(3, __VA_ARGS__)
+#else
+    #define HTTPD3DEBUG(...)   
+#endif
+#if DEBUG_HTTPSRV > 3   /***** Lvl 4 *****/
+    #define HTTPD4DEBUG(...)              DEBUG_OUTPUT(4, __VA_ARGS__)
+#else
+    #define HTTPD4DEBUG(...)   
+#endif
+
 
 /* Private typedef -----------------------------------------------------------*/
 /* Function to call to complete the web page */
@@ -248,11 +276,11 @@ static void HtmlStaticFile(struct netconn *conn, const char *filename )
 
     
     if ( fs_open(&file, filename) == ERR_OK ) {
-        DEBUG_PRINTF("httpd open file %s\n", filename);
+        HTTPD2DEBUG("httpd open file %s\n", filename);
         netconn_write(conn, (const unsigned char*)(file.data), (size_t)file.len, NETCONN_NOCOPY);
         fs_close(&file);
     } else { 
-        DEBUG_PRINTF("httpd failed to open file %s\n", filename);
+        HTTPD2DEBUG("httpd failed to open file %s\n", filename);
         netconn_write(conn, FileErr, strlen(FileErr), NETCONN_NOCOPY);
         netconn_write(conn, filename, strlen(filename), NETCONN_COPY);
     }
@@ -305,7 +333,7 @@ static int32_t IsStaticFile ( const char *item )
  *****************************************************************************/
 static void HandleGet ( struct netconn *conn, char *buf, HttpGetParamT *p )
 {
-    DEBUG_PRINTF("HandleGet:%s:\n", buf);
+    HTTPD1DEBUG("HandleGet:%s:\n", buf);
  
     /* If requested file is one of the dynamically created ones, then create it */
     for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
@@ -360,7 +388,7 @@ static void ParseParams(char *buf, u16_t buflen, HttpGetParamT *p )
     *dest='\0';
 
     /* Paramstr now contains parameter/value pairs in the format p1=v1&p2=v2... */
-    DEBUG_PRINTF("Params:%s:\n", p->paramstr);
+    HTTPD2DEBUG("Params:%s:\n", p->paramstr);
     
     /* Walk thru paramstr and find all parameter value pairs ) */
     src     = p->paramstr;
@@ -400,7 +428,7 @@ static void ParseParams(char *buf, u16_t buflen, HttpGetParamT *p )
 
 
     for ( i=0; i < pcnt;i++ )
-        DEBUG_PRINTF("Param %d: P=%s, V=%s\n", i, p->paramstr+p->pv[i].p_ofs, p->paramstr+p->pv[i].v_ofs);
+        HTTPD3DEBUG("Param %d: P=%s, V=%s\n", i, p->paramstr+p->pv[i].p_ofs, p->paramstr+p->pv[i].v_ofs);
 
     p->num_params =  pcnt;
 
@@ -479,13 +507,13 @@ static void http_server_session ( void *arg )
     uint16_t remote = current->pcb.tcp->remote_port;
 
     /* serve connection */    
-    DEBUG_PRINTF("Established connection to remote Port %d...\n",remote );
+    HTTPD2DEBUG("Established connection to remote Port %d...\n",remote );
 
     http_server_serve(current);
 
     /* delete connection */
     netconn_delete(current);
-    DEBUG_PRINTF("Terminated connection to remote Port %d...\n",remote );
+    HTTPD2DEBUG("Terminated connection to remote Port %d...\n",remote );
     vTaskDelete(NULL);
     for ( ;; );
 }
@@ -500,7 +528,7 @@ static void http_server_netconn_thread(void *arg)
   conn = netconn_new(NETCONN_TCP);
   if (conn!= NULL)
   {
-    DEBUG_PRINTF("Listening on Port %d...\n",PORT);
+    HTTPDDEBUG("Listening on Port %d...\n",PORT);
     /* Bind to port 80 (HTTP) with default IP address */
     err = netconn_bind(conn, NULL, PORT);
     
@@ -658,9 +686,11 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
 #else
     const char local_header[]   ="<p><b>Core CM7 Settings</b></p>";
 #endif
+
 const char ethif_header[]   ="<p><b>Eth interface statistic</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
+
 #define  TAG_PREFIX         "V"
 #include "eeprom.h"
 void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
@@ -689,7 +719,7 @@ void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
         HtmlOneHexSetting(conn, setting->help, tag, setting->val, 4, setting->min, setting->max );
         break;
     default:
-        DEBUG_PRINTF("HTML rendering for setting type %d not implemented\n", setting->type);
+        HTTPDDEBUG("HTML rendering for setting type %d not implemented\n", setting->type);
     }
 }
 
@@ -765,7 +795,7 @@ int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
         if ( *uuu ) return -1;
         break;
     default:
-        DEBUG_PRINTF("HTML extract value for type %d not implemented\n", type);
+        HTTPDDEBUG("HTML extract value for type %d not implemented\n", type);
     }
 
     return 0;
@@ -812,13 +842,13 @@ int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
         for ( uint32_t i = 0; i < p->num_params; i++ ) {
             idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
             if ( (uint32_t)idx > num_settings ) {
-                DEBUG_PRINTF("SetCM7: Index %d out of bounds\n", idx  );
+                HTTPDDEBUG("SetCM7: Index %d out of bounds\n", idx  );
                 continue;
             }
             if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
                 MSGD_SetSettingsLine((uint8_t) idx, (uint8_t) val);
                 if ( !MSGD_WaitForSetSettingsLine() )
-                    DEBUG_PRINTF("SetCM7: Failede to set config[%d] to %d\n", idx,val  );
+                    HTTPDDEBUG("SetCM7: Failede to set config[%d] to %d\n", idx,val  );
             }            
         }
     }
@@ -864,12 +894,12 @@ void HtmlSetLocal         ( struct netconn *conn, void *arg)
     for ( uint32_t i = 0; i < p->num_params; i++ ) {
         idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
         if ( (uint32_t)idx > Config_GetCnt() ) {
-            DEBUG_PRINTF("SetCM4: Index %d out of bounds\n", idx  );
+            HTTPDDEBUG("SetCM4: Index %d out of bounds\n", idx  );
             continue;
         }
         if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
             if ( !Config_SetVal((uint8_t) idx, (uint8_t) val) )
-                DEBUG_PRINTF("SetCM4: Failed to set config[%d] to %d\n", idx,val  );
+                HTTPDDEBUG("SetCM4: Failed to set config[%d] to %d\n", idx,val  );
         }            
     }
 }

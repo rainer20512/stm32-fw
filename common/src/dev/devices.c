@@ -63,7 +63,7 @@ static uint8_t              gpios[MAX_PORTS][16]; /* hold the using device for e
 
 #define PRINTNAME(a)            ( a ? a : "" )
 #define PRINTCOLON(a)           ( a ? " : " : "" )
-#define PRINTOWNERSHIP(i,g,p)   ( IsMyPin(0,i,g,p) ? "" : " Not assigned")
+#define PRINTOWNERSHIP(i,g,p)   ( IsMyPin(i,g,p) ? "" : " Not assigned")
 
 
 /******************************************************************************
@@ -135,7 +135,7 @@ void DBG_dump_devices(bool bLong)
  * if so, it is assigned to "newdev" and true is returned
  * if already assigned to any other device, false is returned
  *****************************************************************************/
-bool AssignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+bool AssignOnePinRemote( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
 {
     uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
     uint16_t pinIdx  = HW_GetIdxFromPin(pin);
@@ -156,10 +156,16 @@ bool AssignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint
     }
 }
 
+bool AssignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return AssignOnePinRemote(0, devIdx, gpio, pin );
+}
+
+
 /******************************************************************************
  * returns true, if device owns that GPIO pin
  *****************************************************************************/
-bool IsMyPin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+bool IsMyPinRemote( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
 {
     uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
     uint16_t pinIdx  = HW_GetIdxFromPin(pin);
@@ -169,10 +175,19 @@ bool IsMyPin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t 
 }
 
 /******************************************************************************
+ * returns true, if device owns that GPIO pin
+ *****************************************************************************/
+bool IsMyPin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return IsMyPinRemote(0, devIdx, gpio, pin);
+}
+
+
+/******************************************************************************
  * Deassign one GPIO pin from a device
  * this is only possible, iff the device owned that pin before
  *****************************************************************************/
-bool DeassignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+bool DeassignOnePinRemote( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
 {
     uint32_t gpioIdx = HW_GetGPIOIdx (gpio);
     uint16_t pinIdx  = HW_GetIdxFromPin(pin);
@@ -196,6 +211,11 @@ bool DeassignOnePin( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, ui
         
         return false;
     }
+}
+
+bool DeassignOnePin( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin )
+{
+    return DeassignOnePinRemote(0, devIdx, gpio, pin);
 }
 
 #if 0
