@@ -320,6 +320,7 @@
         <file file_name="../doc/ErrorCodes.txt" />
         <file file_name="../doc/Howto.txt" />
         <file file_name="../doc/NumeratedChanges.txt" />
+        <file file_name="../doc/Changes.txt" />
       </folder>
     </folder>
   </project>

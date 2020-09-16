@@ -658,7 +658,7 @@ bool SPI_AllowStop(const HW_DeviceType *self)
     #undef  NUM4
     #undef  LIST4
 
-#endif
+#endif // #if defined(USE_BBSPI1) || defined(USE_SPI1)
 
 #if defined(USE_BBSPI2) || defined(USE_SPI2)
     SpiDataT             SPI2Data;
@@ -852,7 +852,214 @@ bool SPI_AllowStop(const HW_DeviceType *self)
     #undef  NUM4
     #undef  LIST5
 
+#endif // #if defined(USE_BBSPI2) || defined(USE_SPI2)
+
+#if defined(USE_BBSPI3) || defined(USE_SPI3)
+    SpiDataT             SPI3Data;
+    SpiHandleT           SPI3Handle = {&SPI3Data, NULL };
+    #if defined(USE_SPI3) && defined(SPI3_USE_DMA) 
+        static DMA_HandleTypeDef hdma_spi3_tx;
+        static DMA_HandleTypeDef hdma_spi3_rx;
+        static const HW_DmaType dmatx_spi3 = { &hdma_spi3_tx, SPI3_TX_DMA };
+        static const HW_DmaType dmarx_spi3 = { &hdma_spi3_rx, SPI3_RX_DMA };
+    #endif
+    static const HW_GpioList_AF gpio_spi3 = {
+        /* MOSI, SCK, nSEL, MISO, DnC, nRST, BUSY */
+        .gpio = { 
+            SPI3_MOSI, SPI3_SCK, 
+            #ifdef SPI3_USE_NSS
+                SPI3_NSS,
+            #else
+                SPI3_NSEL,
+            #endif
+            #ifdef SPI3_USE_MISO
+                SPI3_MISO,
+            #else
+                {0},
+            #endif
+            #ifdef SPI3_USE_DNC
+                SPI3_DNC,
+            #else
+                {0},
+            #endif
+            #ifdef SPI3_USE_RST
+                SPI3_RST,
+            #else
+                {0},
+            #endif
+            #ifdef SPI3_USE_BUSY
+                SPI3_BUSY,
+            #else
+                {0},
+            #endif
+            #ifdef SPI3_USE_INP
+                SPI3_INP,
+            #else
+                {0},
+            #endif
+        },
+        .num = 8, 
+    };
+
+    static const SPI_AdditionalDataType additional_spi3 = {
+        .mySpiHandle = &SPI3Handle,
+        .use_nss = 
+            #ifdef SPI3_USE_NSS 
+                1,
+            #else
+                0,
+            #endif
+        .use_miso = 
+            #ifdef SPI3_USE_MISO 
+                1,
+            #else
+                0,
+            #endif
+        .use_miso_irq = 
+            #ifdef SPI3_USE_MISO_IRQ 
+                1,
+            #else
+                0,
+            #endif
+        .use_dnc = 
+            #ifdef SPI3_USE_DNC
+                1,
+            #else
+                0,
+            #endif
+        .use_rst = 
+            #ifdef SPI3_USE_RST
+                1,
+            #else
+                0,
+            #endif
+        .use_busy = 
+            #ifdef SPI3_USE_BUSY
+                1,
+            #else
+                0,
+            #endif
+        .use_busy_irq = 
+            #ifdef SPI3_USE_BUSY_IRQ 
+                1,
+            #else
+                0,
+            #endif
+        .busy_irq_mode = 
+            #if defined(SPI3_USE_BUSY_IRQ) && defined(SPI3_BUSY_IRQ_MODE) 
+                SPI3_BUSY_IRQ_MODE,
+            #else
+                0,
+            #endif
+        .use_inp = 
+            #ifdef SPI3_USE_INP
+                1,
+            #else
+                0,
+            #endif
+        .use_inp_irq = 
+            #ifdef SPI3_USE_INP_IRQ 
+                1,
+            #else
+                0,
+            #endif
+        .inp_irq_mode = 
+            #if defined(SPI3_USE_INP_IRQ) && defined(SPI3_INP_IRQ_MODE) 
+                SPI3_INP_IRQ_MODE,
+            #else
+                0,
+            #endif
+        .use_hw_irq = 
+            #ifdef SPI3_USE_HW_IRQ 
+                1,
+            #else
+                0,
+            #endif
+        .baudrate = SPI3_BAUDRATE,
+        .datasize =
+            #ifdef SPI3_DATASIZE 
+                SPI3_DATASIZE,
+            #else
+                8,
+            #endif
+    };
+
+    #define NUM0 0
+    #define LIST0 
+    #ifdef SPI3_USE_MISO_IRQ
+        #define NUM1   (NUM0+1)
+        #define LIST1  LIST0 SPI3_MISO_IRQ,
+    #else
+        #define NUM1   NUM0
+        #define LIST1 LIST0
+    #endif
+    #ifdef SPI3_USE_BUSY_IRQ
+        #define NUM2   (NUM1+1)
+        #define LIST2  LIST1 SPI3_BUSY_IRQ,
+    #else
+        #define NUM2   NUM1
+        #define LIST2 LIST1
+    #endif
+    #ifdef SPI3_USE_INP_IRQ
+        #define NUM3   (NUM2+1)
+        #define LIST3  LIST2 SPI3_INP_IRQ,
+    #else
+        #define NUM3   NUM2
+        #define LIST3 LIST2
+    #endif
+    #if defined(USE_SPI3 ) && defined(SPI3_USE_HW_IRQ)
+        #define NUM4   (NUM3+1)
+        #define LIST4  LIST3 SPI3_HW_IRQ,
+    #else
+        #define NUM4   NUM3
+        #define LIST4 LIST3
+    #endif
+
+    const HW_IrqList irq_spi3 = {
+        .num = NUM4,
+        .irq = { LIST4 },
+    };
+    const HW_DeviceType SPIDEV3_DEV = {
+        .devName        = SPIDEV3_NAME,
+        .devBase        = SPIDEV3_HARDWARE,
+        .devGpioAF      = &gpio_spi3,
+        .devGpioIO      = NULL,
+        .devType        = SPIDEV3_TYPE,
+        .devData        = &additional_spi3,
+        .devIrqList     = &irq_spi3,
+        #if defined(USE_SPI3) && defined(SPI3_USE_DMA) 
+            .devDmaTx = &dmatx_spi3,
+            .devDmaRx = &dmarx_spi3,
+        #else
+            .devDmaTx = NULL,
+            .devDmaRx = NULL,
+        #endif
+        .Init           = SPI_Init,
+        .DeInit         = SPI_DeInit,
+#if SPIDEV3_TYPE == HW_DEVICE_HWSPI
+        .OnFrqChange    = SPI_OnFrqChange,
+        .AllowStop      = SPI_AllowStop,
+#else
+        .OnFrqChange    = NULL,
+        .AllowStop      = NULL,
 #endif
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+
+    #undef  NUM0
+    #undef  LIST0 
+    #undef  NUM1
+    #undef  LIST1 
+    #undef  NUM2
+    #undef  LIST2
+    #undef  NUM3
+    #undef  LIST3
+    #undef  NUM4
+    #undef  LIST4
+
+#endif // #if defined(USE_BBSPI3) || defined(USE_SPI3)
+
 
 
 #endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4) */

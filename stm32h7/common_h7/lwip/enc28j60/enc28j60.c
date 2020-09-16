@@ -45,8 +45,13 @@
 
 #define DO_ENC_STATISTIC        1
 
-#define SPI_HANDLE      (&SPI1Handle)
-
+#if defined(STM32H745NUCLEO)
+    #define SPI_HANDLE      (&SPI1Handle)
+#elif defined(STM32H742REF)
+    #define SPI_HANDLE      (&SPI3Handle)
+#else
+    #error "No SPI-Interface for ENC28J60 defined"
+#endif
 /*
 Module         Feature        Issue Issue Summary                                             Affected Revisions
                                                                                               B1 B4 B5 B7
@@ -103,9 +108,9 @@ Errata 18 is implemented in lwip stack
 /* for osDelay */
 #include "cmsis_os.h"
 
-#define DEBUG_ENCRX         4       /* Debug Rx path */
-#define DEBUG_ENCTX         4       /* Debug Tx path */
-#define DEBUG_ENC           4       /* Debug common  */
+#define DEBUG_ENCRX         0       /* Debug Rx path */
+#define DEBUG_ENCTX         0       /* Debug Tx path */
+#define DEBUG_ENC           0       /* Debug common  */
 
 //#define DEBUG_OUTPUT(lvl,...)             DEBUG_PRINTF(__VA_ARGS__)  
 
@@ -575,6 +580,33 @@ static void enc_wrbreg(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
   ENC_SPI_SendBuf(handle, data, NULL, 2);
 }
 
+/****************************************************************************
+ * Function: enc_wrbreg16
+ *
+ * Description:
+ *   Write to a banked 16bit control register using the WCR command.
+ *   Make use of the fact, that all 16bit control registers are
+ *   organized as both bytes of these registers being organized
+ *   as low byte first at consecutive memory locations
+ *
+ * Parameters:
+ *   handle   - Reference to the driver state structure
+ *   ctrlreg  - Bit encoded address of banked LO-register to write
+ *              the high byte is then automatically at next address
+ *   wrdata16 - The data to send
+ *
+ * Returned Value:
+ *   None
+ *
+ * Assumptions:
+ *
+ ****************************************************************************/
+static void enc_wrbreg16(ENC_HandleTypeDef *handle, uint8_t ctrlreg,
+                       uint16_t wrdata16)
+{
+    enc_wrbreg(handle, ctrlreg, wrdata16 & 0xff);
+    enc_wrbreg(handle, ctrlreg+1, wrdata16 >> 8);
+}
 
 /****************************************************************************
  * Function: enc_waitbreg
@@ -810,6 +842,8 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
         ENCDEBUG("ENC_Start: ENC28J60 not responding\n");
         return false;
     }
+    /* ID 6 means: Revision 7 */
+    if ( regval == 6 ) regval = 7;
     ENCDEBUG("ENC28J60 Rev. %d\n", regval);
 
 #if DEBUG_ENC > 0
@@ -825,29 +859,24 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
      * First, set the receive buffer start address.
      */
     handle->nextpkt = PKTMEM_RX_START;
-    enc_wrbreg(handle, ENC_ERXSTL, PKTMEM_RX_START & 0xff);
-    enc_wrbreg(handle, ENC_ERXSTH, PKTMEM_RX_START >> 8);
-
+    enc_wrbreg16(handle, ENC_ERXSTL, PKTMEM_RX_START);
     #if DEBUG_ENC > 1
         ENC2DEBUG("RX Start=0x%04x ", PKTMEM_RX_START);
     #endif
 
     /* Set the receive data pointer */
     /* Errata 14 */
-    enc_wrbreg(handle, ENC_ERXRDPTL, PKTMEM_RX_END & 0xff);
-    enc_wrbreg(handle, ENC_ERXRDPTH, PKTMEM_RX_END >> 8);
+    enc_wrbreg16(handle, ENC_ERXRDPTL, PKTMEM_RX_END);
 
     /* Set the receive buffer end. */
-    enc_wrbreg(handle, ENC_ERXNDL, PKTMEM_RX_END & 0xff);
-    enc_wrbreg(handle, ENC_ERXNDH, PKTMEM_RX_END >> 8);
+    enc_wrbreg16(handle, ENC_ERXNDL, PKTMEM_RX_END);
 
     #if DEBUG_ENC > 1
         ENC2DEBUG("RX End=0x%04x\n", PKTMEM_RX_END);
     #endif
 
     /* Set transmit buffer start. */
-    enc_wrbreg(handle, ENC_ETXSTL, PKTMEM_TX_START & 0xff);
-    enc_wrbreg(handle, ENC_ETXSTH, PKTMEM_TX_START >> 8);
+    enc_wrbreg16(handle, ENC_ETXSTL, PKTMEM_TX_START);
 
     /* Set filter mode: unicast OR broadcast AND crc valid */
     enc_wrbreg(handle, ENC_ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_BCEN);
@@ -867,8 +896,7 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
         enc_wrbreg(handle, ENC_MACON4, MACON4_DEFER);        /* Defer transmission enable */
 
         /* Set Non-Back-to-Back Inter-Packet Gap */
-        enc_wrbreg(handle, ENC_MAIPGL, 0x12);
-        enc_wrbreg(handle, ENC_MAIPGH, 0x0c);
+        enc_wrbreg16(handle, ENC_MAIPGL, 0x0c12);
 
         /* Set Back-to-Back Inter-Packet Gap */
         enc_wrbreg(handle, ENC_MABBIPG, 0x12);
@@ -885,8 +913,7 @@ bool ENC_Start(ENC_HandleTypeDef *handle, uint32_t bFirstInit)
     }
 
     /* Set the maximum packet size which the controller will accept */
-    enc_wrbreg(handle, ENC_MAMXFLL, ETH_MAX_RX_FRAMESIZE & 0xff);
-    enc_wrbreg(handle, ENC_MAMXFLH, ETH_MAX_RX_FRAMESIZE >> 8);
+    enc_wrbreg16(handle, ENC_MAMXFLL, ETH_MAX_RX_FRAMESIZE);
 
     if (handle->Init.DuplexMode == ETH_MODE_HALFDUPLEX) {
         enc_wrphy(handle, ENC_PHCON1, 0x00);
@@ -1032,8 +1059,7 @@ static int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
 
     /* Set transmit buffer start (is this necessary?). */
 
-    enc_wrbreg(handle, ENC_ETXSTL, PKTMEM_TX_START & 0xff);
-    enc_wrbreg(handle, ENC_ETXSTH, PKTMEM_TX_START >> 8);
+    enc_wrbreg16(handle, ENC_ETXSTL, PKTMEM_TX_START);
 
     #if DEBUG_ENCTX > 2
         ENCTX3DEBUG("Tx Start=0x%04x ", PKTMEM_TX_START);
@@ -1042,8 +1068,7 @@ static int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
 
   /* Reset the write pointer to start of transmit buffer */
 
-    enc_wrbreg(handle, ENC_EWRPTL, PKTMEM_TX_START & 0xff);
-    enc_wrbreg(handle, ENC_EWRPTH, PKTMEM_TX_START >> 8);
+    enc_wrbreg16(handle, ENC_EWRPTL, PKTMEM_TX_START);
 
     buflen = p->tot_len;
     txend = PKTMEM_TX_START + buflen;
@@ -1125,8 +1150,7 @@ static int32_t ENC_PrepareTxBuffer(ENC_HandleTypeDef *handle, struct pbuf *p)
     * buffer plus the size of the packet data.
     * txend has to point to the LAST byte of the tx data stream 
     */
-    enc_wrbreg(handle, ENC_ETXNDL, txend & 0xff);
-    enc_wrbreg(handle, ENC_ETXNDH, txend >> 8);
+    enc_wrbreg16(handle, ENC_ETXNDL, txend);
 
     ENCTX3DEBUG("Tx End=0x%04x ", txend);
 
@@ -1203,9 +1227,7 @@ static bool ENC_Transmit(ENC_HandleTypeDef *handle, uint16_t transmitLength)
         #endif
 
         work = PKTMEM_TX_START + transmitLength + 1;
-
-        enc_wrbreg(handle, ENC_ERDPTL, work & 0xff);
-        enc_wrbreg(handle, ENC_ERDPTH, work >> 8);
+        enc_wrbreg16(handle, ENC_ERDPTL, work );
 
         #if DEBUG_ENCTX > 1
             /* Sanity check: Is ERDPT now a t beginning of TSV ? */
@@ -1352,8 +1374,7 @@ static int32_t ENC_ReceiveStart(ENC_HandleTypeDef *handle)
 
     /* Set the read pointer to the start of the received packet (ERDPT) */
 
-    enc_wrbreg(handle, ENC_ERDPTL, (handle->nextpkt) & 0xff);
-    enc_wrbreg(handle, ENC_ERDPTH, (handle->nextpkt) >> 8);
+    enc_wrbreg16(handle, ENC_ERDPTL, handle->nextpkt);
 
     /* Read the next packet pointer and the 4 byte read status vector (RSV)
     * at the beginning of the received packet. (ERDPT should auto-increment
@@ -1437,8 +1458,7 @@ static void ENC_ReceiveFinish(ENC_HandleTypeDef *handle)
     } else {
         work--;
     }
-    enc_wrbreg(handle, ENC_ERXRDPTL, work && 0xff);
-    enc_wrbreg(handle, ENC_ERXRDPTH, work >> 8);
+    enc_wrbreg16(handle, ENC_ERXRDPTL, work );
 
     /* Decrement the packet counter indicate we are done with this packet */
 

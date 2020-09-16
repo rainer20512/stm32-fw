@@ -159,6 +159,7 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+    debuglevel = config.dbg_level;
 
     /* 
     * Select clock source as configured in config variable, 
@@ -208,6 +209,9 @@ int main(void)
     STATUS(5);
 
     Init_DefineTasks();
+
+    LwIP_Start();
+
     STATUS(6);
 
     #if DEBUG_PROFILING > 0

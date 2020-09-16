@@ -963,10 +963,12 @@ static void TmrExpired(uint32_t tickstart)
   ********************************************************************************/
 static bool System_Menu ( char *cmdline, size_t len, const void * arg )
 {
+  #define MAX_SPI 40  
   char *word;
   size_t wordlen;
   uint32_t num;
   UNUSED(cmdline);UNUSED(len);
+  uint8_t spi_in[MAX_SPI],spi_out[MAX_SPI];
 
   switch((uint32_t)arg) {
     case 0:
@@ -988,6 +990,26 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
             DEBUG_PRINTF("Waiting %d seconds...\n", num);
         }
         break;
+#if USE_ETH > 0 && USE_ETH_PHY_ENC28J60 > 0
+    case 3:
+        ethernetif_statistic();
+        break;
+    case 4:
+        DEBUG_PUTS("Reset Ethernet IF hardware");
+        ethernetif_restart();
+        break;
+    case 5:
+        if ( CMD_argc() > 1 ) {
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            if ( num > MAX_SPI ) num = MAX_SPI;
+        } else {
+            num = 2;
+        }
+        num = ENC_Test();
+        DEBUG_PRINTF("PHSTAT2=%02x\n", num);
+        break;
+#endif
 
     /* sample entry
     case 1:
@@ -1043,6 +1065,12 @@ static const CommandSetT cmdTest[] = {
 #if USE_EEPROM_EMUL > 0
   { "Write config ",   ctype_fn, .exec.fn = Test_Menu,      VOID(3), "Write config[31] x times"}, 
 #endif
+#if defined(USE_ETH)
+  { "ETH IF statistic",ctype_fn, .exec.fn = System_Menu,    VOID(3), "Show ETH Interface stats"},   
+  { "ETH IF reset",    ctype_fn, .exec.fn = System_Menu,    VOID(4), "Reset ETH Interface"},   
+  { "ETH SPI Test",    ctype_fn, .exec.fn = System_Menu,    VOID(5), "Test SPI Interface to ETH"},   
+#endif
+
 };
 ADD_SUBMODULE(Test);
 

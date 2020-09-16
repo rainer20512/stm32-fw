@@ -43,6 +43,63 @@
 #define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_HSI
 //#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_LSE
 
+/* Clock source for LPUART1 */
+/* Choose one */
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK3
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL2Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL3Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_CSI
+#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_LSE
+
+#define SPI_SETTER(a,b)             a
+#define SPI_GETTER(a,b)             b
+
+/* Clock sources for SPI1, SPI2, SPI3 */
+/* Choose one SET/GET pair */
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL     
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL2
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PLL3
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+//#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_PIN
+//#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+#define SPI123_CLKSOURCE_SET         RCC_SPI123CLKSOURCE_CLKP
+#define SPI123_CLKSOURCE_GET         HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_SPI123)
+
+/* Clock sources for SPI4, SPI5 */
+/* Choose one SET/GET pair */
+//#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_D2PCLK1
+//#define SPI45_CLKSOURCE_GET         HAL_RCC_GetPCLK2Freq()
+//#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_PLL2
+//#define SPI45_CLKSOURCE_GET         RHB ToDo
+//#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_PLL3
+//#define SPI45_CLKSOURCE_GET         RHB ToDo
+#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_HSI
+#define SPI45_CLKSOURCE_GET         HSI_VALUE
+//#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_CSI
+//#define SPI45_CLKSOURCE_GET       CSI_VALUE
+//#define SPI45_CLKSOURCE_SET         RCC_SPI45CLKSOURCE_HSE
+//#define SPI45_CLKSOURCE_GET       HSE_VALUE
+
+/* Clock sources for SPI6 */
+/* Choose one SET/GET pair */
+//#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_D3PCLK1
+//#define SPI6_CLKSOURCE_GET         HAL_RCCEx_GetD3PCLK1Freq()
+//#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_PLL2
+//#define SPI6_CLKSOURCE_GET         RHB ToDo
+//#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_PLL3
+//#define SPI6_CLKSOURCE_GET         RHB ToDo
+#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_HSI
+#define SPI6_CLKSOURCE_GET         HSI_VALUE
+//#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_CSI
+//#define SPI6_CLKSOURCE_GET         CSI_VALUE
+//#define SPI6_CLKSOURCE_SET         RCC_SPI6CLKSOURCE_HSE
+//#define SPI6_CLKSOURCE_GET         HSE_VALUE
+
+
+
 /*******************************************************************************
  * Maximum config below 
  * choose suitable configs for your platform
@@ -86,16 +143,6 @@
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM9_USE_TX_DMA
 //#define COM9_USE_RX_DMA
-/* Choose one */
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK3
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL2Q
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL3Q
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_CSI
-#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_LSE
-
-
-
 
 //#define USE_SPI1
   /**
@@ -319,48 +366,52 @@
     //#define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     #define COM2_USE_RX_DMA
-    #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
     //#define USE_USART2_DEBUG
     
     #define USE_USART6
     #define COM6_USE_TX_DMA
     //#define COM6_USE_RX_DMA
-    #define USART6_CLKSOURCE         RCC_USART6CLKSOURCE_HSI
     #define USE_USART6_DEBUG
  
     // #define USE_UART4
     #define COM4_USE_TX_DMA
     #define COM4_USE_RX_DMA
-    #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
+
     // #define USE_UART5  
     #define COM5_USE_TX_DMA
     #define COM5_USE_RX_DMA
-    #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
     //#define USE_LPUART1
     #define COM9_USE_TX_DMA
     //#define COM9_USE_RX_DMA
-    #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
     //#define USE_LPUART1_DEBUG
-    //#define USE_SPI1
+
+   //#define USE_SPI1
     // #define SPIDEV1_USE_IRQ
-    #define USE_SPIDEV1_ALTN2
-    #define SPIDEV1_USE_IRQ
-    #define USE_SPI1_BAUDRATE        400000
-    #define USE_SPI1_MASTER
+   #define USE_SPI1_ALTN2
+   #define SPIDEV1_USE_IRQ
+   #define SPI1_BAUDRATE             400000
+   #define USE_SPI1_MASTER
+    
     // #define USE_SPI2
     #define SPIDEV2_USE_IRQ
     #define SPIDEV2_USE_DMA
-    #define USE_SPIDEV2_ALTN1
-    #define USE_SPI2_BAUDRATE        400000
+    #define USE_SPI2_ALTN1
+    #define SPI2_BAUDRATE            400000
     #define USE_SPI2_MASTER
-    // #define USE_SPI3
-    #define SPIDEV3_USE_IRQ
-    #define SPIDEV3_USE_DMA
-    #define USE_SPIDEV3_ALTN1
-    #define USE_SPI3_BAUDRATE        400000
+
+    #define USE_SPI3
+    #define USE_SPI3_ALTN3
+    // #define SPI3_USE_IRQ
+    #define SPI3_USE_MISO
+    #define SPI3_BAUDRATE            6000000
     #define USE_SPI3_MASTER
+    #define SPI3_USE_INP             /* Interrupt pin of enc28j60 */
+    #define SPI3_USE_RST             /* Hardware Rest Pin of enc28j60 */
+    #define SPI3_USE_INP_IRQ
+    #define SPI3_INP_IRQ_MODE        GPIO_MODE_IT_FALLING
+
 
     // #define USE_I2C1
 

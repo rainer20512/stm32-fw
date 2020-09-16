@@ -75,6 +75,15 @@ typedef enum SPI_PinEnum {
     extern SpiHandleT           SPI2Handle;
 #endif
 #if defined(SPI3) && defined(USE_SPI3)
+    #define SPIDEV3_DEV         HW_SPI3
+    #define SPIDEV3_NAME        "SPI3"
+    #define SPIDEV3_HARDWARE    SPI3
+    #define SPIDEV3_TYPE        HW_DEVICE_HWSPI
+
+    extern const HW_DeviceType  SPIDEV3_DEV;
+    extern SpiHandleT           SPI3Handle;
+#endif
+#if defined(SPI3) && defined(USE_SPI3)
     extern SpiHandleT SPI3Handle;
 #endif
 

@@ -51,6 +51,16 @@
     #include "system/profiling.h"
 #endif
 
+/*
+ *************************************************************************************
+ * All the stuff for clock change notification callback management
+ * ( aside of callbacks in devices ) 
+ **** C0001 ****
+ ************************************************************************************/
+#define MAX_CLKCHG_CB                4
+static ClockChangeCB clkCB[MAX_CLKCHG_CB];/* Array of registered clk chng callbacks */
+static int32_t numClkchangeCB = 0;      /* Number of "    "    "      "      "      */
+static void ClockNotifyCallbacks(uint32_t);  /* forward declaration                 */
 
 /*
  *************************************************************************************
@@ -742,6 +752,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
         #endif
     }
 
+    /* Notify all registered callbacks **** C001 **** */
+    ClockNotifyCallbacks(HAL_RCC_GetSysClockFreq());
+
     #if DEBUG_MODE > 0
         DEBUG_PRINTF("SYSCLK nom. %d\n", HAL_RCC_GetSysClockFreq());
         uint32_t sysclk = Get_SysClockFrequency();
@@ -814,6 +827,40 @@ void HSIClockConfig(bool bHSIon)
       Error_Handler(__FILE__, __LINE__);
   
 }
+
+/******************************************************************************
+ * the following two functions are added due to **** C001 ****
+ *****************************************************************************/
+/******************************************************************************
+ * @brief Register a clock change callback
+ * @param changeCB callback function to be notified on clock changes
+ * @returns 0  on success
+ *          -1 ERR_: no more room to register callback
+ *          -2 error: callback must no be NULL
+ * @note Once registered a function, it can never be unregistered again
+ *****************************************************************************/
+int32_t ClockRegisterForClockChange ( ClockChangeCB changeCB )
+{
+    /* Space left in array ? */
+    if ( numClkchangeCB >= MAX_CLKCHG_CB - 1 ) return -1;
+
+    /* CB must not be NULL */
+    if ( changeCB == 0 ) return -2;
+
+    clkCB[numClkchangeCB++] = changeCB;
+    return 0;
+}
+
+/******************************************************************************
+ * @brief Notify all registered callbacks on Clock change
+ * @param newclk  new clock frequncy in Hz
+ *****************************************************************************/
+void   ClockNotifyCallbacks(uint32_t newclk)
+{
+    for ( int32_t i = 0; i < numClkchangeCB; i++ ) 
+        clkCB[i](newclk);
+}
+
 
 
 /******************************************************************************

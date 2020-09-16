@@ -88,8 +88,8 @@ void HtmlHomePage       ( struct netconn *conn, void *arg);
 void HtmlTaskList       ( struct netconn *conn, void *arg); 
 void HtmlSettingsCM7    ( struct netconn *conn, void *arg); 
 void HtmlSetCM7         ( struct netconn *conn, void *arg); 
-void HtmlSettingsCM4    ( struct netconn *conn, void *arg); 
-void HtmlSetCM4         ( struct netconn *conn, void *arg); 
+void HtmlSettingsLocal  ( struct netconn *conn, void *arg); 
+void HtmlSetLocal       ( struct netconn *conn, void *arg); 
 void HtmlShowEthIf      ( struct netconn *conn, void *arg);
 
 /**********************************************************************************************************************************
@@ -98,10 +98,14 @@ void HtmlShowEthIf      ( struct netconn *conn, void *arg);
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
     { "STM32H745 WebServer", "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
-    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList,    .SetterCB = NULL },
-    { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7, .SetterCB = HtmlSetCM7 },
-    { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM4, .SetterCB = HtmlSetCM4 },
-    { "ETH IF Statistic",    "ETH Interface","/eth_if.html",         0, NULL,              PDdynamic, .DetailCB = HtmlShowEthIf,   .SetterCB = NULL },
+    { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList,      .SetterCB = NULL },
+#if defined(DUAL_CORE)
+    { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7,   .SetterCB = HtmlSetCM7 },
+    { "Settings CM4",        "Settings CM4", "/settings_cm4.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsLocal, .SetterCB = HtmlSetLocal },
+#else
+    { "Settings",            "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsLocal, .SetterCB = HtmlSetLocal },
+#endif
+    { "ETH IF Statistic",    "ETH Interface","/eth_if.html",         0, NULL,              PDdynamic, .DetailCB = HtmlShowEthIf,     .SetterCB = NULL },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -302,21 +306,7 @@ static int32_t IsStaticFile ( const char *item )
 static void HandleGet ( struct netconn *conn, char *buf, HttpGetParamT *p )
 {
     DEBUG_PRINTF("HandleGet:%s:\n", buf);
-
-#if 0 
-    if ( CHECK("/tasks.html") ) {
-       /* Load dynamic page */
-       HtmlPage(conn, 1);
-       // DynWebPage(conn);
-       return;
-    }
-    else if ( CHECK("/settings_cm7.html") ) {
-       /* Load dynamic page */
-       HtmlPage(conn, 2);
-       // DynWebPage(conn);
-       return;
-    }
-#endif    
+ 
     /* If requested file is one of the dynamically created ones, then create it */
     for ( uint32_t i = 0; i < sizeof(WebPages)/sizeof(OnePageT); i++ ) {
         if ( CHECK(WebPages[i].HTMLPageName) ) {
@@ -560,7 +550,6 @@ void HtmlTaskList(struct netconn *conn, void *arg)
 
     portCHAR line[MAXLEN];
     int32_t i;
-    char *ret;
 
     const char prefix[] = "<br>";
 
@@ -575,13 +564,15 @@ void HtmlTaskList(struct netconn *conn, void *arg)
     }
 
     /* remote tasks */
-    MSGD_GetTasklistLine(true, prefix);
-    ret = MSGD_WaitForTasklistLine();
-    while ( ret ) {
-        netconn_write(conn, ret, strlen(ret), NETCONN_COPY);
-        MSGD_GetTasklistLine(false, prefix);
-        ret = MSGD_WaitForTasklistLine();
-    }
+    #if defined(DUAL_CORE)
+        MSGD_GetTasklistLine(true, prefix);
+        char *ret = MSGD_WaitForTasklistLine();
+        while ( ret ) {
+            netconn_write(conn, ret, strlen(ret), NETCONN_COPY);
+            MSGD_GetTasklistLine(false, prefix);
+            ret = MSGD_WaitForTasklistLine();
+        }
+    #endif
 }
 
 #define ONLY_CHNG_JS    "/js/only_chgd.js"
@@ -661,8 +652,12 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
     netconn_write(conn, line, strlen(line), NETCONN_COPY);
 }
 
-const char cm7_header[]     ="<p><b>Core CM7 Settings</b></p>";
-const char cm4_header[]     ="<p><b>Core CM4 Settings</b></p>";
+#if defined(DUAL_CORE)
+    const char cm7_header[]     ="<p><b>Core CM7 Settings</b></p>";
+    const char local_header[]   ="<p><b>Core CM4 Settings</b></p>";
+#else
+    const char local_header[]   ="<p><b>Core CM7 Settings</b></p>";
+#endif
 const char ethif_header[]   ="<p><b>Eth interface statistic</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
@@ -701,7 +696,7 @@ void HtmlOneSetting(struct netconn *conn, MSgSettingItemT *setting )
 void HtmlSettingsTEST    ( struct netconn *conn, void *arg) 
 {
     UNUSED(arg);
-    netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
+    netconn_write(conn, local_header, strlen(local_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
     HtmlStaticFile(conn, ONLY_CHNG_JS );
     HtmlOneTextSetting(conn, "Vorname", "vn", "Rainer");    
@@ -711,27 +706,6 @@ void HtmlSettingsTEST    ( struct netconn *conn, void *arg)
     HtmlOneHexSetting(conn,"Hexval2", "dx", 0xab, 2, 0,0xff);   
     HtmlOneHexSetting(conn,"Hexval4", "dy", 0xabcd, 4, 0,0xffff);   
     HtmlOneHexSetting(conn,"Hexval8", "dz", 0xdeadbeef, 8, 0,0xffffffff);   
-    netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
-}
-
-void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
-{
-    MSgSettingItemT *ret;
-
-    UNUSED(arg);
-    
-    /* remote settings */
-    netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
-    netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
-    HtmlStaticFile(conn, ONLY_CHNG_JS );
-
-    MSGD_GetSettingsLine(true);
-    ret = MSGD_WaitForGetSettingsLine();
-    while ( ret->bIsValid ) {
-        HtmlOneSetting( conn, ret );
-        MSGD_GetSettingsLine(false);
-        ret = MSGD_WaitForGetSettingsLine();
-    }
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
 
@@ -797,35 +771,58 @@ int32_t GetTagValue ( char *valstr, uint8_t type, uint32_t *ret )
     return 0;
 }
 
-void HtmlSetCM7         ( struct netconn *conn, void *arg)
-{
-    HttpGetParamT *p = (HttpGetParamT *)arg;
-    int32_t idx;
-    uint32_t val;
-    uint32_t num_settings;
-    MSgSettingItemT *ret;
+#if defined(DUAL_CORE)
+    void HtmlSettingsCM7    ( struct netconn *conn, void *arg) 
+    {
+        MSgSettingItemT *ret;
 
-    UNUSED(conn);
+        UNUSED(arg);
+    
+        /* remote settings */
+        netconn_write(conn, cm7_header, strlen(cm7_header), NETCONN_NOCOPY );
+        netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
+        HtmlStaticFile(conn, ONLY_CHNG_JS );
 
-    /* Read first element of CM7 settings to get the number of setting items */
-    MSGD_GetSettingsLine(true);
-    ret = MSGD_WaitForGetSettingsLine();
-    num_settings = ret->max_idx;
-
-    /* Iterate thru all PV-pairs */
-    for ( uint32_t i = 0; i < p->num_params; i++ ) {
-        idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
-        if ( (uint32_t)idx > num_settings ) {
-            DEBUG_PRINTF("SetCM7: Index %d out of bounds\n", idx  );
-            continue;
+        MSGD_GetSettingsLine(true);
+        ret = MSGD_WaitForGetSettingsLine();
+        while ( ret->bIsValid ) {
+            HtmlOneSetting( conn, ret );
+            MSGD_GetSettingsLine(false);
+            ret = MSGD_WaitForGetSettingsLine();
         }
-        if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
-            MSGD_SetSettingsLine((uint8_t) idx, (uint8_t) val);
-            if ( !MSGD_WaitForSetSettingsLine() )
-                DEBUG_PRINTF("SetCM7: Failede to set config[%d] to %d\n", idx,val  );
-        }            
+        netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
     }
-}
+
+    void HtmlSetCM7         ( struct netconn *conn, void *arg)
+    {
+        HttpGetParamT *p = (HttpGetParamT *)arg;
+        int32_t idx;
+        uint32_t val;
+        uint32_t num_settings;
+        MSgSettingItemT *ret;
+
+        UNUSED(conn);
+
+        /* Read first element of CM7 settings to get the number of setting items */
+        MSGD_GetSettingsLine(true);
+        ret = MSGD_WaitForGetSettingsLine();
+        num_settings = ret->max_idx;
+
+        /* Iterate thru all PV-pairs */
+        for ( uint32_t i = 0; i < p->num_params; i++ ) {
+            idx = GetTagIndex(p->paramstr+p->pv[i].p_ofs);
+            if ( (uint32_t)idx > num_settings ) {
+                DEBUG_PRINTF("SetCM7: Index %d out of bounds\n", idx  );
+                continue;
+            }
+            if ( idx >= 0 && GetTagValue(p->paramstr+p->pv[i].v_ofs, eelimits[idx].type, &val) >= 0 ) {
+                MSGD_SetSettingsLine((uint8_t) idx, (uint8_t) val);
+                if ( !MSGD_WaitForSetSettingsLine() )
+                    DEBUG_PRINTF("SetCM7: Failede to set config[%d] to %d\n", idx,val  );
+            }            
+        }
+    }
+#endif
 
 static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
 {
@@ -838,13 +835,13 @@ static void GetLocalSettings(uint32_t idx, MSgSettingItemT *ret)
     ret->val        = Config_GetVal(idx);
 }
 
-void HtmlSettingsCM4    ( struct netconn *conn, void *arg) 
+void HtmlSettingsLocal    ( struct netconn *conn, void *arg) 
 {
     MSgSettingItemT ret;
     UNUSED(arg);
 
     /* remote settings */
-    netconn_write(conn, cm4_header, strlen(cm4_header), NETCONN_NOCOPY );
+    netconn_write(conn, local_header, strlen(local_header), NETCONN_NOCOPY );
     netconn_write(conn, form_prefix, strlen(form_prefix), NETCONN_NOCOPY );
     HtmlStaticFile(conn, ONLY_CHNG_JS );
     
@@ -856,7 +853,7 @@ void HtmlSettingsCM4    ( struct netconn *conn, void *arg)
     netconn_write(conn, form_postfix, strlen(form_postfix), NETCONN_NOCOPY );
 }
 
-void HtmlSetCM4         ( struct netconn *conn, void *arg)
+void HtmlSetLocal         ( struct netconn *conn, void *arg)
 {
     HttpGetParamT *p = (HttpGetParamT *)arg;
     int32_t idx;

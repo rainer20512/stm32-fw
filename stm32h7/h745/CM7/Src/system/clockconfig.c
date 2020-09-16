@@ -26,12 +26,13 @@
 /*
  *************************************************************************************
  * All the stuff for clock change notification callback management
- * ( aside of callbacks in devices )
+ * ( aside of callbacks in devices ) 
+ **** C0001 ****
  ************************************************************************************/
 #define MAX_CLKCHG_CB                4
 static ClockChangeCB clkCB[MAX_CLKCHG_CB];/* Array of registered clk chng callbacks */
 static int32_t numClkchangeCB = 0;      /* Number of "    "    "      "      "      */
-void   ClockNotifyCallbacks(uint32_t);  /* forward declaration                      */
+static void   ClockNotifyCallbacks(uint32_t);  /* forward declaration               */
 
 /*
  *************************************************************************************
@@ -716,7 +717,7 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
             DEBUG_PUTS("Error: Clk change event to CM4 core timed out");
     }
 
-    /* Notify all registered callbacks */
+    /* Notify all registered callbacks **** C001 **** */
     ClockNotifyCallbacks(HAL_RCC_GetSysClockFreq());
 
     #if DEBUG_MODE > 0
@@ -792,7 +793,9 @@ void HSIClockConfig(bool bHSIon)
   
 }
 
-
+/******************************************************************************
+ * the following two functions are added due to **** C001 ****
+ *****************************************************************************/
 /******************************************************************************
  * @brief Register a clock change callback
  * @param changeCB callback function to be notified on clock changes
@@ -817,7 +820,7 @@ int32_t ClockRegisterForClockChange ( ClockChangeCB changeCB )
  * @brief Notify all registered callbacks on Clock change
  * @param newclk  new clock frequncy in Hz
  *****************************************************************************/
-void   ClockNotifyCallbacks(uint32_t newclk)
+static void   ClockNotifyCallbacks(uint32_t newclk)
 {
     for ( int32_t i = 0; i < numClkchangeCB; i++ ) 
         clkCB[i](newclk);

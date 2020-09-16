@@ -20,7 +20,7 @@
 
 #include "config/config.h"
 
-#if USE_ETY_PHY_LAN8742 >= 0 
+#if USE_ETY_PHY_LAN8742 > 0 
 
 
 /* Includes ------------------------------------------------------------------*/

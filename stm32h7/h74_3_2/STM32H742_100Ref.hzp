@@ -156,6 +156,7 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sram.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_nor.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">
@@ -177,6 +178,89 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+      </folder>
+      <folder Name="LwIP">
+        <folder Name="Api">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/api_lib.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/api_msg.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/err.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netbuf.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netdb.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netifapi.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/sockets.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/tcpip.c" />
+        </folder>
+        <folder Name="apps">
+          <folder Name="httpd">
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/apps/httpd/fs.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/apps/httpd/httpd.c" />
+          </folder>
+        </folder>
+        <folder Name="Core">
+          <folder Name="IPv4">
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/autoip.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/dhcp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/etharp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/icmp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/igmp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_frag.c" />
+          </folder>
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/def.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/dns.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/inet_chksum.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/init.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ip.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/mem.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/memp.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/netif.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/pbuf.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/raw.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/stats.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/sys.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp_in.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp_out.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/timeouts.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/udp.c" />
+        </folder>
+        <folder Name="Netif">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/netif/ethernet.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system/OS/sys_arch.c" />
+        </folder>
+        <configuration
+          Name="Common"
+          c_user_include_directories="../common_h7/lwip;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system" />
+        <folder Name="config">
+          <file file_name="../common_h7/lwip/ethernetif.h" />
+          <file file_name="../common_h7/lwip/lwipopts.h" />
+          <file file_name="../common_h7/lwip/ip_addr.h" />
+        </folder>
+        <folder Name="ProjectSrc">
+          <file file_name="../common_h7/lwip/app_ethernet.c" />
+          <file file_name="../common_h7/lwip/httpserver_netconn.c" />
+          <file file_name="../common_h7/lwip/lwip_start.c" />
+          <file file_name="../common_h7/lwip/heap_mem.c" />
+          <folder Name="lan8742">
+            <file file_name="../common_h7/lwip/lan8742/lan8742.c" />
+            <file file_name="../common_h7/lwip/lan8742/lan8742.h" />
+            <file file_name="../common_h7/lwip/lan8742/ethernetif_lan8742.c" />
+          </folder>
+          <folder Name="enc28j60">
+            <file file_name="../common_h7/lwip/enc28j60/File1.c">
+              <configuration
+                Name="THUMB Debug"
+                build_exclude_from_build="Yes" />
+              <configuration
+                Name="THUMB Release"
+                build_exclude_from_build="Yes" />
+            </file>
+            <file file_name="../common_h7/lwip/enc28j60/enc28j60.c" />
+            <file file_name="../common_h7/lwip/enc28j60/enc28j60.h" />
+            <file file_name="../common_h7/lwip/enc28j60/ethernetif_enc28j60.c" />
+          </folder>
+        </folder>
       </folder>
     </folder>
     <folder Name="common_h7">

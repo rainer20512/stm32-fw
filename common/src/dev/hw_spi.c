@@ -42,7 +42,7 @@
  * Additional data that will be stored to SPI type hardware devices
  ******************************************************************************************/
   
-#define SPIx_TIMEOUT_MAX                   3000
+#define SPIx_TIMEOUT_MAX                   1000
 
 typedef enum SpiDmaDirectionEnum {
   SPI_DMA_RX=0,                       // Rx DMA

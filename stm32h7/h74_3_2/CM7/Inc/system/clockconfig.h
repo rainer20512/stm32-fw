@@ -95,6 +95,17 @@ enum {
 } ;
 void SetPeripheralClkSource( uint32_t src );
 
+/* 
+ * Registration for notification on clock changes
+ * ( In addition to devices, which have their own notification mechanism )
+ * Registration must specify a callback fn of type "ClockChangeCB"
+ **** C001 ****
+ */
+
+typedef void ( *ClockChangeCB ) ( uint32_t  );
+int32_t ClockRegisterForClockChange ( ClockChangeCB );
+
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

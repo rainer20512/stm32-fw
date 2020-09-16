@@ -53,10 +53,16 @@ STM32H742_100_ref\ THUMB\ Debug/stm32h7xx_it.o: \
  ../common_h7/inc/config/spi_config.h \
  ../common_h7/inc/config/i2c_config.h \
  ../common_h7/inc/config/adc_config.h \
- ../common_h7/inc/config/qspi_config.h ../../common/inc/dev/timer_dev.h \
+ ../common_h7/inc/config/qspi_config.h ../../common/inc/dev/spi.h \
+ ../../common/inc/dev/spi_dev.h \
  E:/Programme/CrossWorks\ for\ ARM\ 4.7/include/string.h \
- ../../common/inc/dev/hw_device.h ../common_h7/inc/config/timer_config.h \
- ../../common/inc/circbuf.h ../../common/inc/rtc.h \
+ ../../common/inc/dev/hw_device.h ../../common/inc/dev/devices.h \
+ ../../common/inc/dev/hw_device.h ../../common/inc/dev/uart_dev.h \
+ ../../common/inc/circbuf.h ../../common/inc/dev/i2c_dev.h \
+ ../../common/inc/dev/io_dev.h ../../common/inc/system/exti_handler.h \
+ ../../common/inc/dev/timer_dev.h ../common_h7/inc/config/timer_config.h \
+ ../../common/inc/dev/adc_dev.h ../../common/inc/dev/qspi_dev.h \
+ ../../common/inc/dev/fmc_dev.h ../../common/inc/rtc.h \
  ../common_h7/inc/task/minitask.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
  CM7/Inc/FreeRTOSConfig.h \
@@ -68,12 +74,8 @@ STM32H742_100_ref\ THUMB\ Debug/stm32h7xx_it.o: \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
  E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
  ../../common/inc/timer.h ../../common/inc/debug_helper.h \
- ../../common/inc/dev/uart_dev.h ../../common/inc/dev/hw_device.h \
+ ../../common/inc/dev/uart_dev.h \
  E:/Programme/CrossWorks\ for\ ARM\ 4.7/include/debugio.h \
  CM7/Inc/system/profiling.h \
  E:/Programme/CrossWorks\ for\ ARM\ 4.7/include/stdio.h \
- ../../common/inc/dev/devices.h ../../common/inc/dev/uart_dev.h \
- ../../common/inc/dev/i2c_dev.h ../../common/inc/dev/devices.h \
- ../../common/inc/dev/io_dev.h ../../common/inc/system/exti_handler.h \
- ../../common/inc/dev/spi_dev.h ../../common/inc/dev/adc_dev.h \
- ../../common/inc/dev/qspi_dev.h ../../common/inc/dev/fmc_dev.h
+ ../../common/inc/dev/devices.h

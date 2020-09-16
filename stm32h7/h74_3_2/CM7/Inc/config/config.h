@@ -51,6 +51,20 @@
 #define USE_USB                     0   
 #define USE_FMC_SRAM                1
 #define USE_FMC_NOR                 0
+#define USE_ETH                     1
+
+/* Choose one in case of USE_ETH == 1 
+ * 
+ * Note: As the enc28j60 does not support Checksum calculation for IP packets, lwip must compute these checksums manually when ENC28J60 is selected 
+ * so, when USE_ETH_PHY_ENC28J60 = 1, in lwipopts.h the following #define's MUST be set to 1
+ *  #define CHECKSUM_GEN_IP                 1
+ *  #define CHECKSUM_GEN_UDP                1
+ *  #define CHECKSUM_GEN_TCP                1 
+ * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
+ */
+#define USE_ETY_PHY_LAN8742         0
+#define USE_ETH_PHY_ENC28J60        1
+
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate

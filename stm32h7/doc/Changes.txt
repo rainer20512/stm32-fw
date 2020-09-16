@@ -1,0 +1,9 @@
+This file contains changes, that have been inserted into project sources        RHB 15.09.2020
+( in difference to NumeratedChanges.txt, which documents the changes that have
+  been applied to CubeFW sources)
+Within the sources, the changes are marked as **** C<num> ****
+<num> is always three digits long
+----------------------------------------------------------------------------------------------
+
+C001 Clockconfig.c has been enhanced with a register/callback mechanism on clock changes
+     ( in addition to devices, which are always notified on clock changes )

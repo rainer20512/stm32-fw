@@ -36,13 +36,15 @@
   // LEDs  
   #define IO_00                             { GPIO_PIN_12, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }
   #define IO_01                             { GPIO_PIN_5 , GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed ye" }
-  #define USERLEDNUM                        2
-  #define USERLEDS                          { 0, 1,} 
+  #define IO_02                             { GPIO_PIN_1 , GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed rd" }
+  #define IO_03                             { GPIO_PIN_0 , GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed bl" }
+  #define USERLEDNUM                        4
+  #define USERLEDS                          { 0, 1, 2, 3} 
 
   // Blue pushbutton
-  #define IO_03_IRQ                         { BUTTON_IRQ_PRIO, 0 }
-  #define IO_03                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_03_IRQ, "Blue PushBtn" }
-  #define IO_NUM                            3
+  #define IO_05_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_05                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_05_IRQ, "Blue PushBtn" }
+  #define IO_NUM                            5
 /* Example entry for additional IO-Pins
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
 */

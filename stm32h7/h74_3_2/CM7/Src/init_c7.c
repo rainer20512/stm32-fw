@@ -68,6 +68,14 @@ void Init_OtherDevices(void)
       }
 
   #endif
+  #if defined(USE_SPI3)
+      dev_idx = AddDevice(&HW_SPI3, NULL, NULL );
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init SPI3-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+  #endif
   #if USE_QENCODER > 0
       /* Do this before Display Init */  
       dev_idx = AddDevice(&QENC_DEV, NULL , NULL);

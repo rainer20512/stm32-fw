@@ -21,7 +21,7 @@
 
 #if USE_ETH_PHY_ENC28J60 == 1 
 
-#define DEBUG_IF            5
+#define DEBUG_IF            0
 
 /* Includes ------------------------------------------------------------------*/
 #include "enc28j60.h"
@@ -379,6 +379,14 @@ void ethernet_link_thread( void const * argument )
     osDelay(200);
   } // for
 }
+
+uint8_t ENC_Test(void)
+{
+    /* Get Linkstate */
+    int32_t PHYLinkState = ENC_GetLinkState(&enc28j60);
+    return enc28j60.LinkStatus;
+}
+
 
 
 static FmtItemT statItems[] = {

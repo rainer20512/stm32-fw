@@ -115,6 +115,13 @@
         #define SPI3_MISO                        { GPIO_PIN_11, GPIOC, GPIO_AF5_SPI3, GPIO_PULLUP, "Spi3_Miso" }
         #define SPI3_MISO_IRQ                    { EXTI15_10_IRQn, SPI_IRQ_PRIO, 0 }
         #define SPI3_MOSI                        { GPIO_PIN_12, GPIOC, GPIO_AF5_SPI3, GPIO_NOPULL, "Spi3_Mosi" } 
+    #elif defined(USE_SPI3_ALTN3)
+        /* NSS: PA15/AF6, SCK: PC10/AF6, MSIO: PC11/AF6, MOSI:  PC12/AF6 */
+        #define SPIDEV1_NSS                      { GPIO_PIN_15, GPIOA, GPIO_AF6_SPI3, GPIO_PULLUP, "Spi3_nSS" }
+        #define SPI3_SCK                         { GPIO_PIN_3,  GPIOB, GPIO_AF6_SPI3, GPIO_NOPULL, "Spi3_Sck" }
+        #define SPI3_MISO                        { GPIO_PIN_11, GPIOC, GPIO_AF6_SPI3, GPIO_PULLUP, "Spi3_Miso" }
+        #define SPI3_MISO_IRQ                    { EXTI15_10_IRQn, SPI_IRQ_PRIO, 0 }
+        #define SPI3_MOSI                        { GPIO_PIN_6,  GPIOD, GPIO_AF5_SPI3, GPIO_NOPULL, "Spi3_Mosi" } 
     #else
         #error("No config for SPI3 found");
     #endif 
@@ -177,6 +184,28 @@
   #endif
 #endif // if defined(USE_SPI2) && defined (SPI2)
 #if defined(USE_SPI3) && defined (SPI3)
+  #ifndef SPI3_USE_NSS
+      /* Must define either NSS or NSEL pin, NSS goes first */
+      #define SPI3_NSEL                     { GPIO_PIN_15,  GPIOA, 0, GPIO_PULLUP, "Spi3_nSel" }
+  #endif
+  #ifdef SPI3_USE_DNC 
+    #define SPI3_DNC                        { GPIO_PIN_5 , GPIOC, 0, GPIO_NOPULL, "Spi3_DnC" }
+  #endif  
+  #ifdef SPI3_USE_RST 
+    #define SPI3_RST                        { GPIO_PIN_3 , GPIOD, 0, GPIO_NOPULL, "Spi3_Rst" }
+  #endif  
+  #ifdef SPI3_USE_BUSY 
+    #define SPI3_BUSY                       { GPIO_PIN_8 , GPIOC, 0, GPIO_NOPULL, "Spi3_BusyIn" }
+    #ifdef SPI3_USE_BUSY_IRQ
+      #define SPI3_BUSY_IRQ                 { EXTI9_5_IRQn, SPI_IRQ_PRIO, 0 }
+    #endif
+  #endif
+  #ifdef SPI3_USE_INP 
+    #define SPI3_INP                        { GPIO_PIN_2 , GPIOD, 0, GPIO_PULLUP, "Spi3_EncInt" }
+    #ifdef SPI3_USE_INP_IRQ
+      #define SPI3_INP_IRQ                  { EXTI2_IRQn, SPI_IRQ_PRIO, 0 }
+    #endif
+  #endif
 #endif // if defined(USE_SPI3) && defined (SPI3)
 
 

@@ -17,16 +17,26 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
+#include "config/config.h"
 #include "lwip/opt.h"
 #include "main.h"
+
 #if LWIP_DHCP
     #include "lwip/dhcp.h"
     #include "ip_addr.h"
 #endif
+
 #include "app_ethernet.h"
 #include "ethernetif.h"
+
 #ifdef USE_LCD
-#include "lcd_trace.h"
+    #include "lcd_trace.h"
+#endif
+
+#if defined(STM32H742REF)
+        #include "dev/io_dev.h"
+        #define BSP_LED_On(a)       IO_UserLedOn(2)
+        #define BSP_LED_Off(a)      IO_UserLedOff(2)
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,7 +68,6 @@ void ethernet_link_status_updated(struct netif *netif)
     LCD_UsrTrace ("Static IP address: %s\n", iptxt);
 #else
     BSP_LED_On(LED1);
-    BSP_LED_Off(LED2);
 #endif /* LWIP_DHCP */
   }
   else
@@ -70,7 +79,6 @@ void ethernet_link_status_updated(struct netif *netif)
     LCD_UsrTrace ("The network cable is not connected \n");
 #else
     BSP_LED_Off(LED1);
-    BSP_LED_On(LED2);
 #endif /* LWIP_DHCP */
   }
 }

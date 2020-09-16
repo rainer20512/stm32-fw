@@ -68,7 +68,7 @@ void vCore1SignalControlBufToSend( void * xUpdatedMessageBuffer );
 #define configUSE_MALLOC_FAILED_HOOK            0
 #define configUSE_APPLICATION_TASK_TAG          0
 #define configUSE_COUNTING_SEMAPHORES           1
-#define configGENERATE_RUN_TIME_STATS           0
+#define configGENERATE_RUN_TIME_STATS           1
 
 #define configSUPPORT_STATIC_ALLOCATION         1
 /* Co-routine definitions. */
@@ -93,6 +93,14 @@ to exclude the API function. */
 #define INCLUDE_xQueueGetMutexHolder            1
 #define INCLUDE_xTaskGetSchedulerState          1
 #define INCLUDE_eTaskGetState                   1
+
+/* RHB added due to configGENERATE_RUN_TIME_STATS */
+/* FreeRTOS does not have to configure a timer    */
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+/* That timer counts microseconds */
+#define portGET_RUN_TIME_COUNTER_VALUE()        (BASTMR_GetMicrosecond(&BASTIM_HANDLE)/100)
+
+
 
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
