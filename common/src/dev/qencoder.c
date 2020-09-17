@@ -62,7 +62,7 @@ static QEnc_AdditionalDataType * QEnc_GetAdditionalData(const HW_DeviceType *sel
 }
 
 
-static void QEncGpioInitAF(const HW_GpioList_AF *gpioaf)
+static void QEncGpioInitAF(uint32_t devidx, const HW_GpioList_AF *gpioaf)
 {
     GPIO_InitTypeDef Init;
     
@@ -74,18 +74,18 @@ static void QEncGpioInitAF(const HW_GpioList_AF *gpioaf)
     Init.Mode = GPIO_MODE_AF_PP;
     Init.Speed = GPIO_SPEED_FREQ_LOW;
 
-    GpioAFInitOne( gpioaf->gpio+QENC_CH1_IDX, &Init );
-    GpioAFInitOne( gpioaf->gpio+QENC_CH2_IDX, &Init );
+    GpioAFInitOne( devidx, gpioaf->gpio+QENC_CH1_IDX, &Init );
+    GpioAFInitOne( devidx, gpioaf->gpio+QENC_CH2_IDX, &Init );
 }
 
 
-static void QEncGpioInit(const HW_GpioList_AF *gpioaf, const HW_GpioList_IO *gpioio)
+static void QEncGpioInit(uint32_t devidx, const HW_GpioList_AF *gpioaf, const HW_GpioList_IO *gpioio)
 {
     /* Init both encoder input pins */
-    QEncGpioInitAF(gpioaf);
+    QEncGpioInitAF(devidx, gpioaf);
 
     /* Init optional PushButton Pin as EXTI Pin, pulled up with interrupt on falling edge */
-    if ( gpioio ) GpioIOInitAll(gpioio);
+    if ( gpioio ) GpioIOInitAll(devidx, gpioio);
 }
 
 
@@ -285,7 +285,7 @@ void QEnc_Activate(const HW_DeviceType *self)
     QEncHandleT *myHandle = QEnc_GetAdditionalData(self)->myQEncHandle;  
 
     /* Activate Encoder GPIO pins */
-    QEncGpioInit(self->devGpioAF, self->devGpioIO);
+    QEncGpioInit(GetDevIdx(self), self->devGpioAF, self->devGpioIO);
 
 
     /* Enable TMR clock */
@@ -317,7 +317,7 @@ void QEnc_DeActivate(const HW_DeviceType *self)
     myHandle->bActivated  = false;
 
     /* DeInit GPIO */
-    GpioAFDeInitAll(self->devGpioAF);
+    GpioAFDeInitAll(GetDevIdx(self), self->devGpioAF);
 
     /* disable Timer clock */
     HW_SetHWClock(myHandle->htim.Instance, false);
@@ -343,7 +343,7 @@ void QEnc_DeInit(const HW_DeviceType *self)
     myHandle->OnDblClick            = NULL;
 
     /* DeInit GPIO */
-    GpioAFDeInitAll(self->devGpioAF);
+    GpioAFDeInitAll(GetDevIdx(self), self->devGpioAF);
   
     /* disable interrupts */
     HW_SetAllIRQs(self->devIrqList, false);
@@ -384,7 +384,7 @@ bool QEnc_Init(const HW_DeviceType *self)
     myHandle->bActivated            = false;
     myHandle->bDblClkItvl           = 0;
 
-    QEncGpioInit(self->devGpioAF, self->devGpioIO);
+    QEncGpioInit(GetDevIdx(self), self->devGpioAF, self->devGpioIO);
 
     HW_SetHWClock(htim->Instance, true);
     ret = QEncTmrInit(htim);

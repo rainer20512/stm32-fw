@@ -354,6 +354,17 @@ void SpiHandleInit (SpiHandleT *hnd, const HW_DeviceType *SpiDev)
     }
 }
 
+
+/******************************************************************************
+ * Will be overwritten if any Hardware SPI is defined. This is just a dummy
+ * implementation to make the following "SPI_Init" compileable in case of
+ * only BBSPI being used
+ *****************************************************************************/
+__weak bool SpiClockInit(const HW_DeviceType *self, bool bDoInit)
+{
+    UNUSED(self); UNUSED(bDoInit);
+    return true;
+}
    
 bool SPI_Init(const HW_DeviceType *self)
 {

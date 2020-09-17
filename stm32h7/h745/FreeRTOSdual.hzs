@@ -32,12 +32,8 @@
  <Project>
   <ProjectSessionItem path="FreeRTOS_Dual"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;Application;src;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;inc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;inc;devconfig"/>
+  <ProjectSessionItem path="FreeRTOS_Dual;CM4;common_h7;src"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM4;System Files"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application"/>
@@ -124,7 +120,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="230" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/msg_direct_c7.c" selected="0" top="195" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="70" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/init_c4.c" selected="0" top="45" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="109" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="83" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="70" y="737" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/interpreters_c4.c" selected="0" top="704" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="737" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/interpreters_c4.c" selected="0" top="704" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4478" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="4429" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="37" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="7" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="120" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="94" codecName="Default"/>
@@ -133,7 +129,7 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="46" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/devices.h" selected="0" top="27" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/dev/eth_dev.c" selected="0" top="24" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="125" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/hw_device.h" selected="0" top="91" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="122" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/system/devices_cm4.c" selected="1" top="9" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/system/devices_cm4.c" selected="1" top="94" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/uart_dev.h" selected="0" top="54" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="115" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/uart_config.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="36" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Src/system/error.c" selected="0" top="0" codecName="Default"/>

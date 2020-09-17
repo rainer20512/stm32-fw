@@ -144,8 +144,10 @@ void TaskNotify ( uint32_t num )
 #if DEBUG_MODE > 0
 void TaskDumpList(void)
 {
+    #define MAX_TIMELEN         20
     uint32_t i;
     uint32_t mask;
+    char timestr[MAX_TIMELEN];
 
     DEBUG_PUTS  ("Task List ----------------------------------------------------------------");
 
@@ -159,10 +161,11 @@ void TaskDumpList(void)
 
     for ( i = 0, mask=1; i < MAX_TASK; i++, mask <<= 1 ) if ( taskUsedBits & mask ) {
         DBG_printf_indent("%3d",i);
+        DBG_printf_indent("   %20s",i, tasks[i].Name);
         #if DEBUG_PROFILING > 0
-            ProfilerDumpTime( ProfilerTimes[tasks[i].PrID], (char *)tasks[i].Name);
+            ProfilerFormatTime( ProfilerTimes[tasks[i].PrID], timestr, MAX_TIMELEN, true);
+            DEBUG_PUTS(timestr);
         #else
-            DBG_printf_indent("   %20s",i, tasks[i].Name);
             DEBUG_PRINTF("\n");
         #endif
     }

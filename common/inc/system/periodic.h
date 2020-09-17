@@ -39,8 +39,8 @@ typedef void ( *PeriodicFn ) ( void *arg );
     #define AddActionListItem(a,b,c)     AddActionListItemShort(a,b)
     #define AtSecond(a,b,c,d)            AtSecondShort(a,b,c)
     #define EverySecond(b,c,d)           EverySecondShort(b,c)
-    #define AtMinute(a,b,c,d)            AddMinuteShort(a,b,c)
-    #define AtHour(a,b,c,d)              AddHourShort(a,b,c)
+    #define AtMinute(a,b,c,d)            AtMinuteShort(a,b,c)
+    #define AtHour(a,b,c,d)              AtHourShort(a,b,c)
 #endif
 
 void task_periodic ( uint32_t arg );

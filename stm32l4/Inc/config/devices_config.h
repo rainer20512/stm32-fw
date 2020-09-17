@@ -321,7 +321,7 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    #define USE_USART2
+    // #define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     //#define COM2_USE_RX_DMA

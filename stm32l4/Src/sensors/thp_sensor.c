@@ -18,7 +18,10 @@
 #include "debug_helper.h"
 #include "system/periodic.h"
 
-#if USE_BMP085 > 0
+#if USE_BME280 > 0
+    #include "sensors/bme280.h"
+    #define THPSENSOR_DRIVER        BME280_Driver
+#elif USE_BMP085 > 0
     #include "sensors/bmp085.h"
     #define THPSENSOR_DRIVER        BMP085_Driver
 #endif
@@ -96,6 +99,9 @@ THPSENSOR_StatusEnum THPSENSOR_Init (const THPSENSOR_DecisTypeDef *userdecis)
         #error "No THP-sensor low level driver assigned"
     #endif
     
+    /* Check for I2c device being initialized correctly */
+    if ( USER_I2C_HANDLE.hI2c.Instance == NULL ) return THPSENSOR_ERROR;
+
     /* Low level init */
     SENSOR_IO_Init( &USER_I2C_HANDLE, NULL );
     thpsensorFlags = 0;
@@ -181,13 +187,17 @@ static void task_do_display ( void *arg)
 
 void task_init_thp ( void )
 {
- /* Init all sensor channels to deliver their value with one decimal digit */
-  const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
-  THPSENSOR_Init(&Init);
+    /* Init all sensor channels to deliver their value with one decimal digit */
+    const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
 
-  AtSecond(58, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
-  AtSecond(59, task_do_display, (void *)0, "THP sensor display");
-
+    if ( THPSENSOR_Init(&Init) == THPSENSOR_OK ) {
+        AtSecond(58, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
+        AtSecond(59, task_do_display, (void *)0, "THP sensor display");
+    } else {
+        #if DEBUG_MODE > 0 && DEBUG_THP > 0
+            DEBUG_PRINTF("THP Sensor init failed\n");
+        #endif   
+    }
 }
 
 /******************************************************************************

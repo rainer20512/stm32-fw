@@ -262,8 +262,10 @@ int main(void)
     /* Init variables and structures for device handling */
     DevicesInit();
 
-    // Switch LSE Clock on 
-    LSEClockConfig(true, true);
+    // Switch LSE Clock on, if LSE is equipped
+    #ifdef HW_HAS_LSE
+        LSEClockConfig(true, true);
+    #endif
 
     TogglePin(3);
 

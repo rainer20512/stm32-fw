@@ -122,7 +122,7 @@ void rfm_spi_write8(uint8_t addr, uint8_t val8)
     vector[1] = val8;
 
     RFM_SPI_SELECT();
-    Spi8TxVector(rfmSpi, vector, 2);			
+    Spi8TxRxVector(rfmSpi, vector, NULL, 2);			
     RFM_SPI_DESELECT();
 }
 
@@ -148,7 +148,7 @@ void rfm_spi_write16(uint8_t addr, uint16_t val16)
     vector[2] = val16 & 0xff;
 
     RFM_SPI_SELECT();
-    Spi8TxVector(rfmSpi, vector, 3);			
+    Spi8TxRxVector(rfmSpi, vector, NULL, 3);			
     RFM_SPI_DESELECT();
 }
 
@@ -175,7 +175,7 @@ void rfm_spi_write24(uint8_t addr, uint32_t val24)
     vector[3] = val24 & 0xff;
 
     RFM_SPI_SELECT();
-    Spi8TxVector(rfmSpi, vector, 4);			
+    Spi8TxRxVector(rfmSpi, vector, NULL, 4);			
     RFM_SPI_DESELECT();
 }
 

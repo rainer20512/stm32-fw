@@ -731,9 +731,9 @@ const SpiFunctionT SpiFns_hw = {
 };
 #else
     const SpiFunctionT SpiFns_hw = { 0 };
-#endif // defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3)
+#endif // defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4)
 
-#endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) */
+#endif /* #if defined(USE_BBSPI1) || defined(USE_BBSPI2) || defined(USE_SPI1) || defined(USE_SPI2) || defined(USE_SPI3) || defined(USE_SPI4)  */
 
 
 

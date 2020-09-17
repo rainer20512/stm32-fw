@@ -50,10 +50,6 @@
     #include "system/profiling.h"
 #endif
 
-/* Can we use an LSE Clock */
-#if defined(HW_HAS_LSE_CRYSTAL) || defined(HW_HAS_LSE_BYPASS)
-    #define HW_HAS_LSE
-#endif
 
 /* set the Output frq. of the PLL's M-stage to a fixed value when PLL is used */
 /* This is not mandatory, but alleviates other setup                          */

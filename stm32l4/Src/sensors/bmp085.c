@@ -70,7 +70,7 @@ static int16_t ac3;
 static uint16_t ac4;
 static uint16_t ac5;
 static uint16_t ac6;
-static int16_t b1; 
+static int16_t b1;
 static int16_t b2;
 static int16_t mb;
 static int16_t mc;
