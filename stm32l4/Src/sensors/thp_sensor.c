@@ -29,6 +29,7 @@
 #if USE_DISPLAY > 0
     #include "ui/lcd.h"
     #include "ui/lcd_status.h"
+    #include "system/util.h"
 #endif
 #define DEBUG_THP   0
 
@@ -43,8 +44,8 @@ static THPSENSOR_DecisTypeDef conversiondecis;
 /******************************************************************************
  * compute the conversion factor to convert the sensor decimals to the desired
  * user decimals. 
- * A value i > 0 means "returned value has to be divided by 10^i,
- * A value i < 0 means "returned value has to be multiplied by 10^i,
+ * A value i < 0 means "returned value has to be divided by 10**i,
+ * A value i > 0 means "returned value has to be multiplied by 10**i,
  *****************************************************************************/
 static void SetDecis( const THPSENSOR_DecisTypeDef *user, const THPSENSOR_DecisTypeDef *sensor)
 {
@@ -75,15 +76,26 @@ static bool HasCapability( uint32_t capability )
     return ret;
 }
 
+static uint32_t pwr10 ( uint32_t exp )
+{
+    if ( exp >  9 ) return 1;
+
+    uint32_t ret = 1;
+    for ( uint32_t i = 0; i < exp; i++ )
+        ret = ret * 10;
+
+    return ret;
+}
+
 static int32_t DoScale ( int32_t raw, int8_t delta_decis )
 {
     if ( delta_decis == 0 ) 
         return raw;
     else 
-        if ( delta_decis < 0 )
-            return raw * 10^(-delta_decis);
+        if ( delta_decis > 0 )
+            return raw * pwr10(delta_decis);
         else
-            return raw / 10^(delta_decis);
+            return raw / pwr10(-delta_decis);
 }
 
 /**
@@ -109,7 +121,7 @@ THPSENSOR_StatusEnum THPSENSOR_Init (const THPSENSOR_DecisTypeDef *userdecis)
     /* Init underlying sensor hardware and setup value scaling */   
     if ( THPSENSOR_OK == thpsensor_drv->Init(&sensordecis) ) {
         SET_SENSORFLAG(THPSENSOR_FOUND_FLAG);
-        if ( !thpsensor_drv->Calibrate || thpsensor_drv->Calibrate() ) {
+        if ( !thpsensor_drv->Calibrate || thpsensor_drv->Calibrate() == THPSENSOR_OK ) {
             SET_SENSORFLAG(THPSENSOR_CALIBRATED_FLAG);
             SetDecis(userdecis, &sensordecis);
         }
@@ -172,6 +184,14 @@ int32_t THPSENSOR_GetP (void)
         return DoScale(thpsensor_drv->GetPRaw(), conversiondecis.p_decis);
 }
 
+void THPSENSOR_Diagnostics(void)
+{
+    if ( thpsensor_drv->Diagnostics ) 
+        thpsensor_drv->Diagnostics();
+    else
+        DEBUG_PRINTF("Diagnostics not implemented");
+}
+
 static void task_do_measure ( void *arg )
 {
     THPSENSOR_Measure((uint32_t)arg);
@@ -181,16 +201,24 @@ static void task_do_display ( void *arg)
 {
     UNUSED(arg);
      #if USE_DISPLAY > 0
-        LCD_DisplayStatus(LCD_STATUS_PRESSURE);
+        if ( HasCapability(THPSENSOR_HAS_P) ) {
+            LCD_DisplayStatus(LCD_STATUS_PRESSURE);
+        }
+        if ( HasCapability(THPSENSOR_HAS_T) ) {
+            abstemp = THPSENSOR_GetT();
+            LCD_DisplayStatus(LCD_STATUS_TEMP);
+        }
      #endif
 }
 
 void task_init_thp ( void )
 {
-    /* Init all sensor channels to deliver their value with one decimal digit */
-    const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
+    /* Init : Temp to deliver with 2 digits, other channels with one decimal digit */
+    const THPSENSOR_DecisTypeDef Init = {2,1,1};
 
     if ( THPSENSOR_Init(&Init) == THPSENSOR_OK ) {
+//        AtSecond(28, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
+//        AtSecond(29, task_do_display, (void *)0, "THP sensor display");
         AtSecond(58, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
         AtSecond(59, task_do_display, (void *)0, "THP sensor display");
     } else {

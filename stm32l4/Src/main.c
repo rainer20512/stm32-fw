@@ -263,9 +263,7 @@ int main(void)
     DevicesInit();
 
     // Switch LSE Clock on, if LSE is equipped
-    #ifdef HW_HAS_LSE
-        LSEClockConfig(true, true);
-    #endif
+    LSEClockConfig(true, true);
 
     TogglePin(3);
 

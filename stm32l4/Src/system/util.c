@@ -28,7 +28,7 @@ int16_t average_n ( int16_t avg, int16_t value, uint8_t n  )
         return (int16_t)(temp >> n);
 }
 
-#if defined(TX18LISTENER) || USE_DS18X20 > 0  
+#if defined(TX18LISTENER) || USE_DS18X20 > 0 || USE_BME280 > 0
     int16_t  mintemp, maxtemp;			// Minimum and maximum temperature ( *100 ) of the day
     int16_t  abstemp;				// temp*100
 

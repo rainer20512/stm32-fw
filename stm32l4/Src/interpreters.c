@@ -2099,6 +2099,86 @@ ADD_SUBMODULE(Test);
     };
     ADD_SUBMODULE(CAN);
 #endif
+#if USE_BMP085 > 0 || USE_BME280 > 0
+
+    #include "sensors/thp_sensor.h"
+
+    /*********************************************************************************
+     * @brief  Submenu for THP sensor test functions
+     *         
+     * @retval true on success, false otherwise
+     *
+     * @note  will try to read as many parameters as needed
+     ********************************************************************************/
+
+
+    /*********************************************************************************
+     * @brief  Submenu for THP sensor test functions
+     *         
+     * @retval true on success, false otherwise
+     *
+     * @note  will try to read as many parameters as needed
+     ********************************************************************************/
+    static bool THP_Menu ( char *cmdline, size_t len, const void * arg )
+    {
+      char *word;
+      size_t wordlen;
+      uint32_t num;
+      uint32_t addr;
+      int32_t ret;
+ 
+      /* Init all sensor channels to deliver their value with one decimal digit */
+      const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
+
+     
+      UNUSED(cmdline);UNUSED(len);
+
+      switch((uint32_t)arg) {
+        case 0:
+            printf("THP Sensor initialized %sok\n", THPSENSOR_Init(&Init) == THPSENSOR_OK ? "" : "not ");
+            break;
+        case 1:
+            num = THPSENSOR_IsBusy();
+            printf("THP Sensor %\n", num == 0 ? " in idle" : num > 0 ? "is busy" : "has comm err"  );
+            break;
+        case 3:
+            num = THPSENSOR_Measure(ALL_SENSOR_CHANNELS);
+            printf("THP Sensor Measure %\n", num == THPSENSOR_OK ? "ok" :  "err"  );
+            break;
+        case 4:
+            ret= THPSENSOR_GetT();
+            printf("THP Sensor Temp=%d", ret );
+            ret= THPSENSOR_GetH();
+            printf(", RelHum=%d", ret );
+            ret= THPSENSOR_GetP();
+            printf(", Pressure=%d\n", ret );
+            break;
+        case 5:
+            THPSENSOR_Diagnostics();
+            break;
+        default:
+          DEBUG_PUTS("THP_Menu: command not implemented");
+      } /* end switch */
+
+      return true;
+    }
+
+    static const char *pmtTHP (void)
+    {
+      return "THP-Sensor";
+    }
+
+
+    static const CommandSetT cmdTHP[] = {
+        { "Init",                     ctype_fn, .exec.fn = THP_Menu, VOID(0), "Init THP Sensor" },
+        { "Is Busy",                  ctype_fn, .exec.fn = THP_Menu, VOID(1), "Check THP Sensor busy" },
+        { "Get Capability",           ctype_fn, .exec.fn = THP_Menu, VOID(2), "Get THP Sensor capability" },
+        { "Trigger Measurement",      ctype_fn, .exec.fn = THP_Menu, VOID(3), "Initiate Measurement" },
+        { "Read Data",                ctype_fn, .exec.fn = THP_Menu, VOID(4), "Readout Sensor data" },
+        { "Diagnostics",              ctype_fn, .exec.fn = THP_Menu, VOID(5), "Print Sensor diagnostics" },
+    };
+    ADD_SUBMODULE(THP);
+#endif
 
 #if USE_FMC > 0
 
@@ -2394,6 +2474,9 @@ static const CommandSetT cmdBasic[] = {
 #endif
 #if USE_QSPI > 0
   { "QSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test QuadSpi functions" },
+#endif
+#if USE_BME280 > 0 ||  USE_BMP085 > 0
+  { "THP Sensor test", ctype_sub, .exec.sub = &mdlTHP,        0,       "Test THP Sensor functions" },
 #endif
 #if USE_CAN > 0
   { "CAN test",        ctype_sub, .exec.sub = &mdlCAN,        0,       "Test CAN functions" },

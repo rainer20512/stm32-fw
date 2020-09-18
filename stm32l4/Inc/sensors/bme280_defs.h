@@ -86,11 +86,11 @@
 /********************************************************/
 
 #ifndef BME280_64BIT_ENABLE /*< Check if 64-bit integer (using BME280_64BIT_ENABLE) is enabled */
-#ifndef BME280_32BIT_ENABLE /*< Check if 32-bit integer (using BME280_32BIT_ENABLE) is enabled */
-#ifndef BME280_FLOAT_ENABLE /*< If any of the integer data types not enabled then enable BME280_FLOAT_ENABLE */
-#define BME280_FLOAT_ENABLE
-#endif
-#endif
+    #ifndef BME280_32BIT_ENABLE /*< Check if 32-bit integer (using BME280_32BIT_ENABLE) is enabled */
+        #ifndef BME280_FLOAT_ENABLE /*< If any of the integer data types not enabled then enable BME280_FLOAT_ENABLE */
+            #define BME280_FLOAT_ENABLE
+        #endif
+    #endif
 #endif
 
 #ifndef TRUE
@@ -196,7 +196,7 @@
  * These values are internal for API implementation. Don't relate this to
  * data sheet.
  */
-#define BME280_PRESS                              UINT8_C(1)
+#define BME280_PRESS                              UINT8_C(1 << 0)
 #define BME280_TEMP                               UINT8_C(1 << 1)
 #define BME280_HUM                                UINT8_C(1 << 2)
 #define BME280_ALL                                UINT8_C(0x07)
@@ -210,7 +210,7 @@
 #define BME280_ALL_SETTINGS_SEL                   UINT8_C(0x1F)
 
 /**\name Oversampling macros */
-#define BME280_NO_OVERSAMPLING                    UINT8_C(0x00)
+#define BME280_NO_SAMPLING                        UINT8_C(0x00)
 #define BME280_OVERSAMPLING_1X                    UINT8_C(0x01)
 #define BME280_OVERSAMPLING_2X                    UINT8_C(0x02)
 #define BME280_OVERSAMPLING_4X                    UINT8_C(0x03)
@@ -244,6 +244,11 @@
 #define BME280_SOFT_RESET_COMMAND                 (0xB6)
 #define BME280_STATUS_IM_UPDATE                   (0x01)
 #define BME280_STATUS_MEASURING                   (0x08)
+
+/**\name Operation status flags for BME280 driver */
+#define BME280_FLAG_INITIALIZED                   ((uint8_t)( 1 << 0 ))
+#define BME280_FLAG_MEASURE                       ((uint8_t)( 1 << 1 ))  
+#define BME280_FLAG_DATA_READY                    ((uint8_t)( 1 << 2 ))
 
 /*!
  * @brief Interface selection Enums
@@ -469,6 +474,9 @@ struct bme280_dev
 
     /*< Variable to store result of read/write function */
     BME280_INTF_RET_TYPE intf_rslt;
+
+    /*< BME280 operational status flags RHB:added */
+    uint8_t flags;
 };
 
 #endif /* BME280_DEFS_H_ */

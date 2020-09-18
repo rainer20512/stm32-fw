@@ -6,7 +6,7 @@
 
 #include "config/config.h"
 
-#if USE_BMP085 > 0
+#if USE_BMP085 > 0 && USE_BME280 < 1
 
 #include "dev/i2c_abstract.h"
 #include "sensors/thp_sensor.h"
@@ -80,7 +80,7 @@ static int16_t md;
 static uint16_t ut;
 static uint16_t up;
 static int16_t bmp085_temp;			// T in °C * 10
-uint16_t bmp085_pressure;      // pressure in hPA * 10
+uint16_t bmp_pressure;      // pressure in hPA * 10
 static int32_t x1, x2, b5, b6, x3, b3, p;
 static uint32_t b4, b7;
 
@@ -126,11 +126,11 @@ static void BMP085_CalcPressure(void)
     x1 = (p >> 8) * (p >> 8);
     x1 = (x1 * 3038) >> 16;
     x2 = (-7357 * p) >> 16;
-    bmp085_pressure = (uint16_t)((p + ((x1 + x2 + 3791) >> 4)+5)/10);
-    bmp085_pressure += ((uint16_t)config.PressureComp)*10;
+    bmp_pressure = (uint16_t)((p + ((x1 + x2 + 3791) >> 4)+5)/10);
+    bmp_pressure += ((uint16_t)config.PressureComp)*10;
     #if DEBUG_MODE && DEBUG_BMP085
         if ( debuglevel > 2 ) {
-            DEBUG_PRINTF("Press = %d\n",bmp085_pressure);
+            DEBUG_PRINTF("Press = %d\n",bmp_pressure);
         }
     #endif
 }
@@ -428,7 +428,7 @@ int32_t BMP085_GetTemp(void)
 
 int32_t BMP085_GetPressure(void)
 { 
-    return bmp085_pressure;
+    return bmp_pressure;
 }
 
 const THPSENSOR_DrvTypeDef BMP085_Driver = {
@@ -440,6 +440,7 @@ const THPSENSOR_DrvTypeDef BMP085_Driver = {
         BMP085_GetTemp,
         NULL,
         BMP085_GetPressure,
+        NULL,               /* Diagnostics not implemented */
 };
 /*
 typedef struct {

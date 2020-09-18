@@ -45,7 +45,7 @@ static uint32_t prof_time;
 
 static uint32_t watch_map[WATCH_N] = {
 #if USE_BMP085 > 0	
-    /* 00 */ ((uint32_t) &bmp085_pressure) + B16,			// BMP085 pressure
+    /* 00 */ ((uint32_t) &bmp_pressure) + B16,                          // BMP085 pressure
 #elif USE_OPTICAL_EMETER > 0
     /* 00 */ ((uint16_t) &SML_error_count) + B16,			// SML parser error count
 #else

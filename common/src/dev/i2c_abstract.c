@@ -194,7 +194,7 @@ static HAL_StatusTypeDef I2Cx_ReadMultiple(uint16_t Addr, uint16_t Reg, uint16_t
         osSemaphoreWait(MyI2cSemaphore, osWaitForever);
     #endif
 
-    status = HAL_I2C_Mem_Read(myI2cHandle, Addr, Reg, MemAddress, Buffer, Length, hi2c_evalTimeout);
+    status = HAL_I2C_Mem_Read(myI2cHandle, I2C_READ_ADDR((uint8_t)Addr), Reg, MemAddress, Buffer, Length, hi2c_evalTimeout);
 
     #if defined(BSP_USE_CMSIS_OS)
         /* Release semaphore to prevent multiple I2C access */
@@ -384,7 +384,7 @@ static HAL_StatusTypeDef I2Cx_WriteMultiple(uint16_t Addr, uint16_t Reg, uint16_
         osSemaphoreWait(MyI2cSemaphore, osWaitForever);
     #endif
 
-    status = HAL_I2C_Mem_Write(myI2cHandle, Addr, (uint16_t)Reg, MemAddress, Buffer, Length, hi2c_evalTimeout);
+    status = HAL_I2C_Mem_Write(myI2cHandle, I2C_WRITE_ADDR((uint8_t)Addr), (uint16_t)Reg, MemAddress, Buffer, Length, hi2c_evalTimeout);
 
     #if defined(BSP_USE_CMSIS_OS)
         /* Release semaphore to prevent multiple I2C access */

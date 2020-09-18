@@ -46,6 +46,23 @@
 
 #define DEBUG_BME280            1
 
+/* Define, which data sources to use */
+#define BME280_USE_TEMP         1
+#define BME280_USE_HUM          1
+#define BME280_USE_PRESS        1
+
+/* Use 32 bit integer arithmetic, will produce the following resolutions by driver
+ * - int32_t for temperature with the units 100 * °C
+ * - uint32_t for humidity with the units 1024 * % relative humidity
+ *      Will be corrected to Promille by THP-Interface
+ * - uint32_t for pressure
+ *      If macro "BME280_64BIT_ENABLE" is enabled, which it is by default, the unit is 100 * Pascal
+ *      If this macro is disabled, Then the unit is in Pascal
+ */
+#define BME280_32BIT_ENABLE
+//#define BME280_64BIT_ENABLE
+
+
 #include "sensors/bme280.h"
 
 #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
@@ -777,7 +794,7 @@ int8_t bme280_get_sensor_data(uint8_t sensor_comp, struct bme280_data *comp_data
 
     if ((rslt == BME280_OK) && (comp_data != NULL))
     {
-        /* Read the pressure and temperature data from the sensor */
+        /* Read all data from the sensor, independent from configured capabilities */
         rslt = bme280_get_regs(BME280_DATA_ADDR, reg_data, BME280_P_T_H_DATA_LEN, dev);
 
         if (rslt == BME280_OK)
@@ -1092,6 +1109,7 @@ static void parse_device_settings(const uint8_t *reg_data, struct bme280_setting
     settings->filter = BME280_GET_BITS(reg_data[3], BME280_FILTER);
     settings->standby_time = BME280_GET_BITS(reg_data[3], BME280_STANDBY);
 }
+
 
 /*!
  * @brief This internal API writes the power mode in the sensor.
@@ -1623,7 +1641,12 @@ static int8_t null_ptr_check(const struct bme280_dev *dev)
 #include "dev/i2c_abstract.h"
 
 static struct bme280_dev bme280Dev;
+static struct bme280_data comp_data;
 static uint8_t dev_addr = BME280_I2C_ADDR_PRIM;
+
+/* global variable for pressure */
+uint16_t bmp_pressure;      // pressure in hPA * 10
+
 
 BME280_INTF_RET_TYPE bme280Read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
 {
@@ -1652,24 +1675,156 @@ void bme280Delayms(uint32_t period, void *intf_ptr)
 static uint32_t BME280_GetCapability(void)
 {
     /* Sensor may suppy temp, pressure and humidity */
-    return THPSENSOR_HAS_T | THPSENSOR_HAS_P | THPSENSOR_HAS_H;
+    return 0 
+#if BME280_USE_TEMP > 0
+     | THPSENSOR_HAS_T
+#endif
+#if BME280_USE_HUM > 0
+     | THPSENSOR_HAS_H
+#endif
+#if BME280_USE_PRESS > 0
+     | THPSENSOR_HAS_P 
+#endif
+     ;
 }
 
+/*******************************************************************************
+ * Do the config register settings according to the configured capabilities
+ * ( in BME280_USE_TEMP, ..._HUM and ..._PRESS ) and to passed parameters
+ * Configured settings have precedence over parameters, ie if for example
+ * pressure measuring is configured out, it cannot be activated by passing another
+ * pressure parameter here. It will stay deactivated
+ ******************************************************************************/
+static int8_t bme_do_channel_config ( struct bme280_dev *dev, uint8_t t_conf, uint8_t h_conf, uint8_t p_conf, uint8_t flt_conf)
+{
+    int8_t rslt;
+    uint32_t req_delay;
+    uint8_t settings_sel;
+    
+    settings_sel = BME280_FILTER_SEL
+    #if BME280_USE_TEMP > 0
+         | BME280_OSR_TEMP_SEL
+    #endif
+    #if BME280_USE_HUM > 0
+         | BME280_OSR_HUM_SEL
+    #endif
+    #if BME280_USE_PRESS > 0
+         | BME280_OSR_PRESS_SEL
+    #endif
+    ;
+
+    dev->settings.filter = flt_conf;
+    #if BME280_USE_TEMP > 0
+        dev->settings.osr_t  = t_conf;
+    #endif
+    #if BME280_USE_HUM > 0
+        dev->settings.osr_h  = h_conf;
+    #endif
+    #if BME280_USE_PRESS > 0
+        dev->settings.osr_p  = p_conf;
+    #endif
+    ;
+
+    rslt = bme280_set_sensor_settings(settings_sel, dev);
+	
+	/*Calculate the minimum delay required between consecutive measurement based upon the sensor enabled
+     *  and the oversampling configuration. */
+    req_delay = bme280_cal_meas_delay(&dev->settings);
+    #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
+        DEBUG_PRINTF("BME280 measuerment time %dms\n", req_delay);
+    #endif
+
+    return rslt;
+}
+
+/*******************************************************************************
+ * Set the sensor parameters to use bme280 as weather sensor in forced mode 
+ * according to refman 3.5.1
+ * Then start a measurement 
+ ******************************************************************************/
+static int8_t bme_weather_data_mode(struct bme280_dev *dev)
+{
+    /* 
+     * Recommended mode of operation: Weather monitoring 
+     * Sequence of parameters:
+     *   - device
+     *   - temp.  sampling rate
+     *   - hum.   sampling rate
+     *   - press. sampling rate
+     *   - filter setting
+     * Note: If any channel is configured out ( by use of BME280_USE_XXXX in at top of file ), 
+     * it CANNOT be reactivated by specifying a sample parameter other than BME280_NO_SAMPLING here
+     */
+    return bme_do_channel_config ( dev, BME280_OVERSAMPLING_1X, BME280_OVERSAMPLING_1X, BME280_OVERSAMPLING_1X, BME280_FILTER_COEFF_OFF );
+}
+
+
+/*******************************************************************************
+ * Set the sensor parameters to use bme280 for indoor navigation purposes
+ * according to refman 3.5.3
+ * Shold be used in normal mode with 25Hz sample rate
+ ******************************************************************************/
+static int8_t bme_indoor_nav_mode(struct bme280_dev *dev)
+{
+    /* 
+     * Recommended mode of operation: Indoor Nav
+     * Sequence of parameters:
+     *   - device
+     *   - temp.  sampling rate
+     *   - hum.   sampling rate
+     *   - press. sampling rate
+     *   - filter setting
+     * Note: If any channel is configured out ( by use of BME280_USE_XXXX in at top of file ), 
+     * it CANNOT be reactivated by specifying a sample parameter other than BME280_NO_SAMPLING here
+     */
+    return bme_do_channel_config ( dev, BME280_OVERSAMPLING_2X, BME280_OVERSAMPLING_1X, BME280_OVERSAMPLING_16X, BME280_FILTER_COEFF_16 );
+}
+
+/*******************************************************************************
+ * Set the sensor parameters to use bme280 for gaming purposes
+ * according to refman 3.5.4
+ * Shold be used in normal mode with maximum sample rate ( ca 83 Hz )
+ ******************************************************************************/
+static int8_t bme_gaming_mode(struct bme280_dev *dev)
+{
+    /* 
+     * Recommended mode of operation: Gaming
+     * Sequence of parameters:
+     *   - device
+     *   - temp.  sampling rate
+     *   - hum.   sampling rate
+     *   - press. sampling rate
+     *   - filter setting
+     * Note: If any channel is configured out ( by use of BME280_USE_XXXX in at top of file ), 
+     * it CANNOT be reactivated by specifying a sample parameter other than BME280_NO_SAMPLING here
+     */
+    return bme_do_channel_config ( dev, BME280_OVERSAMPLING_1X, BME280_NO_SAMPLING, BME280_OVERSAMPLING_4X, BME280_FILTER_COEFF_16 );
+}
+
+/*******************************************************************************
+ * Init BME280 before first use
+ * - read and check correct ID
+ * - read and store the calibration data
+ * - setup sampling parameters to "weather monitoring"
+ * - set sensor mode to "forced", ie manual trigger a measuerment 
+ * After correct initialization, use the macro BME280_IsUseable()
+ * to check whether BMP085 is ready for use
+ ******************************************************************************/
 THPSENSOR_StatusEnum BME280_Init(THPSENSOR_DecisTypeDef *Init)
 {
     int8_t bmeInitResult;
 
     /* All sensor values will be returned with one decimal digit */
-    Init->p_decis = 1;  // One decimal digit, base value is hPa
-    Init->t_decis = 1;  // One decimal digit, base value is degree Celsius
-    Init->h_decis = 1;  // One decimal digit, base value %RH
-
+    Init->t_decis =  2; // Will be retunred in °C * 100
+    Init->h_decis =  1; // Will be returned in promille
+    Init->p_decis =  2; // Pa * 100
     bme280Dev.intf_ptr  = &dev_addr;
     bme280Dev.intf      = BME280_I2C_INTF;
     bme280Dev.read      = bme280Read;
     bme280Dev.write     = bme280Write;
     bme280Dev.delay_ms  = bme280Delayms;
-
+    bme280Dev.flags     = 0;
+    
 
     bmeInitResult = bme280_init(&bme280Dev);
     if ( bmeInitResult != BME280_OK ) {
@@ -1682,6 +1837,17 @@ THPSENSOR_StatusEnum BME280_Init(THPSENSOR_DecisTypeDef *Init)
         DEBUG_PUTS("Found BME280 sensor");
     #endif
 
+    /* 
+     * Initially, turn all sampling off, it will be configured by the selected
+     * work mode ( and static configuratrion ) later on
+     */
+    bme280Dev.settings.filter = BME280_FILTER_COEFF_OFF;
+    bme280Dev.settings.osr_t  = BME280_NO_SAMPLING;
+    bme280Dev.settings.osr_h  = BME280_NO_SAMPLING;
+    bme280Dev.settings.osr_p  = BME280_NO_SAMPLING;
+
+    bme_weather_data_mode(&bme280Dev);
+    bme280Dev.flags = BME280_FLAG_INITIALIZED;
     return THPSENSOR_OK;
 }
 
@@ -1691,43 +1857,184 @@ uint32_t BME280_IsBusy(void)
 }
 
 /******************************************************************************
- * Trigger a measurement. BMP085 has capability of temp and pressure measurement
- * it explicit temp measurement only is requested, do that, otherwise trigger
- * a pressure measurement, which implicitely requires/triggers a temp measurement
+ * Trigger a measurement. BME280 is in forcesd mode, so measurement has to be
+ * triggered explicitely. Temperature, Pressure and Humidity are measured
  *****************************************************************************/
 THPSENSOR_StatusEnum BME280_Measure(const uint32_t what)
 {
-    if ( what == THPSENSOR_HAS_T ) 
-        return 0;
-    else
-        return 0;
+    int8_t ret = THPSENSOR_ERROR;
+    UNUSED(what);
+    bme280Dev.flags &= ~BME280_FLAG_DATA_READY;
+    if ( bme280Dev.flags & BME280_FLAG_INITIALIZED ) {
+
+        ret = bme280_set_sensor_mode(BME280_FORCED_MODE, &bme280Dev);
+        if ( ret == BME280_OK ) {
+           bme280Dev.flags |= BME280_FLAG_MEASURE;  
+           return THPSENSOR_OK;
+        } else {
+            #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
+                DEBUG_PUTS("BME280_Measure Error: Cannot trigger measurement");
+            #endif
+        }
+    } else {   
+        #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
+            DEBUG_PUTS("BME280_Measure Error: Not initialized");
+        #endif
+    }
+    return ret;
 }
 
-int32_t BME280_GetTemp(void)
-{ 
-    return 12;
+static bool bme280_check_data_availability(void)
+{
+    /* make sure sensor is initialized successfully */
+    if ( (bme280Dev.flags & ( BME280_FLAG_INITIALIZED | BME280_FLAG_MEASURE )) != ( BME280_FLAG_INITIALIZED | BME280_FLAG_MEASURE ) ) {
+        return false;
+    }
+    
+    /* Determine set of sensor data to readout according to static selection at top of file */
+    uint8_t sensor_set = 0
+    #if BME280_USE_TEMP > 0
+         | BME280_TEMP
+    #endif
+    #if BME280_USE_HUM > 0
+         | BME280_HUM
+    #endif
+    #if BME280_USE_PRESS > 0
+         | BME280_PRESS
+    #endif
+    ;
+
+    /* if raw data conversion is not done up to now, do it */
+    if ( bme280_get_sensor_data(sensor_set, &comp_data, &bme280Dev) != BME280_OK ) return false;
+
+    /* Set the "data available" flag */
+    bme280Dev.flags |= BME280_FLAG_INITIALIZED;
+    return true;
 }
 
+/******************************************************************************
+ * BME280 does not have to be calibration. compensation values are read once
+ * at initialization
+ *****************************************************************************/
+
+static THPSENSOR_StatusEnum BME280_Calibrate(void)
+{
+    return THPSENSOR_OK;
+}
+
+#if BME280_USE_TEMP > 0
+    int32_t BME280_GetTemp(void)
+    {
+        return bme280_check_data_availability() ? comp_data.temperature : 0;
+    }
+#endif
+
+#if BME280_USE_HUM > 0
+    int32_t BME280_GetHumidity(void)
+    { 
+        if ( bme280_check_data_availability() )
+            /* Will be returned as rh[%] * 1024, convert to promille */
+            return ( comp_data.humidity * 10 )/1024;
+        else
+            return 0;
+    }
+#endif
+
+#if BME280_USE_PRESS > 0
 int32_t BME280_GetPressure(void)
 { 
-    return 23;
+    return bme280_check_data_availability() ? comp_data.pressure : 0;
 }
+#endif
 
-int32_t BME280_GetHumidity(void)
-{ 
-    return 45;
-}
+#if DEBUG_MODE > 0 && DEBUG_BME280 > 0
+    const char * const ovrs_txt[]={"No Sampling","Sample x 1","Sample x 2","Sample x 4","Sample x 8"};
+    static const char* get_ovrs_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(ovrs_txt)/sizeof(char *) ) 
+        return ovrs_txt[sel];
+      else
+        return "Sample x 16";
+    }
 
+    const char * const stby_txt[]={"0.5","62.5","125","250","500","1000","10","20"};
+    static const char* get_stby_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(stby_txt)/sizeof(char *) ) 
+        return stby_txt[sel];
+      else
+        return "Illegal";
+    }
+
+    const char * const mode_txt[]={"Sleep","Forced","Forced","Normal"};
+    static const char* get_mode_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(mode_txt)/sizeof(char *) ) 
+        return mode_txt[sel];
+      else
+        return "Illegal";
+    }
+
+    void BME280_Diagnostics ( void )
+    {
+        int8_t rslt;
+        uint8_t reg_data[4];
+        struct bme280_settings settings;
+
+        /* Check for null pointer in the device structure*/
+        rslt = null_ptr_check(&bme280Dev);
+        if ( rslt != BME280_OK ) return; 
+
+        rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4, &bme280Dev);
+        if (rslt == BME280_OK) {
+            parse_device_settings(reg_data, &settings);
+            DEBUG_PRINTF("Temp sampling     %s\n", get_ovrs_txt(settings.osr_t));
+            DEBUG_PRINTF("Humidiy sampling  %s\n", get_ovrs_txt(settings.osr_h));
+            DEBUG_PRINTF("Pressure sampling %s\n", get_ovrs_txt(settings.osr_p));
+            /* Filter coeff. */
+            rslt = settings.filter; 
+            if ( rslt > 4 ) rslt = 4;
+            DEBUG_PRINTF("Filter Coeff      %d\n", 1<<rslt );
+            DEBUG_PRINTF("Standby time      %sms\n", get_stby_txt(settings.standby_time));
+            /* mode */
+            rslt = reg_data[2] & 0x0b11;
+            DEBUG_PRINTF("Sensor mode       %s\n", get_mode_txt(rslt));
+        } else {
+            DEBUG_PUTS("BME280_Diagnostics: Cannot read ctrl regs");
+        }
+    }
+#endif
 
 const THPSENSOR_DrvTypeDef BME280_Driver = {
-        BME280_Init,
-        BME280_IsBusy,
-        BME280_GetCapability,
-        NULL,
-        BME280_Measure,
-        BME280_GetTemp,
-        NULL,
-        BME280_GetPressure,
+        .Init   = BME280_Init,
+        .IsBusy = BME280_IsBusy,
+        .GetCapability = BME280_GetCapability,
+        .Calibrate = BME280_Calibrate,
+        .TriggerMeasure = BME280_Measure,
+        .GetTRaw =
+            #if BME280_USE_TEMP > 0
+                    BME280_GetTemp,
+            #else   
+                    NULL,
+            #endif
+        .GetHRaw =
+            #if BME280_USE_HUM > 0
+                    BME280_GetHumidity,
+            #else   
+                    NULL,
+            #endif
+        .GetPRaw =
+            #if BME280_USE_PRESS > 0
+                    BME280_GetPressure,
+            #else   
+                    NULL,
+            #endif
+        .Diagnostics =
+            #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
+                    BME280_Diagnostics,
+            #else   
+                    NULL,
+            #endif
 };
 /*
 typedef struct {

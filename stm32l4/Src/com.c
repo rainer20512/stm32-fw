@@ -21,6 +21,7 @@
 #include "debug_helper.h"
 #include "wireless.h"
 #include "system/status.h"
+#include "system/util.h"
 #include "version.h"
 #include "eeprom.h"
 #include "watch.h"
@@ -60,6 +61,7 @@
 
 void COM_print_debug(bool rfm_transmit) 
 {
+    uint16_t work;
     DEBUG_PRINTF("D:%s", RTC_GetStrDateTime() );
 
     DEBUG_PRINTF(" %s", Get_FSK_status_text());
@@ -113,7 +115,7 @@ void COM_print_debug(bool rfm_transmit)
     /* 03 */wireless_putchar(CTL_error);
     
     
-    #if defined(TX18LISTENER) || USE_DS18X20 > 0  
+    #if defined(TX18LISTENER) || USE_DS18X20 > 0 || USE_BME280 > 0 
         #if USE_DS18X20 > 0
             int16_t t = 10*DS18X20_GetTemp();
             /* 04 */wireless_putchar(t >> 8); // current temp
@@ -132,9 +134,9 @@ void COM_print_debug(bool rfm_transmit)
         /* 07 */wireless_putchar(pa7_average << 1 & 0xff);
     #else
         #if defined(USER_ADC)
-            uint16_t v = ADC_GetVdda(&USER_ADC);
-            /* 06 */wireless_putchar(v>>8); 
-            /* 07 */wireless_putchar(v &0xff);
+            work = ADC_GetVdda(&USER_ADC);
+            /* 06 */wireless_putchar(work>>8); 
+            /* 07 */wireless_putchar(work&0xff);
         #else
             /* 06 */wireless_putchar(0); 
             /* 07 */wireless_putchar(0);
@@ -143,33 +145,31 @@ void COM_print_debug(bool rfm_transmit)
 
     /* 08 */wireless_putchar(time_sync_tmo);
 
-    #if defined(TX18LISTENER) 
+    #if defined(TX18LISTENER) || defined(UNIVERSAL)
         /* 09 */wireless_putchar(EXT_TYPE_OUTDOOR); // Outdoor Frame type
         #if USE_THPSENSOR > 0
             { 
-                uint16_t p = THPSENSOR_GetP();
-                /* 0A */wireless_putchar(p >> 8); // Pressure
-                /* 0B */wireless_putchar((uint8_t)p & 0xff);
+                work = THPSENSOR_GetP();
+                /* 0A */wireless_putchar(work >> 8); // Pressure
+                /* 0B */wireless_putchar((uint8_t)work & 0xff);
             }
         #else
             /* 0A */wireless_putchar(0); // Pressure
             /* 0B */wireless_putchar(0);
         #endif
-        /* 0C */wireless_putchar(relhum); 				// rel. Humidity
+        #if defined(TX18LISTENER)
+            /* 0C */wireless_putchar(relhum); 				// rel. Humidity
+        #elif USE_THPSENSOR > 0
+            // UNIVERSAL with THP_SENSOR, value is promille
+            work = THPSENSOR_GetH() / 10;
+            /* 0C */wireless_putchar(work);
+        #else
+            /* 0C */wireless_putchar(0); 	
+        #endif
         #if USE_BMP085 > 0 || USE_LSM303D > 0 || USE_FM24V10 > 0 || USE_25X512_EEPROM > 0 || USE_OPTICAL> 0 || USE_OPTICAL_EMETER > 0
                 /* 0D */wireless_putchar(general_error_code);	// general error code
         #else
                 /* 0D */wireless_putchar(0);					// placeholder
-        #endif
-    #elif defined (UNIVERSAL) 
-        /* 09 */wireless_putchar(EXT_TYPE_OUTDOOR);                     // Outdoor Frame type
-        /* 0A */wireless_putchar(0);					// Pressure
-        /* 0B */wireless_putchar(0);
-        /* 0C */wireless_putchar(0); 					// rel. Humidity
-        #if USE_BMP085 > 0 || USE_LSM303D > 0 || USE_FM24V10 > 0
-            /* 0D */wireless_putchar(general_error_code);	// general error code
-        #else
-            /* 0D */wireless_putchar(0);				// no general error code
         #endif
     #elif defined(GASSENSOR) || defined(STROMSENSOR)
         /* 09 */wireless_putchar(EXT_TYPE_COUNTER);		// Counter Frame type

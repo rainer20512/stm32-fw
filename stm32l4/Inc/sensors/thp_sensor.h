@@ -40,8 +40,8 @@ typedef enum {
  * scale the returned raw values 
  * This structure is also used to set the desired scaling factor when
  * reading "cooked" sensor values
- * A value i > 0 means "returned value has to be divided by 10^i,
- * A value i < 0 means "returned value has to be multiplied by 10^i,
+ * A value i > 0 means "returned value has to be divided by 10**i,
+ * A value i < 0 means "returned value has to be multiplied by 10**i,
  *****************************************************************************/
 typedef struct {
   int8_t t_decis;               /* number of decimals of raw temp value          */
@@ -58,6 +58,7 @@ THPSENSOR_StatusEnum THPSENSOR_Measure      (const uint32_t what);
 int32_t              THPSENSOR_GetT         (void);
 int32_t              THPSENSOR_GetH         (void);
 int32_t              THPSENSOR_GetP         (void);
+void                 THPSENSOR_Diagnostics  (void);
 
 /******************************************************************************
  * The driver structure a specific hardware driver has to implement
@@ -71,6 +72,7 @@ typedef struct {
     int32_t              (*GetTRaw)       (void);
     int32_t              (*GetHRaw)       (void);    
     int32_t              (*GetPRaw)       (void);
+    void                 (*Diagnostics)   (void);  
 } THPSENSOR_DrvTypeDef;
 
 extern uint32_t thpsensorFlags;

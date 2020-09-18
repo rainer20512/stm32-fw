@@ -54,6 +54,9 @@
 extern "C" {
 #endif
 
+extern uint16_t bmp_pressure;      			// pressure in hPA * 10 valid after succesful call of BME280_GetPressure
+
+
 /* BME280 communication interface for higher levels */
 #include "sensors/thp_sensor.h"
 extern const THPSENSOR_DrvTypeDef BME280_Driver;

@@ -348,7 +348,7 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
  ******************************************************************************/
 static void LCD_Display_Temp(uint8_t scheme, uint8_t force ) 
 {
-#if USE_DS18X20 > 0 || defined(TX18LISTENER)
+#if USE_DS18X20 > 0 || defined(TX18LISTENER) || USE_BME280 > 0 
     #include "system/util.h"
     uint8_t strlen;
 

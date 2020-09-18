@@ -12,7 +12,7 @@ extern "C" {
 #include "config/config.h"
 
 #define MAJOR_VERSION   1
-#define MINOR_VERSION   02
+#define MINOR_VERSION   03
 
 #if defined(NOEXTENSION) 
     #define APP_NAME "NoExtension"

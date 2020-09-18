@@ -18,6 +18,6 @@
 
 THPSENSOR_StatusEnum BMP085_SoftReset(void);
 
-extern uint16_t bmp085_pressure;      			// pressure in hPA * 10 valid after succesful call of BMP085_GetPressure
+extern uint16_t bmp_pressure;      			// pressure in hPA * 10 valid after succesful call of BMP085_GetPressure
 // extern int16_t  hpa_average;                            // average of "bmp085_pressure" 
 extern const THPSENSOR_DrvTypeDef BMP085_Driver;
