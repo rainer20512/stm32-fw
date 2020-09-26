@@ -33,12 +33,27 @@
 #define NEX_RET_VARNAME_TOO_LONG            (0x23)
 #define NEX_RET_SERBUF_OVERFLOW             (0x24)
 
+#define TERMLEN                             3       /* Length of nextion comm terminator ( 3x 0xff)  */
+#define STR_ANSWER_LEN                      32      /* Max length a nextion answer string may have   */
+#define NUMBER_ANSWER_LEN                   8       /* num identifier + 4 num bytes + 3 x terminator */
+#define ONE_BYTE_ANSWER_LEN                 4       /* one byte ID, 3 x terminator                   */
+
+extern const uint8_t termstr[];
+
+typedef struct nexAnswerStr {
+    uint8_t strlen;
+    char txt[STR_ANSWER_LEN];
+} nexStr;
 
 struct nexAnswer {
-    uint32_t Number;                       /* number answer                     */
-    uint8_t bOneByteValid;                 /* != 0, if one byte answer is valid */
-    uint8_t OneByteAnswer;                 /* One byte answer                   */
+    union {
+        uint32_t Number;                   /* number answer                     */
+        uint8_t  OneByteAnswer;            /* One byte answer                   */
+        nexStr   Str;                      /* returned string                   */  
+    };
+    uint8_t bOneByteValid;                 /* != 0, if one byte answer is valid */                 
     uint8_t bNumberValid;                  /* != 0, if number answer is valid   */
+    uint8_t bStringValid;                  /* != 0, if String answer is valid   */ 
     uint8_t bAnswerValid;                  /* != 0, if we found the terminator  */
 };
 

@@ -322,7 +322,7 @@ bool LinBuff_GetsTo(LinBuffT *b, uint8_t **str, size_t *len, char delimiter )
   ********************************************************************************/
 void LinBuff_SetEmpty(LinBuffT *b)
 {
-  b->rdptr = 0 b->wrptr = b->ovrrun = 0;
+  b->rdptr = b->wrptr = b->ovrrun = 0;
 }
 
 

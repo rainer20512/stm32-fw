@@ -17,8 +17,6 @@
 #define OUTBUF_SIZE 256
 #define INBUF_SIZE  64
 
-#define TERMLEN 3
-static const uint8_t termstr[TERMLEN] = { 0xff, 0xff, 0xff };
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -122,6 +120,7 @@ void SerialRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
 {
     UNUSED(uhandle);
     DEBUG_PRINTF("SerIn[%d]: %02x\n", i.wrptr-1, ch);
+    if ( i.ovrrun ) { LinBuff_SetEmpty(&i); return; }
     if ( LBUF_USED(i) >= 3 ) {
         /* Check for terminating three 0xFF bytes */
         uint32_t ref = i.wrptr - TERMLEN;

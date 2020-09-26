@@ -17,12 +17,16 @@
 
 #include "debug_helper.h"
 
-char txt[32];
+
+
+
+
+/* Nextion termination byte sequence */
+const uint8_t termstr[TERMLEN] = { 0xff, 0xff, 0xff };
+
 char cmd[64];
 char buf[12];
-char msg[32];
-unsigned char wrData;
-struct nexAnswer answer = {0 };
+struct nexAnswer    answer    = {0 };
 
 #define ANSWER_IS_TMO       0
 #define ANSWER_IS_SUCCESS   1 
@@ -46,15 +50,13 @@ int8_t nexOneNumStr(uint16_t answer_len);
  */
 uint8_t recvRetNumber(uint32_t *number)
 {
-    #define NUMBER_ANSWER_LEN      8
 
     /* check for reception of answer of expected chars */
     int8_t ret = nexOneNumStr(NUMBER_ANSWER_LEN);
 
     /* check for expected answer of type NUM */ 
     if ( ret != ANSWER_IS_NUM ) return 0;
-   
-    
+       
     *number = answer.Number;
     return 1;
 }
@@ -71,66 +73,17 @@ uint8_t recvRetNumber(uint32_t *number)
  */
 uint16_t recvRetString(char *buffer, uint16_t len)
 {
-    uint16_t ret = 0;
-    uint8_t str_start_flag = 0;
-    uint8_t cnt_0xff = 0;
-    char arr[32];
-    char *temp = arr;
-    uint8_t c = 0;
-    long start;
+    /* check for reception of answer of expected chars: 32 bytes pure str + indicator byte + termination str  */
+    int8_t ret = nexOneNumStr(STR_ANSWER_LEN+1+TERMLEN);
 
-    if (!buffer || len == 0)
-    {
-        goto __return;
-    }
+    /* check for expected answer of type NUM */ 
+    if ( ret != ANSWER_IS_STR ) return 0;
 
-    start = 500;
-    while (start)
-    {
-        while (nexSerial_available())
-        {
-            c = nexSerial_read();
-            if (str_start_flag)
-            {
-                if (0xFF == c)
-                {
-                    cnt_0xff++;
-                    if (cnt_0xff >= 3)
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    temp += (char)c;
-                }
-            }
-            else if (NEX_RET_STRING_HEAD == c)
-            {
-                str_start_flag = 1;
-            }
-        }
+    uint16_t work = answer.Str.strlen;
+    if ( work > len ) work = len;
+    memcpy(buffer, answer.Str.txt, work);
 
-        if (cnt_0xff >= 3)
-        {
-            break;
-        }
-        --start;
-    }
-
-    ret = ArrayLength((uint8_t*)temp);
-    ret = ret > len ? len : ret;
-    strncpy(buffer, temp, ret);
-
-__return:
-    /*
-    dbSerialPrint("recvRetString[");
-    dbSerialPrint(temp.length());
-    dbSerialPrint(",");
-    dbSerialPrint(temp);
-    dbSerialPrintln("]");
-     */
-    return ret;
+    return work;
 }
 
 /*
@@ -144,7 +97,6 @@ __return:
  */
 uint8_t recvRetCommandFinished()
 {
-    #define ONE_BYTE_ANSWER_LEN      4
 
     /* Wait for answer and check for reception of answer of expected chars */
     int8_t ret = nexOneNumStr(ONE_BYTE_ANSWER_LEN);
@@ -159,6 +111,7 @@ void sendCommand(char *command)
     answer.bOneByteValid = 0;
     answer.bNumberValid  = 0;
     answer.bAnswerValid  = 0;
+    answer.bStringValid  = 0;
 
     nexSerial_start();
     nexSerial_print((unsigned char*)command);
@@ -202,6 +155,11 @@ static void nexStoreNumber()
 
 static void nexStoreString()
 {
+    uint8_t work = nexSerial_available();
+    if ( work > STR_ANSWER_LEN ) work = STR_ANSWER_LEN;
+    nexSerial_readBytes(answer.Str.txt, work);
+    answer.Str.strlen = work;
+    answer.bStringValid = 1;
 }
 
 
@@ -288,6 +246,9 @@ void nexLoop(struct NexObject *nex_listen_list[])
         case NEX_RET_EVENT_TOUCH_HEAD:
             nexHandleTouch(nex_listen_list);
             break;  
+        case NEX_RET_STRING_HEAD:
+            nexStoreString();
+            break;
         default:
             DEBUG_PRINTF("nexLoop cannot handle %02x\n", c);
     }
