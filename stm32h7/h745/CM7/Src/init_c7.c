@@ -59,6 +59,15 @@ void Init_OtherDevices(void)
       }
        
   #endif
+  #if defined(USE_USART2)
+      dev_idx = AddDevice(&HW_COM2, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init COM2-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }
+       
+  #endif
   #if defined(USE_USART1)
       dev_idx = AddDevice(&HW_COM1, NULL, NULL );
       if ( dev_idx < 0 ) {
@@ -163,7 +172,12 @@ void Init_OtherDevices(void)
 
 void task_handle_out  (uint32_t);
 void task_handle_qspi (uint32_t);
+void task_handle_ser  (uint32_t);
 void CM7_handle_remote(uint32_t);
+void task_init_ser_in (void);
+void task_handle_serin(uint32_t arg);
+void task_handle_ser  (uint32_t);
+
 
 /* Stack sizes are in 32bit words */
 #define TMR_STACK_SIZE  256
@@ -174,6 +188,7 @@ void CM7_handle_remote(uint32_t);
 #define ADC_STACK_SIZE  128
 #define RMT_STACK_SIZE  256
 #define QSP_STACK_SIZE  128
+#define SER_STACK_SIZE  128
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];
@@ -182,7 +197,10 @@ static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
 static StackType_t adcStack[ADC_STACK_SIZE];
 static StackType_t rmtStack[RMT_STACK_SIZE];
-static StackType_t qspStack[QSP_STACK_SIZE];
+#if USE_QSPI > 0
+    static StackType_t qspStack[QSP_STACK_SIZE];
+#endif
+static StackType_t sinStack[SER_STACK_SIZE];
 
 
 /******************************************************************************
@@ -194,25 +212,26 @@ void Init_DefineTasks(void)
 {
   /* The priority is defined by the sequence: The higher in the list, the higher the priority */
 #if USE_QSPI > 0
-  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,      JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
+  TaskRegisterTask(NULL,            task_handle_qspi, TASK_QSPI,      JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
 #endif
-  TaskRegisterTask(task_init_rtc, task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
-  TaskRegisterTask(NULL,          task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
-  TaskRegisterTask(NULL,          CM7_handle_remote,TASK_REMOTE_CM7,JOB_TASK_REMOTE,   rmtStack, RMT_STACK_SIZE, "CM4 remote task");
-  TaskRegisterTask(NULL,          task_periodic,    TASK_PERIODIC,   JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
-  TaskRegisterTask(task_init_adc, task_handle_adc,  TASK_ADC,        JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
+  TaskRegisterTask(task_init_rtc,   task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
+  TaskRegisterTask(NULL,            task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
+  TaskRegisterTask(NULL,            CM7_handle_remote,TASK_REMOTE_CM7,JOB_TASK_REMOTE,   rmtStack, RMT_STACK_SIZE, "CM4 remote task");
+  TaskRegisterTask(NULL,            task_periodic,    TASK_PERIODIC,   JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
+  TaskRegisterTask(task_init_adc,   task_handle_adc,  TASK_ADC,        JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
+  TaskRegisterTask(task_init_ser_in,task_handle_serin,TASK_SERIN,      JOB_SER,           sinStack, SER_STACK_SIZE, "Display in task");
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
-  TaskRegisterTask(CMD_Init,      task_handle_com,  TASK_COM,        JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
-  TaskRegisterTask(NULL,          task_handle_out,  TASK_OUT,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
+  TaskRegisterTask(CMD_Init,        task_handle_com,  TASK_COM,        JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
+  TaskRegisterTask(NULL,            task_handle_out,  TASK_OUT,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
 #if USE_THPSENSOR > 0
-  TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
+  TaskRegisterTask(task_init_thp,   task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
 #endif
 #if USE_DISPLAY > 0
-  TaskRegisterTask(task_init_lcd, task_handle_lcd, TASK_LCD,      JOB_TASK_LCD,      "LCD task");
+  TaskRegisterTask(task_init_lcd,   task_handle_lcd, TASK_LCD,      JOB_TASK_LCD,      "LCD task");
 #endif
 #if USE_DS18X20 > 0
-  TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
+  TaskRegisterTask(task_init_ds,    task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
 #endif
 #if USE_DS18X20 > 0
     AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");

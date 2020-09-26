@@ -238,15 +238,16 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
   */
 void DebugErrorCallback(UsartHandleT *uhandle)
 {
-/* Immediately return on 'no error' */
-if ( uhandle->last_errors == HAL_UART_ERROR_NONE ) return; 
-/* Test for receive error */
-if ( uhandle->last_errors & ( HAL_UART_ERROR_PE | HAL_UART_ERROR_NE | HAL_UART_ERROR_FE | HAL_UART_ERROR_ORE ) ) {
-  /* Restart receiver on receive error */
-  DEBUG_PRINTF("Error %x on Debug input receive\n", uhandle->last_errors);
-} else {
-  DEBUG_PUTS("DMA error on Debug output\n");
-}
+    /* Immediately return on 'no error' */
+    if ( uhandle->last_errors == HAL_UART_ERROR_NONE ) return; 
+
+    /* Test for receive error */
+    if ( uhandle->last_errors & ( HAL_UART_ERROR_PE | HAL_UART_ERROR_NE | HAL_UART_ERROR_FE | HAL_UART_ERROR_ORE ) ) {
+        /* Restart receiver on receive error */
+        DEBUG_PRINTF("Error %x on Debug input receive\n", uhandle->last_errors);
+    } else {
+        DEBUG_PUTS("DMA error on Debug output\n");
+    }
 }
 
 

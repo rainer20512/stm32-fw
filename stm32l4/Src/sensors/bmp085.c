@@ -369,7 +369,7 @@ id_err:
 uint32_t BMP085_GetCapability(void)
 {
     /* Sensor may suppy Temp ( chip temp ) and pressure */
-    return THPSENSOR_HAS_T | THPSENSOR_HAS_P;
+    return THPSENSOR_HAS_P;
 }
 
 /*******************************************************************************

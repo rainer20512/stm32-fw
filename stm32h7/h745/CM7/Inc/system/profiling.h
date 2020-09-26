@@ -48,6 +48,7 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
 #if USE_QSPI > 0
     JOB_TASK_QSPI,
 #endif
+    JOB_SER,
     JOB_ADC,
     JOB_SLEEP,
     JOB_STOP0,
@@ -99,6 +100,7 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
 
 #define JOBNAMES99 \
   JOBNAMES4     \
+  "SER IO",     \
   "ADC",        \
   "SLEEP",      \
   "STOP0",      \

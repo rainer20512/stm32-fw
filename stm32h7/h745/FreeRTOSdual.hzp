@@ -618,6 +618,36 @@
         </folder>
         <file file_name="CM7/Inc/global_flags.h" />
       </folder>
+      <folder Name="nextion">
+        <file file_name="../../common/nextion/Example.c" />
+        <file file_name="../../common/nextion/NexButton.c" />
+        <file file_name="../../common/nextion/NexButton.h" />
+        <file file_name="../../common/nextion/NexConfig.h" />
+        <file file_name="../../common/nextion/NexHardware.c" />
+        <file file_name="../../common/nextion/NexHardware.h" />
+        <file file_name="../../common/nextion/NexNumber.c" />
+        <file file_name="../../common/nextion/NexNumber.h" />
+        <file file_name="../../common/nextion/NexObject.h" />
+        <file file_name="../../common/nextion/NexPage.c" />
+        <file file_name="../../common/nextion/NexPage.h" />
+        <file file_name="../../common/nextion/NexProgressBar.c" />
+        <file file_name="../../common/nextion/NexProgressBar.h" />
+        <file file_name="../../common/nextion/NexSlider.c" />
+        <file file_name="../../common/nextion/NexSlider.h" />
+        <file file_name="../../common/nextion/NexText.c" />
+        <file file_name="../../common/nextion/NexText.h" />
+        <file file_name="../../common/nextion/Nextion.h" />
+        <file file_name="../../common/nextion/NexTouch.c" />
+        <file file_name="../../common/nextion/NexTouch.h" />
+        <file file_name="../../common/nextion/README.md" />
+        <file file_name="../../common/nextion/Serial.c" />
+        <file file_name="../../common/nextion/Serial.h" />
+        <folder Name="util">
+          <file file_name="../../common/nextion/util/my_types.h" />
+          <file file_name="../../common/nextion/util/Utilities.c" />
+          <file file_name="../../common/nextion/util/Utilities.h" />
+        </folder>
+      </folder>
     </folder>
   </project>
   <configuration

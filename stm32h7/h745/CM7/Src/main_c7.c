@@ -40,6 +40,8 @@
 #include "system/tm1637.h"
 #include "cmsis_os.h"
 
+#define INIT_STACK_SIZE 256
+
 /* external variables --------------------------------------------------------*/
 extern uint32_t __SRAMUNCACHED_segment_start__;
 
@@ -274,7 +276,7 @@ int main(void)
 
 
     /* Start the Core 1 init task, this task will start all other tasks */
-    xTaskCreate( prvCore1InitTask, "Core1Init", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL);		
+    xTaskCreate( prvCore1InitTask, "Core1Init", INIT_STACK_SIZE, NULL, configMAX_PRIORITIES, NULL);		
 
     STATUS(7);
 

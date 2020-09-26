@@ -37,6 +37,7 @@ typedef struct linear_buffer {
         uint32_t size;                    /* Size of buffer, no size restrictions */
         uint32_t wrptr;                   /* write position within output buffer */
         uint32_t rdptr;                   /* position of next character to be transferred to output device */
+        uint8_t  ovrrun;                  /* Set to != 0 if linear buffer overrun occurs */
 } LinBuffT; 
 
 
@@ -44,6 +45,8 @@ typedef struct linear_buffer {
 #define CBUFPTR_INCR(cbuf,ptr,num)    ( ((cbuf).ptr+num) & (cbuf).mask )      
 /* decrement circular pointer by 'num' */
 #define CBUFPTR_DECR(cbuf,ptr,num)    ( ((cbuf).ptr-num) & (cbuf).mask )      
+/* reset circular buffers to initial values (no content, both ptrs at begin */
+#define CBUF_RESET(cbuf)              do { (cbuf).wrptr = (cbuf).rdptr = 0; } while (0)
 /* true, if circular bufferis empty */
 #define CBUF_EMPTY(cbuf)              ( (cbuf).wrptr == (cbuf).rdptr )
 /* true, if circular buffer wraps around */
@@ -64,6 +67,8 @@ typedef struct linear_buffer {
 
 /* true, if linear buffer is empty */
 #define LBUF_EMPTY(lbuf)              ( (lbuf).wrptr == (lbuf).rdptr )
+/* number of elements in linear buffer */
+#define LBUF_USED(lbuf)               ( (lbuf).wrptr - (lbuf).rdptr )
 /* check for 'num' free elements in buffer, leave one element free for terminating \0 */
 #define CHECK_LBUF_FREE(lbuf,num)     ( (lbuf).wrptr + num < (lbuf).size )
 /* true, if r is a valid read index ( ie between rdptr..wrptr-1  */
@@ -88,8 +93,10 @@ void     CircBuff_PutBack(CircBuffT *b, uint8_t ch );
 
 void     LinBuff_Init(LinBuffT *cbuff, uint32_t size, uint8_t *bufptr );
 bool     LinBuff_Putc(LinBuffT *b, uint8_t ch );
+bool     LinBuff_Peekc(LinBuffT *b, uint8_t *ch );
 bool     LinBuff_Getc(LinBuffT *b, uint8_t *ch );
 void     LinBuff_Gets(LinBuffT *b, uint8_t **str, size_t *len );
+size_t   LinBuff_GetN(LinBuffT *b, uint8_t **buf, size_t numtoread );
 bool     LinBuff_GetsTo(LinBuffT *b, uint8_t **str, size_t *len, char delimiter );
 void     LinBuff_SetEmpty(LinBuffT *b);
 bool     LinBuff_CleanUp(LinBuffT *b, uint32_t num );

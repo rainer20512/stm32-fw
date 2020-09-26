@@ -179,8 +179,7 @@ void LinBuff_Init(LinBuffT *lbuff, uint32_t size, uint8_t *bufptr )
 {
     lbuff->size = size;
     lbuff->buf = bufptr;
-    lbuff->wrptr = lbuff->rdptr = 0;
-
+    lbuff->wrptr = lbuff->rdptr = lbuff->ovrrun = 0;
 }
 
 bool LinBuff_Putc(LinBuffT *b, uint8_t ch )
@@ -188,19 +187,27 @@ bool LinBuff_Putc(LinBuffT *b, uint8_t ch )
   if ( CHECK_LBUF_FREE(*b, 1) ) {    
     b->buf[b->wrptr]=ch;
     b->wrptr++;
+    b->rdptr=0;
     return true;
   } else {
+    b->rdptr=1;
     return false;
   }
 }
 
-bool LinBuff_Getc(LinBuffT *b, uint8_t *ch )
+bool LinBuff_Peekc(LinBuffT *b, uint8_t *ch )
 {
   if ( LBUF_EMPTY(*b) ) return false;
 
   *ch = b->buf[b->rdptr];
-  b->rdptr++;
   return true;  
+}
+
+bool LinBuff_Getc(LinBuffT *b, uint8_t *ch )
+{
+  bool ret = LinBuff_Peekc(b, ch);
+  if ( ret ) b->rdptr++;
+  return ret;  
 }
 
 #if 0
@@ -234,6 +241,34 @@ void LinBuff_Gets(LinBuffT *b, uint8_t **str, size_t *len )
     /* proceed rdptr */
     b->rdptr = b->wrptr;
 }
+
+/*********************************************************************************
+  * @brief  Return the first <numtoread> chars from input buffer
+  *         
+  * @param  *buf       - ptr to string, will point to input buffer on return
+  * @param  numtoread  - number of characters to read
+  *         
+  * @note   if there are less chars in input buffer than requested, only
+  *         the number of available characters is returned
+  * @note   there will be no \0 character at the end. the consumer
+  *         has to check the return len parameter to determine the length of returned string
+  *
+  * @retval number of characters actually available
+  ********************************************************************************/
+size_t LinBuff_GetN(LinBuffT *b, uint8_t **buf, size_t numtoread )
+{
+    size_t avail = LBUF_USED(*b);
+    size_t num = ( avail < numtoread ? avail : numtoread );
+
+    /* Return ptr to input string */
+    *buf = b->buf + b->rdptr;
+
+    /* proceed rdptr */
+    b->rdptr += num;
+
+    return num;
+}
+
 
 /*********************************************************************************
   * @brief  Return the input buffer as string up to the first occurence of 'delim'
@@ -287,8 +322,7 @@ bool LinBuff_GetsTo(LinBuffT *b, uint8_t **str, size_t *len, char delimiter )
   ********************************************************************************/
 void LinBuff_SetEmpty(LinBuffT *b)
 {
-  b->rdptr = 0;
-  b->wrptr = 0;
+  b->rdptr = 0 b->wrptr = b->ovrrun = 0;
 }
 
 
@@ -311,6 +345,7 @@ bool LinBuff_CleanUp(LinBuffT *b, uint32_t num )
 
   b->rdptr-= num;
   b->wrptr-= num;
+  b->rdptr = 0;
   return true;
 }
   

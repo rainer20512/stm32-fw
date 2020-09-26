@@ -53,11 +53,12 @@
 //#define COM1_USE_TX_DMA
 //#define COM1_USE_RX_DMA
 
-//#define USE_USART2
+#define USE_USART2
 //#define USE_USART2_ALTN1
-/* Undefine, if RX or TX shall be done via DMA */
-//#define COM2_USE_TX_DMA
-//#define COM2_USE_RX_DMA
+#define COM2_USE_TX_DMA
+// #define COM2_USE_RX_DMA
+#define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+//#define USE_USART2_DEBUG
 
 //#define USE_USART3
 //#define USE_USART3_ALTN1

@@ -184,23 +184,44 @@
    * Alternatives for UART4 : 
    * TX:[PA0,PC10] RX:[PA1,PC11]
    * ALTN1   TX:PC10 RX:PC11  AF8
-   *         TX:PA12 RX:PA11  AF6
+   * ALTN2   TX:PA12 RX:PA11  AF6
    *         TX:PB9  RX:PB8   AF8
    *         TX:PD1  RX:PD0   AF8
    *         TX:PH13 RX:PH14  AF8
    * DEFAULT TX:PA0  RX:PA1   AF8
    */
-  #ifdef USE_UART4_ALTN1
+  #if defined(USE_UART4_ALTN1)
     /* ALTN1 TX:PC10 RX:PC11 with AF8  */
     #define COM4_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
     #define COM4_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN2)
+    /* ALTN1 TX:PC10 RX:PC11 with AF8  */
+    #define COM4_TX                        { GPIO_PIN_12, GPIOA, GPIO_AF6_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_11, GPIOA, GPIO_AF6_UART4, GPIO_PULLUP, "Uart4_Rx" }
   #else
     /* DEFAULT TX:PA0  RX:PA1 with AF8 */
     #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
     #define COM4_RX                        { GPIO_PIN_1, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
   #endif
 
-   /* RHB work to be done */
+  /* Definition for COM4's NVIC */
+  #if defined(USE_UART4_DEBUG)
+    #define COM4_IRQ                         { UART4_IRQn, DEBUG_IRQ_PRIO, 0    }
+  #else
+    #define COM4_IRQ                         { UART4_IRQn, USART_IRQ_PRIO, 0    }
+  #endif
+  #define COM4_IRQHandler                  UART4_IRQHandler
+
+  #ifdef COM4_USE_TX_DMA
+    /* Definition for UART4 TX DMA */
+    #define COM4_TX_DMA                    DMA1_Stream1, DMA_REQUEST_UART4_TX, DMA1_Stream1_IRQn, DMA_PRIORITY_MEDIUM 
+    #define COM4_DMA_TX_IRQHandler         DMA1_Stream1_IRQHandler
+  #endif
+  #ifdef COM4_USE_RX_DMA
+    /* Definition for UART4 RX DMA */
+    #define COM4_RX_DMA                    DMA1_Stream0, DMA_REQUEST_UART4_RX, DMA1_Stream0_IRQn, DMA_PRIORITY_LOW
+    #define COM4_DMA_RX_IRQHandler         DMA1_Stream0_IRQHandler
+  #endif
 
 #endif // COM4
 

@@ -45,6 +45,8 @@
 #define TASK_QSPI             10
 #define TASK_REMOTE_CM7       11
 #define TASK_REMOTE_CM4       12
+#define TASK_SER              13
+#define TASK_SERIN            14
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30
@@ -59,7 +61,7 @@ bool TaskIsRunableTask  (void);
 void TaskInitAll        ( void );
 void TaskRunAll         ( void );
 void TaskNotify         ( uint32_t num );
-void TaskNotifyFromISR  ( uint32_t num );
+// void TaskNotifyFromISR  ( uint32_t num );  use TaskNotify instead !
 
 #if DEBUG_MODE > 0
     void TaskRegisterTask   ( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name );

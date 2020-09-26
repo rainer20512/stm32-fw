@@ -164,13 +164,14 @@ void TaskInitAll ( void )
 
 /******************************************************************************
  * Notify another task. 
- * Notifications my be cumulated, resulting in more than one execution loop
+ * Can be called out of interrupt context or from normal execution path
+ * Notifications may be cumulated, resulting in more than one execution loop
  * of that task
  *****************************************************************************/
 void TaskNotify ( uint32_t num )
 {
     if ( tasks[num].TaskID )  {
-        /* Check for execution out of interrup context */
+        /* Check for execution out of interrupt context */
         if ( SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk )
             vTaskNotifyGiveFromISR(tasks[num].TaskID, NULL);
         else
@@ -180,6 +181,7 @@ void TaskNotify ( uint32_t num )
     }
 }
 
+#if 0
 /******************************************************************************
  * Notify another task out of an interrupt context 
  * Notifications my be cumulated, resulting in more than one execution loop
@@ -193,7 +195,7 @@ void TaskNotifyFromISR ( uint32_t num )
         DEBUG_PRINTF("ISR Notify to unset Task #%d", num);
     }
 }
-
+#endif
 
 #if DEBUG_MODE > 0
 

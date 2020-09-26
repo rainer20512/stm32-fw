@@ -9,6 +9,8 @@
   * configuration itme, that have to be defined/undefined, too.
   * Check the corresponding ifdef-Block
   *
+  * This is the CM4 part
+  *
   ******************************************************************************
   */
 
@@ -200,22 +202,26 @@
     #define RTCTIMER_IRQn           LPTIM4_IRQn
     #define RTCTIMER_IRQHandler     LPTIM4_IRQHandler
 
-    #define USE_USART2
+    //#define USE_USART2
     //#define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     // #define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    #define USE_USART2_DEBUG
+    //#define USE_USART2_DEBUG
     
     // #define USE_USART3
     #define COM3_USE_TX_DMA
     //#define COM3_USE_RX_DMA
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
  
-    // #define USE_UART4
+    #define USE_UART4
+    #define USE_UART4_ALTN1
     #define COM4_USE_TX_DMA
-    #define COM4_USE_RX_DMA
+    // #define COM4_USE_RX_DMA
     #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
+    #define USE_UART4_DEBUG
+
+
     // #define USE_UART5  
     #define COM5_USE_TX_DMA
     #define COM5_USE_RX_DMA

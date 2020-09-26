@@ -1051,7 +1051,7 @@ void UsartIRQHandler(UsartHandleT *uhandle)
             assert ( uhandle->in );
             /* Store only, if there were no errors */
             if (errorflags == RESET)  {
-                // DEBUG_PUTC('r');DEBUG_PUTC('=');print_hexXX((uint8_t)ch);
+                // DEBUG_PUTC('r');DEBUG_PUTC('='); print_hexXX((uint8_t)ch);
                 if ( !LinBuff_Putc(uhandle->in, ch ) ) DEBUG_PUTS("Inbuf Overrun");
                 /* call Callback, if specified */
                 if (uhandle->OnRx) uhandle->OnRx(uhandle, ch );
@@ -1075,9 +1075,11 @@ void UsartIRQHandler(UsartHandleT *uhandle)
     if( uhandle->TxCount < uhandle->TxSize )
     {
       assert(CircBuff_Get_Indexed(uhandle->out, uhandle->TxCount, &ch));
-      if ( ch < 0x0a || ch > 0x7f ) {
-          ch ='!';
-      }
+      #if 0
+          if ( ch < 0x0a || ch > 0x7f ) {
+              ch ='!';
+          }
+      #endif
       /* Transmit next character */
       uhandle->Instance->TDR = ch;
       uhandle->TxCount++;

@@ -99,7 +99,7 @@ typedef struct UsartHandleType {
     #define HW_DEBUG_UART    HW_COM2
 #elif defined(USE_USART3_DEBUG)
     #define HW_DEBUG_UART    HW_COM3
-#elif defined(USE_USART4_DEBUG)
+#elif defined(USE_UART4_DEBUG)
     #define HW_DEBUG_UART    HW_COM4
 #elif defined(USE_UART5_DEBUG)
     #define HW_DEBUG_UART    HW_COM5
