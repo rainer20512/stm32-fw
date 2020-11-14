@@ -2029,6 +2029,8 @@ const THPSENSOR_DrvTypeDef BME280_Driver = {
             #else   
                     NULL,
             #endif
+        .GetCO2Raw = NULL,              /**** 001 ***** Not capable of CO2 measurement */
+        .GetTVOCRaw = NULL,             /**** 001 ***** Not capable of TVOC measurement */
         .Diagnostics =
             #if DEBUG_MODE > 0 && DEBUG_BME280 > 0
                     BME280_Diagnostics,

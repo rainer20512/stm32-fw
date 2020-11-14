@@ -367,6 +367,38 @@ static void I2Cx_WriteData(uint16_t Addr, uint16_t Reg, uint16_t RegSize, uint8_
 
 
 /**
+  * @brief  Special case: Just write an Register address, but no Data
+  * @param  Addr: Device address on BUS Bus.
+  * @param  Reg: The target register address to write
+  * @retval HAL_OK on success, otherwise HAL error code
+  */
+HAL_StatusTypeDef         SENSOR_IO_WriteZero(uint16_t Addr, uint8_t Reg)
+{
+    HAL_StatusTypeDef status = HAL_OK;
+
+    #if defined(BSP_USE_CMSIS_OS)
+        /* Get semaphore to prevent multiple I2C access */
+        osSemaphoreWait(MyI2cSemaphore, osWaitForever);
+    #endif
+
+    status = HAL_I2C_Master_Transmit(myI2cHandle, I2C_WRITE_ADDR((uint8_t)Addr), &Reg, 1, hi2c_evalTimeout);
+
+    #if defined(BSP_USE_CMSIS_OS)
+        /* Release semaphore to prevent multiple I2C access */
+        osSemaphoreRelease(MyI2cSemaphore);
+    #endif
+
+    /* Check the communication status */
+    if(status != HAL_OK)
+    {
+      /* Re-Initiaize the BUS */
+      I2Cx_Error("MasterTransmit");
+    }
+    
+    return status;
+}
+
+/**
   * @brief  Write multiple data value in a register of the device through BUS.
   * @param  Addr: Device address on BUS Bus.
   * @param  Reg: The target register address to write

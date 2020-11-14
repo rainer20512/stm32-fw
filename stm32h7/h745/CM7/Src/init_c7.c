@@ -188,7 +188,7 @@ void task_handle_ser  (uint32_t);
 #define ADC_STACK_SIZE  128
 #define RMT_STACK_SIZE  256
 #define QSP_STACK_SIZE  128
-#define SER_STACK_SIZE  128
+#define SER_STACK_SIZE  256
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];

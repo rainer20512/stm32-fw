@@ -128,6 +128,8 @@
           <file file_name="$(ProjectDir)/Inc/sensors/thp_sensor.h" />
           <file file_name="Inc/sensors/bme280.h" />
           <file file_name="Inc/sensors/bme280_defs.h" />
+          <file file_name="Inc/sensors/ccs811.h" />
+          <file file_name="Inc/sensors/ccs811_defs.h" />
         </folder>
         <folder Name="task">
           <file file_name="$(ProjectDir)/Inc/task/minitask.h" />
@@ -207,6 +209,7 @@
           <folder Name="doc">
             <file file_name="Src/sensors/bme280_doc/bme280_readme.txt" />
           </folder>
+          <file file_name="Src/sensors/ccs811.c" />
         </folder>
         <folder Name="task">
           <file file_name="$(ProjectDir)/Src/task/minitask.c" />
@@ -226,6 +229,7 @@
     <folder Name="Doc">
       <file file_name="$(ProjectDir)/Doc/readme.txt" />
       <file file_name="Doc/clues.txt" />
+      <file file_name="Doc/Changes.txt" />
     </folder>
     <folder Name="Drivers">
       <folder Name="STM32L4xx_HAL_Driver">

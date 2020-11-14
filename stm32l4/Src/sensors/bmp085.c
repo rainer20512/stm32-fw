@@ -440,7 +440,9 @@ const THPSENSOR_DrvTypeDef BMP085_Driver = {
         BMP085_GetTemp,
         NULL,
         BMP085_GetPressure,
-        NULL,               /* Diagnostics not implemented */
+        NULL,                           /* Not capable of CO2 measurement */
+        NULL,                           /* Not capable of TVOC measurement */
+        NULL,                           /* Diagnostics not implemented */
 };
 /*
 typedef struct {

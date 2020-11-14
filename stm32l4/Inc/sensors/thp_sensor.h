@@ -31,8 +31,11 @@ typedef enum {
  *****************************************************************************/
 #define THPSENSOR_HAS_T    (1<<0)   /* Sensor is able to measure temperature     */
 #define THPSENSOR_HAS_H    (1<<1)   /* Sensor is able to measure rel. humidity   */
-#define THPSENSOR_HAS_P    (1<<2)   /* Sensor is able to measure air pressure    */       
-#define ALL_SENSOR_CHANNELS (THPSENSOR_HAS_T | THPSENSOR_HAS_H | THPSENSOR_HAS_P)
+#define THPSENSOR_HAS_P    (1<<2)   /* Sensor is able to measure air pressure    */ 
+/**** 001 ****/
+#define THPSENSOR_HAS_CO2  (1<<3)   /* Sensor is able to measure CO2 concentration*/  
+#define THPSENSOR_HAS_TVOC (1<<4)   /* Sensor is able to measure TVOC */  
+#define ALL_SENSOR_CHANNELS (THPSENSOR_HAS_T | THPSENSOR_HAS_H | THPSENSOR_HAS_P | THPSENSOR_HAS_CO2 | THPSENSOR_HAS_TVOC )
 
 /******************************************************************************
  * Init structure to be returned by sensor initialization. It will hold 
@@ -47,6 +50,9 @@ typedef struct {
   int8_t t_decis;               /* number of decimals of raw temp value          */
   int8_t h_decis;               /* number of decimals of raw rel. humidity value */
   int8_t p_decis;               /* number of decimals of raw pressure value      */
+/**** 001 ****/
+  int8_t co2_decis;             /* number of decimals of CO2 ppm value           */
+  int8_t tvoc_decis;            /* number of decimals of TVOC ppb value          */
 }THPSENSOR_DecisTypeDef;
 
 
@@ -58,6 +64,9 @@ THPSENSOR_StatusEnum THPSENSOR_Measure      (const uint32_t what);
 int32_t              THPSENSOR_GetT         (void);
 int32_t              THPSENSOR_GetH         (void);
 int32_t              THPSENSOR_GetP         (void);
+/**** 001 ****/
+int32_t              THPSENSOR_GetCO2       (void); 
+int32_t              THPSENSOR_GetTVOC      (void);
 void                 THPSENSOR_Diagnostics  (void);
 
 /******************************************************************************
@@ -72,6 +81,9 @@ typedef struct {
     int32_t              (*GetTRaw)       (void);
     int32_t              (*GetHRaw)       (void);    
     int32_t              (*GetPRaw)       (void);
+/**** 001 ****/
+    int32_t              (*GetCO2Raw)     (void);
+    int32_t              (*GetTVOCRaw)    (void);
     void                 (*Diagnostics)   (void);  
 } THPSENSOR_DrvTypeDef;
 

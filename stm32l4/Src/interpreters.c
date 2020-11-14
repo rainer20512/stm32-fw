@@ -584,7 +584,7 @@ ADD_SUBMODULE(Devices);
           ********************************************************************************/
         static bool Sensor_Menu ( char *cmdline, size_t len, const void * arg )
         {
-          const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
+          const THPSENSOR_DecisTypeDef Init = {-1,-1,-1,0,0};
           int32_t work;
           UNUSED(cmdline);UNUSED(len);
           switch((uint32_t)arg) {
@@ -2099,7 +2099,7 @@ ADD_SUBMODULE(Test);
     };
     ADD_SUBMODULE(CAN);
 #endif
-#if USE_BMP085 > 0 || USE_BME280 > 0
+#if USE_BMP085 > 0 || USE_BME280 > 0 || USE_CCS811 > 0
 
     #include "sensors/thp_sensor.h"
 
@@ -2128,7 +2128,7 @@ ADD_SUBMODULE(Test);
       int32_t ret;
  
       /* Init all sensor channels to deliver their value with one decimal digit */
-      const THPSENSOR_DecisTypeDef Init = {-1,-1,-1};
+      const THPSENSOR_DecisTypeDef Init = {-1,-1,-1,0,0};
 
      
       UNUSED(cmdline);UNUSED(len);
@@ -2139,19 +2139,39 @@ ADD_SUBMODULE(Test);
             break;
         case 1:
             num = THPSENSOR_IsBusy();
-            printf("THP Sensor %\n", num == 0 ? " in idle" : num > 0 ? "is busy" : "has comm err"  );
+            printf("THP Sensor %s\n", num == 0 ? " in idle" : num > 0 ? "is busy" : "has comm err"  );
             break;
         case 3:
             num = THPSENSOR_Measure(ALL_SENSOR_CHANNELS);
             printf("THP Sensor Measure %\n", num == THPSENSOR_OK ? "ok" :  "err"  );
             break;
         case 4:
-            ret= THPSENSOR_GetT();
-            printf("THP Sensor Temp=%d", ret );
-            ret= THPSENSOR_GetH();
-            printf(", RelHum=%d", ret );
-            ret= THPSENSOR_GetP();
-            printf(", Pressure=%d\n", ret );
+            num = THPSENSOR_GetCapability();
+            if ( num & THPSENSOR_HAS_T ) {
+                ret= THPSENSOR_GetT();
+                printf("THP Sensor Temp=%d\n", ret );
+            } else  
+                printf("No Temp capability\n");
+            if ( num & THPSENSOR_HAS_H ) {
+                ret= THPSENSOR_GetH();
+                printf("RelHum=%d\n", ret );
+            } else  
+                printf("No rel. Hum. capability\n");
+            if ( num & THPSENSOR_HAS_P ) {
+                ret= THPSENSOR_GetP();
+                printf("Pressure=%d\n", ret );
+            } else  
+                printf("No pressure capability\n");
+            if ( num & THPSENSOR_HAS_CO2 ) {
+                ret= THPSENSOR_GetCO2();
+                printf(", CO2=%dppm\n", ret );
+            } else  
+                printf("No CO2 capability\n");
+            if ( num & THPSENSOR_HAS_TVOC ) {
+                ret= THPSENSOR_GetTVOC();
+                printf(", TVOC=%dppb\n", ret );
+            } else  
+                printf("No TVOC capability\n");
             break;
         case 5:
             THPSENSOR_Diagnostics();
@@ -2475,7 +2495,7 @@ static const CommandSetT cmdBasic[] = {
 #if USE_QSPI > 0
   { "QSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test QuadSpi functions" },
 #endif
-#if USE_BME280 > 0 ||  USE_BMP085 > 0
+#if USE_BME280 > 0 ||  USE_BMP085 > 0  || USE_CCS811 > 0
   { "THP Sensor test", ctype_sub, .exec.sub = &mdlTHP,        0,       "Test THP Sensor functions" },
 #endif
 #if USE_CAN > 0

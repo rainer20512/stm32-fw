@@ -1,0 +1,7 @@
+Changes in STM32L4 source tree                             Created 14.11.20 RHB
+-------------------------------------------------------------------------------
+
+These changes are marked with /**** <nnn> ****/ in sourcecode, 
+where <nnn> is the threeed igit number from below
+
+001 Extended THP_Sensor class to support CO2 and TVOC sensors

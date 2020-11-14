@@ -17,6 +17,7 @@
 #define OUTBUF_SIZE 256
 #define INBUF_SIZE  64
 
+#define READ_WAIT_ADDITIONAL_MS         5
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -69,11 +70,15 @@ void Serial_Terminate(void)
 unsigned char Serial_WaitFor( uint8_t nrOfChars, uint8_t *ref, uint8_t limit)
 {
     uint32_t delayms = usPerSymbol * nrOfChars / 1000 + 1;
+    delayms += READ_WAIT_ADDITIONAL_MS;
+
+    DEBUG_PRINTTS("SRW=%d\n",delayms); 
     while ( delayms-- ) {
         DEBUG_PRINTTS("RW\n"); 
         if ( ref && *ref >= limit ) return 1;
         nexDelay(1);
     }
+    DEBUG_PRINTTS("EW\n"); 
     return 0;
 }
 
@@ -185,11 +190,16 @@ void Serial_Flush(void)
    bOngoingTransfer = 1;
    uint32_t transfer_size = o.wrptr - o.rdptr;
 
+   DEBUG_PRINTF("SerOut: ");
+   for ( uint32_t i=0; i < transfer_size; i++ )
+       DEBUG_PRINTF("%02x ", o.buf[o.rdptr+i]);
+   DEBUG_PRINTF("\n");
+
    UsartStartTx(SERIALHANDLE, o.buf+o.rdptr, transfer_size);
 
     /* Wait for write to be completed */
     while ( Serial_IsWriteActive() ) {
-        DEBUG_PRINTTS("WW\n");
+//        DEBUG_PRINTTS("WW\n");
         nexDelay(1);
     }
     DEBUG_PRINTTS("EW\n");

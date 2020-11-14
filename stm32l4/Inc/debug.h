@@ -40,6 +40,8 @@
 #define DEBUG_ONEWIRE       0
 #define DEBUG_DS18X20       0
 #define DEBUG_BMP085        0
+// DEBUG_BME280 in bme280.c
+// DEBUG_CCS811 in ccs811.c
 #define DEBUG_EEPROM_EMUL   0
 #define CMACDEBUG           0
 #define DEBUG_PULSES        0

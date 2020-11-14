@@ -24,6 +24,9 @@
 #elif USE_BMP085 > 0
     #include "sensors/bmp085.h"
     #define THPSENSOR_DRIVER        BMP085_Driver
+#elif USE_CCS811 > 0
+    #include "sensors/ccs811.h"
+    #define THPSENSOR_DRIVER        CCS811_Driver
 #endif
 
 #if USE_DISPLAY > 0
@@ -184,6 +187,24 @@ int32_t THPSENSOR_GetP (void)
         return DoScale(thpsensor_drv->GetPRaw(), conversiondecis.p_decis);
 }
 
+/**** 001 ****/
+int32_t THPSENSOR_GetCO2 (void)
+{
+    if ( !HasCapability(THPSENSOR_HAS_CO2) ) 
+        return THPSENSOR_ERROR;
+    else
+        return DoScale(thpsensor_drv->GetCO2Raw(), conversiondecis.co2_decis);
+}
+
+/**** 001 ****/
+int32_t THPSENSOR_GetTVOC (void)
+{
+    if ( !HasCapability(THPSENSOR_HAS_TVOC) ) 
+        return THPSENSOR_ERROR;
+    else
+        return DoScale(thpsensor_drv->GetTVOCRaw(), conversiondecis.tvoc_decis);
+}
+
 void THPSENSOR_Diagnostics(void)
 {
     if ( thpsensor_drv->Diagnostics ) 
@@ -213,8 +234,8 @@ static void task_do_display ( void *arg)
 
 void task_init_thp ( void )
 {
-    /* Init : Temp to deliver with 2 digits, other channels with one decimal digit */
-    const THPSENSOR_DecisTypeDef Init = {2,1,1};
+    /* Init : Temp to deliver with 2 digits, other channels with one decimal digit, co2 ppm and tvoc ppb w/o any decimal digits */
+    const THPSENSOR_DecisTypeDef Init = {2,1,1,0,0};
 
     if ( THPSENSOR_Init(&Init) == THPSENSOR_OK ) {
 //        AtSecond(28, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");

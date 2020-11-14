@@ -1,7 +1,7 @@
 <!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
- <Breakpoints groups="Breakpoints;V7M Exceptions" active_group="Breakpoints">
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
   <BreakpointListItem trigger="" line="969" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="4" filename="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" useHWbreakpoint="false"/>
   <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
@@ -113,11 +113,10 @@
   <Watches active="1" update="Never">
    <Watchpoint expression="self" name="self" radix="-1" linenumber="140" filename="../../common/src/dev/common_spi.c"/>
    <Watchpoint expression="tasks" name="tasks" radix="-1" linenumber="178" filename="../common_h7/Src/task/minitask.c"/>
-   <Watchpoint expression="b" name="b" radix="-1" linenumber="38" filename="../../common/src/circbuf.c"/>
    <Watchpoint expression="handle" name="handle" radix="-1" linenumber="1610" filename="../common_h7/lwip/enc28j60/enc28j60.c"/>
    <Watchpoint expression="self->data->hw.myHalHandle" name="self->data->hw.myHalHandle" radix="-1" linenumber="624" filename="../../common/src/dev/hw_spi.c"/>
    <Watchpoint expression="hspi" name="hspi" radix="-1" linenumber="967" filename="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c"/>
-   <Watchpoint expression="answer" name="answer" radix="-1" linenumber="25" filename="../../common/nextion/NexHardware.c"/>
+   <Watchpoint expression="answer" name="answer" radix="-1" linenumber="31" filename="../../common/nextion/NexHardware.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -131,55 +130,52 @@
  </Watch4>
  <Files>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="73" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="0" top="51" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="232" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="201" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="190" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="164" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="37" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="61" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="98" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="122" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="120" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="456" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/system/devices_c7.c" selected="0" top="424" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="30" y="192" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/uart_config.h" selected="0" top="75" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="192" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/uart_config.h" selected="0" top="151" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="8" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../doc/Changes.txt" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/spi_config.h" selected="0" top="96" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="15" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/Example.c" selected="0" top="6" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexObject.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/Example.c" selected="0" top="19" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexObject.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="41" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/util/Utilities.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="28" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexPage.c" useBinaryEdit="0" left="0" path="../../common/nextion/util/Utilities.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="286" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Example.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexHardware.c" selected="0" top="268" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="33" y="294" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexButton.c" selected="0" top="262" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="20" y="72" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexNumber.c" selected="0" top="55" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="15" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Example.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexHardware.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="24" y="10" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexPage.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="28" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexPage.c" useBinaryEdit="0" left="0" path="../../common/nextion/util/Utilities.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="173" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexSlider.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexHardware.c" selected="0" top="148" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="294" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexButton.c" selected="0" top="262" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="72" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexNumber.c" selected="0" top="55" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="51" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexHardware.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexHardware.h" selected="0" top="11" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="10" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexPage.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexPage.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="11" y="91" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexProgressBar.c" selected="0" top="33" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="91" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexProgressBar.c" selected="0" top="33" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexProgressBar.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="33" y="30" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexSlider.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="29" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Example.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexSlider.c" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="2" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexSlider.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="81" y="208" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexText.c" selected="0" top="156" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="208" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexText.c" selected="0" top="156" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="4" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexText.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="7" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexTouch.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="132" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexConfig.h" useBinaryEdit="0" left="0" path="../../common/nextion/Serial.c" selected="0" top="108" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="74" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexConfig.h" useBinaryEdit="0" left="0" path="../../common/nextion/Serial.c" selected="0" top="39" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="5" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/NexButton.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="42" y="14" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexHardware.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexConfig.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="20" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Example.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexTouch.c" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="1" y="20" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/Serial.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="14" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/NexHardware.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexConfig.h" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="8" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Example.c" useBinaryEdit="0" left="0" path="../../common/nextion/NexTouch.c" selected="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="20" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/Serial.h" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="55" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Inc/config/devices_config.h" selected="0" top="24" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/stm32h7xx_it.c" selected="0" top="261" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="88" y="44" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/uart_dev.h" selected="0" top="41" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="27" y="1054" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Serial.c" useBinaryEdit="0" left="0" path="../../common/src/dev/uart_dev.c" selected="0" top="1024" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="44" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/dev/uart_dev.h" selected="0" top="41" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1054" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Serial.c" useBinaryEdit="0" left="0" path="../../common/src/dev/uart_dev.c" selected="0" top="1024" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="81" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/debug_outbuf.c" selected="0" top="51" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="619" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/cmdline.c" selected="0" top="575" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="15" y="347" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/uart_dev.c" useBinaryEdit="0" left="0" path="../../common/src/circbuf.c" selected="1" top="304" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="91" y="39" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/circbuf.h" selected="0" top="9" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="121" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Serial.c" useBinaryEdit="0" left="0" path="../../common/src/circbuf.c" selected="0" top="107" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="39" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/inc/circbuf.h" selected="0" top="57" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="960" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/init_c7.c" useBinaryEdit="0" left="0" path="../../common/src/rtc.c" selected="0" top="929" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="48" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/init_c7.c" useBinaryEdit="0" left="0" path="../common_h7/inc/task/minitask.h" selected="0" top="24" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="57" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/main_c7.c" useBinaryEdit="0" left="0" path="CM7/Inc/FreeRTOSConfig.h" selected="0" top="36" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="46" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/dev/io_dev.c" selected="0" top="40" codecName=""/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="78" useTextEdit="1" openedFrom="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h" selected="0" top="49" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="102" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/dev/i2c_abstract.c" selected="0" top="55" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="90" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/README.md" selected="0" top="38" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1367" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="1325" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="90" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/README.md" selected="0" top="38" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1367" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" selected="0" top="1325" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="729" useTextEdit="1" openedFrom="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" useBinaryEdit="0" left="0" path="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h" selected="0" top="712" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="47" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/nextion/Serial.c" useBinaryEdit="0" left="0" path="../../common/inc/debug_helper.h" selected="0" top="6" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/inc/debug_helper.h" useBinaryEdit="0" left="0" path="../../common/src/system/profiling.c" selected="0" top="71" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="144" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Src/task/minitask.c" selected="0" top="103" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="144" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Src/task/minitask.c" selected="0" top="103" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/nextion/util" debugSearchPath="" autoConnectCapabilities="266111"/>
+ <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/nextion/util" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

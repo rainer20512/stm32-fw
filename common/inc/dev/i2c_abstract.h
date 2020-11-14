@@ -57,6 +57,7 @@
     HAL_StatusTypeDef         SENSOR_IO_ReadMultiple(uint16_t Addr, uint8_t Reg, uint8_t *Buffer, uint16_t Length);
     HAL_StatusTypeDef         SENSOR_IO_ReadMultipleIT(uint16_t Addr, uint8_t Reg, uint8_t *Buffer, uint16_t Length, pI2C_CallbackTypeDef pCallback);
     void                      SENSOR_IO_Write( uint16_t Addr, uint8_t Reg, uint8_t Value);
+    HAL_StatusTypeDef         SENSOR_IO_WriteZero(uint16_t Addr, uint8_t Reg);
     HAL_StatusTypeDef         SENSOR_IO_WriteMultiple(uint16_t Addr, uint8_t Reg, uint8_t *Buffer, uint16_t Length);
     HAL_StatusTypeDef         SENSOR_IO_IsDeviceReady(uint16_t DevAddress, uint32_t Trials);
     void                      SENSOR_IO_Delay(uint32_t Delay);

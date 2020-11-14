@@ -32,6 +32,7 @@ struct nexAnswer    answer    = {0 };
 #define ANSWER_IS_SUCCESS   1 
 #define ANSWER_IS_NUM       2
 #define ANSWER_IS_STR       3
+#define ANSWER_IS_USERDEF   4
 #define ANSWER_IS_ERR       (-1)
 #define ANSWER_IS_UNDECODED (-2)
 
@@ -108,10 +109,7 @@ uint8_t recvRetCommandFinished()
 void sendCommand(char *command)
 {
     /* reset all types of answer-valid-bytes */
-    answer.bOneByteValid = 0;
-    answer.bNumberValid  = 0;
-    answer.bAnswerValid  = 0;
-    answer.bStringValid  = 0;
+    RESET_VALID(&answer);
 
     nexSerial_start();
     nexSerial_print((unsigned char*)command);
@@ -153,13 +151,12 @@ static void nexStoreNumber()
     answer.bNumberValid = 1;
 }
 
-static void nexStoreString()
+static void nexStoreString(void)
 {
     uint8_t work = nexSerial_available();
     if ( work > STR_ANSWER_LEN ) work = STR_ANSWER_LEN;
     nexSerial_readBytes(answer.Str.txt, work);
     answer.Str.strlen = work;
-    answer.bStringValid = 1;
 }
 
 
@@ -201,14 +198,18 @@ int8_t nexOneNumStr(uint16_t answer_len)
             case NEX_RET_SERBUF_OVERFLOW:
                 nexStoreOneByte(c);
                 ret = ( c == NEX_RET_CMD_FINISHED ? ANSWER_IS_SUCCESS : ANSWER_IS_ERR );
+                DEBUG_PRINTF("Got byte %02x\n",c);
                 break;
             case NEX_RET_NUMBER_HEAD:
                 nexStoreNumber();
                 ret = ANSWER_IS_NUM;
+                DEBUG_PRINTF("Got number %02d\n",answer.Number);
                 break;
             case NEX_RET_STRING_HEAD:
                 nexStoreString();
+                answer.bStringValid = 1;
                 ret = ANSWER_IS_STR;
+                DEBUG_PRINTF("Got Str of len %d\n", answer.Str.strlen);
                 break;
             default:
                 DEBUG_PRINTF("nexOneNumStr cannot handle %02x\n", c);
@@ -246,8 +247,10 @@ void nexLoop(struct NexObject *nex_listen_list[])
         case NEX_RET_EVENT_TOUCH_HEAD:
             nexHandleTouch(nex_listen_list);
             break;  
-        case NEX_RET_STRING_HEAD:
+        case NEX_RET_USERDEF_HEAD:
             nexStoreString();
+            answer.bUserDefValid = 1;
+            // TODO handle user defined answer
             break;
         default:
             DEBUG_PRINTF("nexLoop cannot handle %02x\n", c);

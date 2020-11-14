@@ -15,6 +15,7 @@
 #define NEX_RET_CURRENT_PAGE_ID_HEAD        (0x66)
 #define NEX_RET_STRING_HEAD                 (0x70)
 #define NEX_RET_NUMBER_HEAD                 (0x71)
+#define NEX_RET_USERDEF_HEAD                (0x75)  /* Userdefined return, in TouchMove event, e.g. */
 #define NEX_RET_INVALID_COMPONENT_ID        (0x02)
 #define NEX_RET_INVALID_PAGE_ID             (0x03)
 #define NEX_RET_INVALID_PICTURE_ID          (0x04)
@@ -53,9 +54,21 @@ struct nexAnswer {
     };
     uint8_t bOneByteValid;                 /* != 0, if one byte answer is valid */                 
     uint8_t bNumberValid;                  /* != 0, if number answer is valid   */
-    uint8_t bStringValid;                  /* != 0, if String answer is valid   */ 
+    uint8_t bStringValid;                  /* != 0, if String answer is valid   */
+    uint8_t bUserDefValid;                 /* != 0, if user defined answer is valid   */
     uint8_t bAnswerValid;                  /* != 0, if we found the terminator  */
 };
+
+/* Reset all types of answers */
+#define RESET_VALID(a) \
+    do  {                   \
+    (a)->bAnswerValid   = 0;  \
+    (a)->bOneByteValid  = 0;  \
+    (a)->bNumberValid   = 0;  \
+    (a)->bStringValid   = 0;  \
+    (a)->bUserDefValid  = 0;  \
+    } while (0)
+
 
 extern struct nexAnswer answer;
 
