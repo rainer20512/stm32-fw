@@ -118,7 +118,7 @@ enum {
 #define CCS811_E_DEV_NOT_FOUND                    INT8_C(-2)
 #define CCS811_E_DEV_ERROR                        INT8_C(-3)
 #define CCS811_E_COMM_FAIL                        INT8_C(-4)
-#define CCS811_E_SLEEP_MODE_FAIL                  INT8_C(-5)
+#define CCS811_E_NO_DATA                          INT8_C(-5)
 #define CCS811_E_WRONG_TYPE                       INT8_C(-6)
 #define CCS811_E_I2C_ERR                          INT8_C(-7)
 #define CCS811_E_WRONG_MODE                       INT8_C(-8)

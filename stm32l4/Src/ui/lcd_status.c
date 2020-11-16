@@ -188,6 +188,7 @@ static void LCD_Display_VBatt(uint8_t scheme, uint8_t force)
             lcd_put_string(FONT_PROP_16, NORMAL, LCD_numbuf);
             break;	
         case 3:
+        case 4:
             pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, LCD_numbuf);
             dogm_moveto_xy(3,132-pixlen-1);
             lcd_put_string(FONT_PROP_8, NORMAL, LCD_numbuf);
@@ -212,6 +213,7 @@ static void LCD_Display_Time(uint8_t scheme)
         case 0:
         case 1:
         case 3:
+        case 4:
             dogm_moveto_xy(3,55);
             break;
         default:
@@ -235,6 +237,7 @@ static void LCD_Display_StatusText(uint8_t scheme)
             case 0:
             case 1:
             case 3:
+            case 4:
                 dogm_moveto_xy(3,0);
                 break;
             default:
@@ -392,6 +395,14 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
                 dogm_moveto_xy(1,87);
                 lcd_putstr(LCD_numbuf);
             }
+            break;
+        case 4:
+            lcd_set_font(FONT_PROP_8, NORMAL);
+            dogm_moveto_xy(0,100);
+            lcd_putstr("Temp");
+            lcd_set_font(FONT_PROP_16, NORMAL);
+            dogm_moveto_xy(1,100);
+            lcd_putstr(LCD_numbuf);
         default:
             break;
     }
@@ -399,7 +410,60 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
 }
 #endif
 
-#if USE_THPSENSOR > 0
+#if defined(LCD_STATUS_CO2) || defined(LCD_STATUS_TVOC)
+    static uint16_t last_co2=0xffff;
+    static uint16_t last_tvoc = 0xffff;
+
+    /******************************************************************************
+     * Display CO2 ppm and/or TVOC ppb as decimal integer 
+     ******************************************************************************/
+    static void LCD_Display_Environmental(uint8_t scheme, uint8_t force) 
+    {
+        uint16_t val;
+
+        switch ( scheme ) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+            break;
+        case 4:
+            /**** 002 ****/ 
+            /* CO2 */
+            if ( THPSENSOR_GetCapability() & THPSENSOR_HAS_CO2 ) {
+                val = (uint16_t)THPSENSOR_GetCO2();
+                // Display only, if changed
+                if ( force || last_co2 != val ){
+                    last_co2=val;
+                    my_itoa(val, LCD_numbuf, 5, false);
+                    lcd_set_font(FONT_PROP_8, NORMAL);
+                    dogm_moveto_xy(0,0);
+                    lcd_putstr("CO2 ppm");
+                    lcd_set_font(FONT_PROP_16, NORMAL);
+                    dogm_moveto_xy(1,0);
+                    lcd_putstr(LCD_numbuf);
+                }
+            }
+            /* TVOC */
+            if ( THPSENSOR_GetCapability() & THPSENSOR_HAS_TVOC ) {
+                val = (uint16_t)THPSENSOR_GetTVOC();
+                // Display only, if changed
+                if ( force || last_tvoc != val ){
+                    last_tvoc=val;
+                    my_itoa(val, LCD_numbuf, 5, false);
+                    lcd_set_font(FONT_PROP_8, NORMAL);
+                    dogm_moveto_xy(0,50);
+                    lcd_putstr("TVOC ppb");
+                    lcd_set_font(FONT_PROP_16, NORMAL);
+                    dogm_moveto_xy(1,50);
+                    lcd_putstr(LCD_numbuf);
+                }
+            }
+            break;
+        } // switch
+    }
+#endif
+#if defined(LCD_STATUS_PRESSURE)
     static uint16_t last_pressure=0xffff;
 
     /******************************************************************************
@@ -531,8 +595,14 @@ static uint32_t OnRedraw(uint32_t redraw_bits)
     else if (redraw_bits & LCD_STATUS_BATTERY) 	{ redraw_bits &= ~LCD_STATUS_BATTERY;	LCD_Display_VBatt(work,force); }
     else if (redraw_bits & LCD_STATUS_TIME)	{ redraw_bits &= ~LCD_STATUS_TIME; 	LCD_Display_Time(work); }
     else if (redraw_bits & LCD_STATUS_RFM)	{ redraw_bits &= ~LCD_STATUS_RFM; 	LCD_Display_StatusText(work); }
-#if USE_THPSENSOR > 0
+#if defined(LCD_STATUS_PRESSURE)
     else if (redraw_bits & LCD_STATUS_PRESSURE)	{ redraw_bits &= ~LCD_STATUS_PRESSURE;  LCD_Display_Pressure(work,force); }
+#endif
+#if defined(LCD_STATUS_CO2)
+    else if (redraw_bits & LCD_STATUS_CO2)	{ redraw_bits &= ~LCD_STATUS_CO2;  LCD_Display_Environmental(work,force); }
+#endif
+#if defined(LCD_STATUS_TVOC)
+    else if (redraw_bits & LCD_STATUS_TVOC)	{ redraw_bits &= ~LCD_STATUS_TVOC;  LCD_Display_Environmental(work,force); }
 #endif
 #if USE_SERIALSTORAGE > 0
     else if (redraw_bits & LCD_STATUS_EXTMEM)	{ redraw_bits &= ~LCD_STATUS_EXTMEM;	LCD_Display_ExtMem_Useage(work,force); }

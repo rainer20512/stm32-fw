@@ -5,3 +5,5 @@ These changes are marked with /**** <nnn> ****/ in sourcecode,
 where <nnn> is the threeed igit number from below
 
 001 Extended THP_Sensor class to support CO2 and TVOC sensors
+002 Extended lcd_status.h / lcd_status.c to display CCS811 sensor values 
+    In order to do that, the number of display schemes was increased by 1 ( now  0..4 )

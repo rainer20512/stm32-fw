@@ -73,7 +73,7 @@ extern const EE_LimitsT eelimits[];
     /* 06 */ {                 1,   1,   9, EEType_Uint8_Dec,   "Debug-Level, reqires\nDEBUG_MODE > 0" },                  \
     /* 07 */ {                 9,   0, 255, EEType_Uint8_Dec,   "Correction value to correct\nlocal pressure to MSL" },    \
     /* 08 */ {                 1,   0,  31, EEType_Uint8_Dec,   "Backlight intensity" },                                   \
-    /* 09 */ {                 1,   0,   3, EEType_Uint8_Dec,   "LCD display scheme to use" },                             \
+    /* 09 */ {                 1,   0,   4, EEType_Uint8_Dec,   "LCD display scheme to use" },                             \
     /* 0a */ {                 5,   1,  30, EEType_Uint8_Dec,   "Backlight on time [s]" },                                 \
     /* 0b */ {                 0,   0, 255, EEType_Uint8_Dec,   "LCD on time [s]" },                                       \
     /* 0c */ {               125,  80, 160, EEType_Uint8_Dec,   "threshold for battery\nwarning [unit 0.02V]" },           \
@@ -168,7 +168,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	#define EE_LAYOUT (0xD2) //!< EEPROM layout version (Stromsensor)
 #elif defined(GASSENSOR) 
 	#define EE_LAYOUT (0xD1) //!< EEPROM layout version (Gassensor)
-#elif defined(UNIVERSAL) || defined(NOEXTENSION)
+#elif defined(UNIVERSAL) || defined(NOEXTENSION) || defined(ENVIRONMENTAL)
 	#define EE_LAYOUT (0xD0) //!< EEPROM layout version (Universal 0) 
 #elif defined(TX18LISTENER)
 	#define EE_LAYOUT (0xA0) //!< EEPROM layout version (Außen 0)

@@ -57,6 +57,7 @@
 #define EXT_TYPE_OUTDOOR 	0x51
 #define EXT_TYPE_COUNTER        0x52
 #define EXT_TYPE_ALARM		0x53
+#define EXT_TYPE_ENVIRONMENT    0x55
 
 
 void COM_print_debug(bool rfm_transmit) 
@@ -81,8 +82,17 @@ void COM_print_debug(bool rfm_transmit)
         DEBUG_PRINTF(" Z:%05d%03d.%c" countervalueHi,countervalue/10, '0'+countervalue%10);
     #endif
 
-    #if USE_THPSENSOR > 0
-        DEBUG_PRINTF(" P:%04d", THPSENSOR_GetP()/10);
+    #if defined(TX18LISTENER) || defined(UNIVERSAL) 
+        #if USE_THPSENSOR > 0
+            DEBUG_PRINTF(" P:%04d", THPSENSOR_GetP()/10);
+        #endif
+    #endif
+
+    #if defined(ENVIRONMENTAL)
+        #if USE_THPSENSOR > 0
+            DEBUG_PRINTF(" Q:%05d", THPSENSOR_GetCO2());
+            DEBUG_PRINTF(" O:%05d", THPSENSOR_GetTVOC());
+        #endif
     #endif
 
     // RHB Added: Global Flag	
@@ -170,6 +180,23 @@ void COM_print_debug(bool rfm_transmit)
                 /* 0D */wireless_putchar(general_error_code);	// general error code
         #else
                 /* 0D */wireless_putchar(0);					// placeholder
+        #endif
+    #elif defined(ENVIRONMENTAL)
+        /* 09 */wireless_putchar(EXT_TYPE_ENVIRONMENT); // Environmental Frame type
+        #if USE_THPSENSOR > 0
+            { 
+                work = THPSENSOR_GetTVOC();
+                /* 0A */wireless_putchar(work >> 8); // TVOC
+                /* 0B */wireless_putchar((uint8_t)work & 0xff);
+                work = THPSENSOR_GetCO2();
+                /* 0C */wireless_putchar(work >> 8); // TVOC
+                /* 0D */wireless_putchar((uint8_t)work & 0xff);
+            }
+        #else
+            /* 0A */wireless_putchar(0); // TVOC
+            /* 0B */wireless_putchar(0);
+            /* 0C */wireless_putchar(0); // CO2
+            /* 0D */wireless_putchar(0);
         #endif
     #elif defined(GASSENSOR) || defined(STROMSENSOR)
         /* 09 */wireless_putchar(EXT_TYPE_COUNTER);		// Counter Frame type

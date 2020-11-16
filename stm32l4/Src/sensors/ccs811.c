@@ -172,7 +172,7 @@ void ccs811_setDriveMode(struct ccs811_dev *dev, uint8_t mode)
     @brief  enable the data ready interrupt pin on the device.
 */
 /**************************************************************************/
-static void ccs811_enableInterrupt(struct ccs811_dev *dev ) 
+void ccs811_enableInterrupt(struct ccs811_dev *dev ) 
 {
   dev->devData._meas_mode |= CCS811_MEAS_MODE_INT_DATARDY;
   ccs811_write_reg(dev, CCS811_MEAS_MODE, &dev->devData._meas_mode,1);
@@ -183,9 +183,21 @@ static void ccs811_enableInterrupt(struct ccs811_dev *dev )
     @brief  disable the data ready interrupt pin on the device
 */
 /**************************************************************************/
-static void ccs811_disableInterrupt(struct ccs811_dev *dev ) {
+void ccs811_disableInterrupt(struct ccs811_dev *dev ) {
   dev->devData._meas_mode &= ~CCS811_MEAS_MODE_INT_DATARDY;
   ccs811_write_reg(dev, CCS811_MEAS_MODE, &dev->devData._meas_mode,1);
+}
+
+
+/**************************************************************************/
+/*!
+    @brief   read the status register and store in _status
+    @returns the error bits from the status register of the device.
+*/
+/**************************************************************************/
+void ccs811_readStatus(struct ccs811_dev *dev) 
+{
+  ccs811_read_reg(dev, CCS811_STATUS, &dev->devData._status, 1 );
 }
 
 
@@ -197,7 +209,7 @@ static void ccs811_disableInterrupt(struct ccs811_dev *dev ) {
 /**************************************************************************/
 int8_t ccs811_checkError(struct ccs811_dev *dev) 
 {
-  ccs811_read_reg(dev, CCS811_STATUS, &dev->devData._status, 1 );
+  ccs811_readStatus(dev);
 
   /* If we have an error, read and store the error source ID */
   if ( dev->devData._status & CCS811_STATUS_ERROR ) {
@@ -220,6 +232,66 @@ int8_t ccs811_checkError(struct ccs811_dev *dev)
         }
     }
 #endif
+
+/**************************************************************************/
+/*!
+    @brief  checks if data is available to be read.
+    @returns True if data is ready, false otherwise.
+*/
+/**************************************************************************/
+bool ccs811_dataAvailable(struct ccs811_dev *dev) 
+{
+  ccs811_readStatus(dev);
+  return (dev->devData._status & CCS811_STATUS_DATA_READY) != 0;
+}
+
+/**************************************************************************/
+/*!
+    @brief  read and store the sensor data. This data can be accessed with
+   getTVOC() and geteCO2()
+    @returns CCS811_OK,         if no error, data si stored in _eCO2 and _TVOC
+    @returns CCS811_E_NO_DATA   if no new data vailable
+    @returns CCS811_E_DEV_ERROR if any error bit is set, _status and _error_id
+                                are updated
+    @returns CCS811_E_COMM_FAIL if i2c comm failed
+*/
+/**************************************************************************/
+int8_t ccs811_readData(struct ccs811_dev *dev) 
+{
+    if (!ccs811_dataAvailable(dev)) {
+        #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
+            ccs811_checkError(dev);
+            DEBUG_PUTS("CCS811: No new data available");
+            DEBUG_PRINTF("CCS811 status: Status=0x%02x, Error=0x%02x", 
+                          dev->devData._status,dev->devData._error_id );
+            uint8_t mode;
+            ccs811_read_reg(dev, CCS811_MEAS_MODE, &mode, 1 );
+            DEBUG_PRINTF(", Mode=0x%02x\n", mode );
+        #endif
+        return CCS811_E_NO_DATA;
+    } else {
+        uint8_t buf[8];
+        if ( ccs811_read_reg(dev, CCS811_ALG_RESULT_DATA, buf, 8) == CCS811_OK ) {
+            dev->devData._eCO2     = ((uint16_t)buf[0] << 8) | ((uint16_t)buf[1]);
+            dev->devData._TVOC     = ((uint16_t)buf[2] << 8) | ((uint16_t)buf[3]);
+            dev->devData._status   = buf[4];
+            dev->devData._error_id = buf[5];
+            #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
+                DEBUG_PRINTF("CCS811 read: CO2=%d, TVOC=%d, Status=0x%02x, Error=0x%02x\n", 
+                              dev->devData._eCO2,dev->devData._TVOC, dev->devData._status,dev->devData._error_id );
+            #endif
+            return ( dev->devData._status & CCS811_STATUS_ERROR ) != 0 ? CCS811_E_DEV_ERROR : CCS811_OK;
+        } else {
+           /* error during i2c read */
+            #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
+                DEBUG_PUTS("CCS811 read: I2C comm error");
+            #endif
+           return CCS811_E_COMM_FAIL;
+        }
+    } 
+}
+
+
 
 /**************************************************************************/
 /*!
@@ -412,7 +484,7 @@ THPSENSOR_StatusEnum CCS811_Init(THPSENSOR_DecisTypeDef *Init)
     #endif
 
     // default to read every min
-    ccs811_setDriveMode(&ccs811Dev, CCS811_DRIVE_MODE_60SEC);
+    ccs811_setDriveMode(&ccs811Dev, CCS811_DRIVE_MODE_10SEC);
 
     return THPSENSOR_OK;
 }
@@ -424,49 +496,33 @@ uint32_t CCS811_IsBusy(void)
 }
 
 /******************************************************************************
- * Trigger a measurement. BME280 is in forcesd mode, so measurement has to be
- * triggered explicitely. Temperature, Pressure and Humidity are measured
+ * Trigger a measurement. As the ccs811 sensor triggers its measurements 
+ * automatically ( the measuerment period depends from the mode selected)
+ * the only thing we do here is to readout actual sensor values ( if there are
+ * any )
  *****************************************************************************/
 THPSENSOR_StatusEnum CCS811_Measure(const uint32_t what)
 {
+    UNUSED(what);
+    /* 
+     * read data will either return CCS811OK, CCS811_E_NO_DATA, 
+     * CCS811_E_DEV_ERROR or CCS811_E_COMM_FAIL
+     * The only error conditions are the return of CCS811_E_DEV_ERROR or CCS811_E_COMM_FAIL.
+     * even with CCS811_E_NO_DATA we will return THPSENSOR_OK. 
+     * This will result in previous sensor data being read again
+     */
 
-    // RHB tbd
-    return THPSENSOR_OK;
+    int8_t rslt = ccs811_readData(&ccs811Dev);
+
+    if ( rslt == CCS811_OK || rslt == CCS811_E_NO_DATA )
+        return THPSENSOR_OK;
+    else 
+        return THPSENSOR_ERROR;
 }
 
-static bool ccs811_check_data_availability(void)
-{
-    // RHB todo 
-    #if 0
-    /* make sure sensor is initialized successfully */
-    if ( (bme280Dev.flags & ( BME280_FLAG_INITIALIZED | BME280_FLAG_MEASURE )) != ( BME280_FLAG_INITIALIZED | BME280_FLAG_MEASURE ) ) {
-        return false;
-    }
-    
-    /* Determine set of sensor data to readout according to static selection at top of file */
-    uint8_t sensor_set = 0
-    #if BME280_USE_TEMP > 0
-         | BME280_TEMP
-    #endif
-    #if BME280_USE_HUM > 0
-         | BME280_HUM
-    #endif
-    #if BME280_USE_PRESS > 0
-         | BME280_PRESS
-    #endif
-    ;
-
-    /* if raw data conversion is not done up to now, do it */
-    if ( bme280_get_sensor_data(sensor_set, &comp_data, &bme280Dev) != BME280_OK ) return false;
-
-    /* Set the "data available" flag */
-    bme280Dev.flags |= BME280_FLAG_INITIALIZED;
-    #endif
-    return true;
-}
 
 /******************************************************************************
- * BME280 does not have to be calibration. compensation values are read once
+ * CCS811 does not have to be calibration. compensation values are read once
  * at initialization
  *****************************************************************************/
 
@@ -475,23 +531,14 @@ static THPSENSOR_StatusEnum CCS811_Calibrate(void)
     return THPSENSOR_OK;
 }
 
-#if BME280_USE_TEMP > 0
-    int32_t BME280_GetTemp(void)
-    {
-        return bme280_check_data_availability() ? comp_data.temperature : 0;
-    }
-#endif
-
-#if BME280_USE_HUM > 0
-    int32_t BME280_GetHumidity(void)
-    { 
-        if ( bme280_check_data_availability() )
-            /* Will be returned as rh[%] * 1024, convert to promille */
-            return ( comp_data.humidity * 10 )/1024;
-        else
-            return 0;
-    }
-#endif
+int32_t CCS811_GetCO2(void)
+{
+    return (int32_t) ccs811Dev.devData._eCO2;
+}
+int32_t CCS811_GetTVOC(void)
+{
+    return (int32_t) ccs811Dev.devData._TVOC;
+}
 
 #if BME280_USE_PRESS > 0
 int32_t BME280_GetPressure(void)
@@ -501,75 +548,71 @@ int32_t BME280_GetPressure(void)
 #endif
 
 #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
-    const char * const ovrs_txt[]={"No Sampling","Sample x 1","Sample x 2","Sample x 4","Sample x 8"};
-    static const char* get_ovrs_txt(uint32_t sel)
+    const char * const status_txt[]={"Error", "Bit 1 - resvd", "Bit 2 - resvd", "Data ready ",
+                                     "App valid", "Verify OK",  "Erase done", "App Mode"};
+    static const char* get_status_txt(uint32_t sel)
     {
-      if ( sel < sizeof(ovrs_txt)/sizeof(char *) ) 
-        return ovrs_txt[sel];
+      if ( sel < sizeof(status_txt)/sizeof(char *) ) 
+        return status_txt[sel];
       else
-        return "Sample x 16";
+        return "???";
     }
 
-    const char * const stby_txt[]={"0.5","62.5","125","250","500","1000","10","20"};
-    static const char* get_stby_txt(uint32_t sel)
-    {
-      if ( sel < sizeof(stby_txt)/sizeof(char *) ) 
-        return stby_txt[sel];
-      else
-        return "Illegal";
-    }
-
-    const char * const mode_txt[]={"Sleep","Forced","Forced","Normal"};
+    const char * const mode_txt[]={"Idle","Constant power 1s","Pulse heating 10s","LP pulse heating","Constant power 250ms, raw data"};
     static const char* get_mode_txt(uint32_t sel)
     {
       if ( sel < sizeof(mode_txt)/sizeof(char *) ) 
         return mode_txt[sel];
       else
-        return "Illegal";
+        return "Illegal mode";
     }
 
     void CCS811_Diagnostics ( void )
     {
         int8_t rslt;
-        uint8_t reg_data[4];
+        uint8_t work, mask;
+        uint8_t mode;
 
         /* Check for null pointer in the device structure*/
         rslt = null_ptr_check(&ccs811Dev);
         if ( rslt != CCS811_OK ) return; 
-#if 0
-        rslt = bme280_get_regs(BME280_CTRL_HUM_ADDR, reg_data, 4, &bme280Dev);
-        if (rslt == BME280_OK) {
-            parse_device_settings(reg_data, &settings);
-            DEBUG_PRINTF("Temp sampling     %s\n", get_ovrs_txt(settings.osr_t));
-            DEBUG_PRINTF("Humidiy sampling  %s\n", get_ovrs_txt(settings.osr_h));
-            DEBUG_PRINTF("Pressure sampling %s\n", get_ovrs_txt(settings.osr_p));
-            /* Filter coeff. */
-            rslt = settings.filter; 
-            if ( rslt > 4 ) rslt = 4;
-            DEBUG_PRINTF("Filter Coeff      %d\n", 1<<rslt );
-            DEBUG_PRINTF("Standby time      %sms\n", get_stby_txt(settings.standby_time));
-            /* mode */
-            rslt = reg_data[2] & 0x0b11;
-            DEBUG_PRINTF("Sensor mode       %s\n", get_mode_txt(rslt));
-        } else {
-            DEBUG_PUTS("BME280_Diagnostics: Cannot read ctrl regs");
+
+        /* Read status and error register, then dump status and error register, if error bit is set */
+        ccs811_checkError( &ccs811Dev); 
+        mask = 1;
+        work = ccs811Dev.ccs811Data._status;
+        DEBUG_PRINTF("CCS811 Status=0x%02x\n", work);
+        for ( uint32_t i=0; i < 8; i++ ) {
+            if ( work & mask ) {
+                DEBUG_PRINTF("   %s\n", get_status_txt(i));
+            }
+            mask <<= 1;
         }
-#endif
+        if ( work & CCS811_STATUS_ERROR ) {
+            ccs811_printError(&ccs811Dev);
+        }
+        ccs811_read_reg(&ccs811Dev, CCS811_MEAS_MODE, &ccs811Dev.devData._meas_mode, 1 );
+        mode = ( ccs811Dev.devData._meas_mode >> CCS811_MEAS_MODE_Pos ) & CCS811_MEAS_MODE_Msk;
+        DEBUG_PRINTF("Mode %d: %s\n", mode, get_mode_txt(mode) );
+        DEBUG_PRINTF("DataRdy-Int: %s\n", mode & CCS811_MEAS_MODE_INT_DATARDY ? "On" : "Off" );
+        DEBUG_PRINTF("Int Mode: %s\n", mode & CCS811_MEAS_MODE_INT_THRESH ? "Threshold" : "Normal" );
+
+         
     }
 #endif
 
 const THPSENSOR_DrvTypeDef CCS811_Driver = {
-        .Init   = CCS811_Init,
-        .IsBusy = CCS811_IsBusy,
-        .GetCapability = CCS811_GetCapability,
-        .Calibrate = CCS811_Calibrate,
+        .Init           = CCS811_Init,
+        .IsBusy         = CCS811_IsBusy,
+        .GetCapability  = CCS811_GetCapability,
+        .Calibrate      = CCS811_Calibrate,
         .TriggerMeasure = CCS811_Measure,
-        .GetTRaw = NULL,
-        .GetHRaw = NULL,
-        .GetPRaw = NULL,
-        .GetCO2Raw = NULL,              /**** 001 ***** Not capable of CO2 measurement */
-        .GetTVOCRaw = NULL,             /**** 001 ***** Not capable of TVOC measurement */
-        .Diagnostics =
+        .GetTRaw        = NULL,
+        .GetHRaw        = NULL,
+        .GetPRaw        = NULL,
+        .GetCO2Raw      = CCS811_GetCO2, 
+        .GetTVOCRaw     = CCS811_GetTVOC,
+        .Diagnostics    =
             #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
                     CCS811_Diagnostics,
             #else   

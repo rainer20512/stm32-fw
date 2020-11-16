@@ -18,6 +18,8 @@ extern "C" {
     #define APP_NAME "NoExtension"
 #elif defined(UNIVERSAL) 
     #define APP_NAME "Universal"
+#elif defined(ENVIRONMENTAL) 
+    #define APP_NAME "Environment"
 #elif defined(TX18LISTENER)        
     #define APP_NAME "TxListener"
 #else

@@ -222,13 +222,23 @@ static void task_do_display ( void *arg)
 {
     UNUSED(arg);
      #if USE_DISPLAY > 0
-        if ( HasCapability(THPSENSOR_HAS_P) ) {
-            LCD_DisplayStatus(LCD_STATUS_PRESSURE);
-        }
-        if ( HasCapability(THPSENSOR_HAS_T) ) {
-            abstemp = THPSENSOR_GetT();
-            LCD_DisplayStatus(LCD_STATUS_TEMP);
-        }
+        #if USE_BMP085 > 0 || USE_BME280 > 0
+            if ( HasCapability(THPSENSOR_HAS_P) ) {
+                LCD_DisplayStatus(LCD_STATUS_PRESSURE);
+            }
+            if ( HasCapability(THPSENSOR_HAS_T) ) {
+                abstemp = THPSENSOR_GetT();
+                LCD_DisplayStatus(LCD_STATUS_TEMP);
+            }
+        #endif
+        #if USE_CCS811 > 0 
+            if ( HasCapability(THPSENSOR_HAS_CO2) ) {
+                LCD_DisplayStatus(LCD_STATUS_CO2);
+            }
+            if ( HasCapability(THPSENSOR_HAS_TVOC) ) {
+                LCD_DisplayStatus(LCD_STATUS_TVOC);
+            }
+        #endif
      #endif
 }
 
@@ -238,8 +248,10 @@ void task_init_thp ( void )
     const THPSENSOR_DecisTypeDef Init = {2,1,1,0,0};
 
     if ( THPSENSOR_Init(&Init) == THPSENSOR_OK ) {
-//        AtSecond(28, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
-//        AtSecond(29, task_do_display, (void *)0, "THP sensor display");
+#if USE_CCS811 > 0
+        AtSecond(28, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
+        AtSecond(29, task_do_display, (void *)0, "THP sensor display");
+#endif
         AtSecond(58, task_do_measure, (void *)ALL_SENSOR_CHANNELS, "THP sensor measure");
         AtSecond(59, task_do_display, (void *)0, "THP sensor display");
     } else {
