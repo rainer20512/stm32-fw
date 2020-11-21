@@ -54,7 +54,7 @@
 
     /* plain texts for CSS811 ERROR_ID bits in ascending bit order */
     const char * const ccs811_errtxt[]={
-        "Invalid write addr", 
+        "Invalid write addr/len", 
         "Invalid read addr", 
         "Invalid measure mode",
         "Resistor measurement out of range",
@@ -258,13 +258,14 @@ bool ccs811_dataAvailable(struct ccs811_dev *dev)
 /**************************************************************************/
 int8_t ccs811_readData(struct ccs811_dev *dev) 
 {
+    uint8_t mode;
+
     if (!ccs811_dataAvailable(dev)) {
         #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
             ccs811_checkError(dev);
             DEBUG_PUTS("CCS811: No new data available");
             DEBUG_PRINTF("CCS811 status: Status=0x%02x, Error=0x%02x", 
                           dev->devData._status,dev->devData._error_id );
-            uint8_t mode;
             ccs811_read_reg(dev, CCS811_MEAS_MODE, &mode, 1 );
             DEBUG_PRINTF(", Mode=0x%02x\n", mode );
         #endif
@@ -280,7 +281,18 @@ int8_t ccs811_readData(struct ccs811_dev *dev)
                 DEBUG_PRINTF("CCS811 read: CO2=%d, TVOC=%d, Status=0x%02x, Error=0x%02x\n", 
                               dev->devData._eCO2,dev->devData._TVOC, dev->devData._status,dev->devData._error_id );
             #endif
-            return ( dev->devData._status & CCS811_STATUS_ERROR ) != 0 ? CCS811_E_DEV_ERROR : CCS811_OK;
+            /* 
+             * if an error bit is set, read the error register to reset the error bits 
+             * the error bit(s) will be still available in devData._error_id 
+             */
+            if (dev->devData._status & CCS811_STATUS_ERROR) {
+                DEBUG_PRINTF("CCS811 status: Status=0x%02x, Error=0x%02x", 
+                             dev->devData._status,dev->devData._error_id );
+                /* read into dummy variable */
+                ccs811_read_reg(dev, CCS811_ERROR_ID, &mode, 1);
+                return CCS811_E_DEV_ERROR;
+            } else 
+                return CCS811_OK;
         } else {
            /* error during i2c read */
             #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
@@ -387,6 +399,93 @@ int8_t ccs811_init(struct ccs811_dev *dev)
     return CCS811_OK;
 }
 
+/**************************************************************************/
+/*!
+    @brief  set interrupt thresholds for CO2 ppm values
+    @param medium - begin of medium level of CO2 ppm
+    @param high   - begin of high level of CO2 ppm
+
+    Only valid if sensor is operated in threshold mode.
+    An interrupt is asserted once, only if the current CO2 level moves from one to 
+    another range plus/minus threshold valuse
+    @note  the hysteresis value is fixed to 50
+    @note  the ENV_DATA registers are write-only-registers, ie the current setting cannot
+           be read out
+*/
+/**************************************************************************/
+int8_t ccs811_setThresholds(struct ccs811_dev *dev, uint16_t medium, uint16_t high) 
+{
+    uint8_t buf[4] = {
+        (uint8_t)(medium >> 8), 
+        (uint8_t)(medium & 0xff),
+        (uint8_t)(high >> 8), 
+        (uint8_t)(high & 0xff),
+    };
+
+    /* null ptr check will be performed in write_reg */
+    int8_t rslt = ccs811_write_reg(dev,  CCS811_THRESHOLDS, buf, 4);
+
+    if ( rslt != CCS811_OK ) {
+        #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
+            DEBUG_PRINTF("CCS811 Set Thresholds: error%d\n", rslt);
+        #endif
+    }
+
+    return rslt;
+
+}
+
+/**************************************************************************/
+/*!
+    @brief  set the humidity and temperature compensation for the sensor.
+    @param rh   the humidity data as a percentage in the range 0 .. 100
+    @param temp the temperature in 1/100 degrees C as a int16 in the range -2500 .. +10000
+           For 25.5 degrees C eg, pass 2550
+    @note  the ENV_DATA registers are write-only-registers, ie the current setting cannot
+           be read out
+*/
+/**************************************************************************/
+int8_t ccs811_setEnvironmentalData(struct ccs811_dev *dev, uint8_t rh, int16_t temp) 
+{
+    /* Humidity is stored as an unsigned 16 bits in 1/512%RH. The
+    default value is 50% = 0x64, 0x00. As an example 48.5%
+    humidity would be 0x61, 0x00.*/
+
+    /* Temperature is stored as an unsigned 16 bits integer in 1/512
+    degrees; there is an offset: 0 maps to -25°C. The default value is
+    25°C = 0x64, 0x00. As an example 23.5% temperature would be
+    0x61, 0x00.
+    The internal algorithm uses these values (or default values if
+    not set by the application) to compensate for changes in
+    relative humidity and ambient temperature.*/
+
+    /* Validate range */
+    if ( rh > 100 )     rh = 100;
+    if ( temp < -2500 ) temp = -2500;
+    if ( temp > 10000 ) temp = 10000;
+
+    uint8_t hum_perc  = rh << 1;
+    uint32_t temp_int = temp + 2500;
+    temp_int          = temp_int*128/25;
+
+    uint8_t buf[4] = {
+        hum_perc, 0x00, 
+        (uint8_t)(temp_int >> 8),(uint8_t)(temp_int & 0xff)
+    };
+
+    /* null ptr check will be performed in write_reg */
+    int8_t rslt = ccs811_write_reg(dev, CCS811_ENV_DATA, buf, 4);
+
+    if ( rslt != CCS811_OK ) {
+        #if DEBUG_MODE > 0 && DEBUG_CCS811 > 0
+            DEBUG_PRINTF("CCS811 Set EnvData: error%d\n", rslt);
+        #endif
+    }
+
+    return rslt;
+}
+
+
 /*------------------------------------------------------------------------------
  * End of the CCS811  Driver
  *
@@ -396,7 +495,7 @@ int8_t ccs811_init(struct ccs811_dev *dev)
 #include "sensors/thp_sensor.h"
 #include "dev/i2c_abstract.h"
 
-static struct ccs811_dev  ccs811Dev;
+struct ccs811_dev  ccs811Dev;
 
 CCS811_INTF_RET_TYPE ccs811Read(struct ccs811_dev *dev, uint8_t reg_addr, uint8_t *reg_data, uint32_t len)
 {
@@ -482,6 +581,9 @@ THPSENSOR_StatusEnum CCS811_Init(THPSENSOR_DecisTypeDef *Init)
         DEBUG_PRINTF("Found CCS811 sensor ID 0x%02x, Ver 0x%02x\n", ccs811Dev.hw_id,ccs811Dev.hw_version);
         DEBUG_PRINTF("Found CCS811 sensor BL Ver 0x%02x, App Ver 0x%02x\n", ccs811Dev.boot_version,ccs811Dev.app_version);
     #endif
+
+    /* Environmental data to 30% RH and +21°C */
+    ccs811_setEnvironmentalData(&ccs811Dev,30,2100);
 
     // default to read every min
     ccs811_setDriveMode(&ccs811Dev, CCS811_DRIVE_MODE_10SEC);
@@ -572,7 +674,7 @@ int32_t BME280_GetPressure(void)
         int8_t rslt;
         uint8_t work, mask;
         uint8_t mode;
-
+ 
         /* Check for null pointer in the device structure*/
         rslt = null_ptr_check(&ccs811Dev);
         if ( rslt != CCS811_OK ) return; 
@@ -580,7 +682,7 @@ int32_t BME280_GetPressure(void)
         /* Read status and error register, then dump status and error register, if error bit is set */
         ccs811_checkError( &ccs811Dev); 
         mask = 1;
-        work = ccs811Dev.ccs811Data._status;
+        work = ccs811Dev.devData._status;
         DEBUG_PRINTF("CCS811 Status=0x%02x\n", work);
         for ( uint32_t i=0; i < 8; i++ ) {
             if ( work & mask ) {
@@ -596,8 +698,7 @@ int32_t BME280_GetPressure(void)
         DEBUG_PRINTF("Mode %d: %s\n", mode, get_mode_txt(mode) );
         DEBUG_PRINTF("DataRdy-Int: %s\n", mode & CCS811_MEAS_MODE_INT_DATARDY ? "On" : "Off" );
         DEBUG_PRINTF("Int Mode: %s\n", mode & CCS811_MEAS_MODE_INT_THRESH ? "Threshold" : "Normal" );
-
-         
+       
     }
 #endif
 

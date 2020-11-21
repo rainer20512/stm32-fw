@@ -2102,6 +2102,9 @@ ADD_SUBMODULE(Test);
 #if USE_BMP085 > 0 || USE_BME280 > 0 || USE_CCS811 > 0
 
     #include "sensors/thp_sensor.h"
+    #if USE_CCS811 > 0
+        #include "sensors/ccs811.h"
+    #endif
 
     /*********************************************************************************
      * @brief  Submenu for THP sensor test functions
@@ -2176,6 +2179,20 @@ ADD_SUBMODULE(Test);
         case 5:
             THPSENSOR_Diagnostics();
             break;
+    #if USE_CCS811 > 0
+        case 6:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: compensate  <rh> <temp> : rh=0.100 temp=0..100 \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            printf("Compensate RH=%d%%, Temp=%d\n",num, addr);
+            ccs811_setEnvironmentalData(&ccs811Dev, (uint8_t)num, (uint16_t)addr*100);
+            break;
+    #endif
         default:
           DEBUG_PUTS("THP_Menu: command not implemented");
       } /* end switch */
@@ -2196,6 +2213,9 @@ ADD_SUBMODULE(Test);
         { "Trigger Measurement",      ctype_fn, .exec.fn = THP_Menu, VOID(3), "Initiate Measurement" },
         { "Read Data",                ctype_fn, .exec.fn = THP_Menu, VOID(4), "Readout Sensor data" },
         { "Diagnostics",              ctype_fn, .exec.fn = THP_Menu, VOID(5), "Print Sensor diagnostics" },
+    #if USE_CCS811 > 0
+        { "Compensate CCS811",        ctype_fn, .exec.fn = THP_Menu, VOID(6), "compensate RH and Temp" },
+    #endif
     };
     ADD_SUBMODULE(THP);
 #endif

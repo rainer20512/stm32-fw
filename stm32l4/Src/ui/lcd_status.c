@@ -359,7 +359,7 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
     if ( !force && last_temp == abstemp ) return;
     last_temp = abstemp;
 
-    strlen = LCD_ComputeTemp(LCD_numbuf,(abstemp+5)/10, scheme==3);
+    strlen = LCD_ComputeTemp(LCD_numbuf,(abstemp+5)/10, scheme >= 3);
     switch ( scheme  ) {
         case 0:
         case 1:
@@ -420,6 +420,7 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
     static void LCD_Display_Environmental(uint8_t scheme, uint8_t force) 
     {
         uint16_t val;
+        uint8_t style;
 
         switch ( scheme ) {
         case 0:
@@ -429,6 +430,12 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
             break;
         case 4:
             /**** 002 ****/ 
+            /* On measurement error, print headline inverted */
+            if ( CTL_error & ERR_THPSENSOR ) {
+                 style = INVERT;
+                 force = true;
+            } else 
+                 style =NORMAL;
             /* CO2 */
             if ( THPSENSOR_GetCapability() & THPSENSOR_HAS_CO2 ) {
                 val = (uint16_t)THPSENSOR_GetCO2();
@@ -436,12 +443,14 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
                 if ( force || last_co2 != val ){
                     last_co2=val;
                     my_itoa(val, LCD_numbuf, 5, false);
-                    lcd_set_font(FONT_PROP_8, NORMAL);
+                    lcd_set_font(FONT_PROP_8, style);
                     dogm_moveto_xy(0,0);
                     lcd_putstr("CO2 ppm");
                     lcd_set_font(FONT_PROP_16, NORMAL);
                     dogm_moveto_xy(1,0);
                     lcd_putstr(LCD_numbuf);
+                    /* Clear one char position behind */
+                    dogm_clear_area(2,11,NORMAL);
                 }
             }
             /* TVOC */
@@ -451,12 +460,14 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
                 if ( force || last_tvoc != val ){
                     last_tvoc=val;
                     my_itoa(val, LCD_numbuf, 5, false);
-                    lcd_set_font(FONT_PROP_8, NORMAL);
+                    lcd_set_font(FONT_PROP_8, style);
                     dogm_moveto_xy(0,50);
                     lcd_putstr("TVOC ppb");
                     lcd_set_font(FONT_PROP_16, NORMAL);
                     dogm_moveto_xy(1,50);
                     lcd_putstr(LCD_numbuf);
+                    /* Clear one char position behind */
+                    dogm_clear_area(2,11,NORMAL);
                 }
             }
             break;

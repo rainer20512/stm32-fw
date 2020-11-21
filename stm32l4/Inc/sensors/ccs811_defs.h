@@ -165,7 +165,6 @@ enum {
  */
 struct ccs811_data
 {
-  float _tempOffset;
   uint16_t _TVOC;
   uint16_t _eCO2;
   uint8_t _status;   
@@ -249,12 +248,11 @@ struct ccs811_dev
     CCS811_INTF_RET_TYPE intf_rslt;
 
     /*< copy of some internal registers and sensor data */
-    struct ccs811_data ccs811Data;
+    struct ccs811_data devData;
 
     /*< CCS811 operational status flags */
     uint8_t flags;
 
-    struct ccs811_data devData;
 };
 
 #endif /* CCS811_DEFS_H_ */

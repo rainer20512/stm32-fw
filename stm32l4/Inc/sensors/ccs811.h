@@ -16,6 +16,8 @@ extern const THPSENSOR_DrvTypeDef CCS811_Driver;
 #include "sensors/ccs811_defs.h"
 
 
+extern struct ccs811_dev ccs811Dev;
+
 #ifdef __cplusplus
 }
 #endif /* End of CPP guard */

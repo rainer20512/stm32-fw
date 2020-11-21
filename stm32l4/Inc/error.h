@@ -41,6 +41,8 @@ extern uint8_t CTL_error;
 #define ERR_RFM_INOP                    (1<<1)    		// RHB Added: RFM module seem to be inop ( torn off, e.g. )
 #if defined(TX18LISTENER)
     #define ERR_SENSOR_BATT             (1<<0)	  		// Sensor Battery low
+#elif USE_THPSENSOR > 0
+    #define ERR_THPSENSOR               (1<<0)	  		// THP sensor measurement returned with errir    
 #else
     #define ERR_UUU_UNUSED0             (1<<0)	  		// unused
 #endif

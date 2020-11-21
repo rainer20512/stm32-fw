@@ -130,10 +130,14 @@ THPSENSOR_StatusEnum THPSENSOR_Init (const THPSENSOR_DecisTypeDef *userdecis)
         }
     }
 
-    if ( THPSENSOR_IsUseable() )
+    /* Set or reset global error flag in dependance of result */
+    if ( THPSENSOR_IsUseable() ) {
+        CTL_error &= ~ERR_THPSENSOR;
         return THPSENSOR_OK;
-    else
+    } else {
+        CTL_error |=  ERR_THPSENSOR;
         return THPSENSOR_ERROR;
+    }
 }
 
 uint32_t THPSENSOR_IsBusy(void)
@@ -215,7 +219,15 @@ void THPSENSOR_Diagnostics(void)
 
 static void task_do_measure ( void *arg )
 {
-    THPSENSOR_Measure((uint32_t)arg);
+    THPSENSOR_StatusEnum ret;
+
+    ret = THPSENSOR_Measure((uint32_t)arg);
+
+    /* Set or reset global error flag in dependance of result */
+    if ( ret == THPSENSOR_OK ) 
+        CTL_error &= ~ERR_THPSENSOR;
+    else 
+        CTL_error |=  ERR_THPSENSOR;
 }
 
 static void task_do_display ( void *arg)
