@@ -125,7 +125,7 @@
 /******************************************************************************
  * Check and set constraints for FMC module
  *****************************************************************************/
-#undef USE_FMC 
+#undef USE_FMC
 #if USE_FMC_SRAM > 0 || USE_FMC_NOR > 0 || USE_FMC_NAND > 0
     #define USE_FMC 1
 #else
