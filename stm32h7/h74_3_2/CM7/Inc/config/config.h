@@ -24,7 +24,8 @@
  ********************************************************************************
  */ 
 //#define STM32H745NUCLEO
-#define STM32H742REF
+//#define STM32H742REF
+#define STM32H743EVAL2
 
 /*
  ********************************************************************************
@@ -62,8 +63,8 @@
  *  #define CHECKSUM_GEN_TCP                1 
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
-#define USE_ETY_PHY_LAN8742         0
-#define USE_ETH_PHY_ENC28J60        1
+#define USE_ETY_PHY_LAN8742         1
+#define USE_ETH_PHY_ENC28J60        0
 
 
 #define GENERAL_BAUDRATE    500000
@@ -138,14 +139,20 @@
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
-#endif
 
-#if defined(STM32H742REF)
+#elif defined(STM32H742REF)
     #define  HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       16000000
-#endif
 
+#elif defined(STM32H743EVAL2)
+    #define  HW_HAS_HSE_CRYSTAL
+    #undef  HW_HAS_HSE_BYPASS
+    #define  HW_HSE_FREQUENCY       25000000
+
+#else
+     #error "Missing HSE definitions"
+#endif
 
 /* Can we use an HSE Clock ? */
 #if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)

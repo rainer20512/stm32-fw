@@ -1,5 +1,5 @@
    1. When then STM Cube Directory is changed:
-      THe easiest way is to open the project file as xml file, then search and replace the hard code STM Cube directory 
+      THe easiest way is to open the project file as xml file, then search and replace the hard coded STM Cube path
 
    2. DMA memory has to reside in an area that is not chaced by D-Cache. To create it, define an power-of-2 sized ram area in SRAM1-4 
       (not AXISRAM, this cannot be accessed by DMA1 and DMA2) and define it as not cacheable and not bufferable to MPU. All types of

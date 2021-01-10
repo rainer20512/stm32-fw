@@ -147,7 +147,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 
       return true;
     }
-#elif defined(STM32H745xx) || defined(STM32H742xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     static bool Usart_SetClockSource(const void *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;

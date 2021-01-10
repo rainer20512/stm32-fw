@@ -56,7 +56,7 @@ static uint32_t get_vos_value (void)
 {
 #if defined(STM32H745xx)
     return ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
-#elif defined(STM32H742xx)
+#elif defined(STM32H742xx) || defined(STM32H743xx)
     /* VOSrange 0 is coded as VOSrange 1 PLUS ODEN bit in SYSCFG->PWRCR set */
     uint32_t temp = ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
     if ( temp == 0b11 ) 
@@ -866,7 +866,7 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 
 #if defined(STM32H745xx)
     #define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
-#elif defined(STM32H742xx)
+#elif defined(STM32H742xx) || defined(STM32H743xx)
     #define MK_3ARGS(a)     RCC->a, 0, 0 
 #else
     #error "No RCC domain mapping defined"

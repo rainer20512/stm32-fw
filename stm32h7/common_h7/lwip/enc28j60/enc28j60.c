@@ -49,6 +49,8 @@
     #define SPI_HANDLE      (&SPI1Handle)
 #elif defined(STM32H742REF)
     #define SPI_HANDLE      (&SPI3Handle)
+#elif defined(STM32H743EVAL2)
+    #define SPI_HANDLE      (&SPI3Handle)
 #else
     #error "No SPI-Interface for ENC28J60 defined"
 #endif

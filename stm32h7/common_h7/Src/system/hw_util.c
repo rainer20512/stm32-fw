@@ -27,7 +27,7 @@
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM4;  \
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM5;  \
                                              } while (0)
-#elif defined(STM32H742xx)
+#elif defined(STM32H742xx) || defined(STM32H743xx)
     /* Stop rtc when either M7 or M4 is in debug mode */
     #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;  } while (0)
     /* Stop LPTIMERS when either M7 or M4 is in debug mode */
@@ -483,7 +483,7 @@ static const char *Get_DeviceName ( uint16_t devID )
             default: return "Unknown Package";
         }
     }
-#elif defined(STM32H742xx)
+#elif defined(STM32H742xx)  || defined(STM32H743xx)
     static const char *Get_PackageName( uint16_t package )
     {
         switch(package&0b111) {

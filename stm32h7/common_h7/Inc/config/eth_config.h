@@ -70,6 +70,14 @@
         //altn    #define ETH_TX1          { GPIO_PIN_14 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
         //altn    #define ETH_TX_EN	   { GPIO_PIN_11 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
         #define ETH_TX_EN           { GPIO_PIN_11 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
+    #elif defined(STM32H743EVAL2)
+        // altn  #define ETH_TX0           { GPIO_PIN_12 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     } 
+        #define ETH_TX0             { GPIO_PIN_13 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx0"     }
+        //altn    #define ETH_TX1          { GPIO_PIN_13 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        #define ETH_TX1             { GPIO_PIN_12 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        //altn    #define ETH_TX1          { GPIO_PIN_14 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "Tx1"     }
+        //altn    #define ETH_TX_EN	   { GPIO_PIN_11 ,GPIOB, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
+        #define ETH_TX_EN           { GPIO_PIN_11 ,GPIOG, GPIO_AF11_ETH, GPIO_NOPULL, "TxEn"    }
     #else
         #error "No Ethernet RMII config for selected board"
     #endif

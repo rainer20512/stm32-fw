@@ -80,7 +80,7 @@ void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
             return HAL_RCC_GetPCLK1Freq();
     }
                  
-#elif defined(STM32H745xx) || defined(STM32H742xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     static bool SpiSetClockSource(SPI_TypeDef *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;

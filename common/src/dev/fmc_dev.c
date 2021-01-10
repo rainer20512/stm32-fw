@@ -280,7 +280,7 @@ void Fmc_MspInit(void)
     /* STM32L4xx has no clock mux for QUADSPI device */
     #define Fmc_SetClockSource(a)           (true)
     #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H745xx) || defined(STM32H742xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx)  || defined(STM32H743xx)
     static bool Fmc_SetClockSource(const void *hw)
     {
       UNUSED(hw);

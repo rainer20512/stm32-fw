@@ -36,7 +36,7 @@
     #define ADC_SAMPLETIME_FAST     ADC_SAMPLETIME_24CYCLES_5
     #define ADC_SAMPLETIME_SLOW     ADC_SAMPLETIME_47CYCLES_5
     #define ADC_CLOCKSOURCE         RCC_ADCCLKSOURCE_SYSCLK
-#elif defined(STM32H745xx) || defined(STM32H742xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     #define ADC_SAMPLETIME_FAST     ADC_SAMPLETIME_32CYCLES_5
     #define ADC_SAMPLETIME_SLOW     ADC_SAMPLETIME_64CYCLES_5
     #define ADC_CLOCKSOURCE         RCC_ADCCLKSOURCE_CLKP
@@ -135,7 +135,7 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
         Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
         o->Ratio                    = ADC_OVERSAMPLING_RATIO_16;        /* 16x oversampling */
         o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
-    #elif defined(STM32H745xx) || defined(STM32H742xx)
+    #elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
         Init->ClockPrescaler        = ADC_CLOCK_ASYNC_DIV16;         /* Peripheral clock of 64 MHz divied by 16*/
         o->Ratio                    = 16;                               /* 16x oversampling */
         o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
@@ -359,7 +359,7 @@ bool AdcCalibrate ( ADC_HandleTypeDef *hAdc )
     && (HAL_ADCEx_Calibration_Start(hAdc, ADC_DIFFERENTIAL_ENDED) ==  HAL_OK)
   ;
 }
-#elif defined(STM32H745xx) || defined(STM32H742xx)
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
 bool AdcCalibrate ( ADC_HandleTypeDef *hAdc )
 {
   return    
@@ -498,7 +498,7 @@ ADC_Common_TypeDef *GetCommonInstance(const HW_DeviceType *self)
 {
     #if defined(STM32L476xx) || defined(STM32L496xx)
         return __LL_ADC_COMMON_INSTANCE(self->devBase);
-    #elif defined(STM32H745xx) || defined(STM32H742xx)
+    #elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
         return __LL_ADC_COMMON_INSTANCE(self->devBase);
     #else
         #error "No implementation to determine ADC common instance"
