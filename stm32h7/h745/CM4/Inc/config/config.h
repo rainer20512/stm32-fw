@@ -59,8 +59,8 @@
  *  #define CHECKSUM_GEN_TCP                1 
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
-#define USE_ETY_PHY_LAN8742         0
-#define USE_ETH_PHY_ENC28J60        1
+#define USE_ETY_PHY_LAN8742         1
+#define USE_ETH_PHY_ENC28J60        0
 
 
 #define GENERAL_BAUDRATE    500000

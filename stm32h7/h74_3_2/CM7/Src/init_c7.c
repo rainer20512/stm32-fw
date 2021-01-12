@@ -59,14 +59,13 @@ void Init_OtherDevices(void)
       }
        
   #endif
-  #if defined(USE_USART1)
+  #if defined(USE_USART1) && ! defined(USE_USART1_DEBUG)
       dev_idx = AddDevice(&HW_COM1, NULL, NULL );
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init USART-device");
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }
-
   #endif
   #if defined(USE_SPI3)
       dev_idx = AddDevice(&HW_SPI3, NULL, NULL );
@@ -142,6 +141,16 @@ void Init_OtherDevices(void)
         /* Init I2c device */
         if ( !DeviceInitByIdx(dev_idx, NULL ) ) 
             DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
+      }
+  #endif
+  #if defined (USE_ETH) && USE_ETY_PHY_LAN8742 > 0
+      dev_idx = AddDevice(&ETH_DEV, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to add ETH device %s\n", ETH_DEV.devName );
+      } else {
+        /* Init ETH device */
+        if ( ! DeviceInitByIdx(dev_idx, NULL ) )
+            DEBUG_PRINTF("Failed to init ETH device %s\n", ETH_DEV.devName );
       }
   #endif
   #if defined(FMC_Bank1_R) && USE_FMC > 0 

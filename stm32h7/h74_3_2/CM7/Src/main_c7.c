@@ -316,7 +316,13 @@ static MPURegionT mpuRegions[MAX_MPU_REGIONS];
 static void MPU_Setup(void)
 {
     mpuRegions[0].baseAddress = (uint32_t)&__SRAMUNCACHED_segment_start__;
+#if defined(STM32H742xx)
     mpuRegions[0].regionSize  = MPU_REGION_SIZE_16KB;
+#elif defined(STM32H743xx)
+    mpuRegions[0].regionSize  = MPU_REGION_SIZE_32KB;
+#else
+    #error "Uncached SRAM size unset"
+#endif
 }
 
 
@@ -351,7 +357,14 @@ static void MPU_Config(void)
   /* Configure the MPU attributes as RO for CM7 Flash */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.BaseAddress = FLASH_BANK1_BASE;
+#if defined(STM32H742xx)
   MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
+#elif defined(STM32H743xx)
+  MPU_InitStruct.Size = MPU_REGION_SIZE_2MB;
+#else
+    #error "Cached Flash size unset"
+#endif
+
   MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO_URO;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
   MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;

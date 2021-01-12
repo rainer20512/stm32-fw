@@ -51,17 +51,17 @@
 
 #elif defined(STM32H743EVAL2)
   // LEDs  
-  #define IO_00                             { GPIO_PIN_3,  GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }
-  #define IO_01                             { GPIO_PIN_4 , GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed or" }
-  #define IO_02                             { GPIO_PIN_5 , GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed rd" }
-  #define IO_03                             { GPIO_PIN_6 , GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed bl" }
-  #define USERLEDNUM                        4
-  #define USERLEDS                          { 0, 1, 2, 3} 
+  #define IO_00                             { GPIO_PIN_10,  GPIOF, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }
+  #define IO_01                             { GPIO_PIN_4 ,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed rd" }
+//  #define IO_02                             { GPIO_PIN_5 , GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed rd" }
+//  #define IO_03                             { GPIO_PIN_6 , GPIOK, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed bl" }
+  #define USERLEDNUM                        2
+  #define USERLEDS                          { 0, 1, } 
 
   // Blue pushbutton
   #define IO_05_IRQ                         { BUTTON_IRQ_PRIO, 0 }
   #define IO_05                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_05_IRQ, "Blue PushBtn" }
-  #define IO_NUM                            5
+  #define IO_NUM                            3
 /* Example entry for additional IO-Pins
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
 */

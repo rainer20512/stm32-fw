@@ -594,6 +594,7 @@
 
   #if USE_ETH > 0
     #define ETH_USE_RMII
+    #define ETH_USE_IRQ
     #define ETH_DEV             HW_ETH
   #endif
 

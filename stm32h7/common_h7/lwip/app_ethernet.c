@@ -35,8 +35,8 @@
 
 #if defined(STM32H742REF) || defined(STM32H743EVAL2)
         #include "dev/io_dev.h"
-        #define BSP_LED_On(a)       IO_UserLedOn(2)
-        #define BSP_LED_Off(a)      IO_UserLedOff(2)
+        #define BSP_LED_On(a)       IO_UserLedOn(1)
+        #define BSP_LED_Off(a)      IO_UserLedOff(1)
 #endif
 
 /* Private typedef -----------------------------------------------------------*/

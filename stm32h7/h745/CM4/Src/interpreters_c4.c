@@ -667,7 +667,7 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 #include "system/periodic.h"
 void stats_display(void);
 
-#if USE_ETH > 0
+#if USE_ETH > 0 && USE_ETH_PHY_ENC28J60 > 0
   void ethernetif_statistic ( void );
   void ethernetif_restart   ( void );
 #endif
@@ -749,7 +749,7 @@ static const CommandSetT cmdTest[] = {
 #if USE_EEPROM_EMUL > 0
   { "Write config ",   ctype_fn, .exec.fn = Test_Menu,      VOID(3), "Write config[31] x times"}, 
 #endif
-#if defined(USE_ETH)
+#if defined(USE_ETH) && USE_ETH_PHY_ENC28J60 > 0
   { "ETH IF statistic",ctype_fn, .exec.fn = System_Menu,    VOID(3), "Show ETH Interface stats"},   
   { "ETH IF reset",    ctype_fn, .exec.fn = System_Menu,    VOID(4), "Reset ETH Interface"},   
 #endif
