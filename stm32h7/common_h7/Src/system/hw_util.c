@@ -395,7 +395,7 @@ uint32_t *    HW_GetPeriphBitBandAddr     ( __IO uint32_t *periphAddr, uint16_t 
 
 
 /* from a mathematical view, ln2(GPIO_pin) is returned */
-uint16_t HW_GetLn2 ( uint16_t pwrof2 )
+uint16_t HW_GetLn2 ( uint32_t pwrof2 )
 {
     uint16_t ret = 0;
 

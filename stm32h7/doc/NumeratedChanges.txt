@@ -4,18 +4,30 @@ Within the sources, the changes are marked as **** <num> ****
 ----------------------------------------------------------------------------------------------
 
 001 Add an activity LED to non-sleep FreeRTOS
-    A) in dev/io_dev.h: Add these lines
-       + /**** 001 **** Use gn LED as "activity LED" whoen using FreeRTOS */
-       + #define ACTIVITY_LED        0           
+    A) in inc/FreeRTOSConfig.h: Add these lines
+        + /**** 001 **** RHB Added 
+        +  * implementation of activity LED 
+        +  */
+        + #define configUSE_RTOS_ACTIVITY_LED             1
+        + 
+        + /**** 001 **** RHB ADDED 
+        +  * Use gn LED as "activity LED" when using FreeRTOS
+        +  * LED number according to gpio_config.h"
+        +  */
+        + #define configACTIVITY_LED                      0           
     B) in FreeRTOS-file tasks.c:
        i. add include file
               + /**** 001 **** neccessary for implementation of activity LED */
-              + #include "dev/io_dev.h"
+              + #if configUSE_RTOS_ACTIVITY_LED > 0
+              +     #include "dev/io_dev.h"
+              + #endif 
        ii. switch off activity LED whenever IDLE task is running, add in function portTASK_FUNCTION:
 		/* See if any tasks have deleted themselves - if so then the idle task
 		is responsible for freeing the deleted task's TCB and stack. */
 		prvCheckTasksWaitingTermination();
-                + IO_UserLedOff(ACTIVITY_LED);       /**** 001 **** switch off activity LED */
+                + #if  configUSE_RTOS_ACTIVITY_LED > 0
+                +     IO_UserLedOff(configACTIVITY_LED);       /**** 001 **** switch off activity LED */
+                + #endif
        iii. Switch on activity LED in any context switch, add in function vTaskSwitchContext:
               if( uxSchedulerSuspended != ( UBaseType_t ) pdFALSE )
               {
@@ -23,6 +35,20 @@ Within the sources, the changes are marked as **** <num> ****
               }
               else
               {
-                +      IO_UserLedOn(ACTIVITY_LED); /**** 001 **** Switch on activity LDD */
+                + #if  configUSE_RTOS_ACTIVITY_LED > 0
+                +     IO_UserLedOn(configACTIVITY_LED); /**** 001 **** Switch on activity LED */
+                + #endif
 
+002 Configure a timer for runtime stats
+    A) in inc/FreeRTOSConfig.h: Add these lines
+        + /**** 002 ****
+        +  * RHB added due to configGENERATE_RUN_TIME_STATS
+        +  * FreeRTOS does not have to configure a timer
+        +  */
+        + #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
+        + 
+        + /* basic timer counts microseconds */
+        + #define portGET_RUN_TIME_COUNTER_VALUE()        (BASTMR_GetMicrosecond(&BASTIM_HANDLE)/100)
 
+    B) also in inc/FreeRTOSConfig.h:
+        - set configGENERATE_RUN_TIME_STATS to 1

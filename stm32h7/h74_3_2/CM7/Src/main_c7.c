@@ -28,6 +28,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "system/hw_util.h"
+#include "system/mpu.h"
 #include "system/clockconfig.h"
 #include "eeprom.h"
 #include "dev/devices.h"
@@ -38,7 +39,6 @@
 #include "cmsis_os.h"
 
 /* external variables --------------------------------------------------------*/
-extern uint32_t __SRAMUNCACHED_segment_start__;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
@@ -57,8 +57,6 @@ uint32_t gflags;
 /* Private function prototypes -----------------------------------------------*/
 static void CPU_CACHE_Enable(void);
 static void MPU_Setup(void);
-static void MPU_Config(void);
-static void MPU_Dump(void);
 
 
 /* Forward declarations for external initialization functions -----------------*/
@@ -128,12 +126,11 @@ int main(void)
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
      */
+
     MPU_Setup();
-    MPU_Config();
 
     /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
-
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
@@ -301,106 +298,41 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableDCache();
 }
 
-/* Definition of non cached memory areas */
-typedef struct {
-    uint32_t baseAddress;
-    uint32_t regionSize;
-} MPURegionT;
-
-#define MAX_MPU_REGIONS     1                       /* Number of defined MPU regions */
-static MPURegionT mpuRegions[MAX_MPU_REGIONS]; 
+#define PWROF2(a)           ( (a & (a-1)) == 0 ) 
 
 /******************************************************************************
- * define MPU regions
+ * define MPU regions and enable them
  *****************************************************************************/
 static void MPU_Setup(void)
 {
-    mpuRegions[0].baseAddress = (uint32_t)&__SRAMUNCACHED_segment_start__;
-#if defined(STM32H742xx)
-    mpuRegions[0].regionSize  = MPU_REGION_SIZE_16KB;
-#elif defined(STM32H743xx)
-    mpuRegions[0].regionSize  = MPU_REGION_SIZE_32KB;
-#else
-    #error "Uncached SRAM size unset"
-#endif
+   extern uint32_t __SRAMUNCACHED_segment_start__,__SRAMUNCACHED_segment_size__;
+   extern uint32_t __devicemem_start__, __devicemem_size__;
+   extern uint32_t __lwipheap_start__, __lwipheap_size__;
+   uint32_t flashSize = *(uint16_t*)FLASHSIZE_BASE * 1024;
+   uint32_t size;
+
+   /* find next greater or equal power of 2 for lwipheap size */
+   size = (uint32_t)&__lwipheap_size__;
+   if ( !PWROF2(size ) ) {
+      size = 1 << ( HW_GetLn2(size)+1);
+   }
+
+    MPU_AddRegion ( FLASH_BANK1_BASE,                          MPUTPYE_FLASH_NOWRITE,        flashSize,                                0 );
+    MPU_AddRegion ( (uint32_t)&__SRAMUNCACHED_segment_start__, MPUTYPE_RAM_NONCACHEABLE,     (uint32_t)&__SRAMUNCACHED_segment_size__, 1 );
+    MPU_AddRegion ( (uint32_t)&__lwipheap_start__,             MPUTYPE_RAM_NONCACHEABLE,     size,                                     2 );
+
+    /* find next greater or equal power of 2 for devicemem size */
+    size = (uint32_t)&__devicemem_size__;
+    if ( !PWROF2(size ) ) {
+       size = 1 << ( HW_GetLn2(size)+1);
+    }
+    
+    /* devicemem is part of uncached mem, a higher region ID will cause the devicemem area setting to supersede that of the uncached mem  */
+    MPU_AddRegion ( (uint32_t)&__devicemem_start__,            MPUTYPE_RAM_DEVICEMEM_SHARED, size,                                     3 );
+
+    MPU_EnableAllRegions();
+    MPU_Dump();
+
 }
-
-
-/******************************************************************************
- * configure the previously defined MPU regions
- *****************************************************************************/
-static void MPU_Config(void)
-{
-  MPU_Region_InitTypeDef MPU_InitStruct;
-  
-  /* Disable the MPU */
-  HAL_MPU_Disable();
-
-  /* Configure the MPU "constant" attributes once */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.AccessPermission = MPU_REGION_FULL_ACCESS;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER0;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.SubRegionDisable = 0x00;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-
-  /* Now configure the "dynamic attributes for every region and setup MPU */
-  for ( uint32_t i = 0; i < MAX_MPU_REGIONS; i++ ) {
-      MPU_InitStruct.BaseAddress = mpuRegions[i].baseAddress;
-      MPU_InitStruct.Size = mpuRegions[i].regionSize;
-      HAL_MPU_ConfigRegion(&MPU_InitStruct);
-  }
-
-  /* Configure the MPU attributes as RO for CM7 Flash */
-  MPU_InitStruct.Enable = MPU_REGION_ENABLE;
-  MPU_InitStruct.BaseAddress = FLASH_BANK1_BASE;
-#if defined(STM32H742xx)
-  MPU_InitStruct.Size = MPU_REGION_SIZE_1MB;
-#elif defined(STM32H743xx)
-  MPU_InitStruct.Size = MPU_REGION_SIZE_2MB;
-#else
-    #error "Cached Flash size unset"
-#endif
-
-  MPU_InitStruct.AccessPermission = MPU_REGION_PRIV_RO_URO;
-  MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
-  MPU_InitStruct.IsCacheable = MPU_ACCESS_CACHEABLE;
-  MPU_InitStruct.IsShareable = MPU_ACCESS_SHAREABLE;
-  MPU_InitStruct.Number = MPU_REGION_NUMBER1;
-  MPU_InitStruct.TypeExtField = MPU_TEX_LEVEL0;
-  MPU_InitStruct.SubRegionDisable = 0x00;
-  MPU_InitStruct.DisableExec = MPU_INSTRUCTION_ACCESS_ENABLE;
-
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
-
-  /* Enable the MPU */
-  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-}
-
-/******************************************************************************
- * dump info about every configured MPU region
- *****************************************************************************/
-static void MPU_Dump(void)
-{
-  for ( uint32_t i = 0; i < MAX_MPU_REGIONS; i++ ) {
-      DEBUG_PRINTF("Uncached RAM at 0x%p of size 0x%08x\n", 
-        mpuRegions[i].baseAddress, 
-        2 << mpuRegions[i].regionSize 
-      );
-  }
-}
-
-
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

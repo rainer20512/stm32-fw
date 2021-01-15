@@ -15,8 +15,8 @@
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:AXISRAM);SRAMA;RAMA">
     <!-- Can be used as normal ram memory /-->
+    <ProgramSection alignment="32" load="No" name=".lwipheap" />
     <ProgramSection alignment="4" load="No" name=".axismem" />
-    <ProgramSection alignment="4" load="No" name=".lwipheap" />
   </MemorySegment>
   <!-- Use 128kB DTCM RAM as main RAM /-->
   <MemorySegment name="$(RAM_NAME:DTCM);RAMDTCM">
@@ -33,12 +33,13 @@
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAMUNCACHED);RAMUNCACHED">
     <!-- Uncached Memory, 16k for CM7 DMA and IPC memory /-->
-    <ProgramSection alignment="32" load="No" name=".dmamem" />
-    <ProgramSection alignment="4" load="No" name=".uncached" />
-    <ProgramSection alignment="4" load="No" name=".uncached100" />
+    <ProgramSection alignment="32"  load="No" name=".devicemem" />
+    <ProgramSection alignment="256" load="No" name=".dmamem" />
+    <ProgramSection alignment="4"   load="No" name=".uncached" />
+    <ProgramSection alignment="4"   load="No" name=".uncached100" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM2);RAM2">
-  <!-- Used by CM4 /-->
+    <ProgramSection alignment="4"  load="No" name=".srammem" />
   </MemorySegment>
   <MemorySegment name="$(FLASH2_NAME:FLASH2)">
     <ProgramSection alignment="4" load="Yes" name=".text2" />

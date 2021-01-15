@@ -94,12 +94,25 @@ to exclude the API function. */
 #define INCLUDE_xTaskGetSchedulerState          1
 #define INCLUDE_eTaskGetState                   1
 
-/* RHB added due to configGENERATE_RUN_TIME_STATS */
-/* FreeRTOS does not have to configure a timer    */
+/**** 002 ****
+ * RHB added due to configGENERATE_RUN_TIME_STATS
+ * FreeRTOS does not have to configure a timer
+ */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()
-/* That timer counts microseconds */
+
+/* basic timer counts microseconds */
 #define portGET_RUN_TIME_COUNTER_VALUE()        (BASTMR_GetMicrosecond(&BASTIM_HANDLE)/100)
 
+/**** 001 **** RHB Added 
+ * implementation of activity LED 
+ */
+#define configUSE_RTOS_ACTIVITY_LED             1
+
+/**** 001 **** RHB ADDED 
+ * Use gn LED as "activity LED" when using FreeRTOS
+ * LED number according to gpio_config.h"
+ */
+#define configACTIVITY_LED                      0           
 
 
 /* Cortex-M specific definitions. */

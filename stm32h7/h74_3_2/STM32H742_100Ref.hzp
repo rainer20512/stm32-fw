@@ -271,6 +271,7 @@
         <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
           <file file_name="../common_h7/Src/system/hw_util.c" />
+          <file file_name="../common_h7/Src/system/mpu.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
       </folder>
@@ -278,6 +279,7 @@
         <file file_name="../common_h7/Inc/hardware.h" />
         <folder Name="system">
           <file file_name="../common_h7/Inc/system/hw_util.h" />
+          <file file_name="../common_h7/Inc/system/mpu.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />
