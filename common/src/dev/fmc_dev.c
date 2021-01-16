@@ -391,6 +391,10 @@ bool Fmc_SRAM_Init(const HW_DeviceType *self, FMC_NORSRAM_InitTypeDef *Init)
     }
     
     const Fmc_TimingDataT *timing = Fmc_GetMyTiming(self, idx);
+    if ( !timing ) {
+        DEBUG_PRINTF("No timing for Fmc Bank #%d!\n",  idx );
+        return false;
+    }
     if ( !Fmc_SetTiming( &SRAM_Timing,  timing) ) {
         DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  idx );
         return false;
@@ -416,13 +420,9 @@ bool Fmc_SRAM_Init(const HW_DeviceType *self, FMC_NORSRAM_InitTypeDef *Init)
     if ( curr->fmcIsMuxed ) curr->fmcCtlBits |= ( 1 << FMC_NL_OFS );
 
     /* set effective io lines and activate all IO */
-    #if 0
-    Fmc_MspInit();
-    #else
     FmcSetEffectiveBits();
     FmcGpioInitAF(GetDevIdx(&HW_FMC), HW_FMC.devGpioAF);
-    #endif
-
+ 
     FMC_DumpOneGeometry(idx, curr);
 
     curr->hHal.hsram.Instance  = FMC_NORSRAM_DEVICE;
@@ -559,19 +559,19 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
         #define FMC_T1      NULL
     #endif
     #if defined(TIMING2)
-        static const Fmc_TimimgDataT timing2 = TIMING2;
+        static const Fmc_TimingDataT timing2 = TIMING2;
         #define FMC_T2      &timing2
     #else   
         #define FMC_T2      NULL
     #endif
     #if defined(TIMING3)
-        static const Fmc_TimimgDataT timing3 = TIMING3;
+        static const Fmc_TimingDataT timing3 = TIMING3;
         #define FMC_T3      &timing3
     #else   
         #define FMC_T3      NULL
     #endif
     #if defined(TIMING4)
-        static const Fmc_TimimgDataT timing4 = TIMING4;
+        static const Fmc_TimingDataT timing4 = TIMING4;
         #define FMC_T4      &timing4
     #else   
         #define FMC_T4      NULL
@@ -611,8 +611,8 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
     UNUSED(self); UNUSED(args);
 
     FMC_NORSRAM_InitTypeDef Init;
-    Init.NSBank             = FMC_NORSRAM_BANK1;
-    Init.DataAddressMux     = FMC_DATA_ADDRESS_MUX_ENABLE;
+    Init.NSBank             = FMC_NORSRAM_BANK3;
+    Init.DataAddressMux     = FMC_DATA_ADDRESS_MUX_DISABLE;
     Init.MemoryType         = FMC_MEMORY_TYPE_PSRAM;
     Init.MemoryDataWidth    = FMC_NORSRAM_MEM_BUS_WIDTH_16;
     Init.BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
@@ -631,9 +631,11 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
         DEBUG_PUTS("FMC SRAM init failed!");
     }
 
+    #if 0
     uint16_t *extmemptr = (uint16_t *)(0x60000000 );
     for ( uint32_t i = 0; i < 1 << 23; i++ )
         *(extmemptr + i) = 0;
+    #endif
 }
 
 

@@ -139,20 +139,41 @@
     /* very, very slow!!                                                                                   */
 
     /* Number of address bits                                                                              */
-    #define ADDWID1                         24
+    #define ADDWID3                         24
 
     /* Address setup time is the 74hc373 minimum pulsewidth ( worst case ) in ns                           */
-    #define ADDSET1                         60
-    
+    #define ADDSET3                         2
+
     /* Address hold time is 74hc737 propagation delay plus output transistion time                         */
-    #define ADDHLD1                         100
+    #define ADDHLD3                         1
 
     /* Data setup time is the tDOE value from the CY62157EV30 datasheet                                    */
-    #define DATASET1                        50
+    #define DATASET3                        1
 
-    #define ACCMODE1                        FMC_ACCESS_MODE_D
+    #define ACCMODE3                        FMC_ACCESS_MODE_A
 
-    #define TIMING1                         { ACCMODE1, ADDWID1, ADDSET1, ADDHLD1, DATASET1, }
+    #define TIMING3                         { ACCMODE3, ADDWID3, ADDSET3, ADDHLD3, DATASET3, }
+
+    #if 0
+        /* SRAM timimg for CY62157EV30 MoBL SRAM with multiplexed adress/data line and 74hc373 address latches */
+        /* very, very slow!!                                                                                   */
+
+        /* Number of address bits                                                                              */
+        #define ADDWID1                         24
+
+        /* Address setup time is the 74hc373 minimum pulsewidth ( worst case ) in ns                           */
+        #define ADDSET1                         60
+    
+        /* Address hold time is 74hc737 propagation delay plus output transistion time                         */
+        #define ADDHLD1                         100
+
+        /* Data setup time is the tDOE value from the CY62157EV30 datasheet                                    */
+        #define DATASET1                        50
+
+        #define ACCMODE1                        FMC_ACCESS_MODE_D
+
+        #define TIMING1                         { ACCMODE1, ADDWID1, ADDSET1, ADDHLD1, DATASET1, }
+    #endif
 
 #endif // USE_FMC 
 

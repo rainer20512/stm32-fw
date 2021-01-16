@@ -1805,7 +1805,7 @@ ADD_SUBMODULE(Test);
 
     #define BUFFER_SIZE         ((uint32_t)0x8000)
     #define WRITE_READ_ADDR     ((uint32_t)0x0800)
-    #define SRAM_BANK_ADDR      ((uint32_t)0x60000000)
+    #define SRAM_BANK_ADDR      ((uint32_t)0x68000000)
 
     static uint16_t AXISMEM aTxBuffer[BUFFER_SIZE];
     static uint16_t AXISMEM aRxBuffer[BUFFER_SIZE];
