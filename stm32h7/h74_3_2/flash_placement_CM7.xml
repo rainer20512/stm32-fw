@@ -14,8 +14,9 @@
     <ProgramSection alignment="4" load="Yes" runin=".tdata_run" name=".tdata" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:AXISRAM);SRAMA;RAMA">
-    <!-- Can be used as normal ram memory /-->
+    <!-- LWIP heap has to be made "Uncached" by MPU  /-->
     <ProgramSection alignment="32" load="No" name=".lwipheap" />
+    <!-- Can be used as normal ram memory /-->
     <ProgramSection alignment="4" load="No" name=".axismem" />
   </MemorySegment>
   <!-- Use 128kB DTCM RAM as main RAM /-->
@@ -35,8 +36,6 @@
     <!-- Uncached Memory, 16k for CM7 DMA and IPC memory /-->
     <ProgramSection alignment="32"  load="No" name=".devicemem" />
     <ProgramSection alignment="256" load="No" name=".dmamem" />
-    <ProgramSection alignment="4"   load="No" name=".uncached" />
-    <ProgramSection alignment="4"   load="No" name=".uncached100" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM2);RAM2">
     <ProgramSection alignment="4"  load="No" name=".srammem" />

@@ -302,6 +302,10 @@ static void CPU_CACHE_Enable(void)
 
 /******************************************************************************
  * define MPU regions and enable them
+ *  - all flash as RO memory ( to detect faulty flash writes )
+ *  - DMA buffers as uncached
+ *  - LWIP heap as uncached
+ *  - ETH DMA descriptors as device memory
  *****************************************************************************/
 static void MPU_Setup(void)
 {

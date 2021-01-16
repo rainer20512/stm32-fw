@@ -13,7 +13,24 @@
 
       in the non cacheable RAM area.
 
-    3. The MemoryMap.XML file MUST NOT contain comment lines. Parsing will stop with this lines
+    3. The <name of STM-derivate>_MemoryMap.XML has to be extended to define an uncached section. This section must have a
+       32 * 2^n size, n=0..26, and should reside on one of the SRAMs due to 2., see above
+
+       this can easily be done by splitting the original entry of e.g. SRAM2:
+          <MemorySegment start="0x30020000" name="SRAM2" size="0x20000" />
+       by two consecutive sections, eg:
+          <MemorySegment start="0x30028000" name="SRAM2" size="0x18000" />
+          <MemorySegment start="0x30020000" name="SRAMUNCACHED" size="0x8000" />
+       with an appropriate size of SRAMUNCACHED.
+
+       The uncached RAM area must be defined as not cacheable and not bufferable TEX lvl 1 to the MPU. the file mpu.c/mpu.h
+       contains helper functions to do so.
+
+       as stated before, every uncached memory section should be placed in the SRAMUNCACHED are by corresponding entries
+       in the flash placement.xml file.
+
+    
+       NB: the memory map file MUST NOT contain comment lines. Parsing will stop with this lines
 
     4. DMA and IPC mem must be zeroed upon start. To do that, customize the systems thumb_crt0.s for CM7 core 
        and add the following lines 
@@ -29,29 +46,124 @@
         bl memory_set
         /* RHB end of inserted code */
 
-volatile unsigned int *DWT_CYCCNT     = (volatile unsigned int *)0xE0001004; //address of the register
-volatile unsigned int *DWT_CONTROL    = (volatile unsigned int *)0xE0001000; //address of the register
-volatile unsigned int *SCB_DEMCR      = (volatile unsigned int *)0xE000EDFC; //address of the register
+    5. Implement an us-Delay function by accessing the cycle-counter of the ARM core:
+        volatile unsigned int *DWT_CYCCNT     = (volatile unsigned int *)0xE0001004; //address of the register
+        volatile unsigned int *DWT_CONTROL    = (volatile unsigned int *)0xE0001000; //address of the register
+        volatile unsigned int *SCB_DEMCR      = (volatile unsigned int *)0xE000EDFC; //address of the register
 
-void init_cycle_counter()
-{
-  // Init cycle counter
-  *SCB_DEMCR = *SCB_DEMCR | 0x01000000;
-  *DWT_CYCCNT = 0; // reset the counter
-  *DWT_CONTROL = *DWT_CONTROL | 1 ; // enable the counter
-}
+        void init_cycle_counter()
+        {
+          // Init cycle counter
+          *SCB_DEMCR = *SCB_DEMCR | 0x01000000;
+          *DWT_CYCCNT = 0; // reset the counter
+          *DWT_CONTROL = *DWT_CONTROL | 1 ; // enable the counter
+        }
 
-uint32_t read_cycle_counter()
-{
-  return *DWT_CYCCNT;
-}
+        uint32_t read_cycle_counter()
+        {
+          return *DWT_CYCCNT;
+        }
 
-void delay_us(uint32_t time_us)
-{
-  uint32_t cyc1 = *DWT_CYCCNT;
-  if (time_us>0)
-  {
-    while ((*DWT_CYCCNT-cyc1)<=(SystemCoreClock/1000000)*(time_us-1)){};
-  }
-}
+        void delay_us(uint32_t time_us)
+        {
+          uint32_t cyc1 = *DWT_CYCCNT;
+          if (time_us>0)
+          {
+            while ((*DWT_CYCCNT-cyc1)<=(SystemCoreClock/1000000)*(time_us-1)){};
+          }
+        }
+
+    6. Using the ETH device of STM32H743 together with LWIP needs two blocks of special memory:
+       a. the whole statically allocated LWIP heap has to be of type "uncached"
+       b. all ETH Descriptor tables have to be of type "device memory"
+
+          a. define a second block of uncached memory in flash_placement.xml. This memory may reside within 
+             SRAM or AXISRAM but not DTCM. 
+
+                    <ProgramSection alignment="32" load="No" name=".lwipheap" />
+              
+             Allocate this memory by placing the lwip heap into it. This is done by a new file heap_mem.c in
+             the LWIP-folder with the following content:
+
+                #include "lwip/opt.h"
+                /* RHB added : Allocate the defined block of heap memory to a linker assigned memory area */
+                unsigned char mem_heap[MEM_SIZE] __attribute__((section(".lwipheap"))); /* LwIP heap memory */
+
+             MEM_SIZE should be again of size 32*2^n, as this region has to be made unched by the MPU, too.
+             8k to 32k is a good choice for the LWIP heap size
+
+             in lwipopts.h change the hardcoded LWIP_RAM_HEAP_POINTER to the previous allocated lwip heap:
+
+                /* Relocate the LwIP RAM heap pointer */
+                // RHB changed to linker allocated memory block instead of hardcoded mem address */
+                extern unsigned char mem_heap[];
+                #define LWIP_RAM_HEAP_POINTER    (mem_heap)
+
+            During initialization of the MPU define this area as not cacheable and not bufferable TEX lvl 1 to the MPU.
+
+         b. When using LWIP's default settings, this region has a size of 384 bytes only. first of all, declare an own
+            memory section in flash_lacement.xml at the beginning of SRAMUNCACHED:
+
+              <MemorySegment name="$(RAM_NAME:SRAMUNCACHED);RAMUNCACHED">
+                <!-- Uncached Memory, 16k for CM7 DMA and IPC memory /-->
+                <ProgramSection alignment="32"  load="No" name=".devicemem" />
+                <ProgramSection alignment="512" load="No" name=".dmamem" />
+              </MemorySegment>
+           
+           When changing the size of the DMA descriptor tables, make sure to also change the alignment of the follwing
+           .dmamem section to ensure that .devicemem also has an size ( including padding due to alignment ) of an power of 2.
+
+           in ethernet_lan8742.c, place DMARxDscrTab and DMATxDscrTab in the .devicemem section:
+
+              ETH_DMADescTypeDef DMARxDscrTab[ETH_RX_DESC_CNT] __attribute__((section(".devicemem")));   /* Ethernet Rx DMA Descriptors */
+              ETH_DMADescTypeDef DMATxDscrTab[ETH_TX_DESC_CNT] __attribute__((section(".devicemem")));   /* Ethernet Tx DMA Descriptors */
+
+           when initializing the MPU, define an memory segment of type "shared device mem" with the attributes bufferable, not cacheable,
+           not shareable, TEX lvl 0 to the MPU. As this segment is part of the SRAMUNCACHED region, we will supersede the SRAMUNCACHED 
+           region settings by defining another region with a higher region number and "shared device memory" settings.
+           also mpu.h/mpu.c will help you to ease the task. See STM AN4838 for the principles of the MPU.
+
+        finally, this is an example, how the MPU initialization for all the steps before might look like:
+
+            #define PWROF2(a)           ( (a & (a-1)) == 0 ) 
+
+            /******************************************************************************
+             * define MPU regions and enable them
+             *  - all flash as RO memory ( to detect faulty flash writes )
+             *  - DMA buffers as uncached
+             *  - LWIP heap as uncached
+             *  - ETH DMA descriptors as device memory
+             *****************************************************************************/
+            static void MPU_Setup(void)
+            {
+               extern uint32_t __SRAMUNCACHED_segment_start__,__SRAMUNCACHED_segment_size__;
+               extern uint32_t __devicemem_start__, __devicemem_size__;
+               extern uint32_t __lwipheap_start__, __lwipheap_size__;
+               uint32_t flashSize = *(uint16_t*)FLASHSIZE_BASE * 1024;
+               uint32_t size;
+
+               /* find next greater or equal power of 2 for lwipheap size */
+               size = (uint32_t)&__lwipheap_size__;
+               if ( !PWROF2(size ) ) {
+                  size = 1 << ( HW_GetLn2(size)+1);
+               }
+
+                MPU_AddRegion ( FLASH_BANK1_BASE,                          MPUTPYE_FLASH_NOWRITE,        flashSize,                                0 );
+                MPU_AddRegion ( (uint32_t)&__SRAMUNCACHED_segment_start__, MPUTYPE_RAM_NONCACHEABLE,     (uint32_t)&__SRAMUNCACHED_segment_size__, 1 );
+                MPU_AddRegion ( (uint32_t)&__lwipheap_start__,             MPUTYPE_RAM_NONCACHEABLE,     size,                                     2 );
+
+                /* find next greater or equal power of 2 for devicemem size */
+                size = (uint32_t)&__devicemem_size__;
+                if ( !PWROF2(size ) ) {
+                   size = 1 << ( HW_GetLn2(size)+1);
+                }
+    
+                /* devicemem is part of uncached mem, a higher region ID will cause the devicemem area setting to supersede that of the uncached mem  */
+                MPU_AddRegion ( (uint32_t)&__devicemem_start__,            MPUTYPE_RAM_DEVICEMEM_SHARED, size,                                     3 );
+
+                MPU_EnableAllRegions();
+            }
+
+
+            
 

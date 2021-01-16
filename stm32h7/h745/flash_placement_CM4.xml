@@ -31,6 +31,8 @@
   <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM3);RAM3">
+    <ProgramSection alignment="4" load="No" name=".devicemem" />
+    <ProgramSection alignment="4" load="No" name=".srammem" />
     <ProgramSection alignment="4" load="No" name=".uncached" />
     <ProgramSection alignment="4" load="No" name=".uncached100" />
   </MemorySegment>
