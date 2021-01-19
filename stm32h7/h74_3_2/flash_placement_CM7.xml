@@ -46,5 +46,9 @@
     <ProgramSection alignment="4" load="Yes" runin=".data2_run" name=".data2" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
+    <ProgramSection alignment="4"  load="No" name=".sram4" />
+  </MemorySegment>
+  <MemorySegment name="$(NOR_PSRAM3_NAME:NOR_PSRAM3);NOR_PSRAM3">
+    <ProgramSection alignment="4" load="No" name=".psram3" />
   </MemorySegment>
 </Root>

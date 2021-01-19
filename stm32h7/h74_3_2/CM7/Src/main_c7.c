@@ -55,7 +55,7 @@ uint32_t gflags;
 #endif
 
 /* Private function prototypes -----------------------------------------------*/
-static void CPU_CACHE_Enable(void);
+void CPU_CACHE_Enable(void);
 static void MPU_Setup(void);
 
 
@@ -65,6 +65,12 @@ void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
 
+#define TESTSIZE    16384
+uint32_t psram[TESTSIZE]  __attribute__((section(".psram3")));
+uint32_t dtcm[TESTSIZE]  __attribute__((section(".non_init")));
+uint32_t axi[TESTSIZE]   __attribute__((section(".axismem")));
+uint32_t sram2[TESTSIZE]   __attribute__((section(".srammem")));
+uint32_t sram4[TESTSIZE]   __attribute__((section(".sram4")));
 
 static void prvCore1InitTask( void *pvParameters );
 
@@ -289,13 +295,19 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 * @param  None
 * @retval None
 */
-static void CPU_CACHE_Enable(void)
+void CPU_CACHE_Enable(void)
 {
   /* Enable I-Cache */
   SCB_EnableICache();
 
   /* Enable D-Cache */
   SCB_EnableDCache();
+}
+
+void D_CACHE_Disable(void)
+{
+  /* Disable D-Cache */
+  SCB_DisableDCache();
 }
 
 #define PWROF2(a)           ( (a & (a-1)) == 0 ) 

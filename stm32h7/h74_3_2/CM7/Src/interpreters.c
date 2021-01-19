@@ -1911,6 +1911,152 @@ ADD_SUBMODULE(Test);
         }
     }
 
+    #define PATTERN_1_32    (~0xDEADBEEF)
+    #define PATTERN_2_32    0xDEADBEEF
+    #define PATTERN_1_16    ((uint16_t)0xAC7E)
+    #define PATTERN_2_16    ((uint16_t)(~PATTERN_1_16))
+    #define PATTERN_1_8     ((uint8_t)0xA5)
+    #define PATTERN_2_8     ((uint8_t)~PATTERN_1_8)
+
+    static void loop32( uint32_t *mem, size_t len, uint32_t u0, uint32_t u1 )
+    {
+        register uint32_t *p = mem+2; 
+        register uint32_t *p1 = mem+1;
+        register uint32_t *p2 = mem;
+        *p2=u0;
+        *p1=u1;
+
+        for ( register uint32_t i = 2; i < len; i++ ) {
+            *(p++) = *(p1++) + *(p2++);
+        }
+    }
+    static void loop16( uint16_t *mem, size_t len, uint16_t u0, uint16_t u1 )
+    {
+        register uint16_t *p = mem+2; 
+        register uint16_t *p1 = mem+1;
+        register uint16_t *p2 = mem;
+        *p2=u0;
+        *p1=u1;
+
+        for ( register uint32_t i = 2; i < len; i++ ) {
+            *(p++) = *(p1++) + *(p2++);
+        }
+    }
+
+    static void loop8( uint8_t *mem, size_t len, uint8_t u0, uint8_t u1 )
+    {
+        register uint8_t *p = mem+2; 
+        register uint8_t *p1 = mem+1;
+        register uint8_t *p2 = mem;
+        *p2=u0;
+        *p1=u1;
+
+        for ( register uint32_t i = 2; i < len; i++ ) {
+            *(p++) = *(p1++) + *(p2++);
+        }
+    }
+
+    static void wr32( uint32_t *mem, size_t len, uint32_t u0, uint32_t rep)
+    {
+        while ( rep-- ) {
+            register uint32_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                *(p++) = u0;
+            }
+        }
+    }
+    static uint32_t rd32( uint32_t *mem, size_t len, uint32_t rep)
+    {
+        uint32_t ret;
+        while ( rep-- ) {
+            register uint32_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                ret = *(p++);
+            }
+        }
+        return ret;
+    }
+
+    static void wr16( uint16_t *mem, size_t len, uint16_t u0, uint32_t rep)
+    {
+        while ( rep-- ) {
+            register uint16_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                *(p++) = u0;
+            }
+        }
+    }
+    static uint16_t rd16( uint16_t *mem, size_t len, uint32_t rep)
+    {
+        uint16_t ret;
+        while ( rep-- ) {
+            register uint16_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                ret = *(p++);
+            }
+        }
+        return ret;
+    }
+
+    static void wr8( uint8_t *mem, size_t len, uint8_t u0, uint32_t rep)
+    {
+        while ( rep-- ) {
+            register uint8_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                *(p++) = u0;
+            }
+        }
+    }
+    static uint8_t rd8( uint8_t *mem, size_t len, uint32_t rep)
+    {
+        uint8_t ret;
+        while ( rep-- ) {
+            register uint8_t *p = mem; 
+            for ( register uint32_t i = 0; i < len; i++ ) {
+                ret = *(p++);
+            }
+        }
+        return ret;
+    }
+    static void do_ram_test( uint32_t *mem, size_t len )
+    {
+        uint32_t tstart, tend;
+
+        tstart = ProfilerGetMicrosecond();
+        wr32(mem, len, 0xdeadbeef, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("32bit write: %d microsecs\n", (tend-tstart)/10);
+        tstart = ProfilerGetMicrosecond();
+        rd32(mem, len, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("32bit read : %d microsecs\n", (tend-tstart)/10);
+    
+        tstart = ProfilerGetMicrosecond();
+        wr16((uint16_t*)mem, len, 0xdead, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("16bit write: %d microsecs\n", (tend-tstart)/10);
+        tstart = ProfilerGetMicrosecond();
+        rd16((uint16_t*)mem, len, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("16bit read : %d microsecs\n", (tend-tstart)/10);
+
+        tstart = ProfilerGetMicrosecond();
+        wr8((uint8_t*)mem, len, 0xde, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("8bit write: %d microsecs\n", (tend-tstart)/10);
+        tstart = ProfilerGetMicrosecond();
+        rd8((uint8_t*)mem, len, 10);
+        tend = ProfilerGetMicrosecond();
+        printf("8bit read : %d microsecs\n", (tend-tstart)/10);
+    }
+
+    extern uint32_t psram[];
+    extern uint32_t dtcm[];
+    extern uint32_t axi[];
+    extern uint32_t sram2[];
+    extern uint32_t sram4[];
+    void CPU_CACHE_Enable(void);
+    void D_CACHE_Disable(void);
 
     static bool FMC_Menu ( char *cmdline, size_t len, const void * arg )
     {
@@ -1918,7 +2064,6 @@ ADD_SUBMODULE(Test);
       size_t wordlen;
       uint32_t num;
       uint32_t addr;
-      bool ret;
       
       UNUSED(cmdline);UNUSED(len);
 
@@ -1964,8 +2109,38 @@ ADD_SUBMODULE(Test);
                 FMC_Sram_TestByte(i*BUFFER_SIZE, (uint16_t)addr);
             }
             break;
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+        case 8:
+            #if 0
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Sram test <size> - test sram of size uint32_t[<size>] \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            #endif
+            num = 16384;
+            switch((uint32_t)arg) {
+                case 4: do_ram_test( psram, num ); break;
+                case 5: do_ram_test( dtcm, num ); break;
+                case 6: do_ram_test( axi, num ); break;
+                case 7: do_ram_test( sram2, num ); break;
+                case 8: do_ram_test( sram4, num ); break;
+            }
+            break;
+        case 98:
+            DEBUG_PUTS("D- and I-Cache enabled");
+            CPU_CACHE_Enable();
+            break;
+        case 99:
+            DEBUG_PUTS("D-Cache disabled");
+            D_CACHE_Disable();
+            break;
         default:
-          DEBUG_PUTS("CAN_Menu: command not implemented");
+          DEBUG_PUTS("FMC Menu: command not implemented");
       } /* end switch */
 
       return true;
@@ -1982,6 +2157,13 @@ ADD_SUBMODULE(Test);
         { "SRAM Test",                ctype_fn, .exec.fn = FMC_Menu, VOID(1), "Do FMC SRAM test 0/1" },
         { "SRAM Test pattern",        ctype_fn, .exec.fn = FMC_Menu, VOID(2), "Do FMC SRAM test w pattern" },
         { "SRAM Byte Test pattern",   ctype_fn, .exec.fn = FMC_Menu, VOID(3), "Do FMC SRAM bytewise test w pattern" },
+        { "PSRAM access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(4), "Do a PSRAM access speed test" },
+        { "DTCM access speed test",   ctype_fn, .exec.fn = FMC_Menu, VOID(5), "Do a DTCM access speed test" },
+        { "AXISRAM access speed test",ctype_fn, .exec.fn = FMC_Menu, VOID(6), "Do a AXISRAM access speed test" },
+        { "SRAM2 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM2 access speed test" },
+        { "SRAM4 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM4 access speed test" },
+        { "Disable D-Cache",          ctype_fn, .exec.fn = FMC_Menu, VOID(99), "" },
+        { "Enable D-Cache",           ctype_fn, .exec.fn = FMC_Menu, VOID(98), "" },
     };
     ADD_SUBMODULE(FMC);
 #endif
