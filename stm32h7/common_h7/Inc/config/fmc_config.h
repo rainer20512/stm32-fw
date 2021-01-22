@@ -62,7 +62,28 @@
     #define FMC_D13                         { GPIO_PIN_8,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D13"  }
     #define FMC_D14                         { GPIO_PIN_9,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D14"  }
     #define FMC_D15                         { GPIO_PIN_10, GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D15"  }
-    #define FMC_D_MAX                        16
+    #define FMC_D16                         { GPIO_PIN_8,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D16"  }
+    #define FMC_D17                         { GPIO_PIN_9,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D17"  }
+    #define FMC_D18                         { GPIO_PIN_10, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D18"  }
+    #define FMC_D19                         { GPIO_PIN_11, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D19"  }
+    #define FMC_D20                         { GPIO_PIN_12, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D20"  }
+    #define FMC_D21                         { GPIO_PIN_13, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D21"  }
+    #define FMC_D22                         { GPIO_PIN_14, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D22"  }
+    #define FMC_D23                         { GPIO_PIN_15, GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D23"  }
+    #define FMC_D24                         { GPIO_PIN_0,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D24"  }
+    #define FMC_D25                         { GPIO_PIN_1,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D25"  }
+    #define FMC_D26                         { GPIO_PIN_2,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D26"  }
+    #define FMC_D27                         { GPIO_PIN_3,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D27"  }
+    #define FMC_D28                         { GPIO_PIN_6,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D28"  }
+    #define FMC_D29                         { GPIO_PIN_7,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D29"  }
+    #define FMC_D30                         { GPIO_PIN_9,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D30"  }
+    #define FMC_D31                         { GPIO_PIN_10, GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC D31"  }
+
+    #if USE_FMC_SDRAM > 0
+        #define FMC_D_MAX                        32
+    #else
+        #define FMC_D_MAX                        16
+    #endif
 
     /* Don't change the sequence, has to be in the order A00 ... A25 */
     #define FMC_A00                         { GPIO_PIN_0,  GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC A00"  }
@@ -104,14 +125,25 @@
     #define FMC_NE4_OFS                     7
     #define FMC_NBL0_OFS                    8
     #define FMC_NBL1_OFS                    9
-    #define FMC_INT_OFS                     10
-    #define FMC_NL_OFS                      11
+    #define FMC_NBL2_OFS                    10
+    #define FMC_NBL3_OFS                    11
+    #define FMC_INT_OFS                     12
+    #define FMC_NL_OFS                      13
+    #define FMC_SDNWE_OFS                   14
+    #define FMC_NCAS_OFS                    15
+    #define FMC_NRAS_OFS                    16
+    #define FMC_SDNE0_OFS                   17
+    #define FMC_SDNE1_OFS                   18
+    #define FMC_SDCKE0_OFS                  19
+    #define FMC_SDCKE1_OFS                  20
+    #define FMC_SDCLK_OFS                   21
 
     /* Last entry specifies number of CTL entries */
-    #define FMC_CTL_MAX                     12    
-    #define FMC_CTL_STR                     {"Clk", "NWait", "NOE", "NWE", "NE1", "NE2", "NE3", "NE4", "NBl0", "NBl1", "Int", "NL"}
+    #define FMC_CTL_MAX                     22    
+    #define FMC_CTL_STR                     {"Clk", "NWait", "NOE",   "NWE",    "NE1",    "NE2",   "NE3",   "NE4",    "NBl0",   "NBl1", "NBl2", "NBl3", \
+                                             "Int", "NL",    "SDNWE", "SDNCAS", "SDNRAS", "SDNE0", "SDNE1", "SDCKE0", "SDCKE1", "SDCLK" }
 
-    /* The order here ha so match the offset definitions above */
+    /* The order here has to be so, that the offset definitions above are matched */
     #define FMC_CTL_CLK                     { GPIO_PIN_3,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC Clk"  }
     #define FMC_CTL_NWAIT                   { GPIO_PIN_6,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NWait"}
     #define FMC_CTL_NOE                     { GPIO_PIN_4,  GPIOD, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NOE"  }
@@ -123,10 +155,25 @@
 //  #define FMC_CTL_NE3                     { GPIO_PIN_7,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE3"  }
     #define FMC_CTL_NE3                     { GPIO_PIN_10, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE3"  }
     #define FMC_CTL_NE4                     { GPIO_PIN_12, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NE4"  }
-    #define FMC_CTL_NBL0                    { GPIO_PIN_0,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL1" }
-    #define FMC_CTL_NBL1                    { GPIO_PIN_1,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL0" }
+    #define FMC_CTL_NBL0                    { GPIO_PIN_0,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL0" }
+    #define FMC_CTL_NBL1                    { GPIO_PIN_1,  GPIOE, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL1" }
+    #define FMC_CTL_NBL2                    { GPIO_PIN_4,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL2" }
+    #define FMC_CTL_NBL3                    { GPIO_PIN_5,  GPIOI, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NBL3" }
     #define FMC_CTL_INT                     { GPIO_PIN_7,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC INT"  }
-    #define FMC_CTL_NL                      { GPIO_PIN_7,  GPIOB, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NL"  }
+    #define FMC_CTL_NL                      { GPIO_PIN_7,  GPIOB, GPIO_AF12_FMC, GPIO_PULLUP, "FMC NL"   }
+    #define FMC_CTL_SDNWE                   { GPIO_PIN_5,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNWE"}
+//    #define FMC_CTL_SDNWE                 { GPIO_PIN_0,  GPIOC, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNWE"}
+    #define FMC_CTL_SDNCAS                  { GPIO_PIN_15, GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNCAS"}
+    #define FMC_CTL_SDNRAS                  { GPIO_PIN_11, GPIOF, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNRAS"}
+    #define FMC_CTL_SDNE0                   { GPIO_PIN_3,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNE0"}
+//    #define FMC_CTL_SDNE0                 { GPIO_PIN_4,  GPIOC, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNE0"}
+    #define FMC_CTL_SDNE1                   { GPIO_PIN_6,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNE1"}
+//    #define FMC_CTL_SDNE1                 { GPIO_PIN_6,  GPIOB, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDNE1"}
+    #define FMC_CTL_SDCKE0                  { GPIO_PIN_2,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDCKE0"}
+//    #define FMC_CTL_SDCKE0                { GPIO_PIN_5,  GPIOC, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDCKE0"}
+    #define FMC_CTL_SDCKE1                  { GPIO_PIN_7,  GPIOH, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDCKE1"}
+//    #define FMC_CTL_SDCKE1                { GPIO_PIN_5,  GPIOB, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDCKE1"}
+    #define FMC_CTL_SDCLK                   { GPIO_PIN_8,  GPIOG, GPIO_AF12_FMC, GPIO_PULLUP, "FMC SDCLK"}
 
 
     /* Definition for FMC NVIC */
@@ -139,20 +186,27 @@
     /* very, very slow!!                                                                                   */
 
     /* Number of address bits                                                                              */
-    #define ADDWID3                         24
+    #define ADDWID3                         20
 
-    /* Address setup time is the 74hc373 minimum pulsewidth ( worst case ) in ns                           */
-    #define ADDSET3                         2
+    /* Number of data bits                                                                              */
+    #define DATAWID3                        16
 
-    /* Address hold time is 74hc737 propagation delay plus output transistion time                         */
-    #define ADDHLD3                         1
+    /* Addr/data multipexed ? */
+    #define ADMUXED3                        0
 
-    /* Data setup time is the tDOE value from the CY62157EV30 datasheet                                    */
-    #define DATASET3                        1
+    /* Address setup time [ns]                            */
+    #define ADDSET3                         10
+
+    /* Address hold time [ns], only valid for mux'ed SRAM */
+    #define ADDHLD3                         5
+
+    /* Data setup time    [ns]                            */
+    #define DATASET3                        10
 
     #define ACCMODE3                        FMC_ACCESS_MODE_A
 
-    #define TIMING3                         { ACCMODE3, ADDWID3, ADDSET3, ADDHLD3, DATASET3, }
+    #define SRAM_TIMING3                    { ACCMODE3, ADDWID3, DATAWID3, ADMUXED3, ADDSET3, ADDHLD3, DATASET3, }
+    #define FMC_TYPE3                       FMC_TYPE_SRAM
 
     #if 0
         /* SRAM timimg for CY62157EV30 MoBL SRAM with multiplexed adress/data line and 74hc373 address latches */
@@ -160,6 +214,12 @@
 
         /* Number of address bits                                                                              */
         #define ADDWID1                         24
+
+        /* Number of data bits                                                                              */
+        #define DATAWID1                        16
+
+        /* Addr/data multipexed ? */
+        #define ADMUXED1                        1
 
         /* Address setup time is the 74hc373 minimum pulsewidth ( worst case ) in ns                           */
         #define ADDSET1                         60
@@ -172,7 +232,7 @@
 
         #define ACCMODE1                        FMC_ACCESS_MODE_D
 
-        #define TIMING1                         { ACCMODE1, ADDWID1, ADDSET1, ADDHLD1, DATASET1, }
+        #define TIMING1                         { ACCMODE1, ADDWID1, DATAWID1, ADMUXED1, ADDSET1, ADDHLD1, DATASET1, }
     #endif
 
 #endif // USE_FMC 

@@ -22,9 +22,10 @@
 #define FMC_MAX_BLOCKS      4           /* FMC supports max 4 external mem devices        */
 
 typedef enum {
-    FMC_TYPE_SRAM = 0,
-    FMC_TYPE_NOR  = 1,
-    FMC_TYPE_NAND = 2,
+    FMC_TYPE_SRAM  = 0,
+    FMC_TYPE_NOR   = 1,
+    FMC_TYPE_NAND  = 2,
+    FMC_TYPE_SDRAM = 3,
 } FmcTypeE;
 
 typedef union {
@@ -35,6 +36,9 @@ typedef union {
     NOR_HandleTypeDef hnor;
 #endif
     /* todo: NAND memory */
+#if USE_FMC_SDRAM > 0 
+    SDRAM_HandleTypeDef hsdram;
+#endif
 } FmcHalHandleT;
 
 typedef struct {
@@ -64,7 +68,7 @@ typedef struct FmcHandleType {
 
 void FMC_DumpGeometry(void);
 
-bool Fmc_SRAM_Init(const HW_DeviceType *self, FMC_NORSRAM_InitTypeDef *Init);
+//bool Fmc_SRAM_Init(const HW_DeviceType *self, FMC_NORSRAM_InitTypeDef *Init);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

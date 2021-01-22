@@ -29,20 +29,38 @@
 
 /* My macros --------------------------------------------------------------------*/
 #define BANK_TO_IDX(bank_id)   ((bank_id) >> 1)
+#define IDX_TO_BANK(idx)       (idx << 1)
 #define BITS_TO_MASK(nrofbits)  ((1ULL << (nrofbits))-1)
 
 /* Private typedef --------------------------------------------------------------*/
 typedef struct {
-    uint32_t accessMode;             /* access mode ( one of FMC_ACCESS_MODE_xxx, where xxx=A,B,C,D ) */
-    uint8_t  AddrBits;               /* number of address bits of ext mem chip */
-    uint16_t T_AddrSet;              /* memories Address setup time [ns] */
-    uint16_t T_AddrHold;             /* Memories Address hold time  [ns] */
-    uint16_t T_DataSet;              /* Memories Data setup time    [ns] */
-} Fmc_TimingDataT;
+     uint32_t accessMode;             /* access mode ( one of FMC_ACCESS_MODE_xxx, where xxx=A,B,C,D )         */
+     uint8_t  AddrBits;               /* number of address bits of ext mem chip                                */
+     uint8_t  DataBits;               /* number of data bits of ext mem chip ( only 8 or 16 are valid for sram */
+     uint8_t  AD_Muxed;               /* != 0, when Data and address bits are multiplexed                      */
+     uint16_t T_AddrSet;              /* memories Address setup time [ns] */
+     uint16_t T_AddrHold;             /* Memories Address hold time  [ns] */
+     uint16_t T_DataSet;              /* Memories Data setup time    [ns] */
+} Fmc_SramTimingDataT;
 
 typedef struct {
-    FmcHandleT      *myFmcHandle;    /* my associated handle */
-    const Fmc_TimingDataT *myTiming[FMC_MAX_BLOCKS];
+     uint32_t accessMode;             /* access mode ( one of FMC_ACCESS_MODE_xxx, where xxx=A,B,C,D )         */
+     uint8_t  RowBits;                /* number of row address bits of ext mem chip                            */
+     uint8_t  ColBits;                /* number of column address bits of ext mem chip                         */
+     uint8_t  DataBits;               /* number of data bits of ext mem ( only 8,16 and 32 are valid f. sdram) */
+     uint16_t T_AddrSet;              /* memories Address setup time [ns] */
+     uint16_t T_AddrHold;             /* Memories Address hold time  [ns] */
+     uint16_t T_DataSet;              /* Memories Data setup time    [ns] */
+} Fmc_SdramTimingDataT;
+
+typedef struct {
+     FmcTypeE fmcType;                /* type of FMC external memory */
+     const void *fmcTiming;           /* Ptr to corresponding timing data */
+} Fmc_ExtMemDataT;
+
+typedef struct {
+    FmcHandleT              *myFmcHandle;    /* my associated handle */
+    const Fmc_ExtMemDataT   *myExtMemData[FMC_MAX_BLOCKS];
 } Fmc_AdditionalDataType;
 
 /* Private or driver functions ------------------------------------------------------*/
@@ -51,40 +69,44 @@ static  FmcHandleT * Fmc_GetMyHandle(const HW_DeviceType *self)
     return ((Fmc_AdditionalDataType *)(self->devData))->myFmcHandle;
 }
 
-static const Fmc_TimingDataT * Fmc_GetMyTiming(const HW_DeviceType *self, uint32_t idx)
+static const Fmc_ExtMemDataT * Fmc_GetMyExtMemData(const HW_DeviceType *self, uint32_t idx)
 {
-    return ((Fmc_AdditionalDataType *)(self->devData))->myTiming[idx];
+    return ((Fmc_AdditionalDataType *)(self->devData))->myExtMemData[idx];
 }
 
 
-static void FmcSetEffectiveBits ( void )
+/******************************************************************************
+ * Add/enable the IO lines required by the current FMC bank with respect to the
+ * io lines enabled so far
+ *****************************************************************************/
+static void FmcAddIOLines(FmcDataT *curr)
 {
-    uint32_t i;
-    uint32_t abits = 0, dbits = 0, cbits = 0;
-    for ( i = 0 ; i < FMC_MAX_BLOCKS; i++ ) if ( FmcHandle.fmcData[i].fmcIsUsed ) {
-        abits |= FmcHandle.fmcData[i].fmcAddrBits;
-        dbits |= FmcHandle.fmcData[i].fmcDataBits;
-        cbits |= FmcHandle.fmcData[i].fmcCtlBits;
-    } // for, if    
-    FmcHandle.allAddrBits = abits;
-    FmcHandle.allDataBits = dbits;
-    FmcHandle.allCtlBits  = cbits;
-}
-
-static void FmcGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
-{
-    uint32_t i;
+    uint32_t         i;
+    uint32_t         delta;
     GPIO_InitTypeDef Init;
+    uint32_t         devIdx;
 
-    Init.Mode = GPIO_MODE_AF_PP;
+    Init.Mode  = GPIO_MODE_AF_PP;
     Init.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    devIdx     = (uint32_t)GetDevIdx(&HW_FMC);
 
-    for ( i = 0 ; i < FMC_D_MAX; i++ ) if ( FmcHandle.allDataBits & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(gpioaf->gpio[i]), &Init );
-    for ( i = 0 ; i < FMC_A_MAX; i++ ) if ( FmcHandle.allAddrBits & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(gpioaf->gpio[FMC_D_MAX+i]), &Init );
-    for ( i = 0 ; i < FMC_CTL_MAX; i++ ) if ( FmcHandle.allCtlBits & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(gpioaf->gpio[FMC_D_MAX+FMC_A_MAX+i]), &Init );
+    /* Enable all data lines, that are not enabled so far */
+    delta = curr->fmcDataBits & ~FmcHandle.allDataBits;
+    for ( i = 0 ; i < FMC_D_MAX; i++ ) if ( delta & ( 1 << i ) )
+        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[i]), &Init );
+    FmcHandle.allDataBits |= delta;
+
+    /* Enable all address lines, that are not enabled so far */
+    delta = curr->fmcAddrBits & ~FmcHandle.allAddrBits;
+    for ( i = 0 ; i < FMC_A_MAX; i++ ) if ( delta & ( 1 << i ) )
+        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[FMC_D_MAX+i]), &Init );
+    FmcHandle.allAddrBits |= delta;
+
+    /* Enable all control lines, that are not enabled so far */
+    delta = curr->fmcCtlBits & ~FmcHandle.allCtlBits;
+    for ( i = 0 ; i < FMC_CTL_MAX; i++ ) if ( delta & ( 1 << i ) )
+        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[FMC_D_MAX+FMC_A_MAX+i]), &Init );
+    FmcHandle.allCtlBits |= delta;
 }
 
 /******************************************************************************
@@ -165,8 +187,12 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
     /**************************************************************************************
      * Dump the FMC parameters  *
      *************************************************************************************/
-    static void FMC_DumpOneGeometry(uint32_t idx, FmcDataT *curr)
+    static void FMC_DumpOneSramGeometry(uint32_t idx, FmcDataT *curr)
     {
+
+
+        /* Get Timing data */
+        Fmc_SramTimingDataT *sram_timing = (Fmc_SramTimingDataT *)(Fmc_GetMyExtMemData(&HW_FMC, idx)->fmcTiming);
         
         DEBUG_PRINTF("FMC Bank %d:\n", idx);
         if ( curr->fmcIsUsed ) {
@@ -179,6 +205,19 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
             }
             DEBUG_PRINTF("   Addr: ");FmcPrintBitVector("A",curr->fmcAddrBits, FMC_A_MAX);DEBUG_PRINTF("\n");
             DEBUG_PRINTF("   Ctl:  ");FmcPrintCtlText(curr->fmcCtlBits);DEBUG_PRINTF("\n");
+            
+            /* capacity in kBytes and start address */
+            uint32_t capa = (1 << sram_timing->AddrBits ) * sram_timing->DataBits/8/1024;
+            uint32_t base = 0x60000000 + 0x4000000 * idx;
+             
+            DEBUG_PRINTF("Organisation:       2^%d x %d bit\n", sram_timing->AddrBits, sram_timing->DataBits );
+            DEBUG_PRINTF("Resulting capacity: %dKB or %dMB\n", capa, capa/1024);
+            DEBUG_PRINTF("Address Range     : 0x%08x ... 0x%08x\n", base, base+capa*1024-1);
+            DEBUG_PRINTF("Timing parameters:\n");
+            DEBUG_PRINTF("Address setup time: %dns\n",sram_timing->T_AddrSet);
+            DEBUG_PRINTF("Data setup time:    %dns\n",sram_timing->T_DataSet);
+            if ( curr->fmcIsMuxed ) 
+                DEBUG_PRINTF("Address hold time  %dns\n",sram_timing->T_AddrHold);
         } else {
             DEBUG_PUTS("   unused");
         }
@@ -188,9 +227,10 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
 
 void FMC_DumpGeometry(void)
 {
+
     for ( uint32_t i=0; i < FMC_MAX_BLOCKS; i++) {
         #if DEBUG_MODE > 0 
-            FMC_DumpOneGeometry(i, FmcHandle.fmcData+i);
+            FMC_DumpOneSramGeometry(i, FmcHandle.fmcData+i);
         #endif
     }
     #if DEBUG_MODE > 0
@@ -200,77 +240,6 @@ void FMC_DumpGeometry(void)
     #endif
 }
 
-void Fmc_MspInit(void)
-{
-  GPIO_InitTypeDef GPIO_Init_Structure;
-
-  /* Enable FMC clock */
-  __HAL_RCC_FMC_CLK_ENABLE();
-
-  /* Enable GPIOs clock */
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_PWR_CLK_ENABLE();
-  HAL_PWREx_EnableVddIO2();
-
-  /* Common GPIO configuration */
-  GPIO_Init_Structure.Mode      = GPIO_MODE_AF_PP;
-  GPIO_Init_Structure.Pull      = GPIO_PULLUP;
-  GPIO_Init_Structure.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_Init_Structure.Alternate = GPIO_AF12_FMC;
-
-  /*## Data Bus #######*/
-  /* GPIOD configuration */
-  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_8 | GPIO_PIN_9 | \
-                              GPIO_PIN_10 | GPIO_PIN_14 | GPIO_PIN_15;
-  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
-
-  /* GPIOE configuration */  
-  GPIO_Init_Structure.Pin   = GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | \
-                              GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13 | \
-                              GPIO_PIN_14 | GPIO_PIN_15;
-  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
-  
-  /*## Address Bus #######*/
-  /* GPIOF configuration */  
-  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | \
-                              GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_12 | GPIO_PIN_13 | \
-                              GPIO_PIN_14 | GPIO_PIN_15;
-  HAL_GPIO_Init(GPIOF, &GPIO_Init_Structure);
-  
-  /* GPIOG configuration */  
-  GPIO_Init_Structure.Pin   = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | \
-                              GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOG, &GPIO_Init_Structure);
-  
-  /* GPIOD configuration */
-  GPIO_Init_Structure.Pin   = GPIO_PIN_11 | GPIO_PIN_12 | GPIO_PIN_13;
-  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
-
-  /* GPIOE configuration */  
-  GPIO_Init_Structure.Pin   = GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure);
-
-  /*## NOE and NWE configuration #######*/ 
-  GPIO_Init_Structure.Pin = GPIO_PIN_4 |GPIO_PIN_5;
-  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
-
-  /*## Enable Bank pin configuration #######*/
-  GPIO_Init_Structure.Pin = GPIO_PIN_7;
-  HAL_GPIO_Init(GPIOD, &GPIO_Init_Structure);
-
-#if 0 && defined(USE_STM32L476G_EVAL_REVB)
-  /*## LCD NE3 configuration #######*/
-  GPIO_Init_Structure.Pin = GPIO_PIN_10;
-  HAL_GPIO_Init(GPIOG, &GPIO_Init_Structure);
-#endif /* USE_STM32L476G_EVAL_REVB */
-
-  /*## NBL0, NBL1 configuration #######*/
-  GPIO_Init_Structure.Pin = GPIO_PIN_0 | GPIO_PIN_1;
-  HAL_GPIO_Init(GPIOE, &GPIO_Init_Structure); 
-}
 
 /**************************************************************************************
  * Some Devices support different clock sources for FSMC. Make sure, that             *   
@@ -327,7 +296,7 @@ static bool Fmc_ClockInit(const HW_DeviceType *self, bool bDoInit)
  * of HAL (resp FMC) timing data fields.
  * TRUE will be returned on success
  *****************************************************************************/
-static bool Fmc_SetTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_TimingDataT *myTiming )
+static bool Fmc_SetSramTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_SramTimingDataT *myTiming )
 {
     #define MIN_ADDSET       0         /* min clk cycles for address setup time */
     #define MAX_ADDSET      15         /* max clk cycles for address setup time */
@@ -378,65 +347,192 @@ static bool Fmc_SetTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_Timin
     return true;
 }
 
-bool Fmc_SRAM_Init(const HW_DeviceType *self, FMC_NORSRAM_InitTypeDef *Init)
+/******************************************************************************
+ * Do the Initialization of an SRAM bank.
+ * Parameters:
+ *    fmc_idx     - FMC bank index [0 .. 3]
+ *    sram_timing - neccessary timing and size parameters
+ * initializes all associated IO pins and initializes the FMC bank. After return
+ * the FMC bank is enabled/visible at its prefined memory address range
+ * Returns
+ *    true on success
+ *    false in case of parameter or HAL layer initialization error
+ *****************************************************************************/
+bool Fmc_SRAM_Init(uint32_t fmc_idx, Fmc_SramTimingDataT *sram_timing )
 {
-    FMC_NORSRAM_TimingTypeDef SRAM_Timing;
+    FMC_NORSRAM_InitTypeDef     *init;
+    FMC_NORSRAM_TimingTypeDef   SRAM_Timing;
+    
+    FmcDataT *curr   = FmcHandle.fmcData+fmc_idx; 
+    
+    /* Check for selected FMC bank being unused */
+    if ( curr->fmcIsUsed ) {
+        DEBUG_PRINTF("Fmc Bank #%d already used\n",  fmc_idx );
+        return false;
+    }
+
     /* SRAM device configuration */  
 
-    uint32_t idx         = BANK_TO_IDX(Init->NSBank);
-    FmcDataT *curr       = FmcHandle.fmcData+idx; 
-    if ( curr->fmcIsUsed ) {
-        DEBUG_PRINTF("Fmc Bank #%d already used\n",  idx );
-        return false;
-    }
+//    uint32_t idx         = BANK_TO_IDX(Init->NSBank);
     
-    const Fmc_TimingDataT *timing = Fmc_GetMyTiming(self, idx);
-    if ( !timing ) {
-        DEBUG_PRINTF("No timing for Fmc Bank #%d!\n",  idx );
+    if ( !Fmc_SetSramTiming( &SRAM_Timing, sram_timing) ) {
+        DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
         return false;
     }
-    if ( !Fmc_SetTiming( &SRAM_Timing,  timing) ) {
-        DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  idx );
+
+    /* Check DataWidth to be 8 or 16 */
+    if ( sram_timing->DataBits != 8 && sram_timing->DataBits != 16 ) {
+        DEBUG_PRINTF("Data Width of Fmc Bank #%d invalid\n",  fmc_idx );
         return false;
     }
 
     curr->fmcIsUsed      = 1;
     curr->fmcType        = FMC_TYPE_SRAM;
-    curr->fmcIsMuxed     = Init->DataAddressMux == FMC_DATA_ADDRESS_MUX_ENABLE;
-    curr->fmcDataBits    = ( Init->MemoryDataWidth == FMC_NORSRAM_MEM_BUS_WIDTH_8 ? 8 : 16 );
+    curr->fmcIsMuxed     = sram_timing->AD_Muxed;
+    curr->fmcDataBits    = sram_timing->DataBits; 
     curr->fmcDataBits    = BITS_TO_MASK(curr->fmcDataBits);
-    curr->fmcAddrBits    = BITS_TO_MASK(timing->AddrBits);
+    curr->fmcAddrBits    = BITS_TO_MASK(sram_timing->AddrBits);
+
     /* In case of multiplexed address/data, exclude the multiplexed address lines */
     if ( curr->fmcIsMuxed) curr->fmcAddrBits &= ~(curr->fmcDataBits);
+
     /* Enable NBL0, NBL1, NOE, NWE and selected enable-line */
-    curr->fmcCtlBits     = 1 << FMC_NBL0_OFS | 1 << FMC_NBL1_OFS | 1 << FMC_NOE_OFS | 1 << FMC_NWE_OFS | 1 << ( FMC_NE1_OFS + idx ) ;
+    curr->fmcCtlBits     = 1 << FMC_NBL0_OFS | 1 << FMC_NBL1_OFS | 1 << FMC_NOE_OFS | 1 << FMC_NWE_OFS | 1 << ( FMC_NE1_OFS + fmc_idx ) ;
+
+    /* enable Address valid line in muxed mode */
+    if ( curr->fmcIsMuxed ) curr->fmcCtlBits |= ( 1 << FMC_NL_OFS );
+
+    curr->hHal.hsram.Instance  = FMC_NORSRAM_DEVICE;
+    curr->hHal.hsram.Extended  = FMC_NORSRAM_EXTENDED_DEVICE;
+    init                       = &curr->hHal.hsram.Init;
+
+    init->MemoryType         = FMC_MEMORY_TYPE_SRAM;
+    init->NSBank             = IDX_TO_BANK(fmc_idx);
+    init->DataAddressMux     = curr->fmcIsMuxed ? FMC_DATA_ADDRESS_MUX_ENABLE : FMC_DATA_ADDRESS_MUX_DISABLE;
+    init->MemoryDataWidth    = curr->fmcDataBits == 8 ? FMC_NORSRAM_MEM_BUS_WIDTH_8 : FMC_NORSRAM_MEM_BUS_WIDTH_16;
+    init->BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
+    init->WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
+    init->WaitSignalActive   = FMC_WAIT_TIMING_BEFORE_WS;
+    init->WriteOperation     = FMC_WRITE_OPERATION_ENABLE;
+    init->WaitSignal         = FMC_WAIT_SIGNAL_DISABLE;
+    init->ExtendedMode       = FMC_EXTENDED_MODE_DISABLE;
+    init->AsynchronousWait   = FMC_ASYNCHRONOUS_WAIT_DISABLE;
+    init->WriteBurst         = FMC_WRITE_BURST_DISABLE;
+    init->ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+    init->PageSize           = FMC_PAGE_SIZE_NONE;
+    init->WriteFifo          = FMC_WRITE_FIFO_ENABLE;
+
 
 #if defined(STM32L476EVAL)
     /* When using STM32L476-EVAL with glass LCD deployed, also activate FMCs NE3 select line to deactivate LCD data output */
     curr->fmcCtlBits |= 1 << ( FMC_NE3_OFS );
 #endif
 
-    /* enable Address valid line in muxed mode */
-    if ( curr->fmcIsMuxed ) curr->fmcCtlBits |= ( 1 << FMC_NL_OFS );
 
-    /* set effective io lines and activate all IO */
-    FmcSetEffectiveBits();
-    FmcGpioInitAF(GetDevIdx(&HW_FMC), HW_FMC.devGpioAF);
+    /* enable io lines and keep track of all activated IO lines  */
+    FmcAddIOLines(curr);
  
-    FMC_DumpOneGeometry(idx, curr);
-
-    curr->hHal.hsram.Instance  = FMC_NORSRAM_DEVICE;
-    curr->hHal.hsram.Extended  = FMC_NORSRAM_EXTENDED_DEVICE;
-    curr->hHal.hsram.Init      = *Init;
-
     if ( HAL_SRAM_Init(&curr->hHal.hsram, &SRAM_Timing, &SRAM_Timing) != HAL_OK ) {
-        DEBUG_PRINTF("SRAM init for Fmc Bank #%d failed\n",  idx );
+        DEBUG_PRINTF("SRAM init for Fmc Bank #%d failed\n",  fmc_idx );
+        curr->fmcIsUsed = 0;
         return false;
     }
+
+    FMC_DumpOneSramGeometry(fmc_idx, curr);
 
     return true;
 }
 
+
+/******************************************************************************
+ * Do the Initialization of an SDRAM bank.
+ * Parameters:
+ *    fmc_idx      - FMC bank index [0 .. 3]
+ *    sdram_timing - neccessary timing and size parameters
+ * initializes all associated IO pins and initializes the FMC bank. After return
+ * the FMC bank is enabled/visible at its prefined memory address range
+ * Returns
+ *    true on success
+ *    false in case of parameter or HAL layer initialization error
+ *****************************************************************************/
+bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_timing )
+{
+    FMC_SDRAM_InitTypeDef     *init;
+    FMC_SDRAM_TimingTypeDef   SDRAM_Timing;
+    
+    FmcDataT *curr   = FmcHandle.fmcData+fmc_idx; 
+    
+    /* Check for selected FMC bank being unused */
+    if ( curr->fmcIsUsed ) {
+        DEBUG_PRINTF("Fmc Bank #%d already used\n",  fmc_idx );
+        return false;
+    }
+
+    /* SDRAM device configuration */  
+
+    
+    if ( !Fmc_SetSdramTiming( &SDRAM_Timing, sdram_timing) ) {
+        DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
+        return false;
+    }
+
+    /* Check DataWidth to be 8 or 16 */
+    if ( sdram_timing->DataBits != 8 && sdram_timing->DataBits != 16 && sdram_timing->DataBits != 32 ) {
+        DEBUG_PRINTF("Data Width of Fmc Bank #%d invalid\n",  fmc_idx );
+        return false;
+    }
+
+    curr->fmcIsUsed      = 1;
+    curr->fmcType        = FMC_TYPE_SDRAM;
+    curr->fmcIsMuxed     = 0;
+    curr->fmcDataBits    = sram_timing->DataBits; 
+    curr->fmcDataBits    = BITS_TO_MASK(curr->fmcDataBits);
+    curr->fmcAddrBits    = BITS_TO_MASK(sram_timing->AddrBits);
+
+    /* Enable NBL0, NBL1, NOE, NWE and selected enable-line */
+    curr->fmcCtlBits     = 1 << FMC_NBL0_OFS | 1 << FMC_NBL1_OFS | 1 << FMC_NOE_OFS | 1 << FMC_NWE_OFS | 1 << ( FMC_NE1_OFS + fmc_idx ) ;
+
+  hsdram.Instance = FMC_SDRAM_DEVICE;
+
+    curr->hHal.hsdram.Instance = FMC_SDRAM_DEVICE;
+    init                       = &curr->hHal.hsdram.Init;
+----> here
+    init->MemoryType         = FMC_MEMORY_TYPE_SRAM;
+    init->NSBank             = IDX_TO_BANK(fmc_idx);
+    init->DataAddressMux     = curr->fmcIsMuxed ? FMC_DATA_ADDRESS_MUX_ENABLE : FMC_DATA_ADDRESS_MUX_DISABLE;
+    init->MemoryDataWidth    = curr->fmcDataBits == 8 ? FMC_NORSRAM_MEM_BUS_WIDTH_8 : FMC_NORSRAM_MEM_BUS_WIDTH_16;
+    init->BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
+    init->WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
+    init->WaitSignalActive   = FMC_WAIT_TIMING_BEFORE_WS;
+    init->WriteOperation     = FMC_WRITE_OPERATION_ENABLE;
+    init->WaitSignal         = FMC_WAIT_SIGNAL_DISABLE;
+    init->ExtendedMode       = FMC_EXTENDED_MODE_DISABLE;
+    init->AsynchronousWait   = FMC_ASYNCHRONOUS_WAIT_DISABLE;
+    init->WriteBurst         = FMC_WRITE_BURST_DISABLE;
+    init->ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+    init->PageSize           = FMC_PAGE_SIZE_NONE;
+    init->WriteFifo          = FMC_WRITE_FIFO_ENABLE;
+
+
+#if defined(STM32L476EVAL)
+    /* When using STM32L476-EVAL with glass LCD deployed, also activate FMCs NE3 select line to deactivate LCD data output */
+    curr->fmcCtlBits |= 1 << ( FMC_NE3_OFS );
+#endif
+
+
+    /* enable io lines and keep track of all activated IO lines  */
+    FmcAddIOLines(curr);
+ 
+    if ( HAL_SRAM_Init(&curr->hHal.hsram, &SRAM_Timing, &SRAM_Timing) != HAL_OK ) {
+        DEBUG_PRINTF("SRAM init for Fmc Bank #%d failed\n",  fmc_idx );
+        curr->fmcIsUsed = 0;
+        return false;
+    }
+
+    FMC_DumpOneSramGeometry(fmc_idx, curr);
+
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Device functions ///////////////////////////////////////////////////////////
@@ -469,6 +565,11 @@ void Fmc_DeInit(const HW_DeviceType *self)
                     HAL_NAND_DeInit&(myFmc->fmcData[i].hHal.hnand));
                     break;
 #endif
+#if USE_FMC_SDRAM > 0
+                case FMC_TYPE_SDRAM:
+                    HAL_SDRAM_DeInit(&(myFmc->fmcData[i].hHal.hsdram));
+                    break;
+#endif
                 default:
                     DEBUG_PUTS("Fmc_DeInit: No type specific handler");
             }
@@ -477,7 +578,7 @@ void Fmc_DeInit(const HW_DeviceType *self)
     /* To leave a clean state, reset QUADSPI hardware */
     HW_Reset((void *)self->devBase);
 
-    /* disable QUADSPI clock */
+    /* disable FMC clock */
     Fmc_ClockInit(self, false );
 }
 
@@ -488,13 +589,34 @@ void Fmc_DeInit(const HW_DeviceType *self)
  *************************************************************************************/
 bool Fmc_Init(const HW_DeviceType *self)
 {
-    FmcHandleT *myFmcHandle = Fmc_GetMyHandle(self);
-
+    FmcHandleT              *myFmcHandle = Fmc_GetMyHandle(self);
+    const Fmc_ExtMemDataT   *extmemData;
+    bool                    ret;
+    uint32_t                i;
+    
     Fmc_ClockInit(self, true );
     HW_Reset((void *)self->devBase);
     FmcResetMyHandle(myFmcHandle);
 
-    return true;
+    for ( i = 0, ret=true; ret && i < FMC_MAX_BLOCKS; i++ ) {
+        extmemData = Fmc_GetMyExtMemData(self, i);
+        if ( extmemData ) switch ( extmemData->fmcType ) {
+            case FMC_TYPE_SRAM:
+                ret = Fmc_SRAM_Init(i,(Fmc_SramTimingDataT *)(extmemData->fmcTiming) );
+                break;
+            case FMC_TYPE_SDRAM:
+                ret = Fmc_SDRAM_Init(i,(Fmc_SdramTimingDataT *)(extmemData->fmcTiming) );
+                break;
+            case FMC_TYPE_NOR:
+            case FMC_TYPE_NAND:
+            default:
+                DEBUG_PRINTF("No init method for FMC type %d\n", extmemData->fmcType );
+                ret = false;
+        } // if, switch
+    } // for
+
+
+    return ret;
 }
 
 /******************************************************************************
@@ -504,20 +626,28 @@ bool Fmc_Init(const HW_DeviceType *self)
 bool Fmc_OnFrqChange(const HW_DeviceType *self)
 {
     FMC_NORSRAM_TimingTypeDef SRAM_Timing;
-    const Fmc_TimingDataT *timing;
+    const Fmc_ExtMemDataT *extmemData;
 
     FmcHandleT *myFmcHandle = Fmc_GetMyHandle(self);
     for ( uint32_t i = 0; i < FMC_MAX_BLOCKS; i++ ) if ( myFmcHandle->fmcData[i].fmcIsUsed ) {    
-        timing = Fmc_GetMyTiming(self, i);
-        if ( !Fmc_SetTiming( &SRAM_Timing,  timing) ) {
-            DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n", i );
-            return false;
-        }
-        
-          /* change SRAM timing */
-          (void)FMC_NORSRAM_Timing_Init(myFmcHandle->fmcData[i].hHal.hsram.Instance, &SRAM_Timing, myFmcHandle->fmcData[i].hHal.hsram.Init.NSBank);
-
-    }
+        extmemData = Fmc_GetMyExtMemData(self, i);
+        switch(extmemData->fmcType ) {
+            case FMC_TYPE_SRAM:
+            case FMC_TYPE_NOR:
+                if ( !Fmc_SetSramTiming( &SRAM_Timing, (Fmc_SramTimingDataT *)(extmemData->fmcTiming) ) ) {
+                    DEBUG_PRINTF("Timing setup of SRAM Fmc Bank #%d failed\n", i );
+                    return false;
+                }
+                /* change SRAM timing */
+                (void)FMC_NORSRAM_Timing_Init(myFmcHandle->fmcData[i].hHal.hsram.Instance, &SRAM_Timing, myFmcHandle->fmcData[i].hHal.hsram.Init.NSBank);
+            break;
+            case FMC_TYPE_NAND:
+            case FMC_TYPE_SDRAM:
+            default:
+                DEBUG_PRINTF("No Timing setup for FMC type %d\n", extmemData->fmcType );
+                return false;
+        } // switch
+    } // for
 
     return true;
 }
@@ -536,49 +666,74 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
     };
     #endif
 
-    /* 16 Data pins, 26 Addr pinx FMC_CTL_MAX control pins */
+    /* 16 or 32 Data pins, up to 26 Addr pins, FMC_CTL_MAX control pins */
     static const HW_GpioList_AF gpio_fmc = {
         .num  = FMC_D_MAX + FMC_A_MAX + FMC_CTL_MAX,
         .gpio = { 
             FMC_D00, FMC_D01, FMC_D02, FMC_D03, FMC_D04, FMC_D05, FMC_D06, FMC_D07,
             FMC_D08, FMC_D09, FMC_D10, FMC_D11, FMC_D12, FMC_D13, FMC_D14, FMC_D15,
+            #if FMC_D_MAX > 16
+                FMC_D16, FMC_D17, FMC_D18, FMC_D19, FMC_D20, FMC_D21, FMC_D22, FMC_D23, 
+                FMC_D24, FMC_D25, FMC_D26, FMC_D27, FMC_D28, FMC_D29, FMC_D30, FMC_D31,
+            #endif
+
             FMC_A00, FMC_A01, FMC_A02, FMC_A03, FMC_A04, FMC_A05, FMC_A06, FMC_A07,
             FMC_A08, FMC_A09, FMC_A10, FMC_A11, FMC_A12, FMC_A13, FMC_A14, FMC_A15,
             FMC_A16, FMC_A17, FMC_A18, FMC_A19, FMC_A20, FMC_A21, FMC_A22, FMC_A23, 
             FMC_A24, FMC_A25, 
-            FMC_CTL_CLK,  FMC_CTL_NWAIT, FMC_CTL_NOE, FMC_CTL_NWE,
-            FMC_CTL_NE1,  FMC_CTL_NE2,   FMC_CTL_NE3, FMC_CTL_NE4,
-            FMC_CTL_NBL0, FMC_CTL_NBL1,  FMC_CTL_INT, FMC_CTL_NL,
+
+            FMC_CTL_CLK,   FMC_CTL_NWAIT,  FMC_CTL_NOE,     FMC_CTL_NWE,
+            FMC_CTL_NE1,   FMC_CTL_NE2,    FMC_CTL_NE3,     FMC_CTL_NE4,
+            FMC_CTL_NBL0,  FMC_CTL_NBL1,   FMC_CTL_NBL2,    FMC_CTL_NBL3,   
+            FMC_CTL_INT,     FMC_CTL_NL,
+            FMC_CTL_SDNWE, FMC_CTL_SDNCAS, FMC_CTL_SDNRAS,  FMC_CTL_SDNE0,
+            FMC_CTL_SDNE1, FMC_CTL_SDCKE0, FMC_CTL_SDCKE1,  FMC_CTL_SDCLK,
         }
     };
 
-    #if defined(TIMING1)
-        static const Fmc_TimingDataT timing1 = TIMING1;
-        #define FMC_T1      &timing1
+    #if defined(FMC_TYPE1)
+        #if FMC_TYPE1 == FMC_TYPE_SRAM
+            static const Fmc_SramTimingDataT memdata1  = SRAM_TIMING1;
+        #elif FMC_TYPE1 == FMC_TYPE_SDRAM
+            static const Fmc_SdramTimingDataT memdata1 = SDRAM_TIMING1;
+        #else
+            #error "No Memory data for external memory block 1"
+        #endif
+        static const Fmc_ExtMemDataT extmem1 = { FMC_TYPE1, &memdata1 };
+        #define FMC_T1      &extmem1
     #else   
         #define FMC_T1      NULL
     #endif
+
     #if defined(TIMING2)
-        static const Fmc_TimingDataT timing2 = TIMING2;
+        static const Fmc_ExtMemDataT timing2 = TIMING2;
         #define FMC_T2      &timing2
     #else   
         #define FMC_T2      NULL
     #endif
-    #if defined(TIMING3)
-        static const Fmc_TimingDataT timing3 = TIMING3;
-        #define FMC_T3      &timing3
+    #if defined(FMC_TYPE3)
+        #if FMC_TYPE3 == FMC_TYPE_SRAM
+            static const Fmc_SramTimingDataT memdata3  = SRAM_TIMING3;
+        #elif FMC_TYPE3 == FMC_TYPE_SDRAM
+            static const Fmc_SdramTimingDataT memdata3 = SDRAM_TIMING3;
+        #else
+            #error "No Memory data for external memory block 3"
+        #endif
+        static const Fmc_ExtMemDataT extmem3 = { FMC_TYPE3, &memdata3 };
+        #define FMC_T3      &extmem3
     #else   
         #define FMC_T3      NULL
     #endif
     #if defined(TIMING4)
-        static const Fmc_TimingDataT timing4 = TIMING4;
+        static const Fmc_ExtMemDataT timing4 = TIMING4;
         #define FMC_T4      &timing4
     #else   
         #define FMC_T4      NULL
     #endif
+
     static const Fmc_AdditionalDataType additional_fmc = {
-        .myFmcHandle = &FmcHandle,
-        .myTiming    = { FMC_T1, FMC_T2, FMC_T3, FMC_T4 },
+        .myFmcHandle  = &FmcHandle,
+        .myExtMemData = { FMC_T1, FMC_T2, FMC_T3, FMC_T4 },
     };
 
 
@@ -605,27 +760,12 @@ const HW_DeviceType HW_FMC = {
 };
 #endif
 
-
+#if 0
 void FMC_PostInit( const HW_DeviceType *self, void *args)
 {
     UNUSED(self); UNUSED(args);
 
     FMC_NORSRAM_InitTypeDef Init;
-    Init.NSBank             = FMC_NORSRAM_BANK3;
-    Init.DataAddressMux     = FMC_DATA_ADDRESS_MUX_DISABLE;
-    Init.MemoryType         = FMC_MEMORY_TYPE_PSRAM;
-    Init.MemoryDataWidth    = FMC_NORSRAM_MEM_BUS_WIDTH_16;
-    Init.BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
-    Init.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
-    Init.WaitSignalActive   = FMC_WAIT_TIMING_BEFORE_WS;
-    Init.WriteOperation     = FMC_WRITE_OPERATION_ENABLE;
-    Init.WaitSignal         = FMC_WAIT_SIGNAL_DISABLE;
-    Init.ExtendedMode       = FMC_EXTENDED_MODE_DISABLE;
-    Init.AsynchronousWait   = FMC_ASYNCHRONOUS_WAIT_DISABLE;
-    Init.WriteBurst         = FMC_WRITE_BURST_DISABLE;
-    Init.ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-    Init.PageSize           = FMC_PAGE_SIZE_NONE;
-    Init.WriteFifo          = FMC_WRITE_FIFO_ENABLE;
 
     if (!Fmc_SRAM_Init(self, &Init)) {
         DEBUG_PUTS("FMC SRAM init failed!");
@@ -637,7 +777,7 @@ void FMC_PostInit( const HW_DeviceType *self, void *args)
         *(extmemptr + i) = 0;
     #endif
 }
-
+#endif
 
 
 #endif /* if USE_FMC > 0 */

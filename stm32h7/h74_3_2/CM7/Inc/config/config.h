@@ -51,6 +51,7 @@
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_USB                     0   
 #define USE_FMC_SRAM                1
+#define USE_FMC_SDRAM               1
 #define USE_FMC_NOR                 0
 #define USE_ETH                     1
 
@@ -127,7 +128,7 @@
  * Check and set constraints for FMC module
  *****************************************************************************/
 #undef USE_FMC
-#if USE_FMC_SRAM > 0 || USE_FMC_NOR > 0 || USE_FMC_NAND > 0
+#if USE_FMC_SRAM > 0 || USE_FMC_SDRAM > 0 || USE_FMC_NOR > 0 || USE_FMC_NAND > 0 
     #define USE_FMC 1
 #else
     #define USE_FMC 0

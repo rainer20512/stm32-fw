@@ -155,7 +155,7 @@ void Init_OtherDevices(void)
   #endif
   #if defined(FMC_Bank1_R) && USE_FMC > 0 
       void FMC_PostInit( const HW_DeviceType *self, void *args);
-      dev_idx = AddDevice(&HW_FMC, FMC_PostInit, NULL);
+      dev_idx = AddDevice(&HW_FMC, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init FMC-device");
       } else {
