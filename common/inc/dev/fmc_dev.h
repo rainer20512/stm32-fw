@@ -21,12 +21,17 @@
 /* Public defines ------------------------------------------------------------------------*/
 #define FMC_MAX_BLOCKS      4           /* FMC supports max 4 external mem devices        */
 
-typedef enum {
-    FMC_TYPE_SRAM  = 0,
-    FMC_TYPE_NOR   = 1,
-    FMC_TYPE_NAND  = 2,
-    FMC_TYPE_SDRAM = 3,
-} FmcTypeE;
+
+/* 
+ * Supported types of external memory
+ * cannot be put into enum, is evaluated by preprocessor 
+ */
+
+#define FMC_TYPE_SRAM       0
+#define FMC_TYPE_NOR        1
+#define FMC_TYPE_NAND       2
+#define FMC_TYPE_SDRAM      3
+
 
 typedef union {
 #if USE_FMC_SRAM > 0 
@@ -42,13 +47,17 @@ typedef union {
 } FmcHalHandleT;
 
 typedef struct {
-    FmcHalHandleT   hHal;               /* Associated HAL handle                          */
-    FmcTypeE        fmcType;            /* Memory type                                    */
-    uint32_t        fmcCtlBits;         /* Bit mask of used control bits                  */
-    uint32_t        fmcAddrBits;        /* Bit mask of used address bits                  */
-    uint32_t        fmcDataBits;        /* Bit mask of used data bus bits 8/16            */
-    uint8_t         fmcIsMuxed;         /* true iff Addr and Data lines are multiplexed   */
-    uint8_t         fmcIsUsed;          /* True, iff this FmcDataT block is config'd/used */
+    FmcHalHandleT   hHal;               /* Associated HAL handle                                  */
+    uint32_t        fmcCtlBits;         /* Bit mask of used control bits                          */
+    uint32_t        fmcAddrBits;        /* Bit mask of used address bits                          */
+    uint32_t        fmcDataBits;        /* Bit mask of used data bus bits 8/16                    */
+    uint32_t        fmcRefClockSpeed;   /* FMC clk speed, that is the base of timing computations */
+    uint8_t         fmcType;            /* Memory type                                            */
+    union {
+        uint8_t         fmcIsMuxed;     /* SRAM: true iff Addr and Data lines are mux'ed          */
+        uint8_t         fmcSDBankNum;   /* SDRAM: SDRAM Bank number                               */    
+    };
+    uint8_t         fmcIsUsed;          /* True, iff this FmcDataT block is config'd/used         */
 } FmcDataT;
 
 typedef struct FmcHandleType {

@@ -18,7 +18,6 @@
 
 #include "hardware.h"
 
-
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 
@@ -208,6 +207,47 @@
     #define SRAM_TIMING3                    { ACCMODE3, ADDWID3, DATAWID3, ADMUXED3, ADDSET3, ADDHLD3, DATASET3, }
     #define FMC_TYPE3                       FMC_TYPE_SRAM
 
+    /* Mode register definitions for IS42S32800G DRAM, see data sheet p.22 ff */
+    #define SDRAM_MODEREG_BURST_LENGTH_1             ((uint16_t)0x0000)
+    #define SDRAM_MODEREG_BURST_LENGTH_2             ((uint16_t)0x0001)
+    #define SDRAM_MODEREG_BURST_LENGTH_4             ((uint16_t)0x0002)
+    #define SDRAM_MODEREG_BURST_LENGTH_8             ((uint16_t)0x0004)
+    #define SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL      ((uint16_t)0x0000)
+    #define SDRAM_MODEREG_BURST_TYPE_INTERLEAVED     ((uint16_t)0x0008)
+    #define SDRAM_MODEREG_CAS_LATENCY_2              ((uint16_t)0x0020)
+    #define SDRAM_MODEREG_CAS_LATENCY_3              ((uint16_t)0x0030)
+    #define SDRAM_MODEREG_OPERATING_MODE_STANDARD    ((uint16_t)0x0000)
+    #define SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED ((uint16_t)0x0000)
+    #define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE     ((uint16_t)0x0200)
+
+    #define MODEREG4     (uint32_t)(   SDRAM_MODEREG_BURST_LENGTH_1   | SDRAM_MODEREG_BURST_TYPE_SEQUENTIAL   \
+                                    | SDRAM_MODEREG_CAS_LATENCY_2    | SDRAM_MODEREG_OPERATING_MODE_STANDARD \
+                                    | SDRAM_MODEREG_WRITEBURST_MODE_SINGLE \
+                                   )
+
+    /* Timing parameters for IS42S32800G-x DRAM according to datasheet */                                    
+    #define T_MRD                   14      // tMRD - Mode Register program time -> 12ns
+    #define T_XSR                   70      // tXSR - Self refresh exit time     -> 70ns
+    #define T_RAS                   40      // min. self refresh period = tRAS   -> 40ns
+    #define T_RC                    68      // tRC  - Command Period/Act-to-Act  -> 67.5ns
+    #define T_WR                    20      // Wr. Recovery t.:tRAS-rRCD -> 40-20-> 20ns
+    #define T_RP                    18      // tRP  - Precharge to Active Delay  -> 18ns 
+    #define T_RCD                   18      // tRCD - Active to Read/Write Delay -> 18ns
+
+    #define SDRAM_TIMES4           {T_MRD, T_XSR, T_RAS, T_RC, T_WR, T_RP, T_RCD, }
+
+    /* Operational parameters for IS42S32800G DRAM */
+    #define ROWWID4                 12
+    #define COLWID4                 9
+    #define DATAWID4                32
+    #define CASLTCY4                2             /* CAS Latency may be 2 @ 100MHz SDRAM clock */
+    #define SDBANKNUM4              2
+    #define REFRESHRATE4            64            /* Refreshrate [ms] according to data sheet */
+ 
+    #define FMC_TYPE4               FMC_TYPE_SDRAM
+    #define SDRAM_TIMING4          { MODEREG4, ROWWID4, COLWID4, DATAWID4, SDBANKNUM4, CASLTCY4, REFRESHRATE4, SDRAM_TIMES4, } 
+    
+    
     #if 0
         /* SRAM timimg for CY62157EV30 MoBL SRAM with multiplexed adress/data line and 74hc373 address latches */
         /* very, very slow!!                                                                                   */

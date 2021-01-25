@@ -1803,12 +1803,11 @@ ADD_SUBMODULE(Test);
 
 #if USE_FMC > 0
 
-    #define BUFFER_SIZE         ((uint32_t)0x8000)
-    #define WRITE_READ_ADDR     ((uint32_t)0x0800)
-    #define SRAM_BANK_ADDR      ((uint32_t)0x68000000)
-
-    static uint16_t AXISMEM aTxBuffer[BUFFER_SIZE];
-    static uint16_t AXISMEM aRxBuffer[BUFFER_SIZE];
+    #define BUFFER_SIZE_WORD    (0x8000UL)
+    #define BUFFER_SIZE_BYTE    (BUFFER_SIZE_WORD*2)
+    static uint32_t extmemBase = 0x68000000;
+    static uint16_t AXISMEM aTxBuffer[BUFFER_SIZE_WORD];
+    static uint16_t AXISMEM aRxBuffer[BUFFER_SIZE_WORD];
 
     /* Status variables */
     __IO bool uwWriteReadStatus = 0;
@@ -1816,18 +1815,23 @@ ADD_SUBMODULE(Test);
     /* Counter index */
     static uint32_t uwIndex = 0;
 
-    static void Fill_Buffer(uint16_t *pBuffer, uint32_t uwBufferLength, uint16_t uwOffset)
+    static void FillBufferByte(uint8_t *pBuffer, uint32_t uwBufferLength, uint8_t ubValue)
     {
-      uint16_t tmpIndex = 0;
-
       /* Put in global buffer different values */
-      for (tmpIndex = 0; tmpIndex < uwBufferLength; tmpIndex++)
-            pBuffer[tmpIndex] = uwOffset;
+      for (uint32_t tmpIndex = 0; tmpIndex < uwBufferLength; tmpIndex++)
+        pBuffer[tmpIndex] = ubValue;
+    }
+
+    static void FillBufferWord(uint16_t *pBuffer, uint32_t uwBufferLength, uint16_t uwValue)
+    {
+      /* Put in global buffer different values */
+      for (uint32_t tmpIndex = 0; tmpIndex < uwBufferLength; tmpIndex++)
+        pBuffer[tmpIndex] = uwValue;
       }
 
-    static bool Buffercmp(uint16_t *pBuffer1, uint16_t *pBuffer2, uint16_t BufferLength)
+    static bool BufferCmpWord(uint16_t *pBuffer1, uint16_t *pBuffer2, uint32_t BufferLength)
     {
-      uint16_t i = 0;
+      uint32_t i = 0;
       while (i < BufferLength)
       {
         if (*pBuffer1 != *pBuffer2)
@@ -1847,66 +1851,66 @@ ADD_SUBMODULE(Test);
 
     static void FMC_Sram_TestWord(uint32_t ofs, uint16_t pattern)
     {
-        uint16_t *extmemptr = (uint16_t *)(SRAM_BANK_ADDR + ofs );
+        uint16_t *extmemptr = (uint16_t *)(extmemBase + ofs );
 
         
         /* Fill the buffer to write */
-        Fill_Buffer(aTxBuffer, BUFFER_SIZE, pattern);
+        FillBufferWord(aTxBuffer, BUFFER_SIZE_WORD, pattern);
 
         /* Write data to the SRAM memory */
-        for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE_WORD; uwIndex++)
         {
         *(extmemptr+uwIndex) = aTxBuffer[uwIndex];
         }
 
         /* Read back data from the SRAM memory */
-        for(uwIndex = 0; uwIndex < BUFFER_SIZE; uwIndex++)
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE_WORD; uwIndex++)
         {
         aRxBuffer[uwIndex] = *(extmemptr+uwIndex);
         }
 
 
         /*##-3- Checking data integrity ############################################*/
-        uwWriteReadStatus = Buffercmp(aTxBuffer, aRxBuffer, BUFFER_SIZE);
+        uwWriteReadStatus = BufferCmpWord(aTxBuffer, aRxBuffer, BUFFER_SIZE_WORD);
 
         if(!uwWriteReadStatus) {
-            DEBUG_PRINTTS("Sram test @0x%08x failed\n",SRAM_BANK_ADDR + ofs );
+            DEBUG_PRINTTS("Sram test @0x%08x failed\n",extmemBase + ofs );
         } else {
-            DEBUG_PRINTTS("Sram test @0x%08x ok\n",SRAM_BANK_ADDR + ofs);
+            DEBUG_PRINTTS("Sram test @0x%08x ok\n",extmemBase + ofs);
 
         }
     }
 
-    static void FMC_Sram_TestByte(uint32_t ofs, uint16_t pattern)
+    static void FMC_Sram_TestByte(uint32_t ofs, uint8_t pattern)
     {
-        uint8_t *extmemptr = (uint8_t *)(SRAM_BANK_ADDR + ofs );
+        uint8_t *extmemptr = (uint8_t *)(extmemBase + ofs );
         uint8_t *srcptr;
         
         /* Fill the buffer to write */
-        Fill_Buffer(aTxBuffer, BUFFER_SIZE, pattern);
+        FillBufferByte(aTxBuffer, BUFFER_SIZE_BYTE, pattern);
 
         srcptr    = (uint8_t *)aTxBuffer;
         /* Write data to the SRAM memory */
-        for(uwIndex = 0; uwIndex < BUFFER_SIZE*2; uwIndex++)
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE_BYTE; uwIndex++)
         {
             *(extmemptr+uwIndex) = *(srcptr++);
         }
 
         /* Read back data from the SRAM memory */
         uint8_t *destptr = (uint8_t *)aRxBuffer;
-        for(uwIndex = 0; uwIndex < BUFFER_SIZE*2; uwIndex++)
+        for(uwIndex = 0; uwIndex < BUFFER_SIZE_BYTE; uwIndex++)
         {
             *(destptr++) = *(extmemptr+uwIndex);
         }
 
 
         /*##-3- Checking data integrity ############################################*/
-        uwWriteReadStatus = Buffercmp(aTxBuffer, aRxBuffer, BUFFER_SIZE);
+        uwWriteReadStatus = BufferCmpWord(aTxBuffer, aRxBuffer, BUFFER_SIZE_WORD);
 
         if(!uwWriteReadStatus) {
-            DEBUG_PRINTTS("Sram test @0x%08x failed\n",SRAM_BANK_ADDR + ofs );
+            DEBUG_PRINTTS("Sram test @0x%08x failed\n",extmemBase + ofs );
         } else {
-            DEBUG_PRINTTS("Sram test @0x%08x ok\n",SRAM_BANK_ADDR + ofs);
+            DEBUG_PRINTTS("Sram test @0x%08x ok\n",extmemBase + ofs);
 
         }
     }
@@ -2079,8 +2083,8 @@ ADD_SUBMODULE(Test);
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
             for ( uint32_t i = 0; i < num; i++ ) {
-                FMC_Sram_TestWord(i*BUFFER_SIZE, 0x0000);
-                FMC_Sram_TestWord(i*BUFFER_SIZE, 0xFFFF);
+                FMC_Sram_TestWord(i*BUFFER_SIZE_WORD, 0x0000);
+                FMC_Sram_TestWord(i*BUFFER_SIZE_WORD, 0xFFFF);
             }
             break;
         case 2:
@@ -2093,7 +2097,7 @@ ADD_SUBMODULE(Test);
             CMD_get_one_word( &word, &wordlen );
             addr = CMD_to_number ( word, wordlen );
             for ( uint32_t i = 0; i < num; i++ ) {
-                FMC_Sram_TestWord(i*BUFFER_SIZE, (uint16_t)addr);
+                FMC_Sram_TestWord(i*BUFFER_SIZE_WORD*2, (uint16_t)addr);
             }
             break;
         case 3:
@@ -2106,7 +2110,7 @@ ADD_SUBMODULE(Test);
             CMD_get_one_word( &word, &wordlen );
             addr = CMD_to_number ( word, wordlen );
             for ( uint32_t i = 0; i < num; i++ ) {
-                FMC_Sram_TestByte(i*BUFFER_SIZE, (uint16_t)addr);
+                FMC_Sram_TestByte(i*BUFFER_SIZE_BYTE, (uint8_t)addr);
             }
             break;
         case 4:
@@ -2130,6 +2134,16 @@ ADD_SUBMODULE(Test);
                 case 7: do_ram_test( sram2, num ); break;
                 case 8: do_ram_test( sram4, num ); break;
             }
+            break;
+        case 97:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Base addr <n> - set Extmem base to <n>0000 hex \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            extmemBase = ((uint32_t)num) << 16;
+            DEBUG_PRINTF("ExtMem base=%p\n",extmemBase);
             break;
         case 98:
             DEBUG_PUTS("D- and I-Cache enabled");
@@ -2164,6 +2178,7 @@ ADD_SUBMODULE(Test);
         { "SRAM4 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM4 access speed test" },
         { "Disable D-Cache",          ctype_fn, .exec.fn = FMC_Menu, VOID(99), "" },
         { "Enable D-Cache",           ctype_fn, .exec.fn = FMC_Menu, VOID(98), "" },
+        { "Set ExtMem base addr",     ctype_fn, .exec.fn = FMC_Menu, VOID(97), "Base addr to 0x<XXXX>0000" },
     };
     ADD_SUBMODULE(FMC);
 #endif

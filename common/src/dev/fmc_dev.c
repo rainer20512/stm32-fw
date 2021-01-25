@@ -44,18 +44,19 @@ typedef struct {
 } Fmc_SramTimingDataT;
 
 typedef struct {
-     uint32_t accessMode;             /* access mode ( one of FMC_ACCESS_MODE_xxx, where xxx=A,B,C,D )         */
+     uint32_t modeReg;                /* chip specific mode register setting                                   */
      uint8_t  RowBits;                /* number of row address bits of ext mem chip                            */
      uint8_t  ColBits;                /* number of column address bits of ext mem chip                         */
      uint8_t  DataBits;               /* number of data bits of ext mem ( only 8,16 and 32 are valid f. sdram) */
-     uint16_t T_AddrSet;              /* memories Address setup time [ns] */
-     uint16_t T_AddrHold;             /* Memories Address hold time  [ns] */
-     uint16_t T_DataSet;              /* Memories Data setup time    [ns] */
+     uint8_t  sdramBankNum;           /* SDRAM bank number (1 or 2)       */
+     uint8_t  N_CASLatency;           /* specific CAS Latency             */
+     uint16_t T_Refresh;              /* Refreshrate [ms]                 */
+     FMC_SDRAM_TimingTypeDef times_ns;/* The chip specific times in ns    */
 } Fmc_SdramTimingDataT;
 
 typedef struct {
-     FmcTypeE fmcType;                /* type of FMC external memory */
      const void *fmcTiming;           /* Ptr to corresponding timing data */
+     uint8_t fmcType;                 /* type of FMC external memory */
 } Fmc_ExtMemDataT;
 
 typedef struct {
@@ -118,6 +119,39 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
 }
 
 
+/**************************************************************************************
+ * Some Devices support different clock sources for FSMC. On configurable FMC Clock   *
+ * sources, we assume that FMC Clock source is HCLK. In any case make sure, that      *   
+ * Fmc_SetClockSource and Fmc_GetClockSpeed() will match                              *
+ *************************************************************************************/
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    /* STM32L4xx has no clock mux for FMC device */
+    #define Fmc_SetClockSource(a)           (true)
+    #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#elif defined(STM32H745xx) || defined(STM32H742xx)  || defined(STM32H743xx)
+    static bool Fmc_SetClockSource(const void *hw)
+    {
+      UNUSED(hw);
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      /* FSMC has to be operated with HCLK. Routines, which will set      */
+      /* FMC timing constants, will call Fmc_GetClockSpeed() to determine */
+      /* the current clock speed                                          */
+
+      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FMC; 
+      PeriphClkInit.FmcClockSelection    = RCC_FMCCLKSOURCE_D1HCLK;
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PUTS("failed to set CLK source for FSMC");
+        return false;
+      }
+
+      return true;
+    }
+    #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#else 
+    #error "No FMC clock assignment defined"
+#endif
 
 
 #if DEBUG_MODE >  0
@@ -145,7 +179,7 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
         uint32_t mask = 1;
         uint32_t idx = 0;
         while ( idx < FMC_CTL_MAX ) {
-            if ( mask & bits )  DEBUG_PRINTF(" %s", fmc_get_ctl_txt(idx));
+            if ( mask & bits )  DEBUG_PRINTF("%s ", fmc_get_ctl_txt(idx));
             mask <<= 1;
             idx++;
         }
@@ -223,6 +257,39 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
         }
     }
 
+    /**************************************************************************************
+     * Dump the FMC parameters  for a SDRAM bank*
+     *************************************************************************************/
+    static void FMC_DumpOneSdramGeometry(uint32_t idx, FmcDataT *curr)
+    {
+
+
+        /* Get Timing data */
+        Fmc_SdramTimingDataT *sdram_data = (Fmc_SdramTimingDataT *)(Fmc_GetMyExtMemData(&HW_FMC, idx)->fmcTiming);
+        
+        DEBUG_PRINTF("internal bank #%d", idx);
+        if ( curr->fmcIsUsed || curr->fmcType != FMC_TYPE_SDRAM ) {
+            DEBUG_PRINTF(" / SDRAM-Bank #%d\n", sdram_data->sdramBankNum);
+            DEBUG_PRINTF("   %2d row bits\n", sdram_data->RowBits);
+            DEBUG_PRINTF("   %2d col bits\n", sdram_data->ColBits);
+            DEBUG_PRINTF("    2 bank select bits\n");
+            DEBUG_PRINTF("   %2d data bits\n", sdram_data->DataBits);
+            DEBUG_PRINTF("   Addr: ");FmcPrintBitVector("A",curr->fmcAddrBits, FMC_A_MAX);DEBUG_PRINTF("\n");
+            DEBUG_PRINTF("   Data: ");FmcPrintBitVector("D",curr->fmcDataBits, FMC_D_MAX);DEBUG_PRINTF("\n");
+            DEBUG_PRINTF("   Ctl:  ");FmcPrintCtlText(curr->fmcCtlBits);DEBUG_PRINTF("\n");
+            
+            /* capacity in kBytes and start address */
+            uint32_t capa = (1 << (sdram_data->RowBits+sdram_data->ColBits+2)) * sdram_data->DataBits/8/1024;
+            uint32_t base = 0xC0000000 + 0x10000000 * (sdram_data->sdramBankNum-1);
+            DEBUG_PRINTF("Resulting capacity: %dKB or %dMB\n", capa, capa/1024);
+            DEBUG_PRINTF("Address Range     : 0x%08X ... 0x%08X\n", base, base+capa*1024-1);
+            /* SDRAM controller is initialized with a fixed clock prescaler of 2 */
+            DEBUG_PRINTF("SDRAM Clk Freq.   : %dMHz\n", Fmc_GetClockSpeed()/2/1000000);
+            DEBUG_PRINTF("Timing parameters:\n");
+        } else {
+            DEBUG_PUTS("   unused or type is not SDRAM");
+        }
+    }
 #endif
 
 void FMC_DumpGeometry(void)
@@ -240,39 +307,6 @@ void FMC_DumpGeometry(void)
     #endif
 }
 
-
-/**************************************************************************************
- * Some Devices support different clock sources for FSMC. Make sure, that             *   
-  * Fmc_SetClockSource and Fmc_GetClockSpeed() will match                            *
- *************************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx)
-    /* STM32L4xx has no clock mux for QUADSPI device */
-    #define Fmc_SetClockSource(a)           (true)
-    #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H745xx) || defined(STM32H742xx)  || defined(STM32H743xx)
-    static bool Fmc_SetClockSource(const void *hw)
-    {
-      UNUSED(hw);
-      RCC_PeriphCLKInitTypeDef PeriphClkInit;
-
-      /* FSMC has to be operated with HCLK. Routines, which will set      */
-      /* FMC timing constants, will call Fmc_GetClockSpeed() to determine */
-      /* the current clock speed                                          */
-
-      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FMC; 
-      PeriphClkInit.FmcClockSelection    = RCC_FMCCLKSOURCE_D1HCLK;
-
-      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        DEBUG_PUTS("failed to set CLK source for FSMC");
-        return false;
-      }
-
-      return true;
-    }
-    #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#else 
-    #error "No qspi clock assignment defined"
-#endif
 
 /*
  * Init or DeInit Clock / clocksource 
@@ -292,11 +326,11 @@ static bool Fmc_ClockInit(const HW_DeviceType *self, bool bDoInit)
 /******************************************************************************
  * Set then HAL Timing parameters ( in multiples of fmc_ker_ck ) on base of the
  * passed "myTiming"-times (in nanoseconds ).
- * FALSE will be returned, if timing data is not settable (due to limited bitwidth
+ * 0 will be returned, if timing data is not settable (due to limited bitwidth
  * of HAL (resp FMC) timing data fields.
- * TRUE will be returned on success
+ * The underlying FMC clock speed [Hz] will be returned on success
  *****************************************************************************/
-static bool Fmc_SetSramTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_SramTimingDataT *myTiming )
+static uint32_t Fmc_SetSramTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_SramTimingDataT *myTiming )
 {
     #define MIN_ADDSET       0         /* min clk cycles for address setup time */
     #define MAX_ADDSET      15         /* max clk cycles for address setup time */
@@ -306,9 +340,10 @@ static bool Fmc_SetSramTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_S
     #define MAX_DATASET    255         /* max clk cycles for data setup time    */
 
     uint32_t work;
+    uint32_t newClkHz = Fmc_GetClockSpeed();
 
     /* number of picosecs per FMC clock cycle */
-    uint32_t ps_per_clk = 1000000 / (Fmc_GetClockSpeed()/1000000);
+    uint32_t ps_per_clk = 1000000 / (newClkHz/1000000);
 
     /* Address setup time */
     work = myTiming->T_AddrSet;
@@ -344,7 +379,7 @@ static bool Fmc_SetSramTiming( FMC_NORSRAM_TimingTypeDef *halTiming, const Fmc_S
    
     halTiming->AccessMode             = myTiming->accessMode;
 
-    return true;
+    return newClkHz;
 }
 
 /******************************************************************************
@@ -374,8 +409,8 @@ bool Fmc_SRAM_Init(uint32_t fmc_idx, Fmc_SramTimingDataT *sram_timing )
     /* SRAM device configuration */  
 
 //    uint32_t idx         = BANK_TO_IDX(Init->NSBank);
-    
-    if ( !Fmc_SetSramTiming( &SRAM_Timing, sram_timing) ) {
+    curr->fmcRefClockSpeed = Fmc_SetSramTiming( &SRAM_Timing, sram_timing );
+    if ( curr->fmcRefClockSpeed == 0  ) {
         DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
         return false;
     }
@@ -443,22 +478,191 @@ bool Fmc_SRAM_Init(uint32_t fmc_idx, Fmc_SramTimingDataT *sram_timing )
     return true;
 }
 
+/******************************************************************************
+ * Set then HAL Timing parameters ( in multiples of fmc_ker_ck ) on base of the
+ * passed "myTiming"-times (in nanoseconds ).
+ * Parameters:
+ * halTiming - FMC_SDRAM_TimingTypeDef structure, which will contain the sdram
+ *             timing parameters [in sdram clk cycles] upon return
+ * newCounterVal - New refresh counter value [in sdram clk cycles]. Has to be
+ *                 programmed to the refresh counter register after return
+ * myData    - all the internal sdram specific data and times
+ *
+ * 0 will be returned, if timing data is not settable (due to limited bitwidth
+ * of HAL (resp FMC) timing data fields.
+ * the underlying SDRAM clk speed [Hz]  will be returned on success. 
+ *
+ * NOTE: SDRAM clk is half the FMC input clock
+ *
+ *****************************************************************************/
+static uint32_t Fmc_SetSdramTiming( 
+    FMC_SDRAM_TimingTypeDef *halTiming, uint32_t *newCounterVal, const Fmc_SdramTimingDataT *myData )
+{
+   
+    /* all timing parameters must be in the range [ 1 .. 16] ... */
+    #define MIN_TXX_VALUE    1 
+    #define MAX_TXX_VALUE   16 
+
+    /* ... except the counter which has to be in the rage [ 41 .. 8191 ] */
+    #define MIN_CNT_VALUE   41
+    #define MAX_CNT_VALUE   ((1U<<13)-1)
+
+    /*
+     * convert a timinng value in ns to the corresponding value in sdram clk cycles 
+     * value is always rounded up to the next greater integral value                
+     * 0 is returned in case of value out of range [ 1 .. 16 ]
+     */
+    uint32_t convert ( uint32_t inval_ns, uint32_t picos_per_clk, const char *errtxt )
+    {
+        /* Convert to ps, round to next integral value and convert back to ns */
+        register uint32_t retval = ( inval_ns * 1000 + picos_per_clk - 1 )  / picos_per_clk;
+        /* check range */
+        if ( retval > MAX_TXX_VALUE ) {
+            DEBUG_PRINTF("%s, Value=%d\n",errtxt, retval);
+            retval = 0; 
+        }
+        return retval;
+    }
+
+#if 0
+    halTiming->LoadToActiveDelay    = 2;    // tMRD - Mode Register program time -> 12ns
+    halTiming->ExitSelfRefreshDelay = 7;    // tXSR - Self refresh exit time     -> 70ns 
+    halTiming->SelfRefreshTime      = 4;    // min. self refresh period = tRAS   -> 40ns
+    halTiming->RowCycleDelay        = 7;    // tRC  - Command Period/Act-to-Act  -> 67.5ns
+    halTiming->WriteRecoveryTime    = 2;    // tRAS-rRCD -> 40-20                -> 20ns
+    halTiming->RPDelay              = 2;    // tRP  - Precharge to Active Delay  -> 18ns 
+    halTiming->RCDDelay             = 2;    // tRCD - Active to Read/Write Delay -> 18ns 
+#endif
+
+    /* SDRAM clk is FMC input clock / 2 */
+    uint32_t newClkHz = Fmc_GetClockSpeed() / 2;
+ 
+    /* number of picosecs per SDRAM clock cycle */
+    uint32_t ps_per_clk = 1000000 / (newClkHz/1000000);
+
+    const FMC_SDRAM_TimingTypeDef *nstimes = &myData->times_ns;
+
+    /* All SDRAM timing parameters are in units of SDRAM clk cycles */
+
+
+ 
+    if ( (halTiming->LoadToActiveDelay    = convert( nstimes->LoadToActiveDelay,    ps_per_clk, "tMRD out of range" )) == 0) return 0;
+    if ( (halTiming->ExitSelfRefreshDelay = convert( nstimes->ExitSelfRefreshDelay, ps_per_clk, "tXSR out of range" )) == 0) return 0;
+    if ( (halTiming->SelfRefreshTime      = convert( nstimes->SelfRefreshTime,      ps_per_clk, "tRAS out of range" )) == 0) return 0;
+    if ( (halTiming->RowCycleDelay        = convert( nstimes->RowCycleDelay,        ps_per_clk, "tRC out of range" ))  == 0) return 0;
+    if ( (halTiming->WriteRecoveryTime    = convert( nstimes->WriteRecoveryTime,    ps_per_clk, "tWR out of range" ))  == 0) return 0;
+    if ( (halTiming->RPDelay              = convert( nstimes->RPDelay,              ps_per_clk, "tRP out of range" ))  == 0) return 0;
+    if ( (halTiming->RCDDelay             = convert( nstimes->RCDDelay,             ps_per_clk, "tRCD out of range" )) == 0) return 0;
+
+    /* Compute value of the refresh counter, see 74x refman, section "SDRAM refresh timer register" */
+    /* Refresh time from row to row is total refresh time (usually 64ms ) / number of rows converted to sdram clk cycles */
+    uint32_t clkPerRow = (myData->T_Refresh * (newClkHz/1000) ) / ( 1 << myData->RowBits );   
+    
+    /* subtract 20 as safety margin */
+    clkPerRow -= 20;
+
+    /* check range */
+    if ( clkPerRow < MIN_CNT_VALUE || clkPerRow > MAX_CNT_VALUE ) {
+            DEBUG_PRINTF("Refresh counter value out of range, Value=%d\n",clkPerRow);
+            return 0;
+    }
+    *newCounterVal = clkPerRow;
+    return newClkHz;
+}
+
+#define SDRAM_TIMEOUT                    ((uint32_t)0xFFFF)
+#define REFRESH_COUNT                    ((uint32_t)0x0603)   /* SDRAM refresh counter */
+
+/******************************************************************************
+ * @brief  Perform the SDRAM exernal memory inialization sequence
+ * @param  hsdram: SDRAM handle
+ * @param  Command: Pointer to SDRAM command structure
+ * @retval None
+ *****************************************************************************/
+static void SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum, uint32_t modeReg, uint32_t refresh_counter)
+{
+  FMC_SDRAM_CommandTypeDef CmdRec;
+  FMC_SDRAM_CommandTypeDef *Command = &CmdRec;
+
+  /* Note the difference between FMC_SDRAM_BANKx and FMC_SDRAM_CMD_TARGET_BANKx ! */
+  uint32_t cmdTarget = sdramTargetNum == FMC_SDRAM_BANK1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
+
+  /* Step 1:  Configure a clock configuration enable command */
+  Command->CommandMode = FMC_SDRAM_CMD_CLK_ENABLE;
+  Command->CommandTarget = cmdTarget;
+  Command->AutoRefreshNumber = 1;
+  Command->ModeRegisterDefinition = 0;
+
+  /* Send the command */
+  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+
+  /* Step 2: Insert 100 us minimum delay */
+  /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
+  HAL_Delay(1);
+
+  /* Step 3: Configure a PALL (precharge all) command */
+  Command->CommandMode = FMC_SDRAM_CMD_PALL;
+  Command->CommandTarget = cmdTarget;
+  Command->AutoRefreshNumber = 1;
+  Command->ModeRegisterDefinition = 0;
+
+  /* Send the command */
+  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+
+  /* Step 4 : Configure a Auto-Refresh command */
+  Command->CommandMode = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
+  Command->CommandTarget = cmdTarget;
+  Command->AutoRefreshNumber = 8;
+  Command->ModeRegisterDefinition = 0;
+
+  /* Send the command */
+  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+
+  Command->CommandMode = FMC_SDRAM_CMD_LOAD_MODE;
+  Command->CommandTarget = cmdTarget;
+  Command->AutoRefreshNumber = 1;
+  Command->ModeRegisterDefinition = modeReg;
+
+  /* Send the command */
+  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+
+  /* Step 6: Set the refresh rate counter */
+  /* Set the device refresh rate */
+  HAL_SDRAM_ProgramRefreshRate(hsdram, refresh_counter); 
+
+}
+
+
+
+
+/* Convert cas latency to register values */
+#define ENC_CAS_LATENCY(lat)    (lat<<7)
+
+/* Convert column bit number to register value */
+#define ENC_COL_BITS(col)       (col-8)
+
+/* Convert row bit number to register value */
+#define ENC_ROW_BITS(row)       ((row-11) << 2)
+
+/* Convert row bit number to register value */
+#define ENC_DATA_WID(wid)       (wid == 8 ? FMC_SDRAM_MEM_BUS_WIDTH_8 : wid == 16 ? FMC_SDRAM_MEM_BUS_WIDTH_16 : FMC_SDRAM_MEM_BUS_WIDTH_32)
 
 /******************************************************************************
  * Do the Initialization of an SDRAM bank.
  * Parameters:
  *    fmc_idx      - FMC bank index [0 .. 3]
- *    sdram_timing - neccessary timing and size parameters
+ *    sdram_data - neccessary timing and size parameters
  * initializes all associated IO pins and initializes the FMC bank. After return
  * the FMC bank is enabled/visible at its prefined memory address range
  * Returns
  *    true on success
  *    false in case of parameter or HAL layer initialization error
  *****************************************************************************/
-bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_timing )
+bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
 {
     FMC_SDRAM_InitTypeDef     *init;
     FMC_SDRAM_TimingTypeDef   SDRAM_Timing;
+    uint32_t                  refreshCounter; // Value for the SDRAM controller refresh counter
     
     FmcDataT *curr   = FmcHandle.fmcData+fmc_idx; 
     
@@ -468,68 +672,95 @@ bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_timing )
         return false;
     }
 
-    /* SDRAM device configuration */  
-
+    /* Parameter Checking */
     
-    if ( !Fmc_SetSdramTiming( &SDRAM_Timing, sdram_timing) ) {
-        DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
+    /* Check DataWidth to be 8 or 16 */
+    if ( sdram_data->DataBits != 8 && sdram_data->DataBits != 16 && sdram_data->DataBits != 32 ) {
+        DEBUG_PRINTF("Data Width of Fmc Bank #%d invalid\n",  fmc_idx );
         return false;
     }
 
-    /* Check DataWidth to be 8 or 16 */
-    if ( sdram_timing->DataBits != 8 && sdram_timing->DataBits != 16 && sdram_timing->DataBits != 32 ) {
-        DEBUG_PRINTF("Data Width of Fmc Bank #%d invalid\n",  fmc_idx );
+    /* Check Column address bits to be in the range [8 .. 11] */
+    if ( sdram_data->ColBits < 8 || sdram_data->ColBits > 11 ) {
+        DEBUG_PRINTF("Column Width of Fmc Bank #%d invalid\n",  fmc_idx );
+        return false;
+    }
+
+    /* Check Row address bits to be in the range [11 .. 13] */
+    if ( sdram_data->RowBits < 11 || sdram_data->RowBits > 13 ) {
+        DEBUG_PRINTF("Column Width of Fmc Bank #%d invalid\n",  fmc_idx );
+        return false;
+    }
+    /* Check SDRAM bank number to be in the range [1 ..2] */
+    if ( sdram_data->sdramBankNum < 1 || sdram_data->sdramBankNum > 2 ) {
+        DEBUG_PRINTF("Invalid SDRAM bank number for Fmc Bank #%d\n",  fmc_idx );
+        return false;
+    }
+
+    /* Check CAS Latency to be in the range [1 .. 3] */
+    if ( sdram_data->N_CASLatency < 1 || sdram_data->N_CASLatency > 3) {
+        DEBUG_PRINTF("CAS latency of Fmc Bank #%d invalid\n",  fmc_idx );
+        return false;
+    }
+
+    /* SDRAM device configuration */  
+    curr->fmcRefClockSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, &refreshCounter, sdram_data);
+    if ( curr->fmcRefClockSpeed == 0 ) {
+        DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
         return false;
     }
 
     curr->fmcIsUsed      = 1;
     curr->fmcType        = FMC_TYPE_SDRAM;
-    curr->fmcIsMuxed     = 0;
-    curr->fmcDataBits    = sram_timing->DataBits; 
-    curr->fmcDataBits    = BITS_TO_MASK(curr->fmcDataBits);
-    curr->fmcAddrBits    = BITS_TO_MASK(sram_timing->AddrBits);
+    curr->fmcSDBankNum   = sdram_data->sdramBankNum;
+    /* Bit mask of all used Address and Data lines */
+    curr->fmcAddrBits    = BITS_TO_MASK(sdram_data->ColBits) | BITS_TO_MASK(sdram_data->RowBits);
+    /* independent from any SDRAM size/adress and data widths, A14 and A15 are use as bank select lines */
+    curr->fmcAddrBits    |= ( 1 << 14 | 1 << 15 ); 
 
-    /* Enable NBL0, NBL1, NOE, NWE and selected enable-line */
-    curr->fmcCtlBits     = 1 << FMC_NBL0_OFS | 1 << FMC_NBL1_OFS | 1 << FMC_NOE_OFS | 1 << FMC_NWE_OFS | 1 << ( FMC_NE1_OFS + fmc_idx ) ;
+    curr->fmcDataBits    = BITS_TO_MASK(sdram_data->DataBits);
 
-  hsdram.Instance = FMC_SDRAM_DEVICE;
+    /* Enable SDNWE, SDNCAS, SDNRAS, SDCLK and NBL0 in every case */
+    curr->fmcCtlBits     = 1 << FMC_SDNWE_OFS | 1 << FMC_NCAS_OFS | 1 << FMC_NRAS_OFS | 1 << FMC_SDCLK_OFS | 1 << FMC_NBL0_OFS;
+
+    /* Enable the proper Chip select and chip clock lines */
+    if ( curr->fmcSDBankNum   == 1 ) {
+        curr->fmcCtlBits |= ( 1 << FMC_SDNE0_OFS | 1 << FMC_SDCKE0_OFS );
+    } else {
+        curr->fmcCtlBits |= ( 1 << FMC_SDNE1_OFS | 1 << FMC_SDCKE1_OFS );
+    }
+
+    /* depending from the data with, enable more Byte-select lines */
+    if ( sdram_data->DataBits > 8  ) curr->fmcCtlBits |= 1 << FMC_NBL1_OFS ;
+    if (sdram_data->DataBits > 16 )  curr->fmcCtlBits |= ( 1 << FMC_NBL2_OFS | 1 << FMC_NBL3_OFS);
 
     curr->hHal.hsdram.Instance = FMC_SDRAM_DEVICE;
     init                       = &curr->hHal.hsdram.Init;
-----> here
-    init->MemoryType         = FMC_MEMORY_TYPE_SRAM;
-    init->NSBank             = IDX_TO_BANK(fmc_idx);
-    init->DataAddressMux     = curr->fmcIsMuxed ? FMC_DATA_ADDRESS_MUX_ENABLE : FMC_DATA_ADDRESS_MUX_DISABLE;
-    init->MemoryDataWidth    = curr->fmcDataBits == 8 ? FMC_NORSRAM_MEM_BUS_WIDTH_8 : FMC_NORSRAM_MEM_BUS_WIDTH_16;
-    init->BurstAccessMode    = FMC_BURST_ACCESS_MODE_DISABLE;
-    init->WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
-    init->WaitSignalActive   = FMC_WAIT_TIMING_BEFORE_WS;
-    init->WriteOperation     = FMC_WRITE_OPERATION_ENABLE;
-    init->WaitSignal         = FMC_WAIT_SIGNAL_DISABLE;
-    init->ExtendedMode       = FMC_EXTENDED_MODE_DISABLE;
-    init->AsynchronousWait   = FMC_ASYNCHRONOUS_WAIT_DISABLE;
-    init->WriteBurst         = FMC_WRITE_BURST_DISABLE;
-    init->ContinuousClock    = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-    init->PageSize           = FMC_PAGE_SIZE_NONE;
-    init->WriteFifo          = FMC_WRITE_FIFO_ENABLE;
-
-
-#if defined(STM32L476EVAL)
-    /* When using STM32L476-EVAL with glass LCD deployed, also activate FMCs NE3 select line to deactivate LCD data output */
-    curr->fmcCtlBits |= 1 << ( FMC_NE3_OFS );
-#endif
-
+    init->SDBank               =  curr->fmcSDBankNum == 1 ? FMC_SDRAM_BANK1 : FMC_SDRAM_BANK2;
+    init->ColumnBitsNumber     = ENC_COL_BITS(sdram_data->ColBits);       // HAL constants for this: FMC_SDRAM_COLUMN_BITS_NUM_9 eg
+    init->RowBitsNumber        = ENC_ROW_BITS(sdram_data->RowBits);       // HAL constants for this: FMC_SDRAM_ROW_BITS_NUM_12 eg
+    init->MemoryDataWidth      = ENC_DATA_WID(sdram_data->DataBits);      // HAL constants for this: FMC_SDRAM_MEM_BUS_WIDTH_8 eg
+    init->CASLatency           = ENC_CAS_LATENCY(sdram_data->N_CASLatency);
+    init->InternalBankNumber   = FMC_SDRAM_INTERN_BANKS_NUM_4;              // Always 4 Bank numbers
+    init->WriteProtection      = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
+    init->SDClockPeriod        = FMC_SDRAM_CLOCK_PERIOD_2;                  // Always half the kernel clock
+    init->ReadBurst            = FMC_SDRAM_RBURST_ENABLE;
+    init->ReadPipeDelay        = FMC_SDRAM_RPIPE_DELAY_0;
 
     /* enable io lines and keep track of all activated IO lines  */
     FmcAddIOLines(curr);
  
-    if ( HAL_SRAM_Init(&curr->hHal.hsram, &SRAM_Timing, &SRAM_Timing) != HAL_OK ) {
-        DEBUG_PRINTF("SRAM init for Fmc Bank #%d failed\n",  fmc_idx );
+
+    /* Initialize the SDRAM controller */
+    if(HAL_SDRAM_Init(&curr->hHal.hsdram , &SDRAM_Timing) != HAL_OK) {
+        DEBUG_PRINTF("SDRAM init for SDRAM Bank #%d failed\n",  curr->fmcSDBankNum );
         curr->fmcIsUsed = 0;
         return false;
     }
 
-    FMC_DumpOneSramGeometry(fmc_idx, curr);
+    SDRAM_Initialization_Sequence(&curr->hHal.hsdram, init->SDBank, sdram_data->modeReg, refreshCounter);
+    
+    FMC_DumpOneSdramGeometry(fmc_idx, curr);
 
     return true;
 }
@@ -691,42 +922,33 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
         }
     };
 
-    #if defined(FMC_TYPE1)
-        #if FMC_TYPE1 == FMC_TYPE_SRAM
-            static const Fmc_SramTimingDataT memdata1  = SRAM_TIMING1;
-        #elif FMC_TYPE1 == FMC_TYPE_SDRAM
-            static const Fmc_SdramTimingDataT memdata1 = SDRAM_TIMING1;
-        #else
-            #error "No Memory data for external memory block 1"
-        #endif
-        static const Fmc_ExtMemDataT extmem1 = { FMC_TYPE1, &memdata1 };
-        #define FMC_T1      &extmem1
-    #else   
         #define FMC_T1      NULL
-    #endif
-
-    #if defined(TIMING2)
-        static const Fmc_ExtMemDataT timing2 = TIMING2;
-        #define FMC_T2      &timing2
-    #else   
         #define FMC_T2      NULL
-    #endif
+
     #if defined(FMC_TYPE3)
-        #if FMC_TYPE3 == FMC_TYPE_SRAM
-            static const Fmc_SramTimingDataT memdata3  = SRAM_TIMING3;
-        #elif FMC_TYPE3 == FMC_TYPE_SDRAM
+        #if FMC_TYPE3 == FMC_TYPE_SDRAM
             static const Fmc_SdramTimingDataT memdata3 = SDRAM_TIMING3;
+        #elif FMC_TYPE3 == FMC_TYPE_SRAM
+            static const Fmc_SramTimingDataT memdata3  = SRAM_TIMING3;
         #else
             #error "No Memory data for external memory block 3"
         #endif
-        static const Fmc_ExtMemDataT extmem3 = { FMC_TYPE3, &memdata3 };
+        static const Fmc_ExtMemDataT extmem3 = { &memdata3, FMC_TYPE3 };
         #define FMC_T3      &extmem3
     #else   
         #define FMC_T3      NULL
     #endif
-    #if defined(TIMING4)
-        static const Fmc_ExtMemDataT timing4 = TIMING4;
-        #define FMC_T4      &timing4
+ 
+    #if defined(FMC_TYPE4)
+        #if FMC_TYPE4 >= FMC_TYPE_SDRAM
+            static const Fmc_SdramTimingDataT memdata4 = SDRAM_TIMING4;
+        #elif FMC_TYPE4 >= FMC_TYPE_SRAM
+            static const Fmc_SramTimingDataT memdata4  = SRAM_TIMING4;
+        #else
+            #error "No Memory data for external memory block 4"
+        #endif
+        static const Fmc_ExtMemDataT extmem4 = { &memdata4, FMC_TYPE4 };
+        #define FMC_T4      &extmem4
     #else   
         #define FMC_T4      NULL
     #endif

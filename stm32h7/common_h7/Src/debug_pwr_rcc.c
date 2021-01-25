@@ -953,15 +953,15 @@ static const char* DBG_get_rcc_perclk_txt(uint32_t sel)
     return "Illegal";
 }
 
-const char * const hppp_txt[]={"AHB clk", "PLL1Q", "PLL2R", "PER clk" };
-static const char* DBG_get_hclk_pll1q_pll2r_perclk_txt(uint32_t sel)
+const char * const hppp_txt[]={"HCLK3", "PLL1Q", "PLL2R", "PER clk" };
+static const char* DBG_get_hclk3_pll1q_pll2r_perclk_txt(uint32_t sel)
 {
   /* 
    * Clock Source 01 on LPTIM1 is deviating from normal bitcode schema
    * so handle specially
    */   
-  if ( sel < sizeof(perclk_txt)/sizeof(char *)) 
-    return perclk_txt[sel];
+  if ( sel < sizeof(hppp_txt)/sizeof(char *)) 
+    return hppp_txt[sel];
   else
     return "Illegal";
 }
@@ -989,9 +989,9 @@ void DBG_dump_peripheralclockconfig(void)
           DBG_printf_indent("*** Not implemented ***");
       #endif
       if ( __HAL_RCC_QSPI_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("QSPI Clk Source", DBG_get_hclk_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_QSPISEL_Msk) >> RCC_D1CCIPR_QSPISEL_Pos) );    
+          DBG_dump_textvalue("QSPI Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_QSPISEL_Msk) >> RCC_D1CCIPR_QSPISEL_Pos) );    
       if ( __HAL_RCC_FMC_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("FMC Clk Source", DBG_get_hclk_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_FMCSEL_Msk) >> RCC_D1CCIPR_FMCSEL_Pos) );    
+          DBG_dump_textvalue("FMC Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_FMCSEL_Msk) >> RCC_D1CCIPR_FMCSEL_Pos) );    
 
 
       /* D2 Peripherals */

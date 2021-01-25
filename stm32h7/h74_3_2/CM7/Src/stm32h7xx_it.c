@@ -131,7 +131,6 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   stacked_lr = ((unsigned long) hardfault_args[5]);
   stacked_pc = ((unsigned long) hardfault_args[6]);
   stacked_psr = ((unsigned long) hardfault_args[7]);
- 
   debug_printf ("\n\n[Hard fault handler - all numbers in hex]\n");
   debug_printf ("R0       = %08x\n", stacked_r0);
   debug_printf ("R1       = %08x\n", stacked_r1);
@@ -142,7 +141,11 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   debug_printf ("PC [R15] = %08x  program counter\n", stacked_pc);
   debug_printf ("PSR      = %08x\n", stacked_psr);
   debug_printf ("BFAR     = %08x\n", (*((volatile unsigned long *)(0xE000ED38))));
-  debug_printf ("CFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED28))));
+  uint32_t cfsr =                    (*((volatile unsigned long *)(0xE000ED28)));
+  debug_printf ("CFSR     = %08x\n", cfsr);
+  debug_printf ("   MMFSR = %02x\n", cfsr&0xFF);
+  debug_printf ("    BFSR = %02x\n", (cfsr>>8)&0xFF);
+  debug_printf ("    UFSR = %04x\n", (uint16_t)(cfsr>>16));
   debug_printf ("HFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED2C))));
   debug_printf ("DFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED30))));
   debug_printf ("AFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED3C))));
