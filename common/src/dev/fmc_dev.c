@@ -579,52 +579,57 @@ static uint32_t Fmc_SetSdramTiming(
  * @param  Command: Pointer to SDRAM command structure
  * @retval None
  *****************************************************************************/
-static void SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum, uint32_t modeReg, uint32_t refresh_counter)
+static void SDRAM_Initialization(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum )
 {
-  FMC_SDRAM_CommandTypeDef CmdRec;
-  FMC_SDRAM_CommandTypeDef *Command = &CmdRec;
-
+  FMC_SDRAM_CommandTypeDef Command;
   /* Note the difference between FMC_SDRAM_BANKx and FMC_SDRAM_CMD_TARGET_BANKx ! */
   uint32_t cmdTarget = sdramTargetNum == FMC_SDRAM_BANK1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
 
   /* Step 1:  Configure a clock configuration enable command */
-  Command->CommandMode = FMC_SDRAM_CMD_CLK_ENABLE;
-  Command->CommandTarget = cmdTarget;
-  Command->AutoRefreshNumber = 1;
-  Command->ModeRegisterDefinition = 0;
+  Command.CommandMode = FMC_SDRAM_CMD_CLK_ENABLE;
+  Command.CommandTarget = cmdTarget;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = 0;
 
   /* Send the command */
-  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+  HAL_SDRAM_SendCommand(hsdram, &Command, SDRAM_TIMEOUT);
 
   /* Step 2: Insert 100 us minimum delay */
   /* Inserted delay is equal to 1 ms due to systick time base unit (ms) */
   HAL_Delay(1);
 
   /* Step 3: Configure a PALL (precharge all) command */
-  Command->CommandMode = FMC_SDRAM_CMD_PALL;
-  Command->CommandTarget = cmdTarget;
-  Command->AutoRefreshNumber = 1;
-  Command->ModeRegisterDefinition = 0;
+  Command.CommandMode = FMC_SDRAM_CMD_PALL;
+  Command.CommandTarget = cmdTarget;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = 0;
 
   /* Send the command */
-  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+  HAL_SDRAM_SendCommand(hsdram, &Command, SDRAM_TIMEOUT);
+}
+
+static void SDRAM_AutoRefresh(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum, uint32_t modeReg, uint32_t refresh_counter)
+{
+  FMC_SDRAM_CommandTypeDef Command;
+  /* Note the difference between FMC_SDRAM_BANKx and FMC_SDRAM_CMD_TARGET_BANKx ! */
+  uint32_t cmdTarget = sdramTargetNum == FMC_SDRAM_BANK1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
 
   /* Step 4 : Configure a Auto-Refresh command */
-  Command->CommandMode = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
-  Command->CommandTarget = cmdTarget;
-  Command->AutoRefreshNumber = 8;
-  Command->ModeRegisterDefinition = 0;
+  Command.CommandMode = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
+  Command.CommandTarget = cmdTarget;
+  Command.AutoRefreshNumber = 8;
+  Command.ModeRegisterDefinition = 0;
 
   /* Send the command */
-  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+  HAL_SDRAM_SendCommand(hsdram, &Command, SDRAM_TIMEOUT);
 
-  Command->CommandMode = FMC_SDRAM_CMD_LOAD_MODE;
-  Command->CommandTarget = cmdTarget;
-  Command->AutoRefreshNumber = 1;
-  Command->ModeRegisterDefinition = modeReg;
+  Command.CommandMode = FMC_SDRAM_CMD_LOAD_MODE;
+  Command.CommandTarget = cmdTarget;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = modeReg;
 
   /* Send the command */
-  HAL_SDRAM_SendCommand(hsdram, Command, SDRAM_TIMEOUT);
+  HAL_SDRAM_SendCommand(hsdram, &Command, SDRAM_TIMEOUT);
 
   /* Step 6: Set the refresh rate counter */
   /* Set the device refresh rate */
@@ -632,7 +637,18 @@ static void SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, uint32_t 
 
 }
 
+static void SDRAM_SelfRefresh(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum)
+{
+  FMC_SDRAM_CommandTypeDef Command;
+  /* Note the difference between FMC_SDRAM_BANKx and FMC_SDRAM_CMD_TARGET_BANKx ! */
+  uint32_t cmdTarget = sdramTargetNum == FMC_SDRAM_BANK1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
 
+  /* Configure a Self refresh command */
+  Command.CommandMode = FMC_SDRAM_CMD_SELFREFRESH_MODE;
+  Command.CommandTarget = cmdTarget;
+  Command.AutoRefreshNumber = 1;
+  Command.ModeRegisterDefinition = 0;
+}
 
 
 /* Convert cas latency to register values */
@@ -646,6 +662,9 @@ static void SDRAM_Initialization_Sequence(SDRAM_HandleTypeDef *hsdram, uint32_t 
 
 /* Convert row bit number to register value */
 #define ENC_DATA_WID(wid)       (wid == 8 ? FMC_SDRAM_MEM_BUS_WIDTH_8 : wid == 16 ? FMC_SDRAM_MEM_BUS_WIDTH_16 : FMC_SDRAM_MEM_BUS_WIDTH_32)
+
+uint32_t FMC_SdramCheck();
+
 
 /******************************************************************************
  * Do the Initialization of an SDRAM bank.
@@ -758,12 +777,72 @@ bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
         return false;
     }
 
-    SDRAM_Initialization_Sequence(&curr->hHal.hsdram, init->SDBank, sdram_data->modeReg, refreshCounter);
+    SDRAM_Initialization(&curr->hHal.hsdram, init->SDBank);
+    SDRAM_AutoRefresh(&curr->hHal.hsdram, init->SDBank, sdram_data->modeReg, refreshCounter);
     
     FMC_DumpOneSdramGeometry(fmc_idx, curr);
 
+    
+    #define BASE    0xD0000000
+    #define VALUE   0xA5A5A5A5
+    #define SIZE    0x2000000
+    uint32_t sum = 0;
+    for ( uint32_t i = 0; i < SIZE/4-1;i++ ) {
+        *((uint32_t*)(BASE+i*4)) = VALUE;
+        sum += VALUE;
+    }
+    sum = (~sum)+1;
+    *((uint32_t*)(BASE+SIZE-4)) = sum;
+
+    FMC_SdramCheck();
+
+    return true;
+
+}
+
+uint32_t FMC_SdramCheck() 
+{
+    uint32_t sum = 0;
+    uint32_t val;
+    for ( uint32_t i = 0; i < SIZE/4-1;i++ ) {
+        val = *((uint32_t*)(BASE+i*4));
+        sum += val;
+        if ( val != VALUE ) DEBUG_PRINTF("Wrong value 0x%08X at offset 0x%08X\n", val, i );
+    }
+    val = *((uint32_t*)(BASE+SIZE-4));
+    sum += val;
+    if ( sum != 0 ) DEBUG_PRINTF("Checksum 0x%08X is not correct\n",sum);
+    return sum;
+}
+
+bool Fmc_ChngSdramTiming( uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
+{
+    FmcDataT                  *curr    = FmcHandle.fmcData+fmc_idx; 
+    SDRAM_HandleTypeDef       *hsdram  = &curr->hHal.hsdram;
+    FMC_SDRAM_TimingTypeDef   SDRAM_Timing;
+    uint32_t                  refreshCounter; // Value for the SDRAM controller refresh counter
+    uint32_t                  newSdramClkSpeed;
+    // uint32_t                  sdramBank = curr->fmcSDBankNum == 1 ? FMC_SDRAM_BANK1 : FMC_SDRAM_BANK2;
+
+    /* Calculate new SDRAM timing parameters */  
+    newSdramClkSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, &refreshCounter, sdram_data);
+    if ( newSdramClkSpeed == 0 ) {
+        DEBUG_PRINTF("Change timing of Fmc Bank #%d failed\n",  fmc_idx );
+        return false;
+    }
+    
+    /* Switch to Self refresh */
+    SDRAM_SelfRefresh(hsdram, hsdram->Init.SDBank);
+
+    /* change timing */
+    FMC_SDRAM_Timing_Init(hsdram->Instance, &SDRAM_Timing, hsdram->Init.SDBank);
+
+    /* Switch back to Auto-Refresh */
+    SDRAM_AutoRefresh(hsdram, hsdram->Init.SDBank, sdram_data->modeReg, refreshCounter);
+
     return true;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Device functions ///////////////////////////////////////////////////////////
@@ -872,8 +951,13 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
                 /* change SRAM timing */
                 (void)FMC_NORSRAM_Timing_Init(myFmcHandle->fmcData[i].hHal.hsram.Instance, &SRAM_Timing, myFmcHandle->fmcData[i].hHal.hsram.Init.NSBank);
             break;
-            case FMC_TYPE_NAND:
             case FMC_TYPE_SDRAM:
+                if ( !Fmc_ChngSdramTiming(i, (Fmc_SdramTimingDataT *)(extmemData->fmcTiming)) ) {
+                    DEBUG_PRINTF("Timing setup of SDRAM Fmc Bank #%d failed\n", i );
+                    return false;
+                }
+            break;
+            case FMC_TYPE_NAND:
             default:
                 DEBUG_PRINTF("No Timing setup for FMC type %d\n", extmemData->fmcType );
                 return false;

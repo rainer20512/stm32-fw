@@ -1808,6 +1808,7 @@ ADD_SUBMODULE(Test);
     static uint32_t extmemBase = 0x68000000;
     static uint16_t AXISMEM aTxBuffer[BUFFER_SIZE_WORD];
     static uint16_t AXISMEM aRxBuffer[BUFFER_SIZE_WORD];
+    uint32_t FMC_SdramCheck();
 
     /* Status variables */
     __IO bool uwWriteReadStatus = 0;
@@ -2135,6 +2136,10 @@ ADD_SUBMODULE(Test);
                 case 8: do_ram_test( sram4, num ); break;
             }
             break;
+        case 90:
+            num = FMC_SdramCheck();
+            if ( num == 0 ) DEBUG_PUTS("SDRAM check ok");
+            break;
         case 97:
             if ( CMD_argc() < 1 ) {
               printf("Usage: Base addr <n> - set Extmem base to <n>0000 hex \n");
@@ -2176,6 +2181,7 @@ ADD_SUBMODULE(Test);
         { "AXISRAM access speed test",ctype_fn, .exec.fn = FMC_Menu, VOID(6), "Do a AXISRAM access speed test" },
         { "SRAM2 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM2 access speed test" },
         { "SRAM4 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM4 access speed test" },
+        { "SDRAM check",              ctype_fn, .exec.fn = FMC_Menu, VOID(90),"Perform SDRAM Checksum check" },
         { "Disable D-Cache",          ctype_fn, .exec.fn = FMC_Menu, VOID(99), "" },
         { "Enable D-Cache",           ctype_fn, .exec.fn = FMC_Menu, VOID(98), "" },
         { "Set ExtMem base addr",     ctype_fn, .exec.fn = FMC_Menu, VOID(97), "Base addr to 0x<XXXX>0000" },
