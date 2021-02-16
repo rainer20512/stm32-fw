@@ -16,9 +16,12 @@
 
 #include <stdio.h>
 
+#if DEBUG_MODE > 0
+    #include "debug_helper.h"
+#endif
 
-#define MX25_QUAD_DISABLE       0x0
-#define MX25_QUAD_ENABLE        0x1
+#define MT25Q_QUAD_DISABLE       0x0
+#define MT25Q_QUAD_ENABLE        0x1
 
 #define MX25_HIGH_PERF_DISABLE  0x0
 #define MX25_HIGH_PERF_ENABLE   0x1
@@ -38,20 +41,19 @@
 
 
 /* Private functions ---------------------------------------------------------*/
-static uint8_t  MX25_GetStatus               (QSPI_HandleTypeDef *hqspi);
+static uint8_t  MT25Q_GetStatus               (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WriteEnable        (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WaitForWriteDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
 static bool     QSpecific_WaitForResetDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
-static bool     MX25_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
-static bool     MX25_GetGeometry             (QSpiHandleT *myHandle);
-static bool     MX25RXX35_HighPerfMode       (QSPI_HandleTypeDef *hqspi, uint8_t Operation);
-static uint16_t MX25_GetType                 (QSpiHandleT *myHandle); 
+static bool     MT25Q_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
+static bool     MT25Q_GetGeometry             (QSpiHandleT *myHandle);
 
 /* Exported functions -------------------------------------------------------*/
 
 bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
 {
    /* MT25Q has no low power/high perf. mode */
+   UNUSED(hqspi); UNUSED(bHPerf);
     return 1;
 }
 #if DEBUG_MODE > 0
@@ -65,6 +67,23 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
         return "Unknown";
     }
 
+    const char * const drvstr_txt[]={"Resvd.", "90 Ohms", "Resvd.", "45 Ohms", "Resvd.", "20 Ohms", "Resvd.", "30 Ohms", }; 
+    static const char* get_drvstr_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(drvstr_txt)/sizeof(char *) ) 
+        return drvstr_txt[sel];
+      else
+        return "Unknown";
+    }
+
+    const char * const wrapmode_txt[]={"mod 16", "mod 32", "mod 64", "no wrap" }; 
+    static const char* get_wrapmode_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(wrapmode_txt)/sizeof(char *) ) 
+        return wrapmode_txt[sel];
+      else
+        return "Unknown";
+    }
 
     /**************************************************************************************
      * Return the chip name as string-
@@ -100,9 +119,8 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
  *****************************************************************************/
 bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
 {  
+    UNUSED(bFirstInit);
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
-    bool ret;
-    bool hperf_enable;
 
     /* calculate prescaler,so that the initial frequency is at or below max. ULP frequency */ 
     uint32_t prescaler = ( clk_frq + desired_frq - 1 ) / desired_frq;
@@ -111,7 +129,7 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
 
     if ( prescaler > 255 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTF("QSpecific_BasicInit - QSPI clk too low, minimum is %d\n", QSpiGetClockSpeed()/256 );
+            DEBUG_PRINTF("QSpecific_BasicInit - QSPI clk too low, minimum is %d\n", clk_frq/256 );
         #endif
         return false;
     }
@@ -120,21 +138,16 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
         DEBUG_PRINTF("Qspi: Clk=%d\n", desired_frq );
     #endif
 
-    /* if not first init, then if selected operating speed is higher than max. ULP speed, select high performance mode */
-    /* on first init, the caller has to assure, that "desired_frq" is at or below QSPI_MAX_ULP_FREQUENCY */
-    if ( !bFirstInit && MX25_GetType(myHandle) == MX25R6435F_DEVID ) {
-        hperf_enable = desired_frq > QSPI_MAX_ULP_FREQUENCY;
-        ret = QSpecific_HPerfMode( hqspi, hperf_enable);
-        if ( !ret ) return false;
-    }
-
     /* QSPI initialization */
     hqspi->Init.ClockPrescaler     = prescaler;
     hqspi->Init.FifoThreshold      = 4;
-    hqspi->Init.SampleShifting     = QSPI_SAMPLE_SHIFTING_NONE;
+    hqspi->Init.SampleShifting     = QSPI_SAMPLE_SHIFTING_HALFCYCLE;
     hqspi->Init.FlashSize          = POSITION_VAL(flash_size) - 1;
     hqspi->Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
     hqspi->Init.ClockMode          = QSPI_CLOCK_MODE_0;
+    hqspi->Init.FlashID            = QSPI_FLASH_ID_1;
+    hqspi->Init.DualFlash          = QSPI_DUALFLASH_DISABLE;
+
 
     if (HAL_QSPI_Init(hqspi) != HAL_OK) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
@@ -181,7 +194,7 @@ bool QSpecific_ResetMemory(QSpiHandleT *myHandle)
 
 
   /* Configure automatic polling mode to wait the memory is ready */  
-  if ( !QSpecific_WaitForResetDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
+  if ( !QSpecific_WaitForWriteDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
 
   return true;
 }
@@ -226,86 +239,86 @@ uint32_t QSpecific_GetID ( QSpiHandleT *me )
  *****************************************************************************/
 void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
 {
-  QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
-  QSPI_CommandTypeDef sCommand;
-  uint8_t cr, sr[2];
-  char txtbuf[25];
-  bool ret;
+    QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
+    QSPI_CommandTypeDef sCommand;
+    uint8_t reg, dummy, sr[2];
+    char txtbuf[25];
+    bool ret;
 
-  /* Read the 2.byte device ID first, first byte MfgID will be overwritten later */
-  sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  sCommand.Instruction       = READ_STATUS_REG_CMD;
-  sCommand.AddressMode       = QSPI_ADDRESS_NONE;
-  sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  sCommand.DataMode          = QSPI_DATA_1_LINE;
-  sCommand.DummyCycles       = 0;
-  sCommand.NbData            = 1;
-  sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    /* Read Status Register */
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+    sCommand.Instruction       = READ_STATUS_REG_CMD;
+    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    sCommand.DataMode          = QSPI_DATA_1_LINE;
+    sCommand.DummyCycles       = 0;
+    sCommand.NbData            = 1;
+    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
-  /* Dump Status register */
-  ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  QSpecific_GetChipTypeText(myHandle->id, txtbuf, 25 );
+    /* Dump Status register */
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if (ret) ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    QSpecific_GetChipTypeText(myHandle->id, txtbuf, 25 );
 
-  printf("%s Status register\n", txtbuf );
-  if ( ret ) {
-    printf("   SR Write protect = %d\n", cr & MX25_XXX35F_SR_SRWD ? 1 : 0 );
-    printf("   Quad Enable      = %d\n", cr & MX25_XXX35F_SR_QE   ? 1 : 0 );
-    printf("   Block protect    = 0x%1x\n", (cr & MX25_XXX35F_SR_BP ) >> 2);
-    printf("   Write Enable     = %d\n", cr & MX25_XXX35F_SR_WEL  ? 1 : 0 );
-    printf("   Write in progess = %d\n", cr & MX25_XXX35F_SR_WIP  ? 1 : 0 );
-  } else {
-    puts("   Cannot read SR");
-  }
-
-  /* Dump configuration register, its content depends from chip tpye  */
-  uint16_t devID             = MX25_GetType(myHandle);
-  sCommand.Instruction       = READ_CFG_REG_CMD;
-  sCommand.NbData            = ( devID == MX25R6435F_DEVID ? 2 : 1 );
-
-  ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, sr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  printf("%s Configuration register\n", txtbuf );
-  if ( ret ) {
-    printf("   Bottom area prot = %d\n", sr[0] & ( 1 << 3 ) ? 1 : 0 );
-
-    switch ( devID ) {
-        case MX25R6435F_DEVID:
-            printf("   2/4Rd dummy cyc. = %d\n", sr[0] & ( 1 << 6 ) ? 1 : 0 );
-            printf("   High perf. mode  = %d\n", sr[1] & ( 1 << 1 ) ? 1 : 0 );
-            break;
-        case MX25L12835F_DEVID:
-            printf("   Dummy cycles.    = %d\n", sr[0] >> 6);
-            printf("   Outp.Drv.Str.    = %d\n", sr[0] & 0b111 );
-            break;
-        default:
-            #if DEBUG_MDOE > 0 && DEBBUG_QSPI > 0
-                DEBUG_PRINTF("Config Reg. unknown for DevID 0x%04x\n", devID);
-            #endif
-            ;
+    printf("%s Status register\n", txtbuf );
+    if ( ret ) {
+        printf("   SR Write protect = %d\n",    reg & MT25Q_SR_SRWD ? 1 : 0 );
+        printf("   Block protect    = 0x%1x\n", MT25Q_GET_BP_NORMALIZED(reg));
+        printf("   Block protect dir: from %s\n",   reg & MT25Q_SR_BPDIR   ? "top" : "bottom" );
+        printf("   Write Enable     = %d\n", reg & MT25Q_SR_WEL  ? 1 : 0 );
+        printf("   Write in progess = %d\n", reg & MT25Q_SR_WIP  ? 1 : 0 );
+    } else {
+        puts("   Cannot read SR");
     }
-  } else {
-    puts("   Cannot read CR");
-  }
 
-  /* Configure and read SCUR */
-  sCommand.Instruction       = READ_SEC_REG_CMD;
-  ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  printf("%s Security register\n", txtbuf );
-  if ( ret ) {
-    printf("   last Erase fail. = %d\n", cr & MX25_XXX35F_SECR_E_FAIL ? 1 : 0 );
-    printf("   last Prog failed = %d\n", cr & MX25_XXX35F_SECR_P_FAIL ? 1 : 0 );
-    printf("   Erase suspended  = %d\n", cr & MX25_XXX35F_SECR_ESB    ? 1 : 0 );
-    printf("   Prog suspended   = %d\n", cr & MX25_XXX35F_SECR_PSB    ? 1 : 0 );
-    printf("   LDSO bit         = %d\n", cr & MX25_XXX35F_SECR_LDSO   ? 1 : 0 );
-    printf("   factury OTP bit  = %d\n", cr & MX25_XXX35F_SECR_SOI    ? 1 : 0 );
-  } else {
-    puts("   Cannot read SCUR");
-  }
+    /* Dump flag status register */
+     sCommand.Instruction       = READ_FLAG_STATUS_REG_CMD;
 
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if (ret) ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    printf("%s Flag status register\n", txtbuf );
+    if ( ret ) {
+        printf("   Mem modify done  = %d\n",    reg & MT25Q_FSR_PGM_DONE ? 1 : 0 );
+        printf("   Erase suspended  = %d\n",    reg & MT25Q_FSR_ERA_SUSP ? 1 : 0 );
+        printf("   Erase ERROR      = %d\n",    reg & MT25Q_FSR_ERA_ERR ? 1 : 0 );
+        printf("   Program ERROR    = %d\n",    reg & MT25Q_FSR_PGM_ERR ? 1 : 0 );
+        printf("   Program suspended= %d\n",    reg & MT25Q_FSR_PGM_SUSP ? 1 : 0 );
+        printf("   Access ERROR     = %d\n",    reg & MT25Q_FSR_ACC_ERR ? 1 : 0 );
+        printf("   Address bytes    = %d\n",    reg & MT25Q_FSR_4BYTE_MODE ? 4 : 3 );
+    } else {
+        puts("   Cannot read FSR");
+    }
+    /* Volatile Configuration Register */
+    sCommand.Instruction = READ_VOL_CFG_REG_CMD;
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if ( ret )  ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    printf("%s Volatile configueration register \n", txtbuf );
+    if ( ret ) {
+        dummy = MT25Q_GET_DUMMYCYCLES_NORMALIZED(reg);
+        if ( dummy == 0 ) dummy = 15;
+        printf("   Dummy CLK cycles = %d\n",    dummy);
+        printf("   XIP Read         = %s\n",    reg & MT25Q_EVCR_QUAD_DISABLED ? "Off" : "On" );
+        printf("   Wrap mode        = %s\n",    get_wrapmode_txt(MT25Q_GET_WRAPMODE_NORMALIZED(reg)));
+    } else {
+        puts("   Cannot read VCR");
+    }
+
+    /* Enhanced Volatile Configuration Register */
+    sCommand.Instruction = READ_ENHANCED_VOL_CFG_REG_CMD;
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if ( ret )  ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+
+    printf("%s Enhanced volatile configueration register \n", txtbuf );
+    if ( ret ) {
+        printf("   QUAD I/O         = %s\n",    reg & MT25Q_EVCR_QUAD_DISABLED ? "Off" : "On" );
+        printf("   DUAL I/O         = %s\n",    reg & MT25Q_EVCR_DUAL_DISABLED ? "Off" : "On" );
+        printf("   DTR  I/O         = %s\n",    reg & MT25Q_EVCR_DTR_DISABLED  ? "Off" : "On" );
+        printf("   Outp drv strngth = %s\n",    get_drvstr_txt(MT25Q_GET_DRV_STRENGTH_NORMALIZED(reg)));
+    } else {
+        puts("   Cannot read EVCR");
+    }
 }
 
 
@@ -331,8 +344,9 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
         myHandle->dsInfo->dlyToSleep = MX25_DLY_TO_SLEEP;
     }
 
+
     /* Basic Initialization with a safe speed and minimum flash size to readout ID data */
-    if ( !QSpecific_BasicInit(myHandle, clk_frq, init_speed, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
+    if ( !QSpecific_BasicInit(myHandle, clk_frq, init_speed, MT25QY064_FLASH_SIZE, true) ) return false;
 
 
     /* QSPI memory reset */
@@ -350,21 +364,33 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
         return false;
     }
 
+    /*
+     * Do not enable quad mode, but keep device in SPI mode generally.
+     * Read and write operations will have to switch to 4bit mode
+     * manually.
+     * To switch the device to permanent QUAD mode ( ie 4-4-4 operation for nearly
+     * all commands and to switch back, the driver has to keep track of the selected
+     * mode and setup the command, data and address slicing accordingly.
+     */
+#if 0
     /* QSPI quad enable */
-    if ( !MX25_QuadMode(myHandle, MX25_QUAD_ENABLE) ) {
+    if ( !MT25Q_QuadMode(myHandle, MT25Q_QUAD_ENABLE) ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
             DEBUG_PUTS("QSpi_SpecificInit - Error: Quad mode not set");
         #endif
         return false;
     }
+#endif
 
     /* Get geometry data */
-    if ( !MX25_GetGeometry(myHandle) ) {
+    if ( !MT25Q_GetGeometry(myHandle) ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
             DEBUG_PUTS("QSpi_SpecificInit - Error: Cannot set geometry");
         #endif
         return false;
     }
+
+    QSpecific_DumpStatusInternal(myHandle);
 
  
     /* The operating speed is now set to user configured speed and flash size is set to correct size */
@@ -456,9 +482,9 @@ bool QSpecific_EnableMemoryMappedMode(QSpiHandleT *myHandle)
 
   /* Configure the command for the read instruction */
   sCommand.InstructionMode    = QSPI_INSTRUCTION_1_LINE;
-  sCommand.Instruction        = QUAD_INOUT_READ_CMD;
+  sCommand.Instruction        = QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD;
   sCommand.AddressMode        = QSPI_ADDRESS_4_LINES;
-  sCommand.AddressSize        = QSPI_ADDRESS_24_BITS;
+  sCommand.AddressSize        = QSPI_ADDRESS_32_BITS;
   sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_4_LINES;
   sCommand.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
   sCommand.AlternateBytes     = MX25R6435F_ALT_BYTES_NO_PE_MODE;
@@ -491,7 +517,7 @@ bool QSpecific_SuspendErase(QSPI_HandleTypeDef *hqspi)
   /* Check whether the device is busy (erase operation is 
   in progress).
   */
-  if (MX25_GetStatus(hqspi) == QSPI_BUSY)
+  if (MT25Q_GetStatus(hqspi) == QSPI_BUSY)
   {
     /* Initialize the erase command */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
@@ -507,7 +533,7 @@ bool QSpecific_SuspendErase(QSPI_HandleTypeDef *hqspi)
     /* Send the command */
     if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
     
-    if (MX25_GetStatus(hqspi) == QSPI_SUSPENDED) return true;
+    if (MT25Q_GetStatus(hqspi) == QSPI_SUSPENDED) return true;
     
     return false;
   }
@@ -524,7 +550,7 @@ bool QSpecific_ResumeErase(QSPI_HandleTypeDef *hqspi)
   QSPI_CommandTypeDef sCommand;
   
   /* Check whether the device is in suspended state */
-  if (MX25_GetStatus(hqspi) == QSPI_SUSPENDED)
+  if (MT25Q_GetStatus(hqspi) == QSPI_SUSPENDED)
   {
     /* Initialize the erase command */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
@@ -546,7 +572,7 @@ bool QSpecific_ResumeErase(QSPI_HandleTypeDef *hqspi)
     if the device is not in a suspended state.
     */
     
-    if (MX25_GetStatus(hqspi) == QSPI_BUSY) return true;
+    if (MT25Q_GetStatus(hqspi) == QSPI_BUSY) return true;
     
     return false;
   }
@@ -563,9 +589,9 @@ bool QSpecific_ReadCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 
     /* Initialize the read command */
     sCommand.InstructionMode    = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction        = QUAD_INOUT_READ_CMD;
+    sCommand.Instruction        = QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD;
     sCommand.AddressMode        = QSPI_ADDRESS_4_LINES;
-    sCommand.AddressSize        = QSPI_ADDRESS_24_BITS;
+    sCommand.AddressSize        = QSPI_ADDRESS_32_BITS;
     sCommand.Address            = Addr;
     sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_4_LINES;
     sCommand.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
@@ -597,9 +623,9 @@ bool QSpecific_WriteCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 
     /* Initialize the program command */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction       = QUAD_PAGE_PROG_CMD;
+    sCommand.Instruction       = QUAD_IN_FAST_PROG_4_BYTE_ADDR_CMD;
     sCommand.AddressMode       = QSPI_ADDRESS_4_LINES;
-    sCommand.AddressSize       = QSPI_ADDRESS_24_BITS;
+    sCommand.AddressSize       = QSPI_ADDRESS_32_BITS;
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
     sCommand.DataMode          = QSPI_DATA_4_LINES;
     sCommand.DummyCycles       = 0;
@@ -640,26 +666,26 @@ bool QSpecific_GetEraseParams(uint32_t erasemode, uint32_t *timeout_ms, uint8_t 
     switch(erasemode)
     {
         case QSPI_ERASE_SECTOR:
-            *timeout_ms = MX25R6435F_SECTOR_ERASE_MAX_TIME;
-            *opcode     = SECTOR_ERASE_CMD;
+            *timeout_ms = MT25QY512_SECTOR_ERASE_MAX_TIME;
+            *opcode     = SUBSECTOR_4K_ERASE_4_BYTE_ADDR_CMD;
             break;
         case QSPI_ERASE_SUBBLOCK:
-            *timeout_ms = MX25R6435F_SUBBLOCK_ERASE_MAX_TIME;
-            *opcode     = SUBBLOCK_ERASE_CMD;
+            *timeout_ms = MT25QY512_SUBBLOCK_ERASE_MAX_TIME;
+            *opcode     = SUBSECTOR_32K_ERASE_4_BYTE_ADDR_CMD;
             break;
         case QSPI_ERASE_BLOCK:
-            *timeout_ms = MX25R6435F_BLOCK_ERASE_MAX_TIME;
-            *opcode     = BLOCK_ERASE_CMD;
+            *timeout_ms = MT25QY512_BLOCK_ERASE_MAX_TIME;
+            *opcode     = SECTOR_ERASE_4_BYTE_ADDR_CMD;
             break;
         case QSPI_ERASE_ALL:
-            *timeout_ms = MX25L12835F_CHIP_ERASE_MAX_TIME;
-            *opcode     = CHIP_ERASE_CMD;
+            *timeout_ms = MT25QY512_CHIP_ERASE_MAX_TIME;
+            *opcode     = BULK_ERASE_CMD;
             break;
         default:
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
                 DEBUG_PRINTF("GetEraseTimeout - Error: unkown erasemode %d\n", erasemode);
             #endif
-            *timeout_ms = MX25R6435F_SECTOR_ERASE_MAX_TIME;
+            *timeout_ms = MT25QY512_SECTOR_ERASE_MAX_TIME;
             *opcode     = SECTOR_ERASE_CMD;
             ret = false;
     }
@@ -726,36 +752,29 @@ bool QSpecific_EraseCMD(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t er
 
 
 /******************************************************************************
- * Return the device identification ( 16 bit ) from the ID bytes
- *****************************************************************************/
-static uint16_t MX25_GetType(QSpiHandleT *myHandle)
-{
-    uint16_t ret = myHandle->id[1];
-    return ret << 8 | myHandle->id[2];
-}
-
-
-/******************************************************************************
  * Set the geometry data according to flash deviceID set in myHandle->id
  *****************************************************************************/
-static bool MX25_GetGeometry(QSpiHandleT *myHandle)
+static bool MT25Q_GetGeometry(QSpiHandleT *myHandle)
 {
-    /* get type and set all geometry parameters according to that */
-    uint16_t devID = MX25_GetType(myHandle);
+    /* get density byte from ID string */
+    uint8_t density = myHandle->id[2];
+    uint8_t multiplier;
+    uint32_t flash_size;
 
-    switch ( devID ) {
-        case MX25R6435F_DEVID:
-            QSpi_SetGeometry ( &myHandle->geometry, MX25R6435F_FLASH_SIZE, MX25R6435F_PAGE_SIZE, MX25R6435F_SECTOR_SIZE );
-            return true;
-        case MX25L12835F_DEVID:
-            QSpi_SetGeometry ( &myHandle->geometry, MX25L12835F_FLASH_SIZE, MX25L12835F_PAGE_SIZE, MX25L12835F_SECTOR_SIZE );
-            return true;
-        default:
-            #if DEBUG_MDOE > 0 && DEBBUG_QSPI > 0
-                DEBUG_PRINTF("geometry data not defined for DevID 0x%04x\n", devID);
-            #endif
-            return false;
+    if ( density >= 0x17 && density <= 0x19 ) {
+            multiplier = density - 0x17;
+    } else if ( density >= 0x20 && density <= 0x22 ) {
+            multiplier = density - 0x1d;
+    } else {
+        #if DEBUG_MDOE > 0 && DEBBUG_QSPI > 0
+            DEBUG_PRINTF("geometry data not defined for density byte 0x%02x\n", density);
+        #endif
+        return false;
     }
+
+    flash_size = MT25QY064_FLASH_SIZE << multiplier;
+    QSpi_SetGeometry ( &myHandle->geometry, flash_size, MT25QYXXX_PAGE_SIZE, MT25QYXXX_SECTOR_SIZE );
+    return true;
 
 }
 
@@ -765,69 +784,40 @@ static bool MX25_GetGeometry(QSpiHandleT *myHandle)
   * @brief  Reads current status of the QSPI memory.
   * @retval QSPI memory status
   */
-static uint8_t MX25_GetStatus(QSPI_HandleTypeDef *hqspi)
+static uint8_t MT25Q_GetStatus(QSPI_HandleTypeDef *hqspi)
 {
-  QSPI_CommandTypeDef sCommand;
-  uint8_t reg;
+    QSPI_CommandTypeDef sCommand;
+    uint8_t reg;
 
-  /* Initialize the read security register command */
-  sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  sCommand.Instruction       = READ_SEC_REG_CMD;
-  sCommand.AddressMode       = QSPI_ADDRESS_NONE;
-  sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  sCommand.DataMode          = QSPI_DATA_1_LINE;
-  sCommand.DummyCycles       = 0;
-  sCommand.NbData            = 1;
-  sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    /* Initialize the read of flag status register command */
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+    sCommand.Instruction       = READ_FLAG_STATUS_REG_CMD;
+    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    sCommand.DataMode          = QSPI_DATA_1_LINE;
+    sCommand.DummyCycles       = 0;
+    sCommand.NbData            = 1;
+    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
-  /* Configure the command */
-  if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    return QSPI_ERROR;
-  }
+    /* Read */
+    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return QSPI_ERROR;
+    if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return QSPI_ERROR;
 
-  /* Reception of the data */
-  if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    return QSPI_ERROR;
-  }
-  
-  /* Check the value of the register */
-  if ((reg & (MX25_XXX35F_SECR_P_FAIL | MX25_XXX35F_SECR_E_FAIL)) != 0)
-  {
-    return QSPI_ERROR;
-  }
-  else if ((reg & (MX25_XXX35F_SECR_PSB | MX25_XXX35F_SECR_ESB)) != 0)
-  {
-    return QSPI_SUSPENDED;
-  }
+    /* Check the value of the register for PGM eor erase error */
+    if ((reg & ( MT25Q_FSR_ERA_ERR |  MT25Q_FSR_PGM_ERR)) != 0) {
+        return QSPI_ERROR;
+    } else if ((reg & (MT25Q_FSR_ERA_SUSP | MT25Q_FSR_PGM_SUSP)) != 0) {
+        return QSPI_SUSPENDED;
+    }
 
-  /* Initialize the read status register command */
-  sCommand.Instruction       = READ_STATUS_REG_CMD;
-
-  /* Configure the command */
-  if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    return QSPI_ERROR;
-  }
-
-  /* Reception of the data */
-  if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)
-  {
-    return QSPI_ERROR;
-  }
-
-  /* Check the value of the register */
-  if ((reg & MX25_XXX35F_SR_WIP) != 0)
-  {
-    return QSPI_BUSY;
-  }
-  else
-  {
-    return QSPI_OK;
-  }
+    /* Check the value of the register */
+    if ((reg & MT25Q_FSR_PGM_DONE) == 0) {
+        return QSPI_BUSY;
+    } else {
+        return QSPI_OK;
+    }
 }
 
 
@@ -857,8 +847,8 @@ bool QSpecific_WriteEnable(QSPI_HandleTypeDef *hqspi)
 
   
   /* Configure automatic polling mode to wait for write enabling */  
-  sConfig.Match           = MX25_XXX35F_SR_WEL;
-  sConfig.Mask            = MX25_XXX35F_SR_WEL;
+  sConfig.Match           = MT25Q_SR_WEL;
+  sConfig.Mask            = MT25Q_SR_WEL;
   sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
   sConfig.StatusBytesSize = 1;
   sConfig.Interval        = 0x10;
@@ -899,7 +889,7 @@ static bool QSpecific_WaitForResetDone(QSPI_HandleTypeDef *hqspi, uint32_t Timeo
     sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
     sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
-    sConfig.Match           = 1;
+    sConfig.Match           = MT25Q_FSR_PGM_DONE;
     sConfig.Mask            = MT25Q_FSR_PGM_DONE;
     sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
     sConfig.StatusBytesSize = 1;
@@ -923,7 +913,7 @@ static bool QSpecific_WaitForResetDone(QSPI_HandleTypeDef *hqspi, uint32_t Timeo
  * @retval true if WIP was reset before timeout
  *         false if timeout occured
  *****************************************************************************/
-static bool MX25_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Timeout, uint32_t opmode)
+static bool MT25Q_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Timeout, uint32_t opmode)
 {
     QSPI_CommandTypeDef     sCommand;
     QSPI_AutoPollingTypeDef sConfig;
@@ -940,7 +930,7 @@ static bool MX25_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Ti
     sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
     sConfig.Match           = 0;
-    sConfig.Mask            = MX25_XXX35F_SR_WIP;
+    sConfig.Mask            = MT25Q_SR_WIP;
     sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
     sConfig.StatusBytesSize = 1;
     sConfig.Interval        = 0x10;
@@ -968,154 +958,60 @@ static bool MX25_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Ti
 }
 
 bool QSpecific_WaitForWriteDone(QSPI_HandleTypeDef *hqspi, uint32_t Timeout) {
-    return MX25_WaitForWriteDoneInternal(hqspi, Timeout, QSPI_MODE_POLL);
+    return MT25Q_WaitForWriteDoneInternal(hqspi, Timeout, QSPI_MODE_POLL);
 }
 bool QSpecific_WaitForWriteDone_IT(QSPI_HandleTypeDef *hqspi) {
-    return MX25_WaitForWriteDoneInternal(hqspi, 0, QSPI_MODE_IRQ);
+    return MT25Q_WaitForWriteDoneInternal(hqspi, 0, QSPI_MODE_IRQ);
 }
-
+#if 0
 /**
   * @brief  This function enables/disables the Quad mode of the MX25L memory.
+  *         Immediately after execution, most commands will only work in 4-4-4 mode!
   * @param  hqspi     : QSPI handle
-  * @param  Operation : MX25_QUAD_ENABLE or MX25_QUAD_DISABLE mode  
+  * @param  Operation : MT25Q_QUAD_ENABLE or MT25Q_QUAD_DISABLE mode  
   * @retval None
   */
-static bool MX25_QuadMode(QSpiHandleT *myHandle, uint8_t Operation)
+static bool MT25Q_QuadMode(QSpiHandleT *myHandle, uint8_t Operation)
 {
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
     QSPI_CommandTypeDef sCommand;
     uint8_t reg;
+    bool ret;
 
-    /* check proper type */
-    uint16_t devID = MX25_GetType(myHandle);
-    if ( devID != MX25R6435F_DEVID && devID != MX25L12835F_DEVID ) {
-        #if DEBUG_MDOE > 0 && DEBBUG_QSPI > 0
-            DEBUG_PRINTF("Enter Quadmode not defined for DevID 0x%04x\n", devID);
-        #endif
-        return false;
-    }
-
-    /* Read status register */
+    /* Enable or disable quad mode, depeding from operation parameter */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction       = READ_STATUS_REG_CMD;
+    sCommand.Instruction       = Operation == MT25Q_QUAD_ENABLE ? ENTER_QUAD_CMD : EXIT_QUAD_CMD;
     sCommand.AddressMode       = QSPI_ADDRESS_NONE;
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
     sCommand.DataMode          = QSPI_DATA_1_LINE;
     sCommand.DummyCycles       = 0;
-    sCommand.NbData            = 1;
     sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
     sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
     sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
     if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
 
-    if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
 
-    /* Enable write operations */
-    if ( !QSpecific_WriteEnable(hqspi) ) return false;
-
-    /* Activate/deactivate the Quad mode, clear all other bits */
-    reg = 0;
-    if (Operation == MX25_QUAD_ENABLE) {
-        SET_BIT(reg, MX25_XXX35F_SR_QE);
-    } 
-
-    sCommand.Instruction = WRITE_STATUS_CFG_REG_CMD;
-
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    if (HAL_QSPI_Transmit(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    /* Wait that memory is ready */  
-    if (!QSpecific_WaitForWriteDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
-
-    /* Check the configuration has been correctly done */
-    sCommand.Instruction = READ_STATUS_REG_CMD;
-
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    if (HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)  return false;
-
-    if (  (((reg & MX25_XXX35F_SR_QE) == 0) && (Operation == MX25_QUAD_ENABLE)) ||
-          (((reg & MX25_XXX35F_SR_QE) != 0) && (Operation == MX25_QUAD_DISABLE))
-       ) {
-        return false;
-    }
-
-    return true;
-}
-
-
-/**
-  * @brief  This function enables/disables the high performance mode of the memory.
-  * @param  hqspi     : QSPI handle
-  * @param  Operation : MX25_HIGH_PERF_ENABLE or MX25_HIGH_PERF_DISABLE high performance mode    
-  * @retval None
-  */
-static bool MX25RXX35_HighPerfMode(QSPI_HandleTypeDef *hqspi, uint8_t Operation)
-{
-    QSPI_CommandTypeDef sCommand;
-    uint8_t reg[3];
-
-    /* Read status register */
-    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction       = READ_STATUS_REG_CMD;
-    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+   /* Read EVCR Register */
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_4_LINES;
+    sCommand.Instruction       = READ_ENHANCED_VOL_CFG_REG_CMD;
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-    sCommand.DataMode          = QSPI_DATA_1_LINE;
-    sCommand.DummyCycles       = 0;
+    sCommand.DataMode          = QSPI_DATA_4_LINES;
     sCommand.NbData            = 1;
-    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
-    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
+    /* Dump Status register */
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if (ret) ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+     
+    if ( !ret ) return false;
 
-    if (HAL_QSPI_Receive(hqspi, &(reg[0]), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    /* Read configuration registers */
-    sCommand.Instruction = READ_CFG_REG_CMD;
-    sCommand.NbData      = 2;
-
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    if (HAL_QSPI_Receive(hqspi, &(reg[1]), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    /* Enable write operations */
-    if ( !QSpecific_WriteEnable(hqspi) ) return false;
-
-    /* Activate/deactivate the hig performance mode */
-    if (Operation == MX25_HIGH_PERF_ENABLE) {
-        SET_BIT(reg[2], MX25R6435F_CR2_LH_SWITCH);
-    } else {
-        CLEAR_BIT(reg[2], MX25R6435F_CR2_LH_SWITCH);
-    }
-
-    sCommand.Instruction = WRITE_STATUS_CFG_REG_CMD;
-    sCommand.NbData      = 3;
-
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    if (HAL_QSPI_Transmit(hqspi, &(reg[0]), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    /* Wait that memory is ready */  
-    if ( !QSpecific_WaitForWriteDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
-
-    /* Check the configuration has been correctly done */
-    sCommand.Instruction = READ_CFG_REG_CMD;
-    sCommand.NbData      = 2;
-
-    if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-
-    if (HAL_QSPI_Receive(hqspi, &(reg[0]), HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
-
-    if ( (((reg[1] & MX25R6435F_CR2_LH_SWITCH) == 0) && (Operation == MX25_HIGH_PERF_ENABLE)) ||
-         (((reg[1] & MX25R6435F_CR2_LH_SWITCH) != 0) && (Operation == MX25_HIGH_PERF_DISABLE))
+    if (  (((reg & MT25Q_EVCR_QUAD_DISABLED) != 0) && (Operation == MT25Q_QUAD_ENABLE)) ||
+          (((reg & MT25Q_EVCR_QUAD_DISABLED) == 0) && (Operation == MT25Q_QUAD_DISABLE))
        ) {
         return false;
     }
 
     return true;
 }
+#endif
 

@@ -14,8 +14,6 @@
 
 #if USE_QSPI > 0 
 
-/* Debug ------------------------------------------------------------------------*/
-#define DEBUG_QSPI          1
 
 #include "config/devices_config.h"
 #include "config/qspi_config.h"
@@ -219,7 +217,7 @@ void QSPI_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
     {
         char type[25];
         const char *mf   =  QSpi_GetChipManufacturer(idbuf[0] );
-        QSpecific_GetChipTypeText(idbuf, type, 20);
+        QSpecific_GetChipTypeText(idbuf, type, 25);
         DEBUG_PRINTF("QSpi: Found %s %s\n", mf, type);
     }
 
@@ -906,7 +904,8 @@ bool QSpi_Init(const HW_DeviceType *self)
     uint32_t devIdx = GetDevIdx(self);
     QSpiGpioInitAF(devIdx, self->devGpioAF);
 
-    ret = QSpi_SpecificInit(self, adt->myQSpiHandle, QSpiGetClockSpeed() );
+    HAL_QSPI_DeInit(&myHandle->hqspi);
+    ret = QSpi_SpecificInit(self, myHandle, QSpiGetClockSpeed() );
     if ( ret ) {
         if ( self->devIrqList ) {
             /* Configure the NVIC, enable interrupts */
