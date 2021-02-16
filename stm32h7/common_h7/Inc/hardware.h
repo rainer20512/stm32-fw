@@ -10,6 +10,7 @@
 /*
  * customization for STM32H7xx
  */
+#include "config/config.h"
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
 

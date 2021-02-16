@@ -479,6 +479,36 @@ bool Fmc_SRAM_Init(uint32_t fmc_idx, Fmc_SramTimingDataT *sram_timing )
 }
 
 /******************************************************************************
+ * Compute value of the refresh counter, see 74x refman, section "SDRAM refresh timer register" 
+ * Refresh time from row to row is total refresh time (usually 64ms ) / number of rows converted to sdram clk cycles
+ * Params
+ *    myData     - SDRAM timing data stored in flash
+ *    sdramClkHz - actual SDRAM clk speed. Is usually half the FMC input clock
+ * Returns
+ *    the new refresh counter value for the SDRAM at the specified SDRAM clk
+ *    0 on failure
+ *****************************************************************************/
+static uint32_t Fmc_CalcSdram_RefreshCounter(const Fmc_SdramTimingDataT *myData, uint32_t sdramClkHz )
+{
+    /* Hardware defined margins for the SDRAM counter [ 41 .. 8191 ] */
+    #define MIN_CNT_VALUE   41
+    #define MAX_CNT_VALUE   ((1U<<13)-1)
+
+    uint32_t clkPerRow = (myData->T_Refresh * (sdramClkHz/1000) ) / ( 1 << myData->RowBits );   
+    
+    /* subtract 20 as safety margin */
+    clkPerRow -= 20;
+
+    /* check range */
+    if ( clkPerRow < MIN_CNT_VALUE || clkPerRow > MAX_CNT_VALUE ) {
+            DEBUG_PRINTF("Refresh counter value out of range, Value=%d\n",clkPerRow);
+            return 0;
+    }
+    
+    return clkPerRow;
+}
+
+/******************************************************************************
  * Set then HAL Timing parameters ( in multiples of fmc_ker_ck ) on base of the
  * passed "myTiming"-times (in nanoseconds ).
  * Parameters:
@@ -495,17 +525,12 @@ bool Fmc_SRAM_Init(uint32_t fmc_idx, Fmc_SramTimingDataT *sram_timing )
  * NOTE: SDRAM clk is half the FMC input clock
  *
  *****************************************************************************/
-static uint32_t Fmc_SetSdramTiming( 
-    FMC_SDRAM_TimingTypeDef *halTiming, uint32_t *newCounterVal, const Fmc_SdramTimingDataT *myData )
+static uint32_t Fmc_SetSdramTiming(FMC_SDRAM_TimingTypeDef *halTiming, const Fmc_SdramTimingDataT *myData )
 {
    
     /* all timing parameters must be in the range [ 1 .. 16] ... */
     #define MIN_TXX_VALUE    1 
     #define MAX_TXX_VALUE   16 
-
-    /* ... except the counter which has to be in the rage [ 41 .. 8191 ] */
-    #define MIN_CNT_VALUE   41
-    #define MAX_CNT_VALUE   ((1U<<13)-1)
 
     /*
      * convert a timinng value in ns to the corresponding value in sdram clk cycles 
@@ -544,8 +569,6 @@ static uint32_t Fmc_SetSdramTiming(
 
     /* All SDRAM timing parameters are in units of SDRAM clk cycles */
 
-
- 
     if ( (halTiming->LoadToActiveDelay    = convert( nstimes->LoadToActiveDelay,    ps_per_clk, "tMRD out of range" )) == 0) return 0;
     if ( (halTiming->ExitSelfRefreshDelay = convert( nstimes->ExitSelfRefreshDelay, ps_per_clk, "tXSR out of range" )) == 0) return 0;
     if ( (halTiming->SelfRefreshTime      = convert( nstimes->SelfRefreshTime,      ps_per_clk, "tRAS out of range" )) == 0) return 0;
@@ -554,19 +577,6 @@ static uint32_t Fmc_SetSdramTiming(
     if ( (halTiming->RPDelay              = convert( nstimes->RPDelay,              ps_per_clk, "tRP out of range" ))  == 0) return 0;
     if ( (halTiming->RCDDelay             = convert( nstimes->RCDDelay,             ps_per_clk, "tRCD out of range" )) == 0) return 0;
 
-    /* Compute value of the refresh counter, see 74x refman, section "SDRAM refresh timer register" */
-    /* Refresh time from row to row is total refresh time (usually 64ms ) / number of rows converted to sdram clk cycles */
-    uint32_t clkPerRow = (myData->T_Refresh * (newClkHz/1000) ) / ( 1 << myData->RowBits );   
-    
-    /* subtract 20 as safety margin */
-    clkPerRow -= 20;
-
-    /* check range */
-    if ( clkPerRow < MIN_CNT_VALUE || clkPerRow > MAX_CNT_VALUE ) {
-            DEBUG_PRINTF("Refresh counter value out of range, Value=%d\n",clkPerRow);
-            return 0;
-    }
-    *newCounterVal = clkPerRow;
     return newClkHz;
 }
 
@@ -574,7 +584,8 @@ static uint32_t Fmc_SetSdramTiming(
 #define REFRESH_COUNT                    ((uint32_t)0x0603)   /* SDRAM refresh counter */
 
 /******************************************************************************
- * @brief  Perform the SDRAM exernal memory inialization sequence
+ * @brief  Perform the SDRAM exernal memory inialization sequence 
+ *         This step has to be done once on startup
  * @param  hsdram: SDRAM handle
  * @param  Command: Pointer to SDRAM command structure
  * @retval None
@@ -582,6 +593,7 @@ static uint32_t Fmc_SetSdramTiming(
 static void SDRAM_Initialization(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetNum )
 {
   FMC_SDRAM_CommandTypeDef Command;
+
   /* Note the difference between FMC_SDRAM_BANKx and FMC_SDRAM_CMD_TARGET_BANKx ! */
   uint32_t cmdTarget = sdramTargetNum == FMC_SDRAM_BANK1 ? FMC_SDRAM_CMD_TARGET_BANK1 : FMC_SDRAM_CMD_TARGET_BANK2;
 
@@ -648,6 +660,9 @@ static void SDRAM_SelfRefresh(SDRAM_HandleTypeDef *hsdram, uint32_t sdramTargetN
   Command.CommandTarget = cmdTarget;
   Command.AutoRefreshNumber = 1;
   Command.ModeRegisterDefinition = 0;
+
+  /* Send the command */
+  HAL_SDRAM_SendCommand(hsdram, &Command, SDRAM_TIMEOUT);
 }
 
 
@@ -677,7 +692,7 @@ uint32_t FMC_SdramCheck();
  *    true on success
  *    false in case of parameter or HAL layer initialization error
  *****************************************************************************/
-bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
+bool Fmc_SDRAM_Init(uint32_t fmc_idx, const Fmc_SdramTimingDataT *sdram_data )
 {
     FMC_SDRAM_InitTypeDef     *init;
     FMC_SDRAM_TimingTypeDef   SDRAM_Timing;
@@ -723,11 +738,14 @@ bool Fmc_SDRAM_Init(uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
     }
 
     /* SDRAM device configuration */  
-    curr->fmcRefClockSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, &refreshCounter, sdram_data);
+    curr->fmcRefClockSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, sdram_data);
     if ( curr->fmcRefClockSpeed == 0 ) {
         DEBUG_PRINTF("Timing setup of Fmc Bank #%d failed\n",  fmc_idx );
         return false;
     }
+
+    /* calculate refresh counter */
+    if ((refreshCounter = Fmc_CalcSdram_RefreshCounter( sdram_data, curr->fmcRefClockSpeed ))==0) return false;
 
     curr->fmcIsUsed      = 1;
     curr->fmcType        = FMC_TYPE_SDRAM;
@@ -825,12 +843,15 @@ bool Fmc_ChngSdramTiming( uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
     // uint32_t                  sdramBank = curr->fmcSDBankNum == 1 ? FMC_SDRAM_BANK1 : FMC_SDRAM_BANK2;
 
     /* Calculate new SDRAM timing parameters */  
-    newSdramClkSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, &refreshCounter, sdram_data);
+    newSdramClkSpeed = Fmc_SetSdramTiming( &SDRAM_Timing, sdram_data);
     if ( newSdramClkSpeed == 0 ) {
         DEBUG_PRINTF("Change timing of Fmc Bank #%d failed\n",  fmc_idx );
         return false;
     }
-    
+
+    /* calculate refresh counter */
+    if ((refreshCounter = Fmc_CalcSdram_RefreshCounter( sdram_data, curr->fmcRefClockSpeed ))==0) return false;
+  
     /* Switch to Self refresh */
     SDRAM_SelfRefresh(hsdram, hsdram->Init.SDBank);
 
@@ -967,6 +988,60 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
     return true;
 }
 
+/******************************************************************************
+ * Callback _before_ going to sleep:
+ * Put all dynamic memories into self refresh mode
+ *****************************************************************************/
+bool Fmc_OnSleep( const HW_DeviceType *self)
+{
+    FmcDataT                    *curr; 
+    const Fmc_ExtMemDataT       *extmemData;
+    SDRAM_HandleTypeDef         *hsdram;
+    uint32_t                    i;
+    
+    for ( i = 0; i < FMC_MAX_BLOCKS; i++ ) {
+        extmemData = Fmc_GetMyExtMemData(self, i);
+        if ( extmemData ) switch ( extmemData->fmcType ) {
+            case FMC_TYPE_SDRAM:
+                curr            = FmcHandle.fmcData+i; 
+                hsdram          = &curr->hHal.hsdram;
+                /* Switch to Self refresh */
+                SDRAM_SelfRefresh(hsdram, hsdram->Init.SDBank);
+            break;
+        } // if, switch
+    } // for
+    return true;
+}
+
+/******************************************************************************
+ * Callback _after_ wakeup:
+ * Put all dynamic memories back into normal(auto) refresh mode
+ *****************************************************************************/
+bool Fmc_OnWakeup( const HW_DeviceType *self)
+{
+    FmcDataT                    *curr; 
+    const Fmc_ExtMemDataT       *extmemData;
+    const Fmc_SdramTimingDataT  *sdram_data;
+    SDRAM_HandleTypeDef         *hsdram;
+    uint32_t                    i;
+    uint32_t                    refreshCounter;
+    
+    for ( i = 0; i < FMC_MAX_BLOCKS; i++ ) {
+        extmemData = Fmc_GetMyExtMemData(self, i);
+        if ( extmemData ) switch ( extmemData->fmcType ) {
+            case FMC_TYPE_SDRAM:
+                curr            = FmcHandle.fmcData+i; 
+                hsdram          = &curr->hHal.hsdram;
+                sdram_data      = (const Fmc_SdramTimingDataT *)(extmemData->fmcTiming);
+                refreshCounter  = Fmc_CalcSdram_RefreshCounter( sdram_data, curr->fmcRefClockSpeed );
+                /* Switch back to Auto-Refresh */
+                SDRAM_AutoRefresh(hsdram, hsdram->Init.SDBank, sdram_data->modeReg, refreshCounter);
+            break;
+        } // if, switch
+    } // for
+    return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables  /////////////////////////////////////////////////////////
@@ -1061,8 +1136,8 @@ const HW_DeviceType HW_FMC = {
     .DeInit         = Fmc_DeInit,
     .OnFrqChange    = Fmc_OnFrqChange,
     .AllowStop      = NULL,
-    .OnSleep        = NULL,
-    .OnWakeUp       = NULL,
+    .OnSleep        = Fmc_OnSleep,
+    .OnWakeUp       = Fmc_OnWakeup,
 };
 #endif
 

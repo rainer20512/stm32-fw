@@ -324,11 +324,17 @@
           <folder Name="qspi">
             <file file_name="../../common/src/dev/qspi/mx25r6435f.c">
               <configuration Name="Common" build_exclude_from_build="Yes" />
+              <configuration
+                Name="THUMB Debug"
+                build_exclude_from_build="No" />
             </file>
             <file file_name="../../common/src/dev/qspi/mx25r6435f.h" />
+            <file file_name="../../common/src/dev/qspi/mt25q.c" />
+            <file file_name="../../common/src/dev/qspi/mt25q.h" />
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
           <file file_name="../../common/src/dev/fmc_dev.c" />
+          <file file_name="../../common/src/dev/usb_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -367,6 +373,10 @@
           <file file_name="../../common/inc/dev/uart_dev.h" />
           <file file_name="../../common/inc/dev/eth_dev.h" />
           <file file_name="../../common/inc/dev/fmc_dev.h" />
+          <file file_name="../../common/inc/dev/usb_dev.h" />
+          <folder Name="qspi">
+            <file file_name="../../common/inc/dev/qspi/qspecific.h" />
+          </folder>
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />

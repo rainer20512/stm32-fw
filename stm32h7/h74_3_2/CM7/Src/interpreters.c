@@ -1346,6 +1346,9 @@ ADD_SUBMODULE(Test);
 #if USE_QSPI > 0
 
     #include "dev/qspi_dev.h"
+    #include "dev/qspi/qspecific.h"
+     
+
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
      *         
@@ -1531,7 +1534,7 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = QSpi_EnableMemoryMappedMode(&QSpi1Handle);
+            ret = QSpecific_EnableMemoryMappedMode(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
@@ -1545,12 +1548,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = QSpi_EnterDeepPowerDown(&QSpi1Handle);
+            ret = QSpecific_EnterDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = QSpi_LeaveDeepPowerDown(&QSpi1Handle);
+            ret = QSpecific_LeaveDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:
@@ -1594,7 +1597,7 @@ ADD_SUBMODULE(Test);
             break;
         case 13:
             printf("QSPI chip reset - ");
-            ret = QSpi_ResetMemory(&QSpi1Handle);
+            ret = QSpecific_ResetMemory(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:
@@ -2056,6 +2059,7 @@ ADD_SUBMODULE(Test);
     }
 
     extern uint32_t psram[];
+    extern uint32_t sdram[];
     extern uint32_t dtcm[];
     extern uint32_t axi[];
     extern uint32_t sram2[];
@@ -2119,6 +2123,7 @@ ADD_SUBMODULE(Test);
         case 6:
         case 7:
         case 8:
+        case 9:
             #if 0
             if ( CMD_argc() < 1 ) {
               printf("Usage: Sram test <size> - test sram of size uint32_t[<size>] \n");
@@ -2134,6 +2139,7 @@ ADD_SUBMODULE(Test);
                 case 6: do_ram_test( axi, num ); break;
                 case 7: do_ram_test( sram2, num ); break;
                 case 8: do_ram_test( sram4, num ); break;
+                case 9: do_ram_test( sdram, num ); break;
             }
             break;
         case 90:
@@ -2180,7 +2186,8 @@ ADD_SUBMODULE(Test);
         { "DTCM access speed test",   ctype_fn, .exec.fn = FMC_Menu, VOID(5), "Do a DTCM access speed test" },
         { "AXISRAM access speed test",ctype_fn, .exec.fn = FMC_Menu, VOID(6), "Do a AXISRAM access speed test" },
         { "SRAM2 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM2 access speed test" },
-        { "SRAM4 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(7), "Do a SRAM4 access speed test" },
+        { "SRAM4 access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(8), "Do a SRAM4 access speed test" },
+        { "SDRAM access speed test",  ctype_fn, .exec.fn = FMC_Menu, VOID(9), "Do a SDRAM access speed test" },
         { "SDRAM check",              ctype_fn, .exec.fn = FMC_Menu, VOID(90),"Perform SDRAM Checksum check" },
         { "Disable D-Cache",          ctype_fn, .exec.fn = FMC_Menu, VOID(99), "" },
         { "Enable D-Cache",           ctype_fn, .exec.fn = FMC_Menu, VOID(98), "" },

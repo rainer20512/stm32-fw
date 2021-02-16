@@ -51,4 +51,7 @@
   <MemorySegment name="$(NOR_PSRAM3_NAME:NOR_PSRAM3);NOR_PSRAM3">
     <ProgramSection alignment="4" load="No" name=".psram3" />
   </MemorySegment>
+  <MemorySegment name="SDRAM2">
+    <ProgramSection alignment="4" load="No" name=".sdram2" />
+  </MemorySegment>
 </Root>

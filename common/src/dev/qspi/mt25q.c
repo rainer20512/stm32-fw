@@ -1,18 +1,16 @@
 /*******************************************************************************
- * @file    mx25_xxx35f.c
- * @author  Rainer, derived from MCD Application Team
- * @brief   Low level driver for Macronix MX25_XXX35F Quad SPI flash memory
+ * @file    mt25q.c
+ * @author  Rainer
+ * @brief   Low level driver for MT25Q series Quad SPI flash memory
  *          works for 
- *          - MX25R6435F 
- *          - MX25L12835F
  *          suitable code will be selected at runtime 
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#if 0
+
 #include "config/config.h"
 #include "system/clockconfig.h"
-#include "mx25r6435f.h"
+#include "mt25q.h"
 #include "dev/qspi_dev.h"
 #include "dev/qspi/qspecific.h"
 
@@ -43,6 +41,7 @@
 static uint8_t  MX25_GetStatus               (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WriteEnable        (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WaitForWriteDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
+static bool     QSpecific_WaitForResetDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
 static bool     MX25_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
 static bool     MX25_GetGeometry             (QSpiHandleT *myHandle);
 static bool     MX25RXX35_HighPerfMode       (QSPI_HandleTypeDef *hqspi, uint8_t Operation);
@@ -52,16 +51,20 @@ static uint16_t MX25_GetType                 (QSpiHandleT *myHandle);
 
 bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
 {
-    bool ret = MX25RXX35_HighPerfMode(hqspi, bHPerf ? MX25_HIGH_PERF_ENABLE : MX25_HIGH_PERF_DISABLE);
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        if ( !ret ) 
-            DEBUG_PRINTF("QSpi - Error: Unable to set %s mode\n", bHPerf ? "high perf.":"ultra low power");
-        else
-            DEBUG_PRINTF("QSpi: Set %s mode\n", bHPerf ? "high perf.":"ultra low power");
-    #endif
-    return ret;
+   /* MT25Q has no low power/high perf. mode */
+    return 1;
 }
 #if DEBUG_MODE > 0
+
+    const char * const dens_txt[]={"064 (8", "128 (16", "256 (32", "512 (64", "01G (128", "02G (256", };
+    static const char* get_dens_txt(uint32_t sel)
+    {
+      if ( sel < sizeof(dens_txt)/sizeof(char *) ) 
+        return dens_txt[sel];
+      else
+        return "Unknown";
+    }
+
 
     /**************************************************************************************
      * Return the chip name as string-
@@ -70,21 +73,22 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
      *************************************************************************************/
     char *QSpecific_GetChipTypeText(uint8_t *idbuf, char *retbuf, const uint32_t bufsize)
     {
-        /* 16 bit combination of chip type and density */
-        uint16_t typNdens = idbuf[1];
-        typNdens = typNdens << 8 | idbuf[2];
-        const char *txt;
-
-        if ( bufsize < 14 ) return NULL;
-        
-        switch(typNdens) {
-            case 0x2817: txt = "MX25R6435F"; break;
-            case 0x2018: txt = "MX25L12835F"; break;
-            default:     txt = "Unknown Chip";
+        char vChar;
+        /* Voltage range, L=2.7-3.6V, U=1.7-2.0V */
+        switch(idbuf[1]) {
+            case 0xBA: vChar = 'L';break;
+            case 0xBB: vChar = 'U';break;
+            default: vChar = '?';
         }
+        uint8_t nDens = idbuf[2];
+        nDens = nDens - ( nDens >= 0x20 ? 0x1d : 0x17 );
         
-        strncpy(retbuf, txt,bufsize);
+        if ( bufsize < 25 ) return NULL;
+
+        snprintf(retbuf,bufsize, "MT25Q%c%sMbyte)", vChar, get_dens_txt(nDens));
+         
         return retbuf;
+    
     }
 #endif
 
@@ -177,7 +181,7 @@ bool QSpecific_ResetMemory(QSpiHandleT *myHandle)
 
 
   /* Configure automatic polling mode to wait the memory is ready */  
-  if ( !QSpecific_WaitForWriteDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
+  if ( !QSpecific_WaitForResetDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) ) return false;
 
   return true;
 }
@@ -197,22 +201,6 @@ bool QSpecific_ResetMemory(QSpiHandleT *myHandle)
 uint32_t QSpecific_GetID ( QSpiHandleT *me )
 {
   QSPI_CommandTypeDef sCommand;
-
-  /* Read the 2.byte device ID first, first byte MfgID will be overwritten later */
-  sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-  sCommand.Instruction       = READ_ELEC_MANUFACTURER_DEVICE_ID_CMD;
-  sCommand.AddressMode       = QSPI_ADDRESS_NONE;
-  sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-  sCommand.DataMode          = QSPI_DATA_1_LINE;
-  sCommand.DummyCycles       = 0;
-  sCommand.NbData            = 2;
-  sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
-  sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-  sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
-
-  /* Configure and read */
-  if (HAL_QSPI_Command(&me->hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return QSPI_ERROR;
-  if (HAL_QSPI_Receive(&me->hqspi, me->id+2, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK)  return QSPI_ERROR;
 
   /* Read 3 byte ID,  */
   sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
@@ -241,7 +229,7 @@ void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
   QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
   uint8_t cr, sr[2];
-  char txtbuf[20];
+  char txtbuf[25];
   bool ret;
 
   /* Read the 2.byte device ID first, first byte MfgID will be overwritten later */
@@ -256,11 +244,12 @@ void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
   sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
   sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
 
-  QSpecific_GetChipTypeText(myHandle->id,txtbuf,20);
   /* Dump Status register */
   ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
   if (ret) ret = HAL_QSPI_Receive(hqspi, &cr, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-  printf("%s Status register\n",  txtbuf);
+  QSpecific_GetChipTypeText(myHandle->id, txtbuf, 25 );
+
+  printf("%s Status register\n", txtbuf );
   if ( ret ) {
     printf("   SR Write protect = %d\n", cr & MX25_XXX35F_SR_SRWD ? 1 : 0 );
     printf("   Quad Enable      = %d\n", cr & MX25_XXX35F_SR_QE   ? 1 : 0 );
@@ -888,6 +877,44 @@ bool QSpecific_WriteEnable(QSPI_HandleTypeDef *hqspi)
 }
 
 /******************************************************************************
+ * @brief  Perform an AutoPoll for Program/Erase bit of Flag Status register
+ * @param  hqspi : QUADSPI HAL-Handle
+ * @param  Timeout : Timeout for auto-polling
+ * @retval true if bit was set before timeout
+ *         false if timeout occured
+ *****************************************************************************/
+static bool QSpecific_WaitForResetDone(QSPI_HandleTypeDef *hqspi, uint32_t Timeout)
+{
+    QSPI_CommandTypeDef     sCommand;
+    QSPI_AutoPollingTypeDef sConfig;
+
+    /* Configure automatic polling mode to wait for memory ready */  
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+    sCommand.Instruction       = READ_FLAG_STATUS_REG_CMD;
+    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    sCommand.DataMode          = QSPI_DATA_1_LINE;
+    sCommand.DummyCycles       = 0;
+    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+
+    sConfig.Match           = 1;
+    sConfig.Mask            = MT25Q_FSR_PGM_DONE;
+    sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
+    sConfig.StatusBytesSize = 1;
+    sConfig.Interval        = 0x10;
+    sConfig.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
+
+    if (HAL_QSPI_AutoPolling(hqspi, &sCommand, &sConfig, Timeout) != HAL_OK) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("QSpi_AutoPolling - Error: Timeout when waiting for write done");
+        #endif
+        return false;
+    }
+    return true;
+}
+/******************************************************************************
  * @brief  Perform an AutoPoll for reset of the WIP flag. The timeout may vary
  *         in dependance of the kind of write op ( page write, sector erase,
  *         block erase, chip erase
@@ -1092,4 +1119,3 @@ static bool MX25RXX35_HighPerfMode(QSPI_HandleTypeDef *hqspi, uint8_t Operation)
     return true;
 }
 
-#endif

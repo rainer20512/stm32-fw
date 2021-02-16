@@ -180,7 +180,7 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(USB_OTG_FS) && defined(USE_USB) 
    { USB_OTG_FS, &RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_OTGFSRST_Pos, COMBINE('O', 1) },
 #endif
-#if defined(FMC_Bank1_R) && defined(USE_FMC) 
+#if defined(FMC_Bank1_R) && USE_FMC > 0 
    { FMC_Bank1_R, &RCC->AHB3ENR, RCC_AHB3ENR_FMCEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST_Pos, COMBINE('F', 1) },
 #endif
 

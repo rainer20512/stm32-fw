@@ -1652,6 +1652,8 @@ ADD_SUBMODULE(Test);
 #if USE_QSPI > 0
 
     #include "dev/qspi_dev.h"
+    #include "dev/qspi/qspecific.h"
+
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
      *         
@@ -1836,7 +1838,7 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = QSpi_EnableMemoryMappedMode(&QSpi1Handle);
+            ret = QSpecific_EnableMemoryMappedMode(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
@@ -1850,12 +1852,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = QSpi_EnterDeepPowerDown(&QSpi1Handle);
+            ret = QSpecific_EnterDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = QSpi_LeaveDeepPowerDown(&QSpi1Handle);
+            ret = QSpecific_LeaveDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:

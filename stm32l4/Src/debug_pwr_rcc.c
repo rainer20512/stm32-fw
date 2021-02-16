@@ -576,7 +576,7 @@ void DBG_dump_peripheralclocksetting(void)
   /********  AHB peripheral clock enable register *****************/
   DBG_printf_indent("AHB peripheral clocks\n" );
   DBG_setIndentRel(+2);
-  DBG_dump_rcc_ahbenr(RCC->AHB1ENR, RCC->AHB2ENR, RCC->AHB2ENR, 0);
+  DBG_dump_rcc_ahbenr(RCC->AHB1ENR, RCC->AHB2ENR, RCC->AHB3ENR, 0);
   DBG_setIndentRel(-2);
 
   /********  APB1 peripheral clock enable register *****************/

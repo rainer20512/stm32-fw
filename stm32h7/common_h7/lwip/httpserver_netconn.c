@@ -18,6 +18,11 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+
+#include "config/config.h"
+
+#if USE_ETH > 0
+
 #include "lwip/opt.h"
 #include "lwip/arch.h"
 #include "lwip/api.h"
@@ -981,4 +986,5 @@ void DynWebPage(struct netconn *conn)
   /* Send the dynamically generated page */
 }
 #endif
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+
+#endif /* USE_FMC > 0 */

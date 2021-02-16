@@ -18,6 +18,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "config/config.h"
 #include "main.h"
 
 /* Standard includes. */
@@ -66,12 +67,15 @@ void Init_OtherDevices(void);
 void Init_DefineTasks(void);
 
 #define TESTSIZE    16384
-uint32_t psram[TESTSIZE]  __attribute__((section(".psram3")));
-uint32_t dtcm[TESTSIZE]  __attribute__((section(".non_init")));
-uint32_t axi[TESTSIZE]   __attribute__((section(".axismem")));
-uint32_t sram2[TESTSIZE]   __attribute__((section(".srammem")));
-uint32_t sram4[TESTSIZE]   __attribute__((section(".sram4")));
-
+#if USE_FMC > 0 
+    uint32_t psram[TESTSIZE]  __attribute__((section(".psram3")));
+    uint32_t sdram[TESTSIZE]  __attribute__((section(".sdram2")));
+    uint32_t dtcm[TESTSIZE]  __attribute__((section(".non_init")));
+    uint32_t axi[TESTSIZE]   __attribute__((section(".axismem")));
+    uint32_t sram2[TESTSIZE]   __attribute__((section(".srammem")));
+    uint32_t sram4[TESTSIZE]   __attribute__((section(".sram4")));
+#endif
+ 
 static void prvCore1InitTask( void *pvParameters );
 
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );

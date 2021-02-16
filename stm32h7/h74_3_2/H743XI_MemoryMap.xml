@@ -1,8 +1,8 @@
 <!DOCTYPE Board_Memory_Definition_File>
 <Root name="STM32H743XI">
   <MemorySegment start="0xE0000000" name="PPB" size="0x100000" />
-  <MemorySegment start="0xD0000000" name="SDRAM2" size="$(SDRAM2_SIZE:0)" />
-  <MemorySegment start="0xC0000000" name="SDRAM1" size="$(SDRAM1_SIZE:0)" />
+  <MemorySegment start="0xD0000000" name="SDRAM2" size="$(SDRAM1_SIZE:0x200000)" />
+  <MemorySegment start="0xC0000000" name="SDRAM1" size="$(SDRAM1_SIZE:0x200000)" />
   <MemorySegment start="0xA0001000" name="QUADSPI" size="0x400" />
   <MemorySegment start="0xA0000000" name="FMC" size="0x1000" />
   <MemorySegment start="0x90000000" name="$(QUADSPI_FLASH_NAME:QUADSPI_FLASH)" size="$(QUADSPI_FLASH_SIZE:0)" access="ReadOnly">

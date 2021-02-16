@@ -206,7 +206,6 @@ static StackType_t cmdStack[CMD_STACK_SIZE];
 static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
 static StackType_t adcStack[ADC_STACK_SIZE];
-static StackType_t rmtStack[RMT_STACK_SIZE];
 static StackType_t qspStack[QSP_STACK_SIZE];
 
 

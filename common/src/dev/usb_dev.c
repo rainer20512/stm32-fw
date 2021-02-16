@@ -45,26 +45,29 @@ static void Usbd_GPIO_Init(const HW_DeviceType *self)
 {
     GPIO_InitTypeDef  GPIO_InitStruct;
     const HW_Gpio_AF_Type *gpio = self->devGpioAF->gpio;
+    uint32_t devIdx     = (uint32_t)GetDevIdx(self);
 
     /* ID pin as open drain */
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_OD;
     GPIO_InitStruct.Speed     = GPIO_SPEED_FREQ_VERY_HIGH;
-    GpioAFInitOne(&gpio[ID_IDX], &GPIO_InitStruct);
+    GpioAFInitOne(devIdx, &gpio[ID_IDX], &GPIO_InitStruct);
 
     /* DP and DM as pushpull */
     GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
-    GpioAFInitOne(&gpio[DP_IDX], &GPIO_InitStruct);
-    GpioAFInitOne(&gpio[DM_IDX], &GPIO_InitStruct);
+    GpioAFInitOne(devIdx, &gpio[DP_IDX], &GPIO_InitStruct);
+    GpioAFInitOne(devIdx, &gpio[DM_IDX], &GPIO_InitStruct);
 
     /* Vbus as simple input */
-    GpioIOInitAll(self->devGpioIO);
+    GpioIOInitAll(devIdx, self->devGpioIO);
 }
 
 static void Usbd_GPIO_DeInit(const HW_DeviceType *self)
 {
+    uint32_t devIdx     = (uint32_t)GetDevIdx(self);
+
     /* Disable GPIO Pins */
-    GpioAFDeInitAll(self->devGpioAF);
-    GpioIODeInitAll(self->devGpioIO);
+    GpioAFDeInitAll(devIdx, self->devGpioAF);
+    GpioIODeInitAll(devIdx, self->devGpioIO);
 }
 
 /*******************************************************************************

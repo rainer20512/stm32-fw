@@ -71,4 +71,4 @@ void USBD_CDC_Transmit ( uint32_t actlen );
 
 #endif // USE_CAN > 0 
 
-#endif /* __CAN_DEV_H */
+#endif /* __USB_DEV_H */

@@ -31,14 +31,17 @@
 #define QSPI_MODE_IRQ       1       // Execute function in Interrupt/NoWalt mode
 #define QSPI_MODE_DMA       2       // Execute function in DMA/NoWalt mode, makes only sense for read/write operations
 
-/* Different modes of erase Operation */
+/* 
+   Different modes of erase Operation. Due to different naming conventions with different mamnufacturers,
+   we name these units from small to big size as follows: Sector < Subblock < Block < whole chip memory
+*/
+
 #define QSPI_ERASE_SECTOR   1000    // Erase one sector
-#define QSPI_ERASE_BLOCK    1001    // Erase one block
+#define QSPI_ERASE_SUBBLOCK 1001    // Subblock
+#define QSPI_ERASE_BLOCK    1002    // Erase one block
 #define QSPI_ERASE_ALL      1009    // Erase whole chip
 
 /* Public typedef -----------------------------------------------------------------------*/
-typedef void ( *QEncEncCB ) ( int32_t );        /* Callback for encoder rotation         */
-typedef void ( *QEncClickCB ) ( void );         /* Callbacks for Click and DblClick      */
 
 typedef struct QSpiGeometryType {
     uint32_t FlashSize;             /* Total Size in Bytes */
@@ -74,11 +77,10 @@ typedef struct QSpiHandleType {
 void QSPI_GetGeometry           (QSpiHandleT *myHandle, QSpiGeometryT *pInfo);
 void QSpi_DumpStatus            (QSpiHandleT *myHandle);
 void QSpi_SetAsyncCallbacks     (QSpiHandleT *myHandle, QSpiCallbackT rdDoneCB, QSpiCallbackT wrDoneCB, QSpiCallbackT errorCB);
-bool QSpi_ResetMemory           (QSpiHandleT *myHandle);
 bool QSpi_Abort                 (QSpiHandleT *myHandle);
-bool QSpi_EnterDeepPowerDown    (QSpiHandleT *myHandle);
+bool QSpecific_EnterDeepPowerDown    (QSpiHandleT *myHandle);
 bool QSpi_LeaveDeepPowerDown    (QSpiHandleT *myHandle);
-bool QSpi_EnableMemoryMappedMode(QSpiHandleT *myHandle);
+bool QSpecific_EnableMemoryMappedMode(QSpiHandleT *myHandle);
 bool Qspi_SetSpeed              (QSpiHandleT *myHandle, uint32_t new_clkspeed);
 
 bool QSpi_ReadWait              (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
@@ -100,9 +102,9 @@ bool QSpi_EraseBlockIT          (QSpiHandleT *myHandle, uint32_t EraseAddr, uint
 bool QSpi_EraseChipWait         (QSpiHandleT *myHandle);
 bool QSpi_EraseChipIT           (QSpiHandleT *myHandle);
 
-bool QSpi_EraseChipWait         (QSpiHandleT *myHandle);
 
 void QSPI_EarlyInit             (void);
+void QSpi_SetGeometry           ( QSpiGeometryT *geometry, uint32_t flash_size, uint32_t page_size, uint32_t sector_size );
 
 /* Global variables ---------------------------------------------------------------------*/
 #if defined(USE_QSPI)
