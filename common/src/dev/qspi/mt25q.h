@@ -16,6 +16,20 @@
 
 /* Includes ------------------------------------------------------------------*/
 
+/* 
+ * Driver supported read and program transfer modes 
+ * (Note, that Read and DUAL READ are not implemented yet )
+ */
+typedef enum
+{
+  MT25Q_RW_STR_QUAD   = 0,                    /*!< 1-1-4 STR Read mode */
+  MT25Q_RW_STR_QUADIO = 1,                    /*!< 1-4-4 STR Read mode */
+  MT25Q_RW_DTR_QUAD   = 2,                    /*!< 1-1-4 DTR Read mode */
+  MT25Q_RW_DTR_QUADIO = 3,                    /*!< 1-4-4 DTR Read mode */
+} MT25Q_RWModeT;
+
+/******************MT25TL01G_Transfer_t**********************/
+
 
 /** 
   * @brief  MT25QYXXX geometry data
@@ -35,40 +49,20 @@
 
 
 /*
- * dummy cycles for 80 MHz
+ * Dummy cycles table
+ * Organized as follows: When operating frq [MHz] at or below n-th element, the minimum number of dummy cycles
+ * has to be n. Whenever operating frq is higher than last element, the operating frq is too high for this mode
  */
-#define MX25R6435F_DUMMY_CYCLES_READ         8
-#define MX25R6435F_DUMMY_CYCLES_READ_DUAL    4
-#define MX25R6435F_DUMMY_CYCLES_READ_QUAD    4
-#define MX25R6435F_DUMMY_CYCLES_2READ        4
-#define MX25R6435F_DUMMY_CYCLES_4READ        6
+#define MT25Q_DUMMY_CYCLES_STR_QUAD         { 44, 61, 78, 97, 106, 115, 125, 133, }              /* for 1-1-4 STR */
+#define MT25Q_DUMMY_CYCLES_STR_QUADIO       { 39, 48, 58, 69, 78, 86, 97, 106, 115, 125, 133, }  /* for 1-4-4 STR */
+#define MT25Q_DUMMY_CYCLES_DTR_QUAD         { 26, 40, 59, 65, 75, 83, 90, }                      /* for 1-1-4 DTR */
+#define MT25Q_DUMMY_CYCLES_DTR_QUADIO       { 20, 30, 39, 49, 58, 68, 78, 85, 90, }               /* for 1-4-4 DTR */
 
-#define MX25L12835F_CHIP_ERASE_MAX_TIME       80000
-#define MX25L12835F_BLOCK_ERASE_MAX_TIME      650
-#define MX25L12835F_SUBBLOCK_ERASE_MAX_TIME   650
-#define MX25L12835F_SECTOR_ERASE_MAX_TIME     120
-
-/*
- * dummy cycles for 80 MHz
- */
-#define MX25L12835F_DUMMY_CYCLES_READ         8
-#define MX25L12835F_DUMMY_CYCLES_READ_DUAL    4
-#define MX25L12835F_DUMMY_CYCLES_READ_QUAD    6
-#define MX25L12835F_DUMMY_CYCLES_2READ        8
-#define MX25L12835F_DUMMY_CYCLES_4READ        8
-
-
-#define MX25R6435F_ALT_BYTES_PE_MODE         0xA5
-#define MX25R6435F_ALT_BYTES_NO_PE_MODE      0xAA
 
 
 /** 
   * @brief  MT25Q Commands  
   */  
-/* MT25TL01GHBA8ESF Micron memory */
-/* Size of the flash */
-#define QSPI_FLASH_SIZE                      25
-#define QSPI_PAGE_SIZE                       256
 
 /* Reset Operations */
 #define RESET_ENABLE_CMD                     0x66
@@ -103,6 +97,7 @@
 #define QUAD_INOUT_FAST_READ_CMD             0xEB
 #define QUAD_INOUT_FAST_READ_DTR_CMD         0xED
 #define QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD 0xEC
+#define QUAD_INOUT_FAST_READ_4_BYTE_DTR_CMD  0xEE
 
 /* Write Operations */
 #define WRITE_ENABLE_CMD                     0x06
@@ -138,19 +133,21 @@
 #define EXT_DUAL_IN_FAST_PROG_CMD            0xD2
 
 #define QUAD_IN_FAST_PROG_CMD                0x32
-#define EXT_QUAD_IN_FAST_PROG_CMD            0x12 /*0x38*/
-#define QUAD_IN_FAST_PROG_4_BYTE_ADDR_CMD    0x34
+#define EXT_QUAD_IN_FAST_PROG_CMD            0x38
+
+#define QUAD_IN_FAST_PROG_4BYTE_ADDR_CMD     0x34
+#define EXT_QUAD_IN_FAST_PROG_4BYTE_ADDR_CMD 0x3E
 
 /* Erase Operations */
-#define SUBSECTOR_4K_ERASE_CMD               0x20
-#define SUBSECTOR_4K_ERASE_4_BYTE_ADDR_CMD   0x21
+#define SECTOR_4K_ERASE_CMD               0x20
+#define SECTOR_4K_ERASE_4_BYTE_ADDR_CMD   0x21
 
 /* Erase Operations */
-#define SUBSECTOR_32K_ERASE_CMD              0x52
-#define SUBSECTOR_32K_ERASE_4_BYTE_ADDR_CMD  0x5C
+#define SUBBLOCK_32K_ERASE_CMD              0x52
+#define SUBBLOCK_32K_ERASE_4_BYTE_ADDR_CMD  0x5C
 
-#define SECTOR_ERASE_CMD                     0xD8
-#define SECTOR_ERASE_4_BYTE_ADDR_CMD         0xDC
+#define BLOCK_ERASE_CMD                      0xD8
+#define BLOCK_ERASE_4_BYTE_ADDR_CMD          0xDC
 
 #define BULK_ERASE_CMD                       0xC7
 
@@ -202,7 +199,9 @@
 #define MT25Q_FSR_4BYTE_MODE                  ((uint8_t)0x01)    /* Status: Set when 4-Byte addressing is selected */
 
 /* Volatile Configuration Register bits */
-#define MT25Q_VCR_DUMMY_CYCLES                ((uint8_t)0xF0)    /* 4 bits */
+#define MT25Q_VCR_DUMMY_CYCLES_Pos            4                  /* at four upper bit positions */
+#define MT25Q_VCR_DUMMY_CYCLES_Msk            0x0f               /* 4 bits */
+#define MT25Q_VCR_DUMMY_CYCLES                ((uint8_t)(MT25Q_VCR_DUMMY_CYCLES_Msk<<MT25Q_VCR_DUMMY_CYCLES_Pos))
 #define MT25Q_VCR_XIP_DISABLED                ((uint8_t)0x08)    /* XIP mode disabled */
 #define MT25Q_VCR_WRAPMODE                    ((uint8_t)0x03)    /* address wrap mode, 3 bits */
 #define MT25Q_GET_DUMMYCYCLES_NORMALIZED(a)   ((a & MT25Q_VCR_DUMMY_CYCLES) >> 4)

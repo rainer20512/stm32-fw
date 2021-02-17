@@ -289,7 +289,7 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
     /* Send the read command */
-    if ( !QSpecific_ReadCMD(hqspi, ReadAddr, Size) ) return false;
+    if ( !QSpecific_ReadCMD(myHandle, ReadAddr, Size) ) return false;
     
     switch ( opmode ) {
         case QSPI_MODE_POLL:

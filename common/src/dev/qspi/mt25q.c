@@ -38,15 +38,55 @@
 
 
 /* Private variables ---------------------------------------------------------*/
+static const uint8_t dummy_cycles_str_quad[]   =  MT25Q_DUMMY_CYCLES_STR_QUAD;
+static const uint8_t dummy_cycles_str_quadio[] =  MT25Q_DUMMY_CYCLES_STR_QUADIO;
+static const uint8_t dummy_cycles_dtr_quad[]   =  MT25Q_DUMMY_CYCLES_DTR_QUAD;
+static const uint8_t dummy_cycles_dtr_quadio[] =  MT25Q_DUMMY_CYCLES_DTR_QUADIO;
 
+/* The sequence of entries in the following two tables MUST match the sequence of entries in the MT25Q_RWModeT enum! */
+static const uint8_t * const dummy_cycle_tables[] = { dummy_cycles_str_quad, 
+                                                      dummy_cycles_str_quadio, 
+                                                      dummy_cycles_dtr_quad, 
+                                                      dummy_cycles_dtr_quadio 
+                                                    };
 
-/* Private functions ---------------------------------------------------------*/
+#define GETSIZE(a)                                  (sizeof(a)/sizeof(uint8_t))
+static const uint8_t dummy_cycle_tblsizes[]       = { GETSIZE(dummy_cycles_str_quad), 
+                                                      GETSIZE(dummy_cycles_str_quadio), 
+                                                      GETSIZE(dummy_cycles_dtr_quad), 
+                                                      GETSIZE(dummy_cycles_dtr_quadio) 
+                                                    };
+
+static const uint8_t read_cmds_4b_addr[]          = { QUAD_OUT_FAST_READ_4_BYTE_ADDR_CMD,
+                                                      QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD,  
+                                                      0,
+                                                      QUAD_INOUT_FAST_READ_4_BYTE_DTR_CMD,
+                                                    };
+
+static const uint8_t read_cmds_3b_addr[]          = { QUAD_OUT_FAST_READ_CMD,
+                                                      QUAD_INOUT_FAST_READ_CMD,  
+                                                      QUAD_OUT_FAST_READ_DTR_CMD,
+                                                      QUAD_INOUT_FAST_READ_DTR_CMD,
+                                                    };
+/* Will hold the appropriate read command for selected address mode and RW mode */
+static uint8_t mt25q_read_cmd;
+static uint8_t nDummyCycles;    /* number of dummy cycles for the actual clock speed */
+static uint8_t nAddressBytes;   /* Depending from size: 2 to 4 bytes are common      */
+
+/* Set the RW mode statically to 1-4-4 DTR */
+static uint8_t defaultRWMode = MT25Q_RW_DTR_QUADIO;
+                                                      
+/* Private function prototypes ---------------------------------------------------------*/
 static uint8_t  MT25Q_GetStatus               (QSPI_HandleTypeDef *hqspi);
-       bool     QSpecific_WriteEnable        (QSPI_HandleTypeDef *hqspi);
-       bool     QSpecific_WaitForWriteDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
-static bool     QSpecific_WaitForResetDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
-static bool     MT25Q_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
+       bool     QSpecific_WriteEnable         (QSPI_HandleTypeDef *hqspi);
+       bool     QSpecific_WaitForWriteDone    (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
+static bool     QSpecific_WaitForResetDone    (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
 static bool     MT25Q_GetGeometry             (QSpiHandleT *myHandle);
+static uint8_t  MT25Q_GetDummyCycles          (uint32_t clkspeed, MT25Q_RWModeT mode);
+static bool     MT25Q_SetupDummyCycles        (QSpiHandleT *myHandle, MT25Q_RWModeT mode);
+static bool     MT25Q_Set4ByteAddressMode     (QSpiHandleT *myHandle);
+static uint8_t  MT25Q_GetReadCmd              (uint8_t addrMode,  MT25Q_RWModeT);
+static void     MT25Q_PresetCommand           (QSPI_CommandTypeDef *sCommand, MT25Q_RWModeT rwMode);
 
 /* Exported functions -------------------------------------------------------*/
 
@@ -56,6 +96,7 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
    UNUSED(hqspi); UNUSED(bHPerf);
     return 1;
 }
+
 #if DEBUG_MODE > 0
 
     const char * const dens_txt[]={"064 (8", "128 (16", "256 (32", "512 (64", "01G (128", "02G (256", };
@@ -114,8 +155,6 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
 /******************************************************************************
  * Setup the QSPI prescaler, so that the achieved operating freqency is at or
  * below ( due to the granularity of the prescaler ) "desired_frq"
- * This routine dowes not check for max. Frq. in Ultra low power mode ( 33MHz )
- * It is the callers responsibility to do so
  *****************************************************************************/
 bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
 {  
@@ -294,7 +333,7 @@ void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
     sCommand.Instruction = READ_VOL_CFG_REG_CMD;
     ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
     if ( ret )  ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
-    printf("%s Volatile configueration register \n", txtbuf );
+    printf("%s Volatile configuration register \n", txtbuf );
     if ( ret ) {
         dummy = MT25Q_GET_DUMMYCYCLES_NORMALIZED(reg);
         if ( dummy == 0 ) dummy = 15;
@@ -310,7 +349,7 @@ void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
     ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
     if ( ret )  ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
 
-    printf("%s Enhanced volatile configueration register \n", txtbuf );
+    printf("%s Enhanced volatile configuration register \n", txtbuf );
     if ( ret ) {
         printf("   QUAD I/O         = %s\n",    reg & MT25Q_EVCR_QUAD_DISABLED ? "Off" : "On" );
         printf("   DUAL I/O         = %s\n",    reg & MT25Q_EVCR_DUAL_DISABLED ? "Off" : "On" );
@@ -389,14 +428,40 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
         #endif
         return false;
     }
-
-    QSpecific_DumpStatusInternal(myHandle);
-
  
     /* The operating speed is now set to user configured speed and flash size is set to correct size */
     if ( !QSpecific_BasicInit(myHandle, clk_frq, clkspeed, myHandle->geometry.FlashSize, false) ) return false;
 
-  return true;
+    /* 
+     * Setup the dummy cycles according to the previously set clock speed
+     * The dummy cycles are always setuo for QUADIO DTR read mode (1-4-4) DTR
+     */
+    if ( !MT25Q_SetupDummyCycles(myHandle, defaultRWMode) ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("QSpi_SpecificInit - Clock speed too high");
+        #endif
+        return false;
+    }
+
+    /*
+     * Setup address mode: Whenever address range is more than 24 bit, 4 byte address mode will be selected 
+     */
+
+    nAddressBytes = myHandle->geometry.FlashSize > ( 1UL << 24 ) ? 4 : 3;
+    if ( nAddressBytes == 4 ) {
+        if ( !MT25Q_Set4ByteAddressMode(myHandle) ) return false;
+    }
+
+    mt25q_read_cmd = MT25Q_GetReadCmd(nAddressBytes, defaultRWMode);
+
+    /* Check for valid read command */
+    if ( mt25q_read_cmd == 0 ) {
+        return false;
+    }
+
+    QSpecific_DumpStatusInternal(myHandle);
+
+    return true;
 }
 
 /**
@@ -481,21 +546,13 @@ bool QSpecific_EnableMemoryMappedMode(QSpiHandleT *myHandle)
   if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
   /* Configure the command for the read instruction */
-  sCommand.InstructionMode    = QSPI_INSTRUCTION_1_LINE;
-  sCommand.Instruction        = QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD;
-  sCommand.AddressMode        = QSPI_ADDRESS_4_LINES;
-  sCommand.AddressSize        = QSPI_ADDRESS_32_BITS;
-  sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_4_LINES;
-  sCommand.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
-  sCommand.AlternateBytes     = MX25R6435F_ALT_BYTES_NO_PE_MODE;
-  sCommand.DataMode           = QSPI_DATA_4_LINES;
-  sCommand.DummyCycles        = MX25R6435F_DUMMY_CYCLES_READ_QUAD;
-  sCommand.DdrMode            = QSPI_DDR_MODE_DISABLE;
-  sCommand.DdrHoldHalfCycle   = QSPI_DDR_HHC_ANALOG_DELAY;
-  sCommand.SIOOMode           = QSPI_SIOO_INST_EVERY_CMD;
+  MT25Q_PresetCommand(&sCommand, defaultRWMode);
+  sCommand.Instruction        = mt25q_read_cmd;
+  sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_NONE;
   
   /* Configure the memory mapped mode */
   sMemMappedCfg.TimeOutActivation = QSPI_TIMEOUT_COUNTER_DISABLE;
+  sMemMappedCfg.TimeOutPeriod     = 0;
   
   if (HAL_QSPI_MemoryMapped(hqspi, &sCommand, &sMemMappedCfg) != HAL_OK)
   {
@@ -588,20 +645,11 @@ bool QSpecific_ReadCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
     QSPI_CommandTypeDef sCommand;
 
     /* Initialize the read command */
-    sCommand.InstructionMode    = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction        = QUAD_INOUT_FAST_READ_4_BYTE_ADDR_CMD;
-    sCommand.AddressMode        = QSPI_ADDRESS_4_LINES;
-    sCommand.AddressSize        = QSPI_ADDRESS_32_BITS;
+    MT25Q_PresetCommand(&sCommand, defaultRWMode);
+    sCommand.Instruction        = mt25q_read_cmd;
     sCommand.Address            = Addr;
-    sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_4_LINES;
-    sCommand.AlternateBytesSize = QSPI_ALTERNATE_BYTES_8_BITS;
-    sCommand.AlternateBytes     = MX25R6435F_ALT_BYTES_NO_PE_MODE;
-    sCommand.DataMode           = QSPI_DATA_4_LINES;
-    sCommand.DummyCycles        = MX25R6435F_DUMMY_CYCLES_READ_QUAD;
     sCommand.NbData             = Size;
-    sCommand.DdrMode            = QSPI_DDR_MODE_DISABLE;
-    sCommand.DdrHoldHalfCycle   = QSPI_DDR_HHC_ANALOG_DELAY;
-    sCommand.SIOOMode           = QSPI_SIOO_INST_EVERY_CMD;
+    sCommand.AlternateByteMode  = QSPI_ALTERNATE_BYTES_NONE;
 
     /* Configure the command */
     if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
@@ -614,6 +662,7 @@ bool QSpecific_ReadCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
     return true;
 }
 
+
 /******************************************************************************
  * Enable Write and send write Operation command
  *****************************************************************************/
@@ -621,18 +670,14 @@ bool QSpecific_WriteCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 {
     QSPI_CommandTypeDef sCommand;
 
-    /* Initialize the program command */
-    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
-    sCommand.Instruction       = QUAD_IN_FAST_PROG_4_BYTE_ADDR_CMD;
-    sCommand.AddressMode       = QSPI_ADDRESS_4_LINES;
-    sCommand.AddressSize       = QSPI_ADDRESS_32_BITS;
+    /* Initialize the program command, programming is always done in 1-4-4 STR mode, there is no DTR for programming */
+    MT25Q_PresetCommand(&sCommand, MT25Q_RW_STR_QUADIO);
+    if ( nAddressBytes == 4 )
+        sCommand.Instruction       = EXT_QUAD_IN_FAST_PROG_4BYTE_ADDR_CMD;
+    else
+        sCommand.Instruction       = QUAD_IN_FAST_PROG_4BYTE_ADDR_CMD;
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-    sCommand.DataMode          = QSPI_DATA_4_LINES;
     sCommand.DummyCycles       = 0;
-    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
-    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
-    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
-
     sCommand.Address           = Addr;
     sCommand.NbData            = Size;
 
@@ -667,15 +712,15 @@ bool QSpecific_GetEraseParams(uint32_t erasemode, uint32_t *timeout_ms, uint8_t 
     {
         case QSPI_ERASE_SECTOR:
             *timeout_ms = MT25QY512_SECTOR_ERASE_MAX_TIME;
-            *opcode     = SUBSECTOR_4K_ERASE_4_BYTE_ADDR_CMD;
+            *opcode     = nAddressBytes == 4 ? SECTOR_4K_ERASE_4_BYTE_ADDR_CMD : SECTOR_4K_ERASE_CMD;
             break;
         case QSPI_ERASE_SUBBLOCK:
             *timeout_ms = MT25QY512_SUBBLOCK_ERASE_MAX_TIME;
-            *opcode     = SUBSECTOR_32K_ERASE_4_BYTE_ADDR_CMD;
+            *opcode     = nAddressBytes == 4 ? SUBBLOCK_32K_ERASE_4_BYTE_ADDR_CMD : SUBBLOCK_32K_ERASE_CMD;
             break;
         case QSPI_ERASE_BLOCK:
             *timeout_ms = MT25QY512_BLOCK_ERASE_MAX_TIME;
-            *opcode     = SECTOR_ERASE_4_BYTE_ADDR_CMD;
+            *opcode     = nAddressBytes == 4 ? BLOCK_ERASE_4_BYTE_ADDR_CMD : BLOCK_ERASE_CMD;
             break;
         case QSPI_ERASE_ALL:
             *timeout_ms = MT25QY512_CHIP_ERASE_MAX_TIME;
@@ -686,7 +731,7 @@ bool QSpecific_GetEraseParams(uint32_t erasemode, uint32_t *timeout_ms, uint8_t 
                 DEBUG_PRINTF("GetEraseTimeout - Error: unkown erasemode %d\n", erasemode);
             #endif
             *timeout_ms = MT25QY512_SECTOR_ERASE_MAX_TIME;
-            *opcode     = SECTOR_ERASE_CMD;
+            *opcode     = nAddressBytes == 4 ? SECTOR_4K_ERASE_4_BYTE_ADDR_CMD : SECTOR_4K_ERASE_CMD;
             ret = false;
     }
     return ret;
@@ -714,7 +759,10 @@ bool QSpecific_EraseCMD(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t er
         sCommand.AddressMode       = QSPI_ADDRESS_NONE;
     } else {
         sCommand.AddressMode       = QSPI_ADDRESS_1_LINE;
-        sCommand.AddressSize       = QSPI_ADDRESS_24_BITS;
+        if ( nAddressBytes == 4 )
+            sCommand.AddressSize       = QSPI_ADDRESS_32_BITS;
+        else
+            sCommand.AddressSize       = QSPI_ADDRESS_24_BITS;
         sCommand.Address           = Address;
     }
     sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
@@ -963,6 +1011,215 @@ bool QSpecific_WaitForWriteDone(QSPI_HandleTypeDef *hqspi, uint32_t Timeout) {
 bool QSpecific_WaitForWriteDone_IT(QSPI_HandleTypeDef *hqspi) {
     return MT25Q_WaitForWriteDoneInternal(hqspi, 0, QSPI_MODE_IRQ);
 }
+
+
+/******************************************************************************
+ * get the number of minimum neccessary dummy cycles for the current clock speed
+ * and the desired operating mode
+ * And program into flash chip
+ * False will be returned upon error or illegal clock speed or mode
+ ******************************************************************************/
+static bool MT25Q_SetupDummyCycles(QSpiHandleT *myHandle, MT25Q_RWModeT mode)
+{
+    QSPI_CommandTypeDef sCommand;
+    uint8_t reg;
+    bool ret;
+    QSPI_HandleTypeDef *hqspi   = &myHandle->hqspi;
+    nDummyCycles      = MT25Q_GetDummyCycles(myHandle->clkspeed, mode);
+
+    if ( nDummyCycles == 255 ) {
+        nDummyCycles=15;
+        return false;
+    }
+
+    /* Read Volatile Configuration register --------------------------- */
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+    sCommand.Instruction       = READ_VOL_CFG_REG_CMD;
+    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    sCommand.DataMode          = QSPI_DATA_1_LINE;
+    sCommand.DummyCycles       = 0;
+    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    sCommand.NbData            = 1;
+
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if (ret ) ret = HAL_QSPI_Receive(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if ( !ret ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("MT25Q_SetupDummyCycles: Cannot read VCR");
+        #endif
+        return false;
+    }
+
+    /* Modify dummy cycles */
+
+    MODIFY_REG(reg, MT25Q_VCR_DUMMY_CYCLES, (nDummyCycles << MT25Q_VCR_DUMMY_CYCLES_Pos));
+      
+    /* and write back VCR after enabling register write*/
+
+    QSpecific_WriteEnable(hqspi);
+
+    sCommand.Instruction = WRITE_VOL_CFG_REG_CMD;
+    ret = HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if (ret) ret = HAL_QSPI_Transmit(hqspi, &reg, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    if ( !ret ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("MT25Q_SetupDummyCycles: Cannot write VCR");
+        #endif
+        return false;
+    }
+
+    return ret;
+}
+
+static uint8_t MT25Q_GetReadCmd( uint8_t addrMode,  MT25Q_RWModeT rwMode)
+{
+    uint8_t ret;
+
+    switch( addrMode ) {
+        case 3:
+            ret = read_cmds_3b_addr[rwMode];
+            break;
+        case 4:
+            /* check for illegal combination 4Byte Addr mode and 1-1-4 DTR */
+            if ( rwMode == MT25Q_RW_DTR_QUAD ) {
+                ret = 0;
+            } else {
+                ret = read_cmds_4b_addr[rwMode];
+            }
+            break;
+        default:
+            ret = 0;
+    }
+
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        if ( ret == 0 )
+            DEBUG_PRINTF("Illegal read cmd for %d byte addr mode and RW-Mode %d\n", addrMode, rwMode);
+    #endif
+
+    return ret;
+}
+
+
+/******************************************************************************
+ * get the number of minimum neccessary dummy cycles for the current clock speed
+ * and the desired operating mode
+ * 255 will be returned on failure ( ie clock speed too high for selected mode )
+ ******************************************************************************/
+static uint8_t MT25Q_GetDummyCycles(uint32_t clkspeed, MT25Q_RWModeT mode)
+{
+    const uint8_t *table;
+    uint8_t tableSize;
+    uint8_t i;
+
+    /* round clkspeed to next higher MHz, because reference tables do also contain MHz values */
+    clkspeed = ( clkspeed + 999999 ) / 1000000;
+
+    /* Get the appropriate table and its length */
+    if  ( mode > sizeof(dummy_cycle_tables)/sizeof(const uint8_t *) ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PRINTF("MT25Q_GetDummyCycles: No config data for mode %d\n", mode);
+        #endif
+        return 255;
+    }
+
+    table     = dummy_cycle_tables[mode];
+    tableSize = dummy_cycle_tblsizes[mode];
+
+    /* Find the entry that is at or above the current clockspeed */
+    for ( i= 0; i < tableSize; i++ ) {
+        if ( table[i] >= clkspeed ) break;
+    }
+
+    if ( i >= tableSize ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PRINTF("MT25Q_GetDummyCycles: Clk frq %d too high for mode %d\n", clkspeed, mode);
+        #endif
+        return 255;
+    }
+    
+    /* all dummy cycles tables start with 1 dummy cycle */
+    i++;
+
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        DEBUG_PRINTF("MT25Q_GetDummyCycles: Got %d dummy cycles for clk frq %d and mode %d\n", i, clkspeed, mode);
+    #endif
+    return i;
+}
+
+/******************************************************************************
+ * Setup 3- or 4-byte-address-mode
+ *****************************************************************************/
+static bool MT25Q_Set4ByteAddressMode(QSpiHandleT *myHandle)
+{
+    QSPI_CommandTypeDef sCommand;
+    QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
+
+    /* Initialize the command */
+    sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+    sCommand.Instruction       = ENTER_4_BYTE_ADDR_MODE_CMD;
+    sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+    sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    sCommand.DataMode          = QSPI_DATA_NONE;
+    sCommand.DummyCycles       = 0;
+    sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+    sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+    sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+
+    /*write enable */
+    QSpecific_WriteEnable(hqspi);
+
+    /* Send the command */
+    if ( HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK ) {
+        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            DEBUG_PUTS("MT25Q: Cannot set 4 Byte address mode");
+        #endif
+        return false;
+    }
+    /* Configure automatic polling mode to wait the memory is ready */
+    return QSpecific_WaitForWriteDone(hqspi, HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
+}
+
+/******************************************************************************
+ * Preset SPI_CommandTypeDef according to selected address byte length and
+ * passed RW mode
+ *****************************************************************************/
+static void MT25Q_PresetCommand( QSPI_CommandTypeDef *sCommand, MT25Q_RWModeT rwMode )
+{
+    /* We do not use 4 lines instruction mode */
+    sCommand->InstructionMode    = QSPI_INSTRUCTION_1_LINE;
+    
+    if ( rwMode == MT25Q_RW_STR_QUAD || rwMode == MT25Q_RW_DTR_QUAD )
+        sCommand->AddressMode = QSPI_ADDRESS_1_LINE;
+    else
+        sCommand->AddressMode = QSPI_ADDRESS_4_LINES;
+    
+    /* We always use 4 bit data transfer in read and write */
+    sCommand->DataMode = QSPI_DATA_4_LINES;
+
+    if ( nAddressBytes == 4 ) 
+        sCommand->AddressSize        = QSPI_ADDRESS_32_BITS;
+    else
+         sCommand->AddressSize        = QSPI_ADDRESS_24_BITS;
+
+    /* Dummy cycles as computed upon initialization */
+    sCommand->DummyCycles        = nDummyCycles;
+
+    /* Setup for single or double data rate */
+    if ( rwMode == MT25Q_RW_STR_QUAD || rwMode == MT25Q_RW_STR_QUADIO ) {
+        sCommand->DdrMode            = QSPI_DDR_MODE_DISABLE;
+        sCommand->DdrHoldHalfCycle   = QSPI_DDR_HHC_ANALOG_DELAY;
+        sCommand->SIOOMode           = QSPI_SIOO_INST_EVERY_CMD;
+    } else {
+        sCommand->DdrMode           = QSPI_DDR_MODE_ENABLE;
+        sCommand->DdrHoldHalfCycle  = QSPI_DDR_HHC_HALF_CLK_DELAY;
+        sCommand->SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+    }
+}
+
+
 #if 0
 /**
   * @brief  This function enables/disables the Quad mode of the MX25L memory.
