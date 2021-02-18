@@ -139,12 +139,12 @@ typedef enum
 #define EXT_QUAD_IN_FAST_PROG_4BYTE_ADDR_CMD 0x3E
 
 /* Erase Operations */
-#define SECTOR_4K_ERASE_CMD               0x20
-#define SECTOR_4K_ERASE_4_BYTE_ADDR_CMD   0x21
+#define SECTOR_4K_ERASE_CMD                  0x20
+#define SECTOR_4K_ERASE_4_BYTE_ADDR_CMD      0x21
 
 /* Erase Operations */
-#define SUBBLOCK_32K_ERASE_CMD              0x52
-#define SUBBLOCK_32K_ERASE_4_BYTE_ADDR_CMD  0x5C
+#define SUBBLOCK_32K_ERASE_CMD               0x52
+#define SUBBLOCK_32K_ERASE_4_BYTE_ADDR_CMD   0x5C
 
 #define BLOCK_ERASE_CMD                      0xD8
 #define BLOCK_ERASE_4_BYTE_ADDR_CMD          0xDC

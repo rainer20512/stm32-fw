@@ -461,6 +461,8 @@ static bool WriteBlock (void )
     bool ret;
 
     DEBUG_PRINTTS("Write @0x%08x, Len=%d\n", smData.currWriteAddr, smData.currWriteSize);
+    DEBUG_PRINTTS("First Bytes (hex)= %02x, %02x, %02x, %02x, ...\n", 
+                  smData.WriteSource[0], smData.WriteSource[1], smData.WriteSource[2], smData.WriteSource[3]);
     /* Enable write and send write command */
     if ( !QSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
 

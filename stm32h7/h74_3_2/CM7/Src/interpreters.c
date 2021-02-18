@@ -1415,8 +1415,9 @@ ADD_SUBMODULE(Test);
             } else {
                 cnt = 0;
             }
-            addr =  QSpi1Handle.geometry.EraseSectorSize * num;
-            printf("Erase sector %d (startaddr=0x%08x) plus %d follwing sectors ", num, addr,cnt );
+            addr =  QSpi1Handle.geometry.ProgPageSize * num;
+            printf("Erase sector (%d Bytes) with page %d (startaddr=0x%08x)", 
+                    QSpi1Handle.geometry.EraseSectorSize, num, addr );
             ret = QSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
@@ -1600,6 +1601,11 @@ ADD_SUBMODULE(Test);
             ret = QSpecific_ResetMemory(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
+        case 14:
+            printf("QSPI chip erase - ");
+            ret = QSpi_EraseChipWait(&QSpi1Handle);
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
         default:
           DEBUG_PUTS("PM_Menu: command not implemented");
       } /* end switch */
@@ -1628,6 +1634,7 @@ ADD_SUBMODULE(Test);
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
         { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> kHz" },
         { "Reset memory",             ctype_fn, .exec.fn = QSPI_Menu, VOID(13),"Reset QSPI Memory" },
+        { "Chip erase",               ctype_fn, .exec.fn = QSPI_Menu, VOID(14),"Erase whole chip" },
     };
     ADD_SUBMODULE(QSPI);
 #endif
