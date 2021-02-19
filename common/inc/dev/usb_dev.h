@@ -60,9 +60,9 @@ void USBD_CDC_Transmit ( uint32_t actlen );
 
 
 /* Public Variables -------------------------------------------------------------------------- */
-#if defined(USB_OTG_FS) && defined(USE_USB)
-    extern UsbdHandleT USBDHandle;
-    extern const HW_DeviceType HW_USBD;
+#if defined(USB2_OTG_FS) && defined(USE_USB)
+    extern UsbdHandleT USBDFSHandle;
+    extern const HW_DeviceType HW_USBDFS;
 #endif
 
 #ifdef __cplusplus

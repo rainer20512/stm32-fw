@@ -50,6 +50,7 @@
 #define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_USB                     1   
+#define USE_USB_FS
 #define USE_FMC_SRAM                0
 #define USE_FMC_SDRAM               0
 #define USE_FMC_NOR                 0
@@ -83,6 +84,7 @@
 #define CAN_IRQ_PRIO        0x05         // Give CAN a very high prio
 #define ETH_IRQ_PRIO        0x05         // Give ETH a very high prio
 #define IPC_IRQ_PRIO        0x04         // IPC comes next
+#define USB_IRQ_PRIO        0x04         // Give USB a very, very high prio
 #define RTC_IRQ_PRIO        0x03         // RTC has the next higher prio
 #define BASETIM_IRQ_PRIO    0x02         // Give the base timer the highest possible priority
 

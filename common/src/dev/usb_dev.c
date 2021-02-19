@@ -25,7 +25,7 @@
 #include "config/usb_config.h"
 #include "debug_helper.h"
 
-#include "usbd_cdc.h"
+#include "usbd_msc.h"
 #include "usbd_desc.h"
 
 
@@ -80,7 +80,7 @@ static void Usbd_GPIO_DeInit(const HW_DeviceType *self)
  *ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd*/
 void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
 {
-    const HW_DeviceType *self = &HW_USBD;
+    const HW_DeviceType *self = &HW_USBDFS;
 
     HW_SetHWClock( hpcd->Instance, true );
 
@@ -97,7 +97,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef *hpcd)
  *ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd*/
 void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
 {
-    const HW_DeviceType *self = &HW_USBD;
+    const HW_DeviceType *self = &HW_USBDFS;
     /* disable interrupts */
     if ( self->devIrqList) HW_SetAllIRQs(self->devIrqList, false);
 
@@ -108,6 +108,7 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
     HW_SetHWClock( hpcd->Instance, false );
 }
 
+#if 0
 void USBD_CDC_SetCallbacks   ( USBD_CDC_CallbacksT *usb_cbs)
 {
     USBDHandle.cdc_callbacks = *usb_cbs;
@@ -117,6 +118,7 @@ void USBD_CDC_StartReceive(void)
 {
     USBD_CDC_ReceivePacket(&USBDHandle.hUsb);
 }
+#endif
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Check, whether the system may enter Stop 2 mode. 
@@ -140,7 +142,9 @@ bool USBD_CanStop(const HW_DeviceType *self)
     UNUSED(me);
     return false;
 }
-extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
+
+// extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
+extern USBD_StorageTypeDef USBD_DISK_fops;
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Can Device initialization: Reset handle, init GPIO pins and interrupts,
@@ -155,16 +159,28 @@ bool USBD_InitDev(const HW_DeviceType *self)
     /* Initialize my handle to 'fresh' */
     UsbResetMyHandle(me);
 
+#if defined(STM32L476xx) || defined(STM32L496xx)
     /* Get clock status of PWR domain and switch on, if not already on*/
     uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
-
+#endif
+     HAL_PWREx_EnableUSBVoltageDetector();
+ 
+#if defined(STM32L476xx) || defined(STM32L496xx)
     /* enable USB power on Pwrctrl CR2 register */
     HAL_PWREx_EnableVddUSB();
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    HAL_PWREx_EnableUSBVoltageDetector();
+#else 
+    #error "No suitable USB Initialization for selected MCU"  
+#endif
 
+#if defined(STM32L476xx) || defined(STM32L496xx)
     /* Switch PWR domain clock off again, if it was off before */
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+#endif
 
+#if 0
     /* Init Device Library */
     USBD_Init(hUsbd, &VCP_Desc, 0);
 
@@ -176,6 +192,19 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     /* Start Device Process */
     USBD_Start(hUsbd);
+#endif
+
+  /* Init Device Library */
+  USBD_Init(hUsbd, &MSC_Desc, 0);
+
+  /* Add Supported Class */
+  USBD_RegisterClass(hUsbd, USBD_MSC_CLASS);
+
+  /* Add Storage callbacks for MSC Class */
+  USBD_MSC_RegisterStorage(hUsbd, &USBD_DISK_fops);
+
+  /* Start Device Process */
+  USBD_Start(hUsbd);
 
     return true;
 }
@@ -186,7 +215,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
 void USBD_DeInitDev(const HW_DeviceType *self)
 {
     /*Reset peripherals */
-    HW_Reset((CAN_TypeDef *)self->devBase );
+    HW_Reset((USB_OTG_GlobalTypeDef *)self->devBase );
 
     Usbd_GPIO_DeInit(self);
 
@@ -198,8 +227,8 @@ void USBD_DeInitDev(const HW_DeviceType *self)
 
 /* Static configurations ---------------------------------------------------------*/
 
-#if defined(USB_OTG_FS) && defined(USE_USB)
-    UsbdHandleT USBDHandle;
+#if defined(USB2_OTG_FS) && defined(USE_USB)
+    UsbdHandleT USBDFSHandle;
 
     static const HW_GpioList_AF gpioaf_usb = {
         .gpio = { USB_ID_PIN, USB_DP_PIN, USB_DM_PIN },
@@ -216,13 +245,17 @@ void USBD_DeInitDev(const HW_DeviceType *self)
         .irq = { USB_FS_IRQ  },
     };
 
-    const HW_DeviceType HW_USBD = {
-        .devName        = "USB_CDC",
+    const HW_DeviceType HW_USBDFS = {
+        .devName        = "USBFS_MSC",
+#if defined(STM32L476xx) || defined(STM32L496xx)
         .devBase        = USB_OTG_FS,
+#else
+        .devBase        = USB2_OTG_FS,
+#endif
         .devGpioAF      = &gpioaf_usb,
         .devGpioIO      = &gpioio_usb,
         .devType        = HW_DEVICE_USBD,
-        .devData        = &USBDHandle,
+        .devData        = &USBDFSHandle,
         .devIrqList     = &irq_usb,
         /* No DMA for USBD */
         .devDmaTx = NULL,

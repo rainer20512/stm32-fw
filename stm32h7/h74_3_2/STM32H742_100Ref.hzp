@@ -46,7 +46,7 @@
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
       c_preprocessor_definitions="CORE_CM7"
-      c_user_include_directories="./CM7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common ;./modules/STM32_USBD_Library/inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc"
+      c_user_include_directories="./CM7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common ;./../modules/STM32_USBD_Library/inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H743x_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/H743XI_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM7.xml"
@@ -159,6 +159,9 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_fmc.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sdram.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c" />
       </folder>
       <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
     </folder>
@@ -174,6 +177,17 @@
           <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c" />
           <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c" />
           <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c" />
+        </folder>
+        <folder Name="src">
+          <file file_name="../modules/STM32_USBD_Library/src/usbd_conf.c" />
+          <file file_name="../modules/STM32_USBD_Library/src/usbd_desc.c" />
+          <file file_name="../modules/STM32_USBD_Library/src/usbd_storage.c" />
+        </folder>
+        <folder Name="inc">
+          <file file_name="../modules/STM32_USBD_Library/inc/usbd_conf.h" />
+          <file file_name="../modules/STM32_USBD_Library/inc/usbd_def.h" />
+          <file file_name="../modules/STM32_USBD_Library/inc/usbd_desc.h" />
+          <file file_name="../modules/STM32_USBD_Library/inc/usbd_storage.h" />
         </folder>
       </folder>
       <folder Name="FreeRTOS">
@@ -311,6 +325,7 @@
           <file file_name="../common_h7/Inc/config/uart_config.h" />
           <file file_name="../common_h7/Inc/config/eth_config.h" />
           <file file_name="../common_h7/Inc/config/fmc_config.h" />
+          <file file_name="../common_h7/Inc/config/usb_config.h" />
         </folder>
       </folder>
       <folder Name="task">

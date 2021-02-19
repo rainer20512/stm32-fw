@@ -725,17 +725,33 @@ void DebugMon_Handler(void)
 #endif
 
 #if USE_ETH > 0 && USE_ETY_PHY_LAN8742 > 0 
-extern ETH_HandleTypeDef EthHandle;
+    extern ETH_HandleTypeDef EthHandle;
+    /**
+      * @brief  This function handles Ethernet interrupt request.
+      * @param  None
+      * @retval None
+      */
+    void ETH_IRQHandler(void)
+    {
+      HAL_ETH_IRQHandler(&EthHandle);
+    }
+#endif
+
+#if US_USB > 0
+    #ifdef USE_USB_FS
+    void OTG_FS_IRQHandler(void)
+    #else
+    void OTG_HS_IRQHandler(void)
+    #endif
+    {
+      HAL_PCD_IRQHandler(&hpcd);
+    }
+#endif
 /**
-  * @brief  This function handles Ethernet interrupt request.
+  * @brief  This function handles DMA2 Stream 6 interrupt request.
   * @param  None
   * @retval None
   */
-void ETH_IRQHandler(void)
-{
-  HAL_ETH_IRQHandler(&EthHandle);
-}
-#endif
 
 
 /******************************************************************************/

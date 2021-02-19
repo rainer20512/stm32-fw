@@ -258,7 +258,13 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(FMC_Bank1_R) && defined(USE_FMC) 
    { FMC_Bank1_R, &RCC->AHB3ENR, RCC_AHB3ENR_FMCEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST_Pos, COMBINE('F', 1) },
 #endif
-
+/* USB OTG  --------------------------------------------------------------------------------------------------------------- */
+#if defined(USB1_OTG_FS) && defined(USE_USB) 
+   { USB1_OTG_FS, &RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_USB1OTGHSRST_Pos, COMBINE('O', 1) },
+#endif
+#if defined(USB2_OTG_FS) && defined(USE_USB)
+   { USB2_OTG_FS, &RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_USB2OTGHSRST_Pos, COMBINE('O', 2) },
+#endif
 };
 
 /* Public functions ---------------------------------------------------------------------*/
