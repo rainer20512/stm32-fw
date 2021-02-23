@@ -33,6 +33,39 @@
 bool USB_InitDev(const HW_DeviceType *self);
 void USB_DeInitDev(const HW_DeviceType *self);
 
+/**************************************************************************************
+ * Some Devices support different clock sources for QSPI. Make sure, that             *   
+  * QQSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+ *************************************************************************************/
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    /* STM32L4xx has no clock mux for QUADSPI device */
+    #define QSpiSetClockSource(a)           (true)
+    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    static bool UsbSetClockSource(const void *hw)
+    {
+      UNUSED(hw);
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      /* USB will always be clocked by HSI48 */
+
+      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB; 
+      PeriphClkInit.UsbClockSelection   = RCC_USBCLKSOURCE_HSI48;
+
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        DEBUG_PUTS("failed to set CLK source for USB");
+        return false;
+      }
+
+      return true;
+    }
+    //#include "hardware.h"
+    //#define  QSpiGetClockSpeed()            GetPerClkFrequency()
+    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#else 
+    #error "No qspi clock assignment defined"
+#endif
+
 /******************************************************************************
  * Clear the entire UsbHandleT structure
  *****************************************************************************/
@@ -158,6 +191,8 @@ bool USBD_InitDev(const HW_DeviceType *self)
     
     /* Initialize my handle to 'fresh' */
     UsbResetMyHandle(me);
+
+    UsbSetClockSource(self);
 
 #if defined(STM32L476xx) || defined(STM32L496xx)
     /* Get clock status of PWR domain and switch on, if not already on*/

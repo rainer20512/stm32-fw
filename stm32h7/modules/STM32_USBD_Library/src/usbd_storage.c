@@ -20,6 +20,10 @@
 #define USE_EXTMEM_QSPI
 
 /* Includes ------------------------------------------------------------------ */
+#include "config/config.h"
+#if DEBUG_MODE > 0 && DEBUG_USB > 0
+    #include "debug_helper.h"
+#endif
 #include "usbd_storage.h"
 
 #if defined(USE_EXTMEM_QSPI)
@@ -90,6 +94,7 @@ int8_t STORAGE_Init(uint8_t lun)
     #else
       BSP_SD_Init(0);
     #endif
+  DEBUG_PRINTTS("StorageInit\n");
   return 0;
 }
 
@@ -120,6 +125,7 @@ int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t * block_num,
             ret = 0;
         }
     #endif
+  DEBUG_PRINTTS("StorageCapacity: %d blocks of size %d\n", *block_num +1, *block_size);
   return ret;
 }
 
@@ -133,7 +139,7 @@ int8_t STORAGE_IsReady(uint8_t lun)
     UNUSED(lun);
     int8_t ret = -1;
     #if defined(USE_EXTMEM_QSPI)
-        ret = 0;
+        if ( !QSpi1Handle.bAsyncBusy ) ret=0;
     #else
         static int8_t prev_status = 0;
 
@@ -147,6 +153,7 @@ int8_t STORAGE_IsReady(uint8_t lun)
             prev_status = -1;
         }
     #endif
+  DEBUG_PRINTTS("StorageIsReady=%d\n", ret);
   return ret;
 }
 
@@ -173,6 +180,13 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
 {
     UNUSED(lun);
     int8_t ret = -1;
+    #if DEBUG_MODE > 0 && DEBUG_USB > 0
+        if ( blk_len == 1 ) {
+            DEBUG_PRINTTS("StorageRead block %d\n", blk_addr);
+        } else {
+            DEBUG_PRINTTS("StorageRead block %d...%d\n", blk_addr, blk_addr+blk_len-1);
+        }
+    #endif
     #if defined(USE_EXTMEM_QSPI)
         uint32_t byte_addr = blk_addr * QSpi1Handle.geometry.EraseSectorSize;
         uint32_t byte_size = blk_len  * QSpi1Handle.geometry.EraseSectorSize;
@@ -207,10 +221,30 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
     UNUSED(lun);
     int8_t ret = -1;
 
+    #if DEBUG_MODE > 0 && DEBUG_USB > 0
+        if ( blk_len == 1 ) {
+            DEBUG_PRINTTS("StorageWrite block %d\n", blk_addr);
+        } else {
+            DEBUG_PRINTTS("StorageWrite block %d...%d\n", blk_addr, blk_addr+blk_len-1);
+        }
+    #endif
+
     #if defined(USE_EXTMEM_QSPI)
         uint32_t byte_addr = blk_addr * QSpi1Handle.geometry.EraseSectorSize;
         uint32_t byte_size = blk_len  * QSpi1Handle.geometry.EraseSectorSize;
-        ret = ! QSpi_WriteWait(&QSpi1Handle, buf, byte_addr, byte_size);
+        if ( ! QSpi_EraseSectorWait(&QSpi1Handle, byte_addr,  blk_len ) ) {
+            #if DEBUG_MODE > 0 && DEBUG_USB > 0
+                DEBUG_PRINTF("Erase %d sectors beginning with sector %d failed\n", blk_len, blk_addr);
+            #endif
+            return ret;
+        }
+        if ( !QSpi_WriteWait(&QSpi1Handle, buf, byte_addr, byte_size) ) {
+            #if DEBUG_MODE > 0 && DEBUG_USB > 0
+                DEBUG_PRINTF("Write %d sectors beginning with sector %d failed\n", blk_len, blk_addr);
+            #endif
+            return ret;
+        }
+        ret = 0;
     #else
         if (BSP_SD_IsDetected(0) != SD_NOT_PRESENT)
         {

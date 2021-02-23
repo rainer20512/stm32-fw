@@ -115,6 +115,10 @@ void PB_CB ( uint16_t u, uint16_t pinvalue, void * arg )
   * @retval None
   */
 #define STATUS(i)   TM1637_displayInteger(i,0,99)
+
+#include "stm32h743i_eval_io.h"
+BSP_IO_Init_t init;
+
 int main(void)
 {
 
@@ -143,6 +147,10 @@ int main(void)
     CPU_CACHE_Enable();
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
+
+    /* Initialize IO expander */
+    BSP_IO_Init(0, &init);
+
 
     /* Init variables and structures for device handling */
     DevicesInit();
@@ -177,6 +185,10 @@ int main(void)
 
     // Switch LSE Clock on 
     LSEClockConfig(true, true);
+
+    #if USE_USB > 0
+        stm32h7_enable_hsi48();
+    #endif
 
     /* Peripheral clock to HSE ( 8Mhz ) */
     SetPeripheralClkSource(CLKP_HSE);

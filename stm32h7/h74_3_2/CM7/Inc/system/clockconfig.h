@@ -95,6 +95,11 @@ enum {
 } ;
 void SetPeripheralClkSource( uint32_t src );
 
+#if USE_USB > 0
+    void stm32h7_enable_hsi48(void);
+    void stm32h7_disable_hsi48(void);
+#endif
+
 /* 
  * Registration for notification on clock changes
  * ( In addition to devices, which have their own notification mechanism )

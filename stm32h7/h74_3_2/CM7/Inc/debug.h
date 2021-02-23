@@ -43,6 +43,7 @@
 #define DEBUG_EEPROM_EMUL   0
 #define CMACDEBUG           0
 #define DEBUG_PULSES        0
+#define DEBUG_USB           1
 
 #define DEBUG_PRINT_ADDITIONAL_TIMESTAMPS 0
 

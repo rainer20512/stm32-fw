@@ -58,9 +58,11 @@
  **** C0001 ****
  ************************************************************************************/
 #define MAX_CLKCHG_CB                4
+
 static ClockChangeCB clkCB[MAX_CLKCHG_CB];/* Array of registered clk chng callbacks */
 static int32_t numClkchangeCB = 0;      /* Number of "    "    "      "      "      */
 static void ClockNotifyCallbacks(uint32_t);  /* forward declaration                 */
+
 
 /*
  *************************************************************************************
@@ -231,7 +233,7 @@ static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_C
         }
     }
 
-  /*activate CSI clock mondatory for I/O Compensation Cell*/
+  /*activate CSI clock mandatory for I/O Compensation Cell*/
   __HAL_RCC_CSI_ENABLE() ;
 
   step = __HAL_RCC_SYSCFG_IS_CLK_DISABLED();
@@ -349,7 +351,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
     /* 
     * if HSI is current CLK source, it has to be deactivated before changes may be applied
     * so switch to HSE temporarily. This can be done without changing VOS range
-    * or flash latency, because max LSE frq will meet the VOS and latency settings of current HSI
+    * or flash latency, because max HSE frq will meet the VOS and latency settings of current HSI
     */
     if ( __HAL_RCC_GET_SYSCLK_SOURCE() == RCC_CFGR_SWS_HSI ) {
       ConfigureHSE(&RCC_OscInitStruct);
@@ -1281,6 +1283,97 @@ void EnableMCO ( uint32_t mcoSource )
     }
     HAL_RCC_MCOConfig(RCC_MCO1, halParam, RCC_MCODIV_1);
 }
+
+#if USE_USB > 0
+  /* Enable the HSI48 clock and synchronize with LSE clock
+   * HSI48 will be used as source 
+   * The HSI48 RC can be switched on and off using the HSI48ON bit in the
+   * Clock control register (RCC_CRRCR).
+   *
+   * The USB clock may be derived from either the PLL clock or from the
+   * HSI48 clock.  This oscillator will be also automatically enabled (by
+   * hardware forcing HSI48ON bit to one) as soon as it is chosen as a clock
+   * source for the USB and the peripheral is
+   * enabled.
+   */
+void stm32h7_enable_hsi48(void)
+{
+  uint32_t regval;
+
+  /* Enable the HSI48 clock.
+   *
+   * The HSI48 RC can be switched on and off using the HSI48ON bit in the
+   * Clock control register (RCC_CRRCR).
+   *
+   * The USB clock may be derived from either the PLL clock or from the
+   * HSI48 clock.  This oscillator will be also automatically enabled (by
+   * hardware forcing HSI48ON bit to one) as soon as it is chosen as a clock
+   * source for the USB and the peripheral is
+   * enabled.
+   */
+
+  SET_BIT(RCC->CR, RCC_CR_HSI48ON);
+
+  /* Wait for the HSI48 clock to stabilize */
+  while ( READ_BIT(RCC->CR, RCC_CR_HSI48RDY) == 0 );
+
+
+  while ((RCC->CR & RCC_CR_HSI48RDY) == 0);
+
+  #define CRS_CFGR_SYNCSRC_USB2SOF        0b00
+  #define CRS_CFGR_SYNCSRC_LSE            (0b01 << CRS_CFGR_SYNCSRC_Pos)
+  #define CRS_CFGR_SYNCSRC_OTGHS1SOF      (0b10 << CRS_CFGR_SYNCSRC_Pos)
+
+  __HAL_RCC_CRS_CLK_ENABLE();
+
+  /* Set RELOAD and FELIM value according to Refman 9.5.4 */
+  /* Ftarget = 48 MHz, Fsync = 32768Hz */
+  #define QUOTIENT ((48000000+16384)/32788)
+  #define RELOAD_VAL (QUOTIENT - 1)
+  /* Trimming step size is 0,14% */
+  #define FELIM_VAL  (QUOTIENT*140 + 10000 ) / 20000
+
+  /* Enable synchronization with LSE */
+  regval = READ_REG(CRS->CFGR); 
+  MODIFY_REG(regval, CRS_CFGR_SYNCSRC_Msk,  CRS_CFGR_SYNCSRC_LSE);
+  MODIFY_REG(regval, CRS_CFGR_RELOAD_Msk,  RELOAD_VAL << CRS_CFGR_RELOAD_Pos );
+  MODIFY_REG(regval, CRS_CFGR_FELIM_Msk,   FELIM_VAL << CRS_CFGR_FELIM_Pos );
+  WRITE_REG(CRS->CFGR, regval);
+
+  /* Set the AUTOTRIMEN bit the CRS_CR register to enables the automatic
+   * hardware adjustment of TRIM bits according to the measured frequency
+   * error between the selected SYNC event. Also enable CEN bit to enable
+   * frequency error counter and SYNC events.
+   */
+
+  SET_BIT(CRS->CR, CRS_CR_AUTOTRIMEN | CRS_CR_CEN );  
+}
+
+/****************************************************************************
+ * Name: stm32l4_disable_hsi48
+ *
+ * Description:
+ *   Disable the HSI48 clock.
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+void stm32h7_disable_hsi48(void)
+{
+
+  /* Disable the HSI48 clock and autotrim */
+  CLEAR_BIT(CRS->CR, CRS_CR_AUTOTRIMEN | CRS_CR_CEN );  
+  __HAL_RCC_CRS_CLK_DISABLE();
+  CLEAR_BIT(RCC->CR, RCC_CR_HSI48ON);
+
+}
+
+#endif
 
 /**
   * @}

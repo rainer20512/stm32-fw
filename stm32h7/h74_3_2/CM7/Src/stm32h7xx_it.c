@@ -737,7 +737,8 @@ void DebugMon_Handler(void)
     }
 #endif
 
-#if US_USB > 0
+#if USE_USB > 0
+    extern PCD_HandleTypeDef hpcd;
     #ifdef USE_USB_FS
     void OTG_FS_IRQHandler(void)
     #else
