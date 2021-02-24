@@ -34,9 +34,9 @@
 /** @addtogroup CLOCK_CONFIG
   * @{
   */
+#include "config/config.h"
 
 #include "hardware.h"
-#include "config/config.h"
 #include "dev/devices.h"
 #include "eeprom.h"
 #include "system/clockconfig.h"

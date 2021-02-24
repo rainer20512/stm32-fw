@@ -24,8 +24,8 @@
  ********************************************************************************
  */ 
 //#define STM32H745NUCLEO
-//#define STM32H742REF
-#define STM32H743EVAL2
+#define STM32H742REF
+//#define STM32H743EVAL2
 
 /*
  ********************************************************************************
@@ -65,8 +65,12 @@
  *  #define CHECKSUM_GEN_TCP                1 
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
-#define USE_ETY_PHY_LAN8742         1
-#define USE_ETH_PHY_ENC28J60        0
+#define USE_ETY_PHY_LAN8742         0
+#define USE_ETH_PHY_ENC28J60        1
+
+/* Choose one in case of USE_QSPI == 1  */
+#define USE_QSPI_MX25               1
+#define USE_QSPI_MT25Q              0
 
 
 #define GENERAL_BAUDRATE    500000

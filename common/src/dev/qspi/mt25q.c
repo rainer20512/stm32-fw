@@ -9,6 +9,9 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "config/config.h"
+
+#if USE_QSPI_MT25Q > 0    
+
 #include "system/clockconfig.h"
 #include "mt25q.h"
 #include "dev/qspi_dev.h"
@@ -1319,3 +1322,4 @@ static bool MT25Q_QuadMode(QSpiHandleT *myHandle, uint8_t Operation)
 }
 #endif
 
+#endif /* #if USE_QSPI_MT25Q > 0 */

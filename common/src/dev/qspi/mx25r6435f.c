@@ -9,12 +9,18 @@
  ******************************************************************************/
 
 /* Includes ------------------------------------------------------------------*/
-#if 0
 #include "config/config.h"
+
+#if USE_QSPI_MX25 > 0
+ 
 #include "system/clockconfig.h"
 #include "mx25r6435f.h"
 #include "dev/qspi_dev.h"
 #include "dev/qspi/qspecific.h"
+
+#if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+    #include "debug_helper.h"
+#endif
 
 #include <stdio.h>
 
@@ -107,7 +113,7 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
 
     if ( prescaler > 255 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTF("QSpecific_BasicInit - QSPI clk too low, minimum is %d\n", QSpiGetClockSpeed()/256 );
+            DEBUG_PRINTF("QSpecific_BasicInit - QSPI clk too low, minimum is %d\n", clk_frq/256 );
         #endif
         return false;
     }
@@ -1092,4 +1098,4 @@ static bool MX25RXX35_HighPerfMode(QSPI_HandleTypeDef *hqspi, uint8_t Operation)
     return true;
 }
 
-#endif
+#endif /* #if USE_QSPI_MX25 > 0 */

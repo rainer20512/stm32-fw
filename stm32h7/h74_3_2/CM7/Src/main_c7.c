@@ -148,10 +148,6 @@ int main(void)
 
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
-    /* Initialize IO expander */
-    BSP_IO_Init(0, &init);
-
-
     /* Init variables and structures for device handling */
     DevicesInit();
 
