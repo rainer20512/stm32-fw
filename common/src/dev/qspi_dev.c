@@ -187,7 +187,7 @@ void QSpi_SetGeometry ( QSpiGeometryT *geometry, uint32_t flash_size, uint32_t p
 /**************************************************************************************
  * Return the flash memories specific geometry data                               *
  *************************************************************************************/
-void QSPI_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
+void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
 {
     memcpy(pInfo, &myHandle->geometry, sizeof(QSpiGeometryT) );
 }
@@ -237,10 +237,19 @@ void QSPI_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
 /**************************************************************************************
  * Change the Qspi clock speed on the fly                                             *
  *************************************************************************************/
-bool Qspi_SetSpeed (QSpiHandleT *myHandle, uint32_t new_clkspeed)
+bool QSpi_SetSpeed (QSpiHandleT *myHandle, uint32_t new_clkspeed)
 {
     return QSpecific_BasicInit(myHandle, QSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
 }
+
+/**************************************************************************************
+ * returns value != 0, iff successfully initialized                                   *
+ *************************************************************************************/
+bool QSpi_IsInitialized(QSpiHandleT *myHandle)
+{
+    return myHandle->bIsInitialized;
+}
+
 
 /**************************************************************************************
  * Dump Status and restore DeepSleep-Status afterwards                                *
@@ -286,10 +295,14 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     bool ret;
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+
+    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        DEBUG_PRINTTS("QSPI read, area: 0x%08x ... 0x%08x\n", ReadAddr, ReadAddr+Size-1);
+    #endif
 
     /* Send the read command */
-    if ( !QSpecific_ReadCMD(myHandle, ReadAddr, Size) ) return false;
+    if ( !QSpecific_ReadCMD(hqspi, ReadAddr, Size) ) return false;
     
     switch ( opmode ) {
         case QSPI_MODE_POLL:
@@ -897,6 +910,7 @@ bool QSpi_Init(const HW_DeviceType *self)
     }
     myHandle->bAsyncBusy            = false;
     myHandle->bIsMemoryMapped       = false;
+    myHandle->bIsInitialized        = false;
     myHandle->clkspeed              = adt->default_speed;
 
     QSpiClockInit(self, true);
@@ -932,21 +946,22 @@ bool QSpi_Init(const HW_DeviceType *self)
     /* If Initialization was unsuccessful, deactivate all */
     if ( !ret ) QSpi_DeInit(self);
 
+    /* Otherwise set "initialized" flag and return with success */
+    myHandle->bIsInitialized = true;
     return ret;
 }
 
-    /**********************************************************************************
-     * Early Init of QSPI Device to enable R/W of config values
-     *********************************************************************************/
-    void QSPI_EarlyInit(void)
-    {
-      int32_t dev_idx;
+/**********************************************************************************
+ * Early Init of QSPI Device to enable R/W of config values
+ *********************************************************************************/
+void QSPI_EarlyInit(void)
+{
+    int32_t dev_idx;
 
-      /* Init QSPI device */
-      dev_idx = AddDevice(&QSPI_DEV,NULL ,NULL);
-      DeviceInitByIdx(dev_idx, NULL);
-    }
-
+    /* Init QSPI device */
+    dev_idx = AddDevice(&QSPI_DEV, NULL ,NULL);
+    DeviceInitByIdx(dev_idx, NULL);
+}
 
 
 /******************************************************************************

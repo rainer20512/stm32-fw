@@ -55,6 +55,7 @@
 #define USE_FMC_SDRAM               0
 #define USE_FMC_NOR                 0
 #define USE_ETH                     1
+#define USE_FATFS                   1
 
 /* Choose one in case of USE_ETH == 1 
  * 
@@ -160,6 +161,16 @@
 
 #else
      #error "Missing HSE definitions"
+#endif
+
+#if LOGTO_FATFS > 0 && USE_FATFS == 0
+    #error "LOGTO_FATFS requires USE_FATFS > 0!"
+#endif
+/*
+ * FATFS is currently bound to QSPI
+ */
+#if USE_FATFS > 0 && USE_QSPI == 0
+    #error "Must use QSPI for FATFS"
 #endif
 
 #define HSE_VALUE HW_HSE_FREQUENCY

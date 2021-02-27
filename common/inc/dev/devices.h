@@ -57,7 +57,10 @@
 /* Exported constants --------------------------------------------------------*/
 
 /* max. number of devices we can handle */
-#define MAX_DEV                 16             
+#define MAX_DEV                 16     
+
+/* Not-found return value for FindDevIdx and GetDevIdx                        */
+#define DEV_NOTFOUND            (-1)
 
 /* device number for an "unregistered device, used for test purposes when     */
 /* toggling pins hardcoded and directly                                       */
@@ -75,6 +78,7 @@ void     DevicesBeforeFrqChange         (void);
 bool     DevicesInhibitFrqChange        (void);
 
 const HW_DeviceType *FindDevByBaseAddr  (uint32_t , void *pAddress );
+int32_t  FindDevIdx                     ( const HW_DeviceType *dev);
 int32_t  GetDevIdx                      ( const HW_DeviceType *dev);
 
 bool     AssignOnePinRemote             ( uint32_t remoteIdx, uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );

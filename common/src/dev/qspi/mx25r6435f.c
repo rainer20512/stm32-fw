@@ -454,6 +454,8 @@ bool QSpecific_LeaveDeepPowerDown(QSpiHandleT *myHandle)
   /* On MX25R devices, the nCS signal going low is sufficient to wake up device                    */
   /* Memory takes 35us min to leave deep power down                                                */
   
+  BASTMR_DelayUs(DS_RECOVERY_TIME_US);
+
   myHandle->dsInfo->bIsDeepSleep = false;
   return true;
 }

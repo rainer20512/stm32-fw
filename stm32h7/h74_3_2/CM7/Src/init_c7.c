@@ -114,13 +114,19 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_QSPI > 0 && USE_EEPROM_EMUL == 0 
-      dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
-      } else {
-        /* Init QuadSpi device */
-        DeviceInitByIdx(dev_idx, NULL );
+  #if USE_QSPI > 0 
+      /* 
+       * QSPI may have been initialized before due to read eeprom parameters or fatfs logging
+       * so check, whether already registered before adding 
+       */
+      if ( FindDevIdx(&QSPI_DEV)  == DEV_NOTFOUND ) {
+          dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
+          if ( dev_idx < 0 ) {
+            DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
+          } else {
+            /* Init QuadSpi device */
+            DeviceInitByIdx(dev_idx, NULL );
+          }
       }
   #endif
   #if defined(USER_I2CDEV)

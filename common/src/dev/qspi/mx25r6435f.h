@@ -30,11 +30,12 @@
 #define MX25R6435F_SECTOR_SIZE               0x1000    /* 2048 sectors of 4kBytes */
 #define MX25R6435F_PAGE_SIZE                 0x100     /* 32768 pages of 256 bytes */
 
-#define MX25R6435F_CHIP_ERASE_MAX_TIME       240000
+#define MX25R6435F_CHIP_ERASE_MAX_TIME       240000    /* these times are [ms] */
 #define MX25R6435F_BLOCK_ERASE_MAX_TIME      3500
 #define MX25R6435F_SUBBLOCK_ERASE_MAX_TIME   3000
 #define MX25R6435F_SECTOR_ERASE_MAX_TIME     240
 
+#define DS_RECOVERY_TIME_US                  35         /* Recovery time from deep sleep in [us] */
 /*
  * dummy cycles for 80 MHz
  */
@@ -53,7 +54,7 @@
 #define MX25L12835F_SECTOR_SIZE               0x1000    /* 4096 sectors of 4kBytes */
 #define MX25L12835F_PAGE_SIZE                 0x100     /* 65536 pages of 256 bytes */
 
-#define MX25L12835F_CHIP_ERASE_MAX_TIME       80000
+#define MX25L12835F_CHIP_ERASE_MAX_TIME       80000     /* these times are [ms] */
 #define MX25L12835F_BLOCK_ERASE_MAX_TIME      650
 #define MX25L12835F_SUBBLOCK_ERASE_MAX_TIME   650
 #define MX25L12835F_SECTOR_ERASE_MAX_TIME     120

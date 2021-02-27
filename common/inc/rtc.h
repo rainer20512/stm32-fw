@@ -137,8 +137,9 @@ void RTC_SetDateTime(uint8_t dd, uint8_t mm, uint8_t yy, uint8_t hr, uint8_t mi,
 bool RTC_SetCmpMatch(uint32_t value);
 
 
-char* RTC_GetStrDateTimeSubsecs(void);
+char* RTC_GetStrDateTimeMillis(void);
 char* RTC_GetStrDateTime(void);
+char* RTC_GetStrTimeMillis(void);
 char* RTC_GetStrTime(void);
 void RTC_DumpDateTime(void);
 

@@ -854,6 +854,12 @@ char* RTC_GetStrDateTime(void)
   return rtcbuf;
 }
 
+char* RTC_GetStrTimeMillis(void)
+{
+  sprintf(rtcbuf, "%02d:%02d:%02d.%03d", rtc.hh, rtc.mm, rtc.ss, RTC_GetMillis() );
+  return rtcbuf;
+}
+
 char* RTC_GetStrTime(void)
 {
   sprintf(rtcbuf, "%02d:%02d:%02d", rtc.hh, rtc.mm, rtc.ss );

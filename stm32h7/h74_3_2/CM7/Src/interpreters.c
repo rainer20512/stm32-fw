@@ -1593,7 +1593,7 @@ ADD_SUBMODULE(Test);
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d MHz",  addr );
              
-                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000 );
+                ret = QSpi_SetSpeed(&QSpi1Handle, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 13:
@@ -2238,6 +2238,9 @@ bool Settings(char *cmdline, size_t len, const void * arg )
 
   return true;
 }
+#if LOGTO_FATFS > 0
+    #include "logfile.h"
+#endif
 /*********************************************************************************
   * @brief  MainMenu
   *         
@@ -2259,6 +2262,12 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
                 debuglevel = CMD_to_number ( word, wordlen );
             }
             printf("Debuglevel=%d\n", debuglevel);
+            break;
+#endif
+#if LOGTO_FATFS > 0
+        case 1:
+            printf("Flush Logfile\n");
+            LogFile_Flush();
             break;
 #endif
         default:
@@ -2306,10 +2315,13 @@ static const CommandSetT cmdBasic[] = {
   { "QSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test QuadSpi functions" },
 #endif
 #if USE_CAN > 0
-  { "CAN test",        ctype_sub, .exec.sub = &mdlCAN,        0,       "Test CAN functions" },
+  { "CAN test",        ctype_sub, .exec.sub = &mdlCAN,         0,       "Test CAN functions" },
 #endif
 #if USE_FMC > 0
-  { "FMC test",        ctype_sub, .exec.sub = &mdlFMC,        0,       "Test FMC functions" },
+  { "FMC test",        ctype_sub, .exec.sub = &mdlFMC,         0,       "Test FMC functions" },
+#endif
+#if LOGTO_FATFS > 0
+  { "Flush Logfile",    ctype_fn, .exec.fn = MainMenu,        VOID(1), "Flush Logfile" },
 #endif
 };
 ADD_SUBMODULE(Basic);

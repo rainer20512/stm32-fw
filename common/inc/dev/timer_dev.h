@@ -62,7 +62,7 @@ uint16_t    BASTMR_GetRawValue      (TimerHandleT *hnd);
 void        BASTMR_EarlyInit        (void);
 void        BASTMR_Aquire           (TimerHandleT *hnd);
 void        BASTMR_Release          (TimerHandleT *hnd);
-
+void        BASTMR_DelayUs          (uint32_t delta_us );
 
 /* Public functions for PWM Timers ---------------------------------------------*/
 bool TMR_SetPWMFrq          (const HW_DeviceType *self, uint32_t frq );

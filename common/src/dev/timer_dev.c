@@ -140,6 +140,17 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
     }
 
     /**********************************************************************************
+     * Do an delay of some microseconds
+     *********************************************************************************/
+    void BASTMR_DelayUs ( uint32_t delta_us )
+    {
+        uint32_t start = BASTMR_GetMicrosecond(&BASTIM_HANDLE);
+
+        while ((BASTMR_GetMicrosecond(&BASTIM_HANDLE) - start) < delta_us);
+    }
+
+
+    /**********************************************************************************
      * Early Init of BasicTimer Device to enable Profiling even during initialization
      *********************************************************************************/
     void BASTMR_EarlyInit(void)

@@ -455,6 +455,11 @@
       // #define QSPI1_USE_DMA Not implemented yet 
   #endif
 
+  #if USE_FATFS > 0
+      #define FATFS_DEV     HW_QSPI1
+      #define FATFS_HND     QSpi1Handle
+  #endif
+
   #if USE_ETH > 0
     #define ETH_USE_RMII
     #define ETH_DEV             HW_ETH

@@ -24,6 +24,10 @@
 #include "system/hw_util.h"
 #include "debug_helper.h"
 #include "dev/devices.h"
+
+#if USE_FATFS > 0
+    #include "logfile.h"
+#endif 
 /** @addtogroup DEVICES
   * @{
   */
@@ -560,13 +564,23 @@ const HW_DeviceType *FindDevByBaseAddr(uint32_t dt, void *pBase )
  * return the index of the device list for a given device
  * -1 will be returned when not foune
  ******************************************************************************/
+int32_t FindDevIdx ( const HW_DeviceType *dev)
+{
+    for( uint8_t i = 0; i < act_devices; i++ ) if ( devices[i] == dev ) return i;
+ 
+    return -1;
+}
+
+/******************************************************************************
+ * return the index of the device list for a given device
+ * -1 will be returned when not found and an error message is issued
+ ******************************************************************************/
 int32_t GetDevIdx ( const HW_DeviceType *dev)
 {
-    for( uint8_t i = 0; i < act_devices; i++ ) {
-        if ( devices[i] == dev ) return i;
-    }
-    DEBUG_PUTS("Error: GetDevIdx: Device not found");
-    return -1;
+    int32_t ret = FindDevIdx(dev);
+    if ( ret == -1 ) DEBUG_PUTS("Error: GetDevIdx: Device not found");
+
+    return ret;
 }
 
 #ifndef HW_DEBUG_UART
@@ -589,6 +603,13 @@ void BasicDevInit(void)
   #if DEBUG_FEATURES > 0 && DEBUG_DEBUGIO == 0
      dev_idx = AddDevice(&HW_DEBUG_UART, DebugAssignUart, DebugDeAssignUart);
      DeviceInitByIdx(dev_idx, (void *)1);
+  #endif
+
+  /* Add QSPI-Device as storage for FAT filesystem and init fat file logging */  
+  #if LOGTO_FATFS > 0
+     dev_idx = AddDevice(&FATFS_DEV, NULL, NULL);
+     DeviceInitByIdx(dev_idx, NULL);
+     LogFile_Init();
   #endif
 }
 

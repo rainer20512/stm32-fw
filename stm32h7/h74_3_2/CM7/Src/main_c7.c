@@ -116,8 +116,6 @@ void PB_CB ( uint16_t u, uint16_t pinvalue, void * arg )
   */
 #define STATUS(i)   TM1637_displayInteger(i,0,99)
 
-#include "stm32h743i_eval_io.h"
-BSP_IO_Init_t init;
 
 int main(void)
 {
@@ -159,11 +157,10 @@ int main(void)
         BASTMR_EarlyInit();
     #endif
 
-    #if USE_QSPI  > 0 && USE_EEPROM_EMUL > 0
+    #if ( USE_QSPI  > 0 && USE_EEPROM_EMUL > 0 )
         QSPI_EarlyInit();
     #endif
     
-
     HAL_Init();
 
     STATUS(0);
@@ -200,8 +197,9 @@ int main(void)
 
     STATUS(2);
 
-    /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
+    /* Set neccessary peripheral clocks and initialize IO_DEV, debug u(s)art and FAT file system */
     BasicDevInit();
+
     STATUS(3);
     Init_DumpAndClearResetSource();
     STATUS(4);

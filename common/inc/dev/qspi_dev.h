@@ -72,16 +72,18 @@ typedef struct QSpiHandleType {
     QSpiDeepSleepT*     dsInfo;          /* if deep sleep is supported, the ds info, else NULL*/
     uint8_t             bAsyncBusy;      /* Flag for "Async operation (_IT, _DMA) ongoing     */
     uint8_t             bIsMemoryMapped; /* true, iff in memory mapped mode                   */
+    uint8_t             bIsInitialized;  /* true, iff device is initialized successfully      */
 } QSpiHandleT; 
 
-void QSPI_GetGeometry           (QSpiHandleT *myHandle, QSpiGeometryT *pInfo);
+void QSpi_GetGeometry           (QSpiHandleT *myHandle, QSpiGeometryT *pInfo);
 void QSpi_DumpStatus            (QSpiHandleT *myHandle);
 void QSpi_SetAsyncCallbacks     (QSpiHandleT *myHandle, QSpiCallbackT rdDoneCB, QSpiCallbackT wrDoneCB, QSpiCallbackT errorCB);
 bool QSpi_Abort                 (QSpiHandleT *myHandle);
 bool QSpecific_EnterDeepPowerDown    (QSpiHandleT *myHandle);
 bool QSpi_LeaveDeepPowerDown    (QSpiHandleT *myHandle);
 bool QSpecific_EnableMemoryMappedMode(QSpiHandleT *myHandle);
-bool Qspi_SetSpeed              (QSpiHandleT *myHandle, uint32_t new_clkspeed);
+bool QSpi_SetSpeed              (QSpiHandleT *myHandle, uint32_t new_clkspeed);
+bool QSpi_IsInitialized         (QSpiHandleT *myHandle);
 
 bool QSpi_ReadWait              (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 bool QSpi_ReadIT                (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);

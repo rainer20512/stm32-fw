@@ -46,7 +46,7 @@
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
       c_preprocessor_definitions="CORE_CM7;USE_IOEXPANDER"
-      c_user_include_directories="./CM7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common ;./../modules/STM32_USBD_Library/inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H743I-EVAL;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common"
+      c_user_include_directories="./CM7/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common ;./../modules/STM32_USBD_Library/inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H743I-EVAL;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:\\STM32H7\\STM32Cube_FW_H7_V1.7.0\\Middlewares\\Third_Party\\FatFs\\src"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32H743x_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/H743XI_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM7.xml"
@@ -166,6 +166,23 @@
       <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
     </folder>
     <folder Name="Middlewares">
+      <folder Name="FatFs">
+        <folder Name="Core">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FatFs/src/diskio.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FatFs/src/ff.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FatFs/src/ff_gen_drv.c" />
+        </folder>
+        <folder Name="Drivers">
+          <file file_name="../../common/modules/fatfs/qspi_diskio.c" />
+        </folder>
+        <folder Name="Options">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FatFs/src/option/syscall.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FatFs/src/option/unicode.c" />
+        </folder>
+        <folder Name="config">
+          <file file_name="../../common/modules/inc/ffconf.h" />
+        </folder>
+      </folder>
       <folder Name="STM32_USBD_Library">
         <folder Name="Class">
           <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Src/usbd_msc.c" />
@@ -382,6 +399,7 @@
           <file file_name="../../common/src/debug_outbuf.c" />
           <file file_name="../../common/src/debug_sram.c" />
           <file file_name="../../common/src/debug_gpio_exti.c" />
+          <file file_name="../../common/src/logfile.c" />
         </folder>
       </folder>
       <folder Name="inc">
@@ -427,11 +445,12 @@
         <file file_name="CM7/Inc/global_flags.h" />
       </folder>
     </folder>
+    <file file_name="../../common/inc/logfile.h" />
   </project>
   <configuration
     Name="Common"
     c_preprocessor_definitions="USE_HAL_DRIVER;STM32H743xx;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
-    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
+    c_user_include_directories="../../common/inc;../../common/modules/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0"
     gcc_enable_all_warnings="Yes" />
 </solution>
