@@ -836,39 +836,82 @@ void RTC_SetDateTime(uint8_t dd, uint8_t mm, uint8_t yy, uint8_t hr, uint8_t mi,
     }
 #endif
 
+/* 
+ * Some time formating functions with different types of output.
+ * All functions use "rtcbuf" to return their NUL-terminated results
+ * if passed parameter "retlen" is not NULL, the length of the time
+ * string is written here in
+ */
 
 static char rtcbuf[25];
 
-char* RTC_GetStrDateTimeMillis(void)
+char* RTC_GetStrDateTimeMillis(uint32_t *retlen)
 {
   sprintf(rtcbuf, "%02d.%02d.%02d %02d:%02d:%02d.%03d", rtc.DD, rtc.MM,rtc.YY, rtc.hh, rtc.mm, rtc.ss, RTC_GetMillis() );
+  if ( retlen ) *retlen = 21;
   return rtcbuf;
 }
 
-char* RTC_GetStrDateTime(void)
+char* RTC_GetStrDateTime(uint32_t *retlen)
 {
 #if USE_RTC > 0
   RTC_CopytoVar();
 #endif
   sprintf(rtcbuf, "%02d.%02d.%02d %02d:%02d:%02d", rtc.DD, rtc.MM,rtc.YY, rtc.hh, rtc.mm, rtc.ss );
+  if ( retlen ) *retlen = 18;
   return rtcbuf;
 }
 
-char* RTC_GetStrTimeMillis(void)
+char* RTC_GetStrTimeMillis(uint32_t *retlen)
 {
   sprintf(rtcbuf, "%02d:%02d:%02d.%03d", rtc.hh, rtc.mm, rtc.ss, RTC_GetMillis() );
+  if ( retlen ) *retlen = 12;
   return rtcbuf;
 }
 
-char* RTC_GetStrTime(void)
+char* RTC_GetStrTime(uint32_t *retlen)
 {
   sprintf(rtcbuf, "%02d:%02d:%02d", rtc.hh, rtc.mm, rtc.ss );
+  if ( retlen ) *retlen = 8;
   return rtcbuf;
 }
 
+#if 0
 void RTC_DumpDateTime(void)
 {  
-  DEBUG_PUTS(RTC_GetStrDateTime());
+  DEBUG_PUTS(RTC_GetStrDateTime(NULL));
+}
+#endif
+
+char* RTC_GetStrSecMicros(uint32_t *retlen)
+{
+#if USE_BASICTIMER > 0
+    register uint32_t work = rtc.ss % 10;
+    register uint32_t work10 = rtc.ss / 10;
+
+    /* first 3 chars are seconds + ':' */
+    char *ptr = rtcbuf;
+    *ptr++  = '0' + work10;
+    *ptr++  = '0' + work;
+    *ptr++  = ':';
+
+    /* Now 7 chars from right to left for micro- and milliseconds */
+    ptr+= 7;
+    *ptr-- = '\0';
+    work = ProfilerGetMicrosecond();
+    for ( register int32_t i = 6; i > 0; i-- ) {
+        work10 = work/10;
+        *ptr-- = '0' + (char)(work-work10*10);
+        if ( i == 4) *ptr-- = '.';
+        work = work10;
+    }
+    if ( retlen ) *retlen = 10;
+    return rtcbuf;
+#else
+    if ( retlen ) *retlen = 10;
+    return "*NoMicros*";
+#endif
+    
 }
 
 /******************************************************************************

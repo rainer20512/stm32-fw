@@ -163,9 +163,16 @@
      #error "Missing HSE definitions"
 #endif
 
+/* Logging to FAT filesystem requires active FAT FS support */
 #if LOGTO_FATFS > 0 && USE_FATFS == 0
     #error "LOGTO_FATFS requires USE_FATFS > 0!"
 #endif
+
+/* Debug to console only supported, if console is an U(S)ART */
+#if ( DEBUG_FEATURES == 0  || DEBUG_DEBUGIO > 0 ) && LOGTO_CONSOLE > 0
+    #error "Console logging only when console output to UART is configured"
+#endif
+
 /*
  * FATFS is currently bound to QSPI
  */

@@ -16,12 +16,20 @@
 #include "config/config.h"
 #include "debug_helper.h"
 #include "rtc.h"
+#include "circbuf.h"
+#include "task/minitask.h"
+
 #include "logfile.h"
 
 #include "ff_gen_drv.h"
 #include "ff.h"
 
 #define DETAILED_FSERR      1
+
+/* Define an output buffer of one sector size to buffer the time when a sector is written physically to disk  */
+#define OUTBUF_SIZE 4096
+static uint8_t outbuf[OUTBUF_SIZE];
+static CircBuffT o;
 
 static FATFS LogFileFs;   /* File system object for logging device */
 static FIL   LogFile;     /* Logfile File object */
@@ -38,7 +46,6 @@ extern Diskio_drvTypeDef FatFsQspi_Driver;
 /* forward declarations -----------------------------------------------------*/
 static void     LogFile_ExplainError     (FRESULT res, const char * const op );
 static int32_t  LogFile_OpenNextLogFile  ( void );
-static void     LogFile_Timestamp        (void);
 
 /******************************************************************************
  * Mount the logging volume and open the logfile for write/append
@@ -60,7 +67,10 @@ int32_t LogFile_Init(void)
   /* Open next available logfile in name schema logXXXX.log */  
   if ( LogFile_OpenNextLogFile() != 0 ) return -1;
    
-  LogFile_Info("Logging started");
+  /* Initilaize the write buffer */
+  CircBuff_Init(&o, OUTBUF_SIZE, outbuf);
+
+  LogFile_Write_CRLF("Logging started",15);
   return 0;      
 }
 
@@ -92,39 +102,95 @@ int32_t LogFile_Close ( void )
 {
     if ( !logOpen ) return -1;
 
-    LogFile_Info("Logging stopped");
+    LogFile_Write_CRLF("Logging stopped", 15);
     FRESULT res = f_close(&LogFile);
     logOpen     = 0;
 
     return res == FR_OK ? 0 : - 1;
 }
 
+/*----------------------------------------------------------------------------*
+ * logger functions
+ *---------------------------------------------------------------------------*/
+
+
 
 /******************************************************************************
- * Write one line to logfile, the newline character is appended
- *  0 is returned on success
- * -1 on any failure 
+ * Write data of lenght <len> to LogFile, no CRLF appended 
+ * true is returned on success,
+ * false is returned on any failure
  *****************************************************************************/
-void LogFile_Info(const char *line)
+uint8_t LogFile_Write(const char *data, uint32_t len )
 {
-    UINT rlen;
-    LogFile_Timestamp();
-    f_write(&LogFile, line, strlen(line), &rlen);
+    /* Only write, if logfile is open */
+    if ( !logOpen ) return false;
+
+    CircBuff_PutStr(&o, (uint8_t *)data, len );
+
+    return true;
+}
+
+
+
+/******************************************************************************
+ * Write NULL-terminated string to LogFile, append CRLF and start write to file 
+ *****************************************************************************/
+uint8_t LogFile_Write_CRLF(const char *data, uint32_t len)
+{
+    uint8_t ret = LogFile_Write(data, len);
+    if ( ret ) LogFile_CRLF();
+    return ret;
+
 }
 
 
 /******************************************************************************
- * Dump a timestamp to file, currently timestamp contains not date info
+ * Write CRLF and transfer to file
  *****************************************************************************/
-static void LogFile_Timestamp(void)
+void LogFile_CRLF(void)
 {
-    char *strtim = RTC_GetStrTimeMillis();
-    uint32_t len = strlen(strtim);
+    CircBuff_Put(&o, '\r');
+    CircBuff_Put(&o, '\n');
+    TaskNotify(TASK_LOGFILE);
+}
+
+
+/*----------------------------------------------------------------------------*
+ * log writer task
+ *---------------------------------------------------------------------------*/
+
+
+/******************************************************************************
+ * Transfer the circular buffer from position "from" up to "to", 
+ * but not including "to". "from" and "to" MUST NOT wrap around
+ *****************************************************************************/
+static void log_transfer ( uint32_t from, uint32_t to )
+{
+    uint32_t size = to - from;
     UINT rlen;
 
-    f_write(&LogFile,strtim, len, &rlen );
-    f_write(&LogFile," ",1, &rlen);
+    f_write(&LogFile, o.buf+from, size, &rlen );
+    if ( rlen != size )
+        DEBUG_PRINTF("log_transfer: write truncated by %d\n", size-rlen);
+    o.rdptr = CBUFPTR_INCR(o, rdptr, size);
 }
+
+/* Copy the content of the output buffer to output device */
+void task_handle_log(uint32_t arg)
+{
+    UNUSED(arg);
+   
+   /* nothing to do if, buffer is empty */
+   if ( CBUF_EMPTY(o) ) return;
+
+  /*
+   * If the buffer content wraps around, transfer in two pieces
+   */
+  if ( CBUF_WRAPAROUND(o) ) log_transfer(o.rdptr, OUTBUF_SIZE);
+  
+  log_transfer(o.rdptr, o.wrptr );
+}
+
 
 
 /******************************************************************************

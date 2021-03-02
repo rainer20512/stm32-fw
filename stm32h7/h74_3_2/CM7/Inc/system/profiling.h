@@ -36,6 +36,9 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
     JOB_TASK_PERIODIC,
     JOB_TASK_REMOTE,
     JOB_TASK_DBGIO,
+#if LOGTO_FATFS > 0
+    JOB_TASK_LOG,
+#endif
     JOB_TASK_RTC,
     JOB_TASK_INIT,
     JOB_TASK_MAIN,
@@ -47,6 +50,9 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
 #endif
 #if USE_QSPI > 0
     JOB_TASK_QSPI,
+#endif
+#if LOGTO_FATFS > 0
+    JOB_TASK_LOGFILE,
 #endif
     JOB_ADC,
     JOB_SLEEP,
@@ -97,8 +103,15 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
   #define JOBNAMES4 JOBNAMES3
 #endif             
 
+#if LOGTO_FATFS > 0
+  #define JOBNAMES5 JOBNAMES4 \
+  "LOGFILE",
+#else
+  #define JOBNAMES5 JOBNAMES4
+#endif             
+
 #define JOBNAMES99 \
-  JOBNAMES4     \
+  JOBNAMES5     \
   "ADC",        \
   "SLEEP",      \
   "STOP0",      \

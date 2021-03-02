@@ -25,7 +25,7 @@
 #include "dev/hw_device.h"
 #include "dev/devices.h"
 
-#include "debug_helper.h"
+#include "log.h"
 
 #include "dev/qspi/qspecific.h"
 
@@ -131,7 +131,7 @@ static void QSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
       PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_D1HCLK;
 
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        DEBUG_PUTS("failed to set CLK source for QUADSPI");
+        LOG_FATAL("failed to set CLK source for QUADSPI");
         return false;
       }
 
@@ -169,11 +169,11 @@ void QSpi_SetGeometry ( QSpiGeometryT *geometry, uint32_t flash_size, uint32_t p
         /* Check validity */
         #define PWROF2(a)   ( (a & (a-1)) == 0 ) 
         if ( !PWROF2(flash_size) )
-            DEBUG_PRINTF("Flash size 0x%x is not a power of 2, sure ?\n", flash_size);
+            LOG_WARN("Flash size 0x%x is not a power of 2, sure?", flash_size);
         if ( !PWROF2(page_size) )
-            DEBUG_PRINTF("Page size 0x%x is not a power of 2, sure ?\n", page_size);
+            LOG_WARN("Page size 0x%x is not a power of 2, sure?", page_size);
         if ( !PWROF2(sector_size) )
-            DEBUG_PRINTF("Sector size 0x%x is not a power of 2, sure ?\n", sector_size);
+            LOG_WARN("Sector size 0x%x is not a power of 2, sure?", sector_size);
    #endif
 
    geometry->FlashSize          = flash_size;
@@ -218,7 +218,7 @@ void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
         char type[25];
         const char *mf   =  QSpi_GetChipManufacturer(idbuf[0] );
         QSpecific_GetChipTypeText(idbuf, type, 25);
-        DEBUG_PRINTF("QSpi: Found %s %s\n", mf, type);
+        LOG_INFO("QSpi: Found %s %s", mf, type);
     }
 
     /**************************************************************************************
@@ -227,9 +227,9 @@ void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
      *************************************************************************************/
     static void QSpi_DumpGeometry(QSpiGeometryT *geo)
     {
-        DEBUG_PRINTF("QSpi: Flash size is %dkiB\n", geo->FlashSize>>10);
-        DEBUG_PRINTF("QSpi: %d write pages with %d bytes\n", geo->ProgPagesNumber, geo->ProgPageSize);
-        DEBUG_PRINTF("QSpi: %d erase sectors with %d bytes\n", geo->EraseSectorsNumber, geo->EraseSectorSize);
+        LOG_INFO("QSpi: Flash size is %dkiB", geo->FlashSize>>10);
+        LOG_INFO("QSpi: %d write pages with %d bytes", geo->ProgPagesNumber, geo->ProgPageSize);
+        LOG_INFO("QSpi: %d erase sectors with %d bytes", geo->EraseSectorsNumber, geo->EraseSectorSize);
     }
 
 #endif
@@ -260,7 +260,7 @@ void QSpi_DumpStatus(QSpiHandleT *myHandle)
     /* Wake up device, if in deep sleep */
     if ( sleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_DumpStatus - Error: Cannot wake up flash device");
+            LOG_ERROR("QSpi_DumpStatus - Error: Cannot wake up flash device");
         #endif
         return;
     }
@@ -298,7 +298,7 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTTS("QSPI read, area: 0x%08x ... 0x%08x\n", ReadAddr, ReadAddr+Size-1);
+        LOGU_VERBOSE("QSPI read, area: 0x%08x ... 0x%08x", ReadAddr, ReadAddr+Size-1);
     #endif
 
     /* Send the read command */
@@ -327,7 +327,7 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
 #endif
         default:
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PRINTF("QSpi_ReadOperation - Error: Mode %d not implemented\n", opmode);
+                LOGU_ERROR("QSpi_ReadOperation - Error: Mode %d not implemented", opmode);
             #endif
             return false;
     } // switch
@@ -335,7 +335,7 @@ bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     /* report errors, if configured */
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTF("QSpi_ReadOperation - Error: Receive error in mode %d\n", opmode);
+            LOGU_ERROR("QSpi_ReadOperation - Error: Receive error in mode %d", opmode);
         #endif
     }
 
@@ -411,7 +411,7 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     if ( opmode != QSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PUTS("WriteWait - Error: Another Async Op is active");
+                LOGU_ERROR("WriteWait - Error: Another Async Op is active");
             #endif
             return false;
         }
@@ -421,7 +421,7 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     /* check for positive size */
     if ( Size == 0 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("WriteWait - Writing 0 bytes not allowed");
+            LOGU_WARN("WriteWait - Writing 0 bytes not allowed");
         #endif
         return false;
     }
@@ -443,7 +443,7 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     erSM               = NULL;
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTTS("Write Init, area: 0x%08x ... 0x%08x, written in %d steps\n", WriteAddr,smData.WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
+        LOGU_VERBOSE("Write Init, area: 0x%08x ... 0x%08x, written in %d steps", WriteAddr,smData.WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
@@ -457,12 +457,12 @@ static void WriteEraseTerminate(bool finalState, uint32_t opmode, QSpiHandleT *m
     if ( opmode != QSPI_MODE_POLL ) {
         if ( !myHandle->bAsyncBusy ) {
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PUTS("WriteEraseTerminate - Error: Async Op not active");
+                LOGU_ERROR("WriteEraseTerminate - Error: Async Op not active");
             #endif
         }
         myHandle->bAsyncBusy = false;
     }
-    DEBUG_PRINTTS("Write/Erase terminated %s\n",finalState ? "ok" : "with error");
+    LOGU_VERBOSE("Write/Erase terminated %s",finalState ? "ok" : "with error");
 
     /* Activate Callback, if specified */
     if (myHandle->QSpi_WrDoneCB) myHandle->QSpi_WrDoneCB(myHandle);
@@ -473,8 +473,8 @@ static bool WriteBlock (void )
 {
     bool ret;
 
-    DEBUG_PRINTTS("Write @0x%08x, Len=%d\n", smData.currWriteAddr, smData.currWriteSize);
-    DEBUG_PRINTTS("First Bytes (hex)= %02x, %02x, %02x, %02x, ...\n", 
+    LOGU_VERBOSE("Write @0x%08x, Len=%d", smData.currWriteAddr, smData.currWriteSize);
+    LOGU_VERBOSE("First Bytes (hex)= %02x, %02x, %02x, %02x, ...", 
                   smData.WriteSource[0], smData.WriteSource[1], smData.WriteSource[2], smData.WriteSource[3]);
     /* Enable write and send write command */
     if ( !QSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
@@ -494,7 +494,7 @@ static bool WriteBlock (void )
             break;
         default:
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PRINTF("WriteLoop - Error: Mode %d not implemented\n", smData.wrOpmode);
+                LOGU_ERROR("WriteLoop - Error: Mode %d not implemented", smData.wrOpmode);
             #endif
             return false;
     } // switch
@@ -502,7 +502,7 @@ static bool WriteBlock (void )
     /* report errors, if configured */
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTF("WriteLoop - Error: Transmit error in mode %d\n", smData.wrOpmode);
+            LOGU_ERROR("WriteLoop - Error: Transmit error in mode %d", smData.wrOpmode);
         #endif
     }
 
@@ -521,7 +521,7 @@ static bool WaitForWriteDone(void)
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificWriteWait - Error: Timeout while autopll");
+            LOGU_ERROR("QSpi_SpecificWriteWait - Error: Timeout while autopll");
         #endif
         return false;
     }
@@ -553,7 +553,7 @@ static bool WriteSM(void)
 
     while (!bSmPause ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTTS("WriteSM in state %d\n", smData.wrState);
+            LOGU_VERBOSE("WriteSM in state %d", smData.wrState);
         #endif
         switch ( smData.wrState ) {
             case WRSTATE_START: 
@@ -593,7 +593,7 @@ static bool WriteSM(void)
                 goto WriteSmTerminate;    
             default:
                 #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                    DEBUG_PRINTF("WriteSM - Error: illegal state %d\n", smData.wrState);
+                    LOGU_ERROR("WriteSM - Error: illegal state %d", smData.wrState);
                 #endif
                 goto WriteSmTerminate;
         } // switch
@@ -642,7 +642,7 @@ static uint32_t GetEraseAddrInc(QSpiHandleT *myHandle,uint32_t erasemode)
             break;
         default:
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PRINTF("GetEraseAddrInc - Error: unkown erasemode %d\n", erasemode);
+                LOGU_ERROR("GetEraseAddrInc - Error: unkown erasemode %d", erasemode);
             #endif
     }
 
@@ -663,7 +663,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     if ( opmode != QSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                DEBUG_PUTS("EraseInit - Error: Another Async Op is active");
+                LOGU_ERROR("EraseInit - Error: Another Async Op is active");
             #endif
             return false;
         }
@@ -673,7 +673,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     /* check for positive size */
     if ( numItems == 0 ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("EraseInit - Erasing 0 items not allowed");
+            LOGU_ERROR("EraseInit - Erasing 0 items not allowed");
         #endif
         return false;
     }
@@ -691,7 +691,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     wrSM               = NULL;
 
     #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        DEBUG_PRINTTS("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d\n", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
+        LOGU_VERBOSE("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
@@ -712,7 +712,7 @@ static bool WaitForEraseDone(uint32_t timeout_ms)
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificWait - Error: Timeout while autopll");
+            LOGU_ERROR("QSpi_SpecificWait - Error: Timeout while autopll");
         #endif
         return false;
     }
@@ -747,12 +747,12 @@ static bool EraseSM(void)
 
     while (!bSmPause ) {
         #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PRINTTS("EraseSM in state %d\n", smData.erState);
+            LOGU_VERBOSE("EraseSM in state %d", smData.erState);
         #endif
         switch ( smData.erState ) {
             case ERSTATE_START: 
                 /* Enable Write and Send Write Command - both in one step */
-                DEBUG_PRINTTS("Erase @0x%08x, mode=%d\n", smData.currEraseAddr, smData.EraseMode);
+                LOGU_VERBOSE("Erase @0x%08x, mode=%d", smData.currEraseAddr, smData.EraseMode);
                 if ( !QSpecific_EraseCMD(GETERHANDLE(), smData.currEraseAddr, smData.EraseMode) ) goto EraseSmTerminate;
                 /* Continue with next state in any case*/
                 ER_NEXTSTATE(ERSTATE_WAITFORDONE);
@@ -762,7 +762,7 @@ static bool EraseSM(void)
             case ERSTATE_WAITFORDONE:
                 if ( !QSpecific_GetEraseParams(smData.EraseMode, &tmo_ms, &opcode_unused ) ) goto EraseSmTerminate;
                 if ( !WaitForEraseDone(tmo_ms) ) goto EraseSmTerminate;
-                DEBUG_PRINTTS("Erase done\n");
+                LOGU_VERBOSE("Erase done");
                 ER_NEXTSTATE(ERSTATE_INCREMENT);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
                 ER_SM_PAUSE( smData.erOpmode != QSPI_MODE_POLL );
@@ -785,7 +785,7 @@ static bool EraseSM(void)
                 goto EraseSmTerminate;    
             default:
                 #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                    DEBUG_PRINTF("EraseSM - Error: illegal state %d\n", smData.erState);
+                    LOGU_ERROR("EraseSM - Error: illegal state %d", smData.erState);
                 #endif
                 goto EraseSmTerminate;
         } // switch
@@ -1099,7 +1099,7 @@ const HW_DeviceType HW_QSPI1 = {
     void HAL_QSPI_CmdCpltCallback(QSPI_HandleTypeDef *hqspi)
     {
         UNUSED(hqspi);
-        DEBUG_PRINTTS("CmdCplt Callback\n");
+        LOGU_VERBOSE("CmdCplt Callback");
         TaskNotify(TASK_QSPI);
     }
 
@@ -1111,7 +1111,7 @@ const HW_DeviceType HW_QSPI1 = {
     void HAL_QSPI_RxCpltCallback(QSPI_HandleTypeDef *hqspi)
     {
       UNUSED(hqspi);
-      DEBUG_PRINTTS("RxCplt Callback\n");
+      LOGU_VERBOSE("RxCplt Callback");
       QSpi1Handle.bAsyncBusy = false;  
       if ( QSpi1Handle.QSpi_RdDoneCB ) QSpi1Handle.QSpi_RdDoneCB(&QSpi1Handle);
     }
@@ -1124,7 +1124,7 @@ const HW_DeviceType HW_QSPI1 = {
     void HAL_QSPI_TxCpltCallback(QSPI_HandleTypeDef *hqspi)
     {
         UNUSED(hqspi);
-        DEBUG_PRINTTS("TxCplt Callback\n");
+        LOGU_VERBOSE("TxCplt Callback");
         TaskNotify(TASK_QSPI);
     }
 
@@ -1136,14 +1136,14 @@ const HW_DeviceType HW_QSPI1 = {
     void HAL_QSPI_StatusMatchCallback(QSPI_HandleTypeDef *hqspi)
     {
         UNUSED(hqspi);
-        DEBUG_PRINTTS("StatusMatch Callback\n");
+        LOGU_VERBOSE("StatusMatch Callback");
         TaskNotify(TASK_QSPI);
     }
 
     void HAL_QSPI_ErrorCallback(QSPI_HandleTypeDef *hqspi)
     {
       UNUSED(hqspi);
-      DEBUG_PRINTTS("ERROR CALLBACK\n");
+      LOGU_VERBOSE("ERROR CALLBACK");
       /* Set error state and trigger next call of SM */
       smData.wrState = STATE_ERROR;
       TaskNotify(TASK_QSPI);

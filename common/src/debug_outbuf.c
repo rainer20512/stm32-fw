@@ -172,6 +172,52 @@ int __putchar(int ch, __printf_tag_ptr uu) {
   return ch;
 }
 
+/*----------------------------------------------------------------------------*
+ * logger functions
+ *---------------------------------------------------------------------------*/
+
+
+#if LOGTO_CONSOLE > 0
+    /******************************************************************************
+     * Write data of lenght <len> to LogFile, no CRLF appended 
+     * true is returned on success,
+     * false is returned on any failure
+     *****************************************************************************/
+    uint8_t Console_Write(const char *data, uint32_t len )
+    {
+        /* write ti buffer and start transfer, if full */
+        if ( CircBuff_PutStr(&o, (uint8_t *)data, len ) < len )
+            TaskNotify(TASK_OUT);
+
+        return true;
+    }
+
+
+
+    /******************************************************************************
+     * Write NULL-terminated string to LogFile, append CRLF and start write to file 
+     *****************************************************************************/
+    uint8_t Console_Write_CRLF(const char *data, uint32_t len)
+    {
+        uint8_t ret = Console_Write(data, len);
+        if ( ret ) Console_CRLF();
+        return ret;
+
+    }
+
+
+    /******************************************************************************
+     * Write CRLF and transfer to file
+     *****************************************************************************/
+    void Console_CRLF(void)
+    {
+        if ( bExpandCrToCrlf ) CircBuff_Put(&o, '\r');
+        CircBuff_Put(&o, '\n');
+        TaskNotify(TASK_OUT);
+    }
+#endif
+
+
 
 void DebugAssignUart(const HW_DeviceType *dev, void *arg)
 { 

@@ -16,12 +16,35 @@
  extern "C" {
 #endif
 
-#define DEBUG_MODE          1
+/*
+ * Define different levels of logging detail depth 
+ * the higher the loglevel, the more debug/log info is generated/displayed
+ */
 
+#define LOGLEVEL_ALWAYS     0                    /* Will be generated even in release code   */
+#define LOGLEVEL_FATAL      1                    /* debug/log only severe errors      */
+#define LOGLEVEL_ERROR      2                    /* debug/log all kinds errors        */
+#define LOGLEVEL_WARN       3                    /* debug/log also warnings           */ 
+#define LOGLEVEL_INFO       4                    /* debug/log all kind of useful info */
+#define LOGLEVEL_VERBOSE    5                    /* debug/log even more               */
+
+#if defined(DEBUG)
+    #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE    /* max. loglevel that will be generated in code */
+    #define DEBUG_MODE          1
+#else
+    #define STATIC_LOGLIMIT     LOGLEVEL_ALWAYS 
+    #define DEBUG_MODE          0
+#endif
+
+/* Enable/Disable different logging destinations */
+#define LOGTO_FATFS         1   
+#define LOGTO_CONSOLE       1   
+
+
+/* Enable/Disable different debug packets */
 #define DEBUG_STARTUP       0
 #define DEBUG_FEATURES      1
 #define DEBUG_DEBUGIO       0
-#define LOGTO_FATFS         1   
 #define DEBUG_DUMP_RFM      0
 #define DEBUG_DUMP_KEYS     0
 #define DEBUG_RFM_STATUS    1
@@ -52,6 +75,7 @@
   #include <stdint.h>
   extern uint32_t debuglevel;
 #endif
+
 
 #ifdef __cplusplus
 }

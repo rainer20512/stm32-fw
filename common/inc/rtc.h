@@ -136,12 +136,14 @@ void task_init_rtc(void);
 void RTC_SetDateTime(uint8_t dd, uint8_t mm, uint8_t yy, uint8_t hr, uint8_t mi, uint8_t sec, uint8_t subs);
 bool RTC_SetCmpMatch(uint32_t value);
 
+#define RTC_GetMicrosecond()  BASTMR_GetMicrosecond(&BASTIM_HANDLE) 
 
-char* RTC_GetStrDateTimeMillis(void);
-char* RTC_GetStrDateTime(void);
-char* RTC_GetStrTimeMillis(void);
-char* RTC_GetStrTime(void);
-void RTC_DumpDateTime(void);
+char* RTC_GetStrSecMicros(uint32_t *retlen);
+char* RTC_GetStrDateTimeMillis(uint32_t *retlen);
+char* RTC_GetStrDateTime(uint32_t *retlen);
+char* RTC_GetStrTimeMillis(uint32_t *retlen);
+char* RTC_GetStrTime(uint32_t *retlen);
+char* RTC_GetStrSecMicros(uint32_t *retlen);
 
 void task_handle_rtc(uint32_t);
 void task_init_rtc(void);

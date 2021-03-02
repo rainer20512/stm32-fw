@@ -10,7 +10,7 @@
     hidden="Yes" />
   <configuration
     Name="Debug"
-    c_preprocessor_definitions="DEBUG"
+    c_preprocessor_definitions="DEBUG;USE_FULL_ASSERT"
     gcc_debugging_level="Level 3"
     gcc_omit_frame_pointer="Yes"
     gcc_optimization_level="None"
@@ -400,6 +400,7 @@
           <file file_name="../../common/src/debug_sram.c" />
           <file file_name="../../common/src/debug_gpio_exti.c" />
           <file file_name="../../common/src/logfile.c" />
+          <file file_name="../../common/src/log.c" />
         </folder>
       </folder>
       <folder Name="inc">
@@ -441,11 +442,12 @@
           <file file_name="../../common/inc/debug_helper.h" />
           <file file_name="../../common/inc/debug_outbuf.h" />
           <file file_name="../../common/inc/debug_sram.h" />
+          <file file_name="../../common/inc/logfile.h" />
+          <file file_name="../../common/inc/log.h" />
         </folder>
         <file file_name="CM7/Inc/global_flags.h" />
       </folder>
     </folder>
-    <file file_name="../../common/inc/logfile.h" />
   </project>
   <configuration
     Name="Common"

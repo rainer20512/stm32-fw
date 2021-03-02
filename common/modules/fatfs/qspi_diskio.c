@@ -11,8 +11,7 @@
 #include "ff_gen_drv.h"
 #include "dev/qspi_dev.h"
 
-#include "debug_helper.h"
-
+#include "log.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -99,6 +98,10 @@ DRESULT QspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
     if (QSpi_ReadWait(&FATFS_HND, buff, byte_addr, byte_size)) {
         res = RES_OK;
+    } else {
+        #if DEBUG_MODE > 0 
+            LOG_ERROR("FatFS: Read %d sectors beginning with sector %d failed", sector, count);
+        #endif
     }
 
   return res;
@@ -121,15 +124,16 @@ DRESULT QspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
     uint32_t byte_addr = sector * FATFS_HND.geometry.EraseSectorSize;
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
 
+    LOG_VERBOSE("FatFS Write %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
     if ( ! QSpi_EraseSectorWait(&FATFS_HND, byte_addr, count ) ) {
         #if DEBUG_MODE > 0 
-            DEBUG_PRINTF("Erase %d sectors beginning with sector %d failed\n", sector, count);
+            LOG_ERROR("FatFS: Erase %d sectors beginning with sector %d failed", sector, count);
         #endif
         return res;
     }
     if ( !QSpi_WriteWait(&FATFS_HND, (uint8_t *)buff, byte_addr, byte_size) ) {
         #if DEBUG_MODE > 0 
-            DEBUG_PRINTF("Write %d sectors beginning with sector %d failed\n", sector, count);
+            LOG_ERROR("FatFS: Write %d sectors beginning with sector %d failed\n", sector, count);
         #endif
         return res;
     }

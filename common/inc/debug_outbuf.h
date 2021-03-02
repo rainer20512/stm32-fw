@@ -58,6 +58,12 @@
   #endif
 #endif
 
+#if LOGTO_CONSOLE > 0
+    uint8_t Console_Write       (const char *data, uint32_t len );
+    uint8_t Console_Write_CRLF  (const char *data, uint32_t len);
+    void    Console_CRLF        (void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

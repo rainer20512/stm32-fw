@@ -39,17 +39,15 @@
 #define TASK_OUT              4
 #define TASK_RFM              5
 #define TASK_PERIODIC         6
-#define TASK_EPD              7
-#define TASK_ADC              8
-#define TASK_LCD              9
-#define TASK_QSPI             10
-#define TASK_REMOTE_CM7       11
-#define TASK_REMOTE_CM4       12
-#define TASK_SER              13
-#define TASK_SERIN            14
-#define TASK_PULSE            20
-#define TASK_SEQUENCE         21
-#define TASK_THP              30
+#define TASK_ADC              7
+#define TASK_LCD              8
+#define TASK_QSPI             9
+#define TASK_REMOTE_CM7       10
+#define TASK_REMOTE_CM4       11
+#define TASK_PULSE            12
+#define TASK_SEQUENCE         13
+#define TASK_LOGFILE          14
+#define TASK_THP              15
 
 /* functtion prototypes of Init and Run functions of task */
 /* both will be passed the task number as parameter       */

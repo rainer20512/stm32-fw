@@ -20,15 +20,25 @@
 #include "system/profiling.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
 #endif
 /* Private define ------------------------------------------------------------*/
 
-/* the maximum number of task is defined by the number of bits in the 
-   following variables. */
-#define MAX_TASK            16
+/* 
+ * the maximum number of tasks we can handle 
+ * ( one task requires approx 256 bytes  of SRAM )
+ */
+#define MAX_TASK            20
+
+/* 
+ * maximum number of semaphores the system supports. Semaphores can be allocated
+ * and deallocated by any task
+ * ( one semaphore requires 84 bytes of SRAM )
+ */
+#define MAX_SEMA            5
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct {
@@ -44,10 +54,16 @@ typedef struct {
 #endif
 } MiniTaskT;
 
+typedef struct {
+    StaticSemaphore_t staticSemaphore;
+    SemaphoreHandle_t binaryTaskSemaphore; 
+} SemaphoreT;
+
 /* Private variables ---------------------------------------------------------*/
 
 /* Array of registered tasks */
-static MiniTaskT tasks[MAX_TASK] = {0};
+static MiniTaskT       tasks[MAX_TASK] = {0};
+static SemaphoreT semaphores[MAX_TASK] = {0};
 
 #if DEBUG_MODE > 0
     /* flag variable to inhibit StopMode (for debug purposes) */
@@ -116,6 +132,7 @@ void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t 
     tasks[num].stackMem  = stackMem;
     tasks[num].stackSize = ulStackDepth;
     tasks[num].TaskID    = NULL;
+    semaphores[num].binaryTaskSemaphore = NULL;
 #if DEBUG_MODE > 0
     tasks[num].Name = Name;
 #endif
@@ -157,6 +174,10 @@ void TaskInitAll ( void )
         }
     } // for
 
+    /* Initialize the pool of shared semaphores */
+    for ( uint32_t i=0; i < MAX_SEMA; i++ ) {
+        semaphores[i].binaryTaskSemaphore = xSemaphoreCreateBinaryStatic(&(semaphores[i].staticSemaphore));
+    }
 
     ProfilerPop();
 }

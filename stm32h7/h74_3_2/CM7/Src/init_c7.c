@@ -200,6 +200,10 @@ void Init_OtherDevices(void)
     #include "system/util.h"
 #endif
 
+#if LOGTO_FATFS > 0
+    #include "logfile.h"
+#endif
+
 void task_handle_out  (uint32_t);
 void task_handle_qspi (uint32_t);
 void CM7_handle_remote(uint32_t);
@@ -213,6 +217,7 @@ void CM7_handle_remote(uint32_t);
 #define ADC_STACK_SIZE  128
 #define RMT_STACK_SIZE  256
 #define QSP_STACK_SIZE  128
+#define LOG_STACK_SIZE  512
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];
@@ -220,7 +225,6 @@ static StackType_t cmdStack[CMD_STACK_SIZE];
 static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
 static StackType_t adcStack[ADC_STACK_SIZE];
-static StackType_t qspStack[QSP_STACK_SIZE];
 
 
 /******************************************************************************
@@ -232,7 +236,8 @@ void Init_DefineTasks(void)
 {
   /* The priority is defined by the sequence: The higher in the list, the higher the priority */
 #if USE_QSPI > 0
-  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,      JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
+  static StackType_t qspStack[QSP_STACK_SIZE];
+  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,       JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
 #endif
   TaskRegisterTask(task_init_rtc, task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
   TaskRegisterTask(NULL,          task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
@@ -253,5 +258,9 @@ void Init_DefineTasks(void)
 #endif
 #if USE_DS18X20 > 0
     AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");
+#endif
+#if LOGTO_FATFS > 0
+  static StackType_t logStack[LOG_STACK_SIZE];
+  TaskRegisterTask(NULL,          task_handle_log, TASK_LOGFILE,     JOB_TASK_LOG,     logStack, LOG_STACK_SIZE, "LOG task");
 #endif
 }

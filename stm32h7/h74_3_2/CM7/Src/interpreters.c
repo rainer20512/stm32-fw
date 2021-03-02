@@ -27,6 +27,7 @@
 #include "task/minitask.h"
 //#include "com.h"
 #include "rtc.h"
+#include "log.h"
 #include "dev/i2c_dev.h"
 //#include "system/status.h"
 #include "system/hw_util.h"
@@ -2240,6 +2241,8 @@ bool Settings(char *cmdline, size_t len, const void * arg )
 }
 #if LOGTO_FATFS > 0
     #include "logfile.h"
+    char logbuf[80];
+    uint32_t num;
 #endif
 /*********************************************************************************
   * @brief  MainMenu
@@ -2268,6 +2271,21 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
         case 1:
             printf("Flush Logfile\n");
             LogFile_Flush();
+            break;
+        case 2:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: 'Write Log <n> - Write <n>+10 lines to log\n");
+            } else {
+                CMD_get_one_word( &word, &wordlen );
+                num = CMD_to_number ( word, wordlen );
+            }
+            printf("Write %d lines to logfile\n", num);
+            for ( uint32_t i = 0; i < num ; i++ ) {
+                for ( uint32_t j=0; j < 10; j++ ) {
+                    snprintf(logbuf,80, "This is Block %d, line %d", i+1, j+1);
+                    FLOGU_ALWAYS(logbuf, strlen(logbuf) );
+                }
+            }
             break;
 #endif
         default:
@@ -2321,6 +2339,7 @@ static const CommandSetT cmdBasic[] = {
   { "FMC test",        ctype_sub, .exec.sub = &mdlFMC,         0,       "Test FMC functions" },
 #endif
 #if LOGTO_FATFS > 0
+  { "Write Logfile",    ctype_fn, .exec.fn = MainMenu,        VOID(2), "Write Logfile" },
   { "Flush Logfile",    ctype_fn, .exec.fn = MainMenu,        VOID(1), "Flush Logfile" },
 #endif
 };
