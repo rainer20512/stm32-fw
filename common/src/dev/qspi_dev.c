@@ -931,7 +931,7 @@ bool QSpi_Init(const HW_DeviceType *self)
         #if DEBUG_MODE > 0
             QSpi_DumpChipInfo(myHandle->id);
             QSpi_DumpGeometry(&myHandle->geometry);
-            if ( debuglevel > 2 )  QSpi_DumpStatus(myHandle);
+            if ( console_debuglevel > 2 )  QSpi_DumpStatus(myHandle);
         #endif
 
  

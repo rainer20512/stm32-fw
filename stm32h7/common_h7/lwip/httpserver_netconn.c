@@ -35,7 +35,7 @@
 #define DEBUG_HTTPSRV         0       /* Debug Http server level */
 
 //#define DEBUG_OUTPUT(lvl,...)             DEBUG_PRINTF(__VA_ARGS__)  
-#define DEBUG_OUTPUT(lvl,...)             do if ( debuglevel > lvl ) { DEBUG_PRINTF(__VA_ARGS__); } while(0)  
+#define DEBUG_OUTPUT(lvl,...)             do if ( console_debuglevel > lvl ) { DEBUG_PRINTF(__VA_ARGS__); } while(0)  
 
 #define HTTPDDEBUG(...)                   DEBUG_OUTPUT(0, __VA_ARGS__)
 

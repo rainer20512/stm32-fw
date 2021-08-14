@@ -19,11 +19,9 @@
 #include "task/minitask.h"
 #include "system/profiling.h"
 #include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
 
 #if DEBUG_MODE > 0
-    #include "debug_helper.h"
+    #include "log.h"
 #endif
 /* Private define ------------------------------------------------------------*/
 
@@ -57,13 +55,14 @@ typedef struct {
 typedef struct {
     StaticSemaphore_t staticSemaphore;
     SemaphoreHandle_t binaryTaskSemaphore; 
+    uint32_t          bIsAllocated;
 } SemaphoreT;
 
 /* Private variables ---------------------------------------------------------*/
 
 /* Array of registered tasks */
 static MiniTaskT       tasks[MAX_TASK] = {0};
-static SemaphoreT semaphores[MAX_TASK] = {0};
+static SemaphoreT semaphores[MAX_SEMA] = {0};
 
 #if DEBUG_MODE > 0
     /* flag variable to inhibit StopMode (for debug purposes) */
@@ -122,7 +121,7 @@ void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t 
 
 
     if ( tasks[num].TaskID != NULL  ) {
-        DEBUG_PRINTF("Task %d already set\n", num);
+        LOG_ERROR("Task %d already set", num);
         return;
     }
 
@@ -132,7 +131,6 @@ void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t 
     tasks[num].stackMem  = stackMem;
     tasks[num].stackSize = ulStackDepth;
     tasks[num].TaskID    = NULL;
-    semaphores[num].binaryTaskSemaphore = NULL;
 #if DEBUG_MODE > 0
     tasks[num].Name = Name;
 #endif
@@ -168,7 +166,7 @@ void TaskInitAll ( void )
                 tasks[i].TaskID = ret;
             else {
                 #if DEBUG_MODE > 0
-                    DEBUG_PRINTF("Error: Cannot initialize Task #%d (%s)\n", i, TASK_NAME(i) );
+                    LOG_ERROR("Cannot initialize Task #%d (%s)", i, TASK_NAME(i) );
                 #endif
             }
         }
@@ -177,6 +175,7 @@ void TaskInitAll ( void )
     /* Initialize the pool of shared semaphores */
     for ( uint32_t i=0; i < MAX_SEMA; i++ ) {
         semaphores[i].binaryTaskSemaphore = xSemaphoreCreateBinaryStatic(&(semaphores[i].staticSemaphore));
+        semaphores[i].bIsAllocated        = 0;
     }
 
     ProfilerPop();
@@ -198,9 +197,39 @@ void TaskNotify ( uint32_t num )
         else
             xTaskNotifyGive(tasks[num].TaskID);
     } else {
-        // DEBUG_PRINTF("Notify to unset Task #%d", num);
+        // LOG_ERROR("Notify to unset Task #%d", num);
     }
 }
+
+
+/******************************************************************************
+ * Allocate one semaphore from the static pool of semaphores, execute "give" and
+ * return ready for use to caller
+* NULL is returned, if there is no unused semaphore in the pool
+ *****************************************************************************/
+SemaphoreHandle_t TaskSemaphoreAlloc(void)
+{
+    for ( uint32_t i = 0; i < MAX_SEMA; i++ ) if ( !semaphores[i].bIsAllocated ) {
+       semaphores[i].bIsAllocated = 1;
+       xSemaphoreGive(semaphores[i].binaryTaskSemaphore);
+       return semaphores[i].binaryTaskSemaphore;
+    } // for, if
+
+    LOG_ERROR("TaskSemaphoreAlloc: No free semaphore");
+    return NULL;
+}
+
+void TaskSemaphoreFree( SemaphoreHandle_t used_sem )
+{
+    for ( uint32_t i = 0; i < MAX_SEMA; i++ ) if ( semaphores[i].binaryTaskSemaphore == used_sem ) {
+       semaphores[i].bIsAllocated = 0;
+       return;
+    } // for, if
+
+    LOG_ERROR("TaskSemaphoreFree: Illegal semaphore");
+    return;
+}
+
 
 #if 0
 /******************************************************************************
@@ -213,7 +242,7 @@ void TaskNotifyFromISR ( uint32_t num )
     if ( tasks[num].TaskID )  {
         vTaskNotifyGiveFromISR(tasks[num].TaskID, NULL);
     } else {
-        DEBUG_PRINTF("ISR Notify to unset Task #%d", num);
+        LOG_ERROR("ISR Notify to unset Task #%d", num);
     }
 }
 #endif
@@ -239,7 +268,7 @@ uint32_t TaskGetTasks(void)
 {
     nroftasks = uxTaskGetNumberOfTasks();
     if ( nroftasks > MAX_TASK ) {
-        DEBUG_PUTS("Too many tasks");
+        LOG_ERROR("Too many tasks");
         return 0;
     }   
     uxTaskGetSystemState( taskstatus, MAX_TASK, NULL );

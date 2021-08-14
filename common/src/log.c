@@ -18,18 +18,22 @@ static char logline[LOGLINE_LEN];
 
 static const char severity_char[] = "FEWI";  /* Severity designators for Fatal, Error, Warning and Info */
 
-static void _logto ( uint32_t logdest, char *buf, uint32_t buflen, uint32_t bWithCRLF )
+static void _logto ( uint32_t logdest, uint32_t loglvl, char *buf, uint32_t buflen, uint32_t bWithCRLF )
 {
     #if LOGTO_FATFS > 0
         if ( logdest & LOGDEST_FATFS ) {
-            LogFile_Write(buf, buflen);
-            if ( bWithCRLF ) LogFile_CRLF();
+            if ( loglvl <= fatfs_debuglevel || loglvl == LOGLEVEL_ALWAYS ) {
+                LogFile_Write(buf, buflen);
+                if ( bWithCRLF ) LogFile_CRLF();
+            }
         }
     #endif
     #if LOGTO_CONSOLE > 0
         if ( logdest & LOGDEST_CONSOLE ) {
-            Console_Write(buf, buflen);
-            if ( bWithCRLF ) Console_CRLF();
+            if ( loglvl <= console_debuglevel || loglvl == LOGLEVEL_ALWAYS ) {
+                Console_Write(buf, buflen);
+                if ( bWithCRLF ) Console_CRLF();
+            }
         }
     #endif
 }
@@ -41,7 +45,7 @@ void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* form
     uint32_t reslen;
 
     /* Only generate output, if message severity is at or below global loglevel value */
-    if ( loglvl != LOGLEVEL_ALWAYS && loglvl > debuglevel ) return;
+    if ( loglvl != LOGLEVEL_ALWAYS && loglvl > console_debuglevel &&  loglvl > fatfs_debuglevel ) return;
 
     /* First, generate the timestamp, if desired */
     switch(logts) {
@@ -55,7 +59,7 @@ void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* form
             start = NULL;
     }
 
-    if ( start ) _logto( logdest, start, reslen, false );
+    if ( start ) _logto( logdest, loglvl, start, reslen, false );
 
     /* then, generate the severity letter */
     if ( loglvl >= LOGLEVEL_FATAL && loglvl <= LOGLEVEL_INFO ) {
@@ -74,5 +78,11 @@ void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* form
     reslen = vsnprintf(start, LOGLINE_LEN-prefixlen, format, args);
     va_end( args );
 
-    _logto( logdest, logline, reslen+prefixlen, true );
+    _logto( logdest, loglvl, logline, reslen+prefixlen, true );
+}
+
+void Log_SetDebugLevels(uint32_t config_value)
+{
+    console_debuglevel = config_value & 0x0f;
+    fatfs_debuglevel   = config_value >> 4;
 }

@@ -17,12 +17,13 @@
  */
 
 #define LOGLEVEL_NOTHING   0                    /* Don't debug/log anything at all   */
-#define LOGLEVEL_ALWAYS    1                    /* Log always, independent from debuglevel       */
+#define LOGLEVEL_ALWAYS    1                    /* Log always, independent from console_debuglevel       */
 #define LOGLEVEL_FATAL     2                    /* debug/log only severe errors      */
 #define LOGLEVEL_ERROR     3                    /* debug/log all kinds errors        */
 #define LOGLEVEL_WARN      4                    /* debug/log also warnings           */ 
 #define LOGLEVEL_INFO      5                    /* debug/log all kind of useful info */
 #define LOGLEVEL_VERBOSE   6                    /* debug/log even more               */
+#define LOGLEVEL_PALAVER   7                    /* debug/log all you can imagine     */
 
 #define LOGTS_NONE         0                    /* No timestamp at start of line     */
 #define LOGTS_T            1                    /* hh:mm:ss.iii at start of line     */
@@ -101,6 +102,16 @@
     #define LOGU_VERBOSE(...)
 #endif
 
+#if STATIC_LOGLIMIT >= LOGLEVEL_PALAVER
+    #define LOG_PALAVER(...)    _LOG(LOGLEVEL_PALAVER, LOGTS_NONE, LOGDEST_ALL, __VA_ARGS__ )
+    #define LOGT_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_T,    LOGDEST_ALL, __VA_ARGS__ )
+    #define LOGU_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_U,    LOGDEST_ALL, __VA_ARGS__ )
+#else
+    #define LOG_PALAVER(...)
+    #define LOGT_PALAVER(...)
+    #define LOGU_PALAVER(...)
+#endif
+
 /* ------------------------------ Log console only ----------------------------------------*/
 #define DBG_ALWAYS(...)     _LOG(LOGLEVEL_ALWAYS,  LOGTS_NONE, LOGDEST_CONSOLE, __VA_ARGS__ )
 #define DBGT_ALWAYS(...)    _LOG(LOGLEVEL_ALWAYS,  LOGTS_T,    LOGDEST_CONSOLE, __VA_ARGS__ )
@@ -154,6 +165,16 @@
     #define DBG_VERBOSE(...)
     #define DBGT_VERBOSE(...)
     #define DBGU_VERBOSE(...)
+#endif
+
+#if STATIC_LOGLIMIT >= LOGLEVEL_PALAVER
+    #define DBG_PALAVER(...)    _LOG(LOGLEVEL_PALAVER, LOGTS_NONE, LOGDEST_CONSOLE, __VA_ARGS__ )
+    #define DBGT_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_T,    LOGDEST_CONSOLE, __VA_ARGS__ )
+    #define DBGU_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_U,    LOGDEST_CONSOLE, __VA_ARGS__ )
+#else
+    #define DBG_PALAVER(...)
+    #define DBGT_PALAVER(...)
+    #define DBGU_PALAVER(...)
 #endif
 
 /* ------------------------------ Log console only ----------------------------------------*/
@@ -211,7 +232,18 @@
     #define FLOGU_VERBOSE(...)
 #endif
 
+#if STATIC_LOGLIMIT >= LOGLEVEL_PALAVER
+    #define FLOG_PALAVER(...)    _LOG(LOGLEVEL_PALAVER, LOGTS_NONE, LOGDEST_FATFS, __VA_ARGS__ )
+    #define FLOGT_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_T,    LOGDEST_FATFS, __VA_ARGS__ )
+    #define FLOGU_PALAVER(...)   _LOG(LOGLEVEL_PALAVER, LOGTS_U,    LOGDEST_FATFS, __VA_ARGS__ )
+#else
+    #define FLOG_PALAVER(...)
+    #define FLOGT_PALAVER(...)
+    #define FLOGU_PALAVER(...)
+#endif
+
 void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* format, ... );
+void Log_SetDebugLevels(uint32_t config_value);
 
 
 #endif /* if ! defined(_LOG_H_) */

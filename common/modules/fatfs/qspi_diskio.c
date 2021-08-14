@@ -96,15 +96,19 @@ DRESULT QspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 
     uint32_t byte_addr = sector * FATFS_HND.geometry.EraseSectorSize;
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
+    DBGU_VERBOSE("FatFS read %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
+
     if (QSpi_ReadWait(&FATFS_HND, buff, byte_addr, byte_size)) {
         res = RES_OK;
     } else {
         #if DEBUG_MODE > 0 
-            LOG_ERROR("FatFS: Read %d sectors beginning with sector %d failed", sector, count);
+            DBGU_ERROR("FatFS: Read %d sectors beginning with sector %d failed", sector, count);
         #endif
     }
 
-  return res;
+    DBGU_VERBOSE("FatFS read done", count, sector, byte_addr, byte_addr+byte_size-1); 
+
+    return res;
 }
 
 /**
@@ -124,20 +128,24 @@ DRESULT QspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
     uint32_t byte_addr = sector * FATFS_HND.geometry.EraseSectorSize;
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
 
-    LOG_VERBOSE("FatFS Write %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
+    DBGU_VERBOSE("FatFS Write %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
     if ( ! QSpi_EraseSectorWait(&FATFS_HND, byte_addr, count ) ) {
         #if DEBUG_MODE > 0 
-            LOG_ERROR("FatFS: Erase %d sectors beginning with sector %d failed", sector, count);
+            DBGU_ERROR("FatFS: Erase %d sectors beginning with sector %d failed", sector, count);
         #endif
         return res;
     }
     if ( !QSpi_WriteWait(&FATFS_HND, (uint8_t *)buff, byte_addr, byte_size) ) {
         #if DEBUG_MODE > 0 
-            LOG_ERROR("FatFS: Write %d sectors beginning with sector %d failed\n", sector, count);
+            DBGU_ERROR("FatFS: Write %d sectors beginning with sector %d failed", sector, count);
         #endif
         return res;
     }
     
+    #if DEBUG_MODE > 0 
+        DBGU_VERBOSE("FatFS: Write done\n", sector, count);
+    #endif
+
     return RES_OK;
 }
 #endif /* _USE_WRITE == 1 */

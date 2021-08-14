@@ -63,7 +63,7 @@
 void COM_print_debug(bool rfm_transmit) 
 {
     uint16_t work;
-    DEBUG_PRINTF("D:%s", RTC_GetStrDateTime() );
+    DEBUG_PRINTF("D:%s", RTC_GetStrDateTime(NULL) );
 
     DEBUG_PRINTF(" %s", Get_FSK_status_text());
     #ifdef TX18LISTENER

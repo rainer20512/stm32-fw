@@ -21,12 +21,13 @@
  * the higher the loglevel, the more debug/log info is generated/displayed
  */
 
-#define LOGLEVEL_ALWAYS     0                    /* Will be generated even in release code   */
-#define LOGLEVEL_FATAL      1                    /* debug/log only severe errors      */
-#define LOGLEVEL_ERROR      2                    /* debug/log all kinds errors        */
-#define LOGLEVEL_WARN       3                    /* debug/log also warnings           */ 
-#define LOGLEVEL_INFO       4                    /* debug/log all kind of useful info */
-#define LOGLEVEL_VERBOSE    5                    /* debug/log even more               */
+#define LOGLEVEL_NOTHING   0                    /* Don't debug/log anything at all   */
+#define LOGLEVEL_ALWAYS    1                    /* Log always, independent from console_debuglevel       */
+#define LOGLEVEL_FATAL     2                    /* debug/log only severe errors      */
+#define LOGLEVEL_ERROR     3                    /* debug/log all kinds errors        */
+#define LOGLEVEL_WARN      4                    /* debug/log also warnings           */ 
+#define LOGLEVEL_INFO      5                    /* debug/log all kind of useful info */
+#define LOGLEVEL_VERBOSE   6                    /* debug/log even more               */
 
 #if defined(DEBUG)
     #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE    /* max. loglevel that will be generated in code */
@@ -73,7 +74,8 @@
 
 #if DEBUG_MODE 
   #include <stdint.h>
-  extern uint32_t debuglevel;
+  extern uint32_t console_debuglevel;
+  extern uint32_t fatfs_debuglevel;
 #endif
 
 

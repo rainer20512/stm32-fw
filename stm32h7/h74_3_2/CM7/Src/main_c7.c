@@ -32,6 +32,7 @@
 #include "system/mpu.h"
 #include "system/clockconfig.h"
 #include "eeprom.h"
+#include "log.h"
 #include "dev/devices.h"
 #include "task/minitask.h"
 #include "debug_helper.h"
@@ -52,7 +53,8 @@ osSemaphoreId osSemaphore;
 uint32_t gflags;
 
 #if DEBUG_MODE 
-  uint32_t debuglevel;
+  uint32_t console_debuglevel;
+  uint32_t fatfs_debuglevel;
 #endif
 
 /* Private function prototypes -----------------------------------------------*/
@@ -167,7 +169,7 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
-    debuglevel = config.dbg_level;
+    Log_SetDebugLevels((uint32_t)config.dbg_level);
 
     /* 
     * Select clock source as configured in config variable, 

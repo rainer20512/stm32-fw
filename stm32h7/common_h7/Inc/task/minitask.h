@@ -20,6 +20,7 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -59,6 +60,11 @@ bool TaskIsRunableTask  (void);
 void TaskInitAll        ( void );
 void TaskRunAll         ( void );
 void TaskNotify         ( uint32_t num );
+
+SemaphoreHandle_t TaskSemaphoreAlloc(void);
+void              TaskSemaphoreFree (SemaphoreHandle_t used_sem);
+
+
 // void TaskNotifyFromISR  ( uint32_t num );  use TaskNotify instead !
 
 #if DEBUG_MODE > 0
