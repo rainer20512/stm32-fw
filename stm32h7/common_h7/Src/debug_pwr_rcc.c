@@ -54,7 +54,7 @@ static const char* DBG_get_pwr_vos_txt(uint32_t sel)
 
 static uint32_t get_vos_value (void)
 {
-#if defined(STM32H745xx)
+#if defined(STM32H747xx) || defined(STM32H745xx)
     return ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
 #elif defined(STM32H742xx) || defined(STM32H743xx)
     /* VOSrange 0 is coded as VOSrange 1 PLUS ODEN bit in SYSCFG->PWRCR set */
@@ -167,7 +167,7 @@ static void DBG_dump_pwr_cpu1cr(void)
   DBG_dump_textvalue("D1 on PDD", READ_BIT(PWR->CPUCR, PWR_CPUCR_PDDS_D1) ? "allow Standby" : "continue StopMode" );    
 }
 
-#if defined(STM32H745xx)
+#if defined(STM32H747xx) || defined(STM32H745xx)
     static void DBG_dump_pwr_cpu2cr(void)
     {
       DBG_setPadLen(24);
@@ -266,7 +266,7 @@ void DBG_dump_powersetting(void)
       DBG_dump_pwr_cpu1cr();
       DBG_setIndentRel(-2);
 
-#if defined(STM32H745xx) 
+#if defined(STM32H747xx) || defined(STM32H745xx) 
       DBG_printf_indent("PWR: CPU2 Control Register\n" );
       DBG_setIndentRel(+2);
       DBG_dump_pwr_cpu2cr();
@@ -864,7 +864,7 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 #endif /* #if DEBUG_DUMP_PERCLK > 0 */
 
 
-#if defined(STM32H745xx)
+#if defined(STM32H747xx) || defined(STM32H745xx)
     #define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
 #elif defined(STM32H742xx) || defined(STM32H743xx)
     #define MK_3ARGS(a)     RCC->a, 0, 0 

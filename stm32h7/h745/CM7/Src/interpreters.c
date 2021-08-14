@@ -27,6 +27,7 @@
 #include "task/minitask.h"
 //#include "com.h"
 #include "rtc.h"
+#include "log.h"
 #include "dev/i2c_dev.h"
 //#include "system/status.h"
 #include "system/hw_util.h"
@@ -1824,9 +1825,12 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
               printf("Usage: 'Level [<n>] - Show/Set Debuglevel\n");
             } else {
                 CMD_get_one_word( &word, &wordlen );
-                debuglevel = CMD_to_number ( word, wordlen );
+                Log_SetDebugLevels(CMD_to_number ( word, wordlen ));
+//                debuglevel = CMD_to_number ( word, wordlen );
             }
-            printf("Debuglevel=%d\n", debuglevel);
+            printf("Console Debuglevel=%d\n", console_debuglevel);
+            printf("FatFS   Debuglevel=%d\n", fatfs_debuglevel);
+//            printf("Debuglevel=%d\n", debuglevel);
             break;
 #endif
         default:

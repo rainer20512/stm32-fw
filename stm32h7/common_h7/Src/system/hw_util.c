@@ -17,7 +17,7 @@
 
 /* Private macro ------------------------------------------------------------------------*/
 
-#if defined(STM32H745xx)
+#if defined(STM32H747xx) || defined(STM32H745xx)
     /* Stop rtc when either M7 or M4 is in debug mode */
     #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;   DBGMCU->APB4FZ2 |=  DBGMCU_APB4FZ2_DBG_RTC;      } while (0)
     /* Stop LPTIMERS when either M7 or M4 is in debug mode */
@@ -476,7 +476,7 @@ static const char *Get_DeviceName ( uint16_t devID )
         default:    return "Unknown Device";
     }
 }
-#if defined(STM32H745xx)
+#if defined(STM32H747xx) || defined(STM32H745xx)
     static const char *Get_PackageName( uint16_t package )
     {
         switch(package&0b1111) {

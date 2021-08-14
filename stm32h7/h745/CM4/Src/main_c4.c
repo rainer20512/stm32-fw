@@ -23,6 +23,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "task/minitask.h"
+#include "log.h"
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
@@ -47,7 +48,9 @@
 uint32_t gflags;
 
 #if DEBUG_MODE 
-  uint32_t debuglevel;
+  uint32_t console_debuglevel;
+  uint32_t fatfs_debuglevel;
+//  uint32_t debuglevel;
 #endif
 
 /* Set to pdFALSE if any errors are detected.  Used to inform the check task
@@ -136,7 +139,8 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
-    debuglevel = config.dbg_level;
+    Log_SetDebugLevels((uint32_t)config.dbg_level);
+//    debuglevel = config.dbg_level;
 
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */

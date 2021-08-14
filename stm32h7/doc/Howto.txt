@@ -46,6 +46,31 @@
         bl memory_set
         /* RHB end of inserted code */
 
+    4a. The Rowley Crossworks Startup-code. located in "STM32_Startup.s" in ..\AppData\Local\Rowley Associates Limited\CrossWorks for ARM\v4\packages\targets\STM32
+        has been modified to preset all RAM with an uniform pattern at startup. This has been done for a primitive RAM-Usage checker: All ram bytes that differ from 
+        the startup pattern are regarded as "in use".
+
+        This has been done by the insertion of the following code in "STM32_Startup.s":
+
+        reset_handler:
+
+        // RHB chgd: Preset all RAM with an uniform pattern
+        #ifdef DO_RAM_PRESET
+          #include "system/ram_preset.inc"
+        #endif
+        // end of inserted code
+
+        #ifndef __NO_SYSTEM_INIT
+          ldr r0, =__RAM_segment_end__
+          mov sp, r0
+          bl SystemInit
+        #endif
+
+        the ram_preset.inc is target-specific- Moreover, in a dual core environment, it is core-specific. So we have different ram_preset.inc for CM/ and CM4 core.
+        by own definition, CM7 "owns" all SRAM except SRAM1, which is owned by CM4 as only RAM area. 
+        So, CM7's ram_preset.inc has to preset all SRAM except SRAM1, while CM4's ram_preset.inc has to preset only SRAM1. 
+        The specific ram_preset.inc can be found in the core-specific inc/system-folder.
+
     5. Implement an us-Delay function by accessing the cycle-counter of the ARM core:
         volatile unsigned int *DWT_CYCCNT     = (volatile unsigned int *)0xE0001004; //address of the register
         volatile unsigned int *DWT_CONTROL    = (volatile unsigned int *)0xE0001000; //address of the register

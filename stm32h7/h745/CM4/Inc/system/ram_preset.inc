@@ -2,8 +2,8 @@
  * code for a RAM preset. this code is included by STM32_Startup.s, so no
  * section or global definitions are neccessary
  * 
- * This file : RAM  preset for CM7: Preset all RAM except SRAM1, which is used by 
- * CM4 in parallel and which will be preset by CM4, if desired
+ * This file : RAM  preset for CM4: Preset SRAM1 _only_ , this is the
+ * only memory that is assigned to CM4
  *
  * Store this file in one directoy, that is contained in the include search path
  *

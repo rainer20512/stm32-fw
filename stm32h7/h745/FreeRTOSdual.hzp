@@ -257,6 +257,7 @@
           <file file_name="../../common/src/system/exti_handler.c" />
           <file file_name="../../common/src/system/profiling.c" />
         </folder>
+        <file file_name="../../common/src/log.c" />
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -279,6 +280,7 @@
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />
         </folder>
+        <file file_name="../../common/inc/log.h" />
       </folder>
     </folder>
     <folder Name="common_h7">
@@ -580,6 +582,7 @@
           <file file_name="../../common/src/debug_sram.c" />
           <file file_name="../../common/src/debug_gpio_exti.c" />
         </folder>
+        <file file_name="../../common/src/log.c" />
       </folder>
       <folder Name="inc">
         <folder Name="dev">
@@ -617,6 +620,7 @@
           <file file_name="../../common/inc/debug_sram.h" />
         </folder>
         <file file_name="CM7/Inc/global_flags.h" />
+        <file file_name="../../common/inc/log.h" />
       </folder>
       <folder Name="nextion">
         <file file_name="../../common/nextion/Example.c" />

@@ -112,7 +112,7 @@ static void DBG_dump_sram_areas(void)
   DO_DUMP_RAMAREA("RAM",__RAM_segment);
   DEBUG_PUTC('\n');
 }
-#elif defined(STM32H745xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx)
 static void DBG_dump_sram_areas(void)
 {
   DBG_setPadLen(8);

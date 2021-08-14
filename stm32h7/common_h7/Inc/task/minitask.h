@@ -45,10 +45,10 @@
 #define TASK_QSPI             9
 #define TASK_REMOTE_CM7       10
 #define TASK_REMOTE_CM4       11
-#define TASK_PULSE            12
-#define TASK_SEQUENCE         13
-#define TASK_LOGFILE          14
-#define TASK_THP              15
+#define TASK_SERIN            12
+#define TASK_XXX              13
+#define TASK_ZZZ              14
+#define TASK_YYY              15
 
 /* functtion prototypes of Init and Run functions of task */
 /* both will be passed the task number as parameter       */

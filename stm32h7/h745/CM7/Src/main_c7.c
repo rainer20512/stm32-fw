@@ -23,6 +23,7 @@
 /* Standard includes. */
 #include "stdio.h"
 #include "string.h"
+#include "log.h"
 
 /* FreeRTOS includes. */
 #include "FreeRTOS.h"
@@ -58,7 +59,9 @@ osSemaphoreId osSemaphore;
 uint32_t gflags;
 
 #if DEBUG_MODE 
-  uint32_t debuglevel;
+  uint32_t console_debuglevel;
+  uint32_t fatfs_debuglevel;
+//  uint32_t debuglevel;
 #endif
 
 /* Private function prototypes -----------------------------------------------*/
@@ -197,6 +200,7 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+    Log_SetDebugLevels((uint32_t)config.dbg_level);
 
     /* 
     * Select clock source as configured in config variable, 

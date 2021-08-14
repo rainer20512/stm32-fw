@@ -80,7 +80,7 @@ void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
             return HAL_RCC_GetPCLK1Freq();
     }
                  
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     static bool SpiSetClockSource(SPI_TypeDef *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -219,7 +219,7 @@ static uint32_t HwSpiGetBRPrescaler(SPI_TypeDef *hspi, uint32_t baudrate )
     
 #if defined(STM32L476xx)|| defined(STM32L496xx)
    return min_idx << SPI_CR1_BR_Pos;
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
    return min_idx << SPI_CFG1_MBR_Pos;
 #else
     #error "No receipe to set baudrate prescaler"
@@ -235,7 +235,7 @@ void HwSpiSetPrescaler (SPI_TypeDef *hspi, uint32_t baudrate )
     uint32_t newPscVal = HwSpiGetBRPrescaler(hspi, baudrate );
 #if defined(STM32L476xx)|| defined(STM32L496xx)
    MODIFY_REG(hspi->CR1, SPI_CR1_BR_Msk, newPscVal);
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
    MODIFY_REG(hspi->CFG1, SPI_CFG1_MBR_Msk, newPscVal);
 #else
     #error "No receipe to set baudrate prescaler"
@@ -246,7 +246,7 @@ static uint32_t HwGetDataSize ( uint8_t plainDataSize )
 {
 #if defined(STM32L476xx)|| defined(STM32L496xx)
    return  ((uint16_t)plainDataSize - 1) << 8;
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
    return  ((uint16_t)plainDataSize - 1);
 #else
     #error "No receipe to set baudrate prescaler"
@@ -398,7 +398,7 @@ static void HwSpiSetTxDMAMemInc(SPI_HandleTypeDef *hspi, bool bDoIncrement )
       */
     }
 
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
     {
       SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;

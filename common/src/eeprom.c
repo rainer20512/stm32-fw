@@ -314,7 +314,7 @@ void HAL_FLASH_EndOfOperationCallback(uint32_t ReturnValue)
 void Config_Init(void)
 {
 
-#if defined(STM32H745xx) && defined(CORE_CM4)
+#if (defined(STM32H747xx) || defined(STM32H745xx)) && defined(CORE_CM4)
   /* Core CM4 in dual core config gets its persistend settings from CM7 core */
   bEeConfigValid = true;
 #else

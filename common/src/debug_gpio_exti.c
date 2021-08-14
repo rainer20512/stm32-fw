@@ -354,7 +354,7 @@ const char * const exti_domain_name[]= { "EXTI   " };
 #define GET_FTSR(i)   ( i > 31 ? EXTI->FTSR2 : EXTI->FTSR1 )
 #define GET_RTSR(i)   ( i > 31 ? EXTI->RTSR2 : EXTI->RTSR1 )
 
-#elif defined(STM32H745xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx)
 const char * const exti_line_name[]= { 
 /* insert pattern ( max length is 12 ) 
   "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
@@ -574,7 +574,7 @@ const char * const user_nvic_name[]= {
   "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "CAN2_TX",        "CAN2_RX0", 
   "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
 };
-#elif defined(STM32H745xx)
+#elif defined(STM32H747xx) || defined(STM32H745xx)
 const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
 /*.                 .                 .                 .                 .                 .                 .                 . */
   "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
