@@ -1067,6 +1067,16 @@ static bool Test_Bitband ( char *cmdline, size_t len, const void * arg )
   ********************************************************************************/
 bool eeprom_update_config_byte(uint8_t cfg_idx, uint8_t newval);
 
+#if defined(USE_LPUART1) 
+    #define OUTBUF_SIZE 256
+    #define INBUF_SIZE  64
+
+    static DMAMEM uint8_t outbuf[OUTBUF_SIZE];
+    static DMAMEM uint8_t inbuf[INBUF_SIZE];    
+    static CircBuffT o;
+    static LinBuffT i; 
+#endif
+
 static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
 {
   UNUSED(cmdline);UNUSED(len);
@@ -1119,20 +1129,27 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
        break;
 #endif
 #if defined(USE_LPUART1) 
-      case 4:
-        if ( CMD_argc() < 1 ) {
+       case 4:
+         if ( CMD_argc() < 1 ) {
             printf("Usage: 'LPUART Write/read char  <x> times\n");
             return false;
-        }
-       CMD_get_one_word( &word, &wordlen );
-       pattern = CMD_to_number ( word, wordlen );
-       c = '?';
-       for ( uint32_t i = 0; i < pattern; i++ )
+         }
+         CMD_get_one_word( &word, &wordlen );
+         pattern = CMD_to_number ( word, wordlen );
+         c = '?';
+         for ( uint32_t i = 0; i < pattern; i++ )
             UsartTxRxOneByteWait   (&HandleCOM9, &c, 3000);
-       break;
+         break;
+       case 5:
+         CircBuff_Init       (&o, OUTBUF_SIZE, outbuf);
+         LinBuff_Init        (&i, INBUF_SIZE,  inbuf );
+         Usart_AssignBuffers (&HandleCOM9, &i, &o ); 
+         CircBuff_PutStr     (&o,(uint8_t *)"Am Ende ist man immer schlauer",30);
+         UsartStartTx        (&HandleCOM9, o.buf+o.rdptr,CBUF_GET_USED(o));
+         break; 
 #endif
-    default:
-      DEBUG_PUTS("Test_Menu: command not implemented");
+       default:
+         DEBUG_PUTS("Test_Menu: command not implemented");
   } /* end switch */
 
   return true;
@@ -1207,7 +1224,8 @@ static const CommandSetT cmdTest[] = {
   { "QEncoder test",   ctype_fn, .exec.fn = Test_Menu,      VOID(2), "Test quadrature encoder"}, 
 #endif
 #if defined(USE_LPUART1) 
-  { "LPUART1 test",     ctype_fn, .exec.fn = Test_Menu,      VOID(4), "Test LPUART1"}, 
+  { "LPUART1 R/W byte",ctype_fn, .exec.fn = Test_Menu,      VOID(4), "Test LPUART1 r/w"}, 
+  { "LPUART1 W string",ctype_fn, .exec.fn = Test_Menu,      VOID(5), "Test LPUART1 write str "}, 
 #endif
 #if USE_EEPROM_EMUL > 0
   { "Write config ",   ctype_fn, .exec.fn = Test_Menu,      VOID(3), "Write config[31] x times"}, 
@@ -1896,7 +1914,7 @@ ADD_SUBMODULE(Test);
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d kHz",  addr );
              
-                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000 );
+                ret = QSpi_SetSpeed(&QSpi1Handle, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:
@@ -2458,9 +2476,9 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
               printf("Usage: 'Level [<n>] - Show/Set Debuglevel\n");
             } else {
                 CMD_get_one_word( &word, &wordlen );
-                debuglevel = CMD_to_number ( word, wordlen );
+                console_debuglevel = CMD_to_number ( word, wordlen );
             }
-            printf("Debuglevel=%d\n", debuglevel);
+            printf("Console Debuglevel=%d\n", console_debuglevel);
             break;
 #endif
         default:

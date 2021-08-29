@@ -105,7 +105,7 @@ static void BMP085_CalcTemp(void)
     bmp085_temp = (int16_t)work;
 
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) DEBUG_PRINTF("Temp = %d\n",bmp085_temp);
+        if ( console_debuglevel > 2 ) DEBUG_PRINTF("Temp = %d\n",bmp085_temp);
     #endif
 
 }
@@ -129,7 +129,7 @@ static void BMP085_CalcPressure(void)
     bmp_pressure = (uint16_t)((p + ((x1 + x2 + 3791) >> 4)+5)/10);
     bmp_pressure += ((uint16_t)config.PressureComp)*10;
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) {
+        if ( console_debuglevel > 2 ) {
             DEBUG_PRINTF("Press = %d\n",bmp_pressure);
         }
     #endif
@@ -159,7 +159,7 @@ THPSENSOR_StatusEnum BMP085_Temp(uint32_t bContinue)
 {
     SET_BUSY();
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) DEBUG_PUTS("Temperature:");
+        if ( console_debuglevel > 2 ) DEBUG_PUTS("Temperature:");
     #endif	
 
     bmpbuf[0] = BMP085_TEM_REG_W;
@@ -189,7 +189,7 @@ static void BMP085_ReadPressureFinished(uint32_t arg)
     up = ((int16_t)bmpbuf[0])<<8 | bmpbuf[1];
 
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) DEBUG_PRINTF("PressureFinished, up = %d\n", up);
+        if ( console_debuglevel > 2 ) DEBUG_PRINTF("PressureFinished, up = %d\n", up);
     #endif
 
     // First do the Temp calculation
@@ -205,7 +205,7 @@ static THPSENSOR_StatusEnum BMP085_Pressure(void)
 {
     SET_BUSY();
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) DEBUG_PUTS("Pressure:");
+        if ( console_debuglevel > 2 ) DEBUG_PUTS("Pressure:");
     #endif
 
     bmpbuf[0] = BMP085_PR_REG_W;
@@ -245,7 +245,7 @@ static THPSENSOR_StatusEnum BMP085_CalibrationFinished(void)
     }
 
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) {
+        if ( console_debuglevel > 2 ) {
             DEBUG_PUTS("CalibrationFinished ");
             for ( uint8_t i=0; i < BMP085_CAL_SIZE>>1; i++ ) {
                 print_hexXX(bmpbuf[i*2]);print_hexXX(bmpbuf[i*2+1]); DEBUG_PUTC(' ');
@@ -268,7 +268,7 @@ static THPSENSOR_StatusEnum BMP085_CalibrationFinished(void)
     md = (int16_t)read_calibration_word();
 
     #if DEBUG_MODE && DEBUG_BMP085
-    if ( debuglevel > 2 ) {
+    if ( console_debuglevel > 2 ) {
         DEBUG_PRINTF("\tAC1 = %d\n",ac1);
         DEBUG_PRINTF("\tAC2 = %d\n",ac2);
         DEBUG_PRINTF("\tAC3 = %d\n",ac3);
@@ -302,7 +302,7 @@ THPSENSOR_StatusEnum BMP085_Calibrate(void)
     SET_BUSY();
 
     #if DEBUG_MODE && DEBUG_BMP085
-        if ( debuglevel > 2 ) DEBUG_PUTS("Calibration:");
+        if ( console_debuglevel > 2 ) DEBUG_PUTS("Calibration:");
     #endif
 
     bmpbuf[0] = BMP085_CAL_REGISTER;

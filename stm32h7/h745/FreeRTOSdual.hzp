@@ -80,6 +80,7 @@
         <file file_name="CM4/Inc/error.h" />
         <file file_name="CM4/Inc/eeprom.h" />
         <file file_name="CM4/Inc/global_flags.h" />
+        <file file_name="../common_h7/Inc/config/can_config.h" />
       </folder>
       <folder Name="config">
         <file file_name="CM4/Inc/config/config.h" />
@@ -296,7 +297,6 @@
         <file file_name="../common_h7/Inc/MessageBufferAMP.h" />
         <folder Name="devconfig">
           <file file_name="../common_h7/Inc/config/adc_config.h" />
-          <file file_name="../common_h7/Inc/config/can_config.h" />
           <file file_name="../common_h7/Inc/config/gpio_config.h" />
           <file file_name="../common_h7/Inc/config/i2c_config.h" />
           <file file_name="../common_h7/Inc/config/qencode_config.h" />
@@ -651,6 +651,7 @@
           <file file_name="../../common/nextion/util/Utilities.c" />
           <file file_name="../../common/nextion/util/Utilities.h" />
         </folder>
+        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
       </folder>
     </folder>
   </project>

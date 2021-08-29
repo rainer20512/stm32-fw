@@ -116,32 +116,32 @@ unsigned char InterpretPulse( void )
         if        ( pLength < MIN_PULSELENGTH ) {	
             // shorter than 100us are too short
             #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 2 ) LongWrite('.', pLength, pDelta);
+                if ( console_debuglevel > 2 ) LongWrite('.', pLength, pDelta);
             #else
                 ;
             #endif
         } else if ( pLength < 1100 ) { 	
             // 100-1100 us High pulse means "logic 1"	
             #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 3 ) LongWrite('H', pLength, pDelta); 
+                if ( console_debuglevel > 3 ) LongWrite('H', pLength, pDelta); 
             #endif
             Store('1');
         } else if ( pLength < 1200 ) { 
             // between 1100 an 1200 us is illegal
             #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 2 ) LongWrite('<', pLength, pDelta);
+                if ( console_debuglevel > 2 ) LongWrite('<', pLength, pDelta);
             #else
                 ;
             #endif										
         } else if ( pLength < 3150 ) { 
             // between 1200 ans 3150 us is regarded as "logic 0"
             #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 3 ) LongWrite('L', pLength, pDelta); 
+                if ( console_debuglevel > 3 ) LongWrite('L', pLength, pDelta); 
             #endif
             Store('0');
         } else {
             #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 2 ) LongWrite ('>', pLength, pDelta);
+                if ( console_debuglevel > 2 ) LongWrite ('>', pLength, pDelta);
             #else
                 ;
             #endif										
@@ -181,7 +181,7 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
             uHStart = GET_MIKROSECONDS();
             pLLength = uHStart - uLStart;
             #if DEBUG_MODE && DEBUG_PULSES
-                if (debuglevel > 3) {
+                if (console_debuglevel > 3) {
                     DEBUG_PUTC('H');print_decXXXXX(uHStart);CRLF();
                 }
             #endif
@@ -191,7 +191,7 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
                 // Determine total length of high and low Pulse
                 uint16_t pDelta = pHLength + pLLength;
                 #if DEBUG_MODE && DEBUG_PULSES
-                    if (debuglevel > 3) {
+                    if (console_debuglevel > 3) {
                         DEBUG_PUTC('>');print_decXXXXX(pHLength);DEBUG_PUTC('/');print_decXXXXX(pDelta);CRLF();
                     }
                 #endif
@@ -200,13 +200,13 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
                     if ( !pulse_buf_put( pHLength, pDelta ) ) {
                         // Buffer full
                         #if DEBUG_MODE && DEBUG_PULSES
-                            if (debuglevel > 2) DEBUG_PUTC('-');
+                            if (console_debuglevel > 2) DEBUG_PUTC('-');
                         #endif
                     }
                     /* Set Timeout for next pulse to MAX_PULSE_DETA ms */
                     MsTimerReUseRel( PulseTimerID, MIKROSEC_TO_TIMERUNIT(MAX_PULSE_DELTA),0, PulseTimeout, 0 );
                     #if DEBUG_MODE && DEBUG_PULSES
-                        if (debuglevel > 3) {
+                        if (console_debuglevel > 3) {
                             DEBUG_PUTC('L');print_decXXXXX(uLStart);CRLF();
                         }
                     #endif
@@ -216,7 +216,7 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
                 } else {
                     /* No valid pulse ( ie high or low part too short */
                     #if DEBUG_MODE && DEBUG_PULSES
-                        if (debuglevel > 2 )  {
+                        if (console_debuglevel > 2 )  {
                             if ( pHLength <= MIN_PULSELENGTH )
                                 DEBUG_PRINTF("%d:noH",pHLength);
                             else
@@ -228,7 +228,7 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
             bFirstPulse = false;
         } else {
             #if DEBUG_MODE && DEBUG_PULSES
-            if (debuglevel > 3) DEBUG_PUTC('h');
+            if (console_debuglevel > 3) DEBUG_PUTC('h');
             #endif
         }			  
     } else {
@@ -245,13 +245,13 @@ void HandleOOKInterrupt(uint16_t pin, uint16_t pinvalue, void *arg)
             uLStart = GET_MIKROSECONDS();
             pHLength = uLStart-uHStart;
             #if DEBUG_MODE && DEBUG_PULSES
-                if (debuglevel > 3) {
+                if (console_debuglevel > 3) {
                     DEBUG_PUTC('L');print_decXXXXX(uLStart);CRLF();
                 }
             #endif
         } else {
             #if DEBUG_MODE && DEBUG_PULSES
-                if (debuglevel > 3) DEBUG_PUTC('l');
+                if (console_debuglevel > 3) DEBUG_PUTC('l');
             #endif
         }
     }
@@ -264,7 +264,7 @@ void PulseTimeout(uint32_t arg)
     // We assume that a pulse sequence ended.
 
     #if DEBUG_MODE && DEBUG_PULSES
-        if (debuglevel > 2) DEBUG_PUTC('x');
+        if (console_debuglevel > 2) DEBUG_PUTC('x');
     #endif
 
     // Assume maximal Pulse duration
@@ -279,7 +279,7 @@ void PulseTimeout(uint32_t arg)
             if ( !pulse_buf_put( pHLength, pDelta ) ) {
                 // Buffer full
                 #if DEBUG_MODE && DEBUG_PULSES
-                    if (debuglevel > 2) DEBUG_PUTC('-');
+                    if (console_debuglevel > 2) DEBUG_PUTC('-');
                 #endif
             }
         }

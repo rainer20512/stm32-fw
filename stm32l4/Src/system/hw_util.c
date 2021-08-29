@@ -37,10 +37,14 @@ typedef struct {
 static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 /* DMA -------------------------------------------------------------------------------------------------------------------- */
 #ifdef DMA1
-   { DMA1, &RCC->AHB1ENR, RCC_AHB1ENR_DMA1EN_Pos,   &RCC->AHB1RSTR, RCC_AHB1RSTR_DMA1RST_Pos,    COMBINE('D', 1) },
+   { DMA1, &RCC->AHB1ENR, RCC_AHB1ENR_DMA1EN_Pos,       &RCC->AHB1RSTR, RCC_AHB1RSTR_DMA1RST_Pos,    COMBINE('D', 1) },
 #endif
 #ifdef DMA2
-   { DMA2, &RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN_Pos,   &RCC->AHB1RSTR, RCC_AHB1RSTR_DMA2RST_Pos,    COMBINE('D', 2) },
+   { DMA2, &RCC->AHB1ENR, RCC_AHB1ENR_DMA2EN_Pos,       &RCC->AHB1RSTR, RCC_AHB1RSTR_DMA2RST_Pos,    COMBINE('D', 2) },
+#endif
+/**** 003 ***/
+#ifdef DMAMUX1
+   { DMAMUX1, &RCC->AHB1ENR, RCC_AHB1ENR_DMAMUX1EN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_DMAMUX1RST_Pos, COMBINE('D', 5) },
 #endif
 
 /* GPIO ------------------------------------------------------------------------------------------------------------------- */
@@ -298,6 +302,11 @@ void HW_SetDmaChClock ( const HW_DmaType *tx, const HW_DmaType *rx)
             HW_SetHWClock(DMA2, 1 );
         }
     #endif
+
+    /* Enable Clock for DMAMUX1 in nay case */
+    #if defined(DMAMUX1)
+        HW_SetHWClock(DMAMUX1, 1 );
+    #endif
 }
 
 /*
@@ -395,37 +404,73 @@ static const char *Get_DeviceName ( uint16_t devID )
     switch(devID) {
         case 0x461: return "STM32L496xx/4A6xx";
         case 0x415: return "STM32L475xx/476xx/486xx";
+        case 0x470: return "STM32L4Rxxx/STM32L4Sxxx";
+        case 0x471: return "STM32L4P5xx/STM32L4Q5xx";
         default:    return "Unknown Device";
     }
 }
 
 static const char *Get_PackageName( uint16_t package )
 {
-    switch(package&0b11111) {
-        case 0b00000: return "LQFP64";
-        case 0b00010: return "LQFP100";
-        case 0b00011: return "UFBGA132";
-        case 0b00100: return "LQFP144, WLCSP81 or WLCSP72";
-        case 0b10000: return "UFBGA169";
-        case 0b10001: return "WLCSP100";
-        default: return "Unknown Package";
+    #if defined(STM32L476xx) || defined(STM32L496xx)
+        switch(package&0b11111) {
+            case 0b00000: return "LQFP64";
+            case 0b00010: return "LQFP100";
+            case 0b00011: return "UFBGA132";
+            case 0b00100: return "LQFP144, WLCSP81 or WLCSP72";
+            case 0b10000: return "UFBGA169";
+            case 0b10001: return "WLCSP100";
+            default: return "Unknown Package";
+        }
     }
+    #elif defined(STM32L4Sxxx) || defined(STM32L4Rxxx)
+        switch(package&0b11111) {
+            case 0b00010: return "LQFP100 without DSI";
+            case 0b00011: return "UFBGA132 without DSI";
+            case 0b00100: 
+            case 0b00101: 
+            case 0b00110: 
+            case 0b00111: return "LQFP144 without DSI";
+            case 0b10000: return "UFBGA169 without DSI";
+            case 0b10010: return "LQFP100 with DSI";
+            case 0b10011: return "UFBGA144 with DSI, WLCSP144 with DSI";
+            case 0b10100: return "UFBGA169 with DSI";
+            case 0b10101: return "LQFP144 with DSI";
+            default: return "Unknown Package";
+        }
+    #endif
 }
 
 char Get_RevisionName( uint16_t devID, uint16_t revID)
 {
     char work;
-    switch (revID) {
-        case 0x1000 : work = '1'; break;
-        case 0x1001 : work = '2'; break;
-        case 0x1003 : work = '3'; break;
-        case 0x1007 : work = '4'; break;
+    switch(devID) {
+        case 0x461:
+        case 0x465:
+            switch (revID) {
+                case 0x1000 : work = '1'; break;
+                case 0x1001 : work = '2'; break;
+                case 0x1003 : work = '3'; break;
+                case 0x1007 : work = '4'; break;
+                default: return '?';
+            }
+            /* On 496/4A6 devices the revision numbers are revision letters */
+            if ( devID == 0x461 )  work = work - '1'+'A';
+            break;
+        case 0x470:
+        case 0x471:
+            switch (revID) {
+                case 0x1000 : work = 'A'; break;
+                case 0x1001 : work = 'Z'; break;
+                case 0x1003 : work = 'Y'; break;
+                case 0x100f : work = 'W'; break;
+                default: return '?';
+            }
+            break;
         default: return '?';
-    }
-    if ( devID == 0x461 ) 
-        work = work - '1'+'A';
-
+    } // outer switch 
     return work;
+        
 }
 
 void HW_ReadID(DeviceIdT *id )
@@ -449,7 +494,7 @@ bool HW_DumpID(char *cmdline, size_t len, const void * arg )
     printf("UID=");
     for ( uint8_t i = 0; i < 7; i++ )
         putchar(id->lot[i]);
-    printf("-%d-(%d,%d)\n",id->waferNum, id->waferX, id->waferY);
+    printf("Wafer#=%d (X=%d,Y=%d)\n",id->waferNum, id->waferX, id->waferY);
 
     return true;
 }

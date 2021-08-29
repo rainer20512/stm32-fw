@@ -48,7 +48,7 @@ uint32_t FreeTimeSlot(void)
     if ( !SECTimerGetRel(RestartTimerID, &remaining_s ) ) remaining_s = 0xffff;
  
     #if DEBUG_MODE > 0
-        if ( debuglevel > 1 ) DEBUG_PRINTF("FreeTimeSlot=%d\n", remaining_s);
+        if ( console_debuglevel > 1 ) DEBUG_PRINTF("FreeTimeSlot=%d\n", remaining_s);
     #endif
 
     return remaining_s;
@@ -160,7 +160,7 @@ uint8_t CheckCrc(uint8_t s_num)
     ret = (crc & 0x0f) == nibble;
 
     #if DEBUG_MODE && DEBUG_PULSES
-        if ( debuglevel > 0 ) {
+        if ( console_debuglevel > 0 ) {
             DEBUG_PRINTF(" CRC %s", ret ? "OK" : "Fail"); 
         }
     #endif
@@ -187,7 +187,7 @@ static void ComputeAvgWaitTime(void)
     avg_waitms = average4(avg_waitms, dt);
 
     #if DEBUG_MODE && DEBUG_PULSES 
-            if ( debuglevel > 0 ) DEBUG_PRINTF("Waittime=%d, new Avg lead time: %dms\n", dt, avg_waitms);
+            if ( console_debuglevel > 0 ) DEBUG_PRINTF("Waittime=%d, new Avg lead time: %dms\n", dt, avg_waitms);
     #endif
 }
 
@@ -265,7 +265,7 @@ bool InterpretSequence(uint8_t s_num)
     if ( transmitter_id ) {
         if ( transmitter_id != GetTransmitterID( s_num ) ) {
             #if DEBUG_MODE && DEBUG_PULSES 
-                    if ( debuglevel > 0 ) DEBUG_PUTS(" Wrong Transmitter ID");
+                    if ( console_debuglevel > 0 ) DEBUG_PUTS(" Wrong Transmitter ID");
             #endif
             return false;
         } else {
@@ -292,7 +292,7 @@ bool InterpretSequence(uint8_t s_num)
         next_transmission = Get_Next_OOK_Interval();
         if (next_transmission) SecTimerReSetRel(RestartTimerID, next_transmission);
         #if DEBUG_MODE && DEBUG_PULSES 
-                if ( debuglevel > 0 ) DEBUG_PRINTF("Next OOK-Reception in %d Secs\n", next_transmission);
+                if ( console_debuglevel > 0 ) DEBUG_PRINTF("Next OOK-Reception in %d Secs\n", next_transmission);
         #endif
     }
 
@@ -322,7 +322,7 @@ bool InterpretSequence(uint8_t s_num)
     
     #if DEBUG_MODE && DEBUG_PULSES
         int16_t t100;
-        if ( debuglevel > 0 ) {
+        if ( console_debuglevel > 0 ) {
             DEBUG_PUTC(' ');
             switch (type ) {
                 case 0: DEBUG_PRINTF("Temp ");
@@ -356,12 +356,12 @@ void AnalyzeSequence(uint8_t s_num)
     
     #if DEBUG_MODE && DEBUG_PULSES
         uint8_t mydebug;
-        // Dump correct sequences, if debuglevel > 0
-        // Dump seuqences of wrong length if debuglevel > 1
+        // Dump correct sequences, if console_debuglevel > 0
+        // Dump seuqences of wrong length if console_debuglevel > 1
         if ( *ptr != CORRECT_LENGTH ) 
-            mydebug = debuglevel > 1;
+            mydebug = console_debuglevel > 1;
         else 
-            mydebug = debuglevel > 0;
+            mydebug = console_debuglevel > 0;
     #endif
 
     #if DEBUG_PRINT_ADDITIONAL_TIMESTAMPS
@@ -437,7 +437,7 @@ void AnalyzerTimeout(uint32_t arg)
             ClearFlagBit(aflags, AFLAG_OOK_RETRY);
             CTL_error &= ~ERR_OOK_INOP;
             #if DEBUG_MODE && DEBUG_PULSES
-                if ( debuglevel > 0 ) DEBUG_PRINTF("Timeout,Sleep ");
+                if ( console_debuglevel > 0 ) DEBUG_PRINTF("Timeout,Sleep ");
             #endif
     } else {
         /* We got no valid data until timeout */
@@ -448,7 +448,7 @@ void AnalyzerTimeout(uint32_t arg)
             SetOOKStatus(OOK_STATUS_NO_PEER, false);
             CTL_error |= ERR_OOK_INOP;
             #if DEBUG_MODE && DEBUG_PULSES
-                if ( debuglevel > 0 ) DEBUG_PRINTF("No valid signal in SYNC Phase, no transmitter error ");
+                if ( console_debuglevel > 0 ) DEBUG_PRINTF("No valid signal in SYNC Phase, no transmitter error ");
             #endif
             return;
         }
@@ -461,14 +461,14 @@ void AnalyzerTimeout(uint32_t arg)
 
             // If retries left: Restart time has already been set in Start_OOK_Receiver
             #if DEBUG_MODE && DEBUG_PULSES
-                if ( debuglevel > 0 ) DEBUG_PRINTF("Retries=%d, Try again later\n", OOK_retries); 
+                if ( console_debuglevel > 0 ) DEBUG_PRINTF("Retries=%d, Try again later\n", OOK_retries); 
             #endif
         } else {
             /* maximum number of unsuccessful retries reached, reinitialize receiver, i.e. */
             /* try to resync again */
             AnalyzerInit();
             #if DEBUG_MODE && DEBUG_PULSES
-                if ( debuglevel > 0 ) DEBUG_PRINTF("No more retries, try to resync ");
+                if ( console_debuglevel > 0 ) DEBUG_PRINTF("No more retries, try to resync ");
             #endif
             /* OOK Restart is done in main */
         }

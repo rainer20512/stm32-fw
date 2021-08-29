@@ -11,19 +11,24 @@
 #ifndef __HARDWARE_H__
 #define  __HARDWARE_H__
 /*
- * customization for STM32H4xx
+ * customization for STM32L4xx
  */
 #include "stm32l4xx.h"
 #include "stm32l4xx_hal.h"
 
-#define DMA_IS_LINEAR(hdma)     HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC)
-#define DMA_GET_RXSIZE(hdma)    (hdma->Instance->CNDTR)
+#define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC)
+#define DMA_GET_RXSIZE(hdma)            (hdma->Instance->CNDTR)
 #define DMAMEM                  
 
 /* --- Type specific setup for ADC ------------------------------------------*/
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC1_BASE )
-#define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE || inst == (void *)ADC3_BASE )
-
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE || inst == (void *)ADC3_BASE )
+#elif defined(STM32L4S9xx)
+    #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE )
+#else
+    #error "No Definition for ADC_HAS_CHIPTEMP"
+#endif
 
 /* --- Type specific setup for Timers ---------------------------------------*/
 extern const TIM_TypeDef* apb1_timers[6];    /* Timers connected to APB1 */

@@ -76,7 +76,7 @@ int16_t avg_skew_00=0;      // Average time skew when syncing at 00 *** Chng 052
 int16_t avg_skew_30=0;      // Average time skew when syncing at 30 *** Chng 052 ***
 
 #if DEBUG_MODE 
-  uint32_t debuglevel;
+  uint32_t console_debuglevel;
 #endif
 
 
@@ -293,7 +293,7 @@ int main(void)
     ProfilerInitTo(JOB_TASK_INIT);
 
     #if DEBUG_MODE > 0
-        debuglevel = config.dbg_level;
+        console_debuglevel = config.dbg_level;
     #endif
 
     TogglePin(6);

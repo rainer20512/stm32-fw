@@ -31,6 +31,17 @@
 
 #include "debug_helper.h"
 
+/*
+ **** 003 **** 
+ * Remap new bit names in L4+ series to old ones of L4 series
+ */
+#if defined(STM32L4Sxxx)
+    #define USART_CR1_RXNEIE    USART_CR1_RXNEIE_RXFNEIE
+    #define USART_CR1_TXEIE     USART_CR1_TXEIE_TXFNFIE
+    #define USART_ISR_RXNE      USART_ISR_RXNE_RXFNE
+    #define USART_ISR_TXE       USART_ISR_TXE_TXFNF
+#endif
+
 /*******************************************************************************************
  * Additional data that will be stored to UART type hardware devices
  ******************************************************************************************/
@@ -92,7 +103,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 #define USE_UART8
 #endif
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     static bool Usart_SetClockSource(const void *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -1047,6 +1058,9 @@ void UsartIRQHandler(UsartHandleT *uhandle)
     /* Check for Character Reception */
     if(((isrflags & USART_ISR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET)) {
         ch = (uint8_t) (READ_REG(uhandle->Instance->RDR) & 0xFF );
+        if ( uhandle->Instance == LPUART1 ) {
+          DEBUG_PRINTF("Read from LPUART1:'%c'\d", ch);
+        }
         if ( uhandle->bRxCharMode ) {
             assert ( uhandle->in );
             /* Store only, if there were no errors */
@@ -1082,6 +1096,9 @@ void UsartIRQHandler(UsartHandleT *uhandle)
       #endif
       /* Transmit next character */
       uhandle->Instance->TDR = ch;
+      if ( uhandle->Instance == LPUART1 ) {
+        DEBUG_PRINTF("Write to LPUART1:'%c'\d", ch);
+      }
       uhandle->TxCount++;
     } else {
       /*
@@ -1136,7 +1153,7 @@ bool UsartTxRxOneByteWait(UsartHandleT *uhandle, uint8_t *txrx, uint32_t tmo)
   /* Wait for RX not empty or timeout */
   while ( !READ_BIT(u->ISR, USART_ISR_RXNE) && HAL_GetTick() != ticktmo ) ;
   if ( HAL_GetTick() == ticktmo ) {
-    DEBUG_PUTS("Unexpected timeout on Tx/Rx byte");
+//    DEBUG_PUTS("Unexpected timeout on Tx/Rx byte");
     return false;
   }
 

@@ -35,12 +35,12 @@ void USB_DeInitDev(const HW_DeviceType *self);
 
 /**************************************************************************************
  * Some Devices support different clock sources for QSPI. Make sure, that             *   
-  * QQSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+  * QSpiSetClockSource and QSpiGetClockSpeed() will match                            *
  *************************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx)
-    /* STM32L4xx has no clock mux for QUADSPI device */
-    #define QSpiSetClockSource(a)           (true)
-    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+    /* STM32L4xx has no clock mux for USB device */
+    #define UsbSetClockSource(a)           (true)
+    #define UsbGetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     static bool UsbSetClockSource(const void *hw)
     {
@@ -194,14 +194,14 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     UsbSetClockSource(self);
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* Get clock status of PWR domain and switch on, if not already on*/
     uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
 #endif
      HAL_PWREx_EnableUSBVoltageDetector();
  
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* enable USB power on Pwrctrl CR2 register */
     HAL_PWREx_EnableVddUSB();
 #elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
@@ -210,7 +210,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
     #error "No suitable USB Initialization for selected MCU"  
 #endif
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* Switch PWR domain clock off again, if it was off before */
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
 #endif
@@ -282,7 +282,7 @@ void USBD_DeInitDev(const HW_DeviceType *self)
 
     const HW_DeviceType HW_USBDFS = {
         .devName        = "USBFS_MSC",
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
         .devBase        = USB_OTG_FS,
 #else
         .devBase        = USB2_OTG_FS,

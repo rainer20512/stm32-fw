@@ -327,15 +327,26 @@ void DBG_deinit_pin(char portletter, uint8_t portnum)
 
 const char exti_gpio_name[] = "GPIO";
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
-const char * const exti_line_name[]= { 
-/* insert pattern ( max length is 12 ) 
-  "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
-  "PVS",          "OTG FS wkup",  "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",
-  "I2C2 wkup",    "I231 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   "LPUART1 wkup",
-  "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "LCD wkup",
-  "I2C4 wkup",
-};
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+    #if defined(STM32L476xx) || defined(STM32L496xx)
+        const char * const exti_line_name[]= { 
+        /* insert pattern ( max length is 12 ) 
+          "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
+          "PVS",          "OTG FS wkup",  "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",
+          "I2C2 wkup",    "I231 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   "LPUART1 wkup",
+          "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "LCD wkup",
+          "I2C4 wkup",
+        };
+    #else // defined(STM32L4Sxxx)
+        const char * const exti_line_name[]= { 
+        /* insert pattern ( max length is 12 ) 
+          "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
+          "PVD",          "OTG FS wkup",  "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",
+          "I2C2 wkup",    "I231 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   "LPUART1 wkup",
+          "LPTIM1   ",    "LPTIM2   ",    "Reserved   ",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "Reserved",
+          "I2C4 wkup",
+        };
+    #endif
 const char * const exti_domain_name[]= { "EXTI   " };
 #define EXTI_MAXNUM             40
 #define EXTI_MAXDOMAIN          1
@@ -551,7 +562,7 @@ void DBG_dump_exti_config(uint32_t exti_domain)
  */
 
 #define NVIC_NAME_LEN             15
-const char * const nvic_name_undef= "???";
+const char * const nvic_fmt_undef= "IRQ#%d";
 const char * const sys_nvic_name[]= { 
 /*.             .             .             .             .             .             .             . */
   "",           "",           "NMI",        "HardFault",  "MemMgmt",    "BusFault",   "UsageFault", "", 
@@ -560,66 +571,82 @@ const char * const sys_nvic_name[]= {
 
 #if defined(STM32L476xx) || defined(STM32L496xx)
 const char * const user_nvic_name[]= { 
-/*.                 .                 .                 .                 .                 .                 .                 . */
-  "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
-  "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_CH1",       "DMA1_CH2",       "DMA1_CH3",       "DMA1_CH4",       "DMA1_CH5",
-  "DMA1_CH6",       "DMA1_CH7",       "ADC1/ADC2",      "CAN1_TX",        "CAN1_RX0",       "CAN1_RX1",       "CAN1_SCE",       "EXTI9_5",  
-  "TIM1_BRK/TIM15", "TIM1_UP/TIM16",  "TIM1_TRG/TIM17", "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV", 
-  "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
-  "EXTI15_10",      "RTC alarm",      "DFSDM1_FLT3",    "TIM8_BRK",       "TIM8_UP",        "TIM8_TRG_COM",   "TIM8_CC",        "ADC3", 
-  "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
-  "DMA2_CH1",       "DMA2_CH2",       "DMA2_CH3",       "DMA2_CH4",       "DMA2_CH5",       "DFSDM1_FLT0",    "DFSDM1_FLT1",    "DFSDM1_FLT2",
-  "COMP",           "LPTIM1",         "LPTIM2",         "OTG_FS",         "DMA2_CH6",       "DMA2_CH7",       "LPUART1",        "QUADSPI", 
-  "I2C3_EV",        "I2C3_ER",        "SAI1",           "SAI2",           "SWPMI1",         "TSC",            "LCD",            "AES", 
-  "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "CAN2_TX",        "CAN2_RX0", 
-  "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
-};
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_CH1",       "DMA1_CH2",       "DMA1_CH3",       "DMA1_CH4",       "DMA1_CH5",
+      "DMA1_CH6",       "DMA1_CH7",       "ADC1/ADC2",      "CAN1_TX",        "CAN1_RX0",       "CAN1_RX1",       "CAN1_SCE",       "EXTI9_5",  
+      "TIM1_BRK/TIM15", "TIM1_UP/TIM16",  "TIM1_TRG/TIM17", "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV", 
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm",      "DFSDM1_FLT3",    "TIM8_BRK",       "TIM8_UP",        "TIM8_TRG_COM",   "TIM8_CC",        "ADC3", 
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_CH1",       "DMA2_CH2",       "DMA2_CH3",       "DMA2_CH4",       "DMA2_CH5",       "DFSDM1_FLT0",    "DFSDM1_FLT1",    "DFSDM1_FLT2",
+      "COMP",           "LPTIM1",         "LPTIM2",         "OTG_FS",         "DMA2_CH6",       "DMA2_CH7",       "LPUART1",        "QUADSPI", 
+      "I2C3_EV",        "I2C3_ER",        "SAI1",           "SAI2",           "SWPMI1",         "TSC",            "LCD",            "AES", 
+      "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "CAN2_TX",        "CAN2_RX0", 
+      "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
+    };
+#elif defined(STM32L4Sxxx)
+const char * const user_nvic_name[]= { 
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_CH1",       "DMA1_CH2",       "DMA1_CH3",       "DMA1_CH4",       "DMA1_CH5",
+      "DMA1_CH6",       "DMA1_CH7",       "ADC1/ADC2",      "CAN1_TX",        "CAN1_RX0",       "CAN1_RX1",       "CAN1_SCE",       "EXTI9_5",  
+      "TIM1_BRK/TIM15", "TIM1_UP/TIM16",  "TIM1_TRG/TIM17", "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV", 
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm",      "DFSDM1_FLT3",    "TIM8_BRK",       "TIM8_UP",        "TIM8_TRG_COM",   "TIM8_CC",        "Reserved", 
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_CH1",       "DMA2_CH2",       "DMA2_CH3",       "DMA2_CH4",       "DMA2_CH5",       "DFSDM1_FLT0",    "DFSDM1_FLT1",    "DFSDM1_FLT2",
+      "COMP",           "LPTIM1",         "LPTIM2",         "OTG_FS",         "DMA2_CH6",       "DMA2_CH7",       "LPUART1",        "OCTOSPI1", 
+      "I2C3_EV",        "I2C3_ER",        "SAI1",           "SAI2",           "OCTOSPI2",       "TSC",            "DSIHOST",        "AES", 
+      "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "Reserved",       "Reserved", 
+      "Reserved",       "Reserved",       "DMA2D",          "LCD-TFT",        "LCD-TFT_ER",     "GFXMMU",         "DMAMUX_OVR", 
+    };
 #elif defined(STM32H747xx) || defined(STM32H745xx)
 const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
-/*.                 .                 .                 .                 .                 .                 .                 . */
-  "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
-  "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
-  "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
-  "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
-  "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
-  "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
-  "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
-  "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
-  "M7_SEV",         "M4_SEV",         "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",       "USART6",
-  "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
-  "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
-  "LTDC",           "LTDC_ER",        "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",
-  "I2C4_ER",        "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",
-  "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
-  "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
-  "MDIOS",          "JPEG",           "MDMA",           "DSI(WKUP)",      "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
-  "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
-  "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
-  "CRS",            "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
-};
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
+      "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
+      "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
+      "M7_SEV",         "M4_SEV",         "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",       "USART6",
+      "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
+      "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
+      "LTDC",           "LTDC_ER",        "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",
+      "I2C4_ER",        "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",
+      "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
+      "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
+      "MDIOS",          "JPEG",           "MDMA",           "DSI(WKUP)",      "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
+      "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
+      "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
+      "CRS",            "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
+    };
 #elif defined(STM32H742xx) || defined(STM32H743xx)
 const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
-/*.                 .                 .                 .                 .                 .                 .                 . */
-  "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
-  "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
-  "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
-  "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
-  "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
-  "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
-  "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
-  "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
-  "M7_SEV",         "n/c",            "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",      "USART6",
-  "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
-  "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
-  "LTDC",           "LTDC_ER",        "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",
-  "I2C4_ER",        "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",
-  "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
-  "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
-  "MDIOS",          "JPEG",           "MDMA",           "n/c",            "SDMMC2",         "HSEM0",          "n/c",            "ADC3",
-  "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
-  "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
-  "CRS",            "RAMECC",         "SAI4",           "n/c",            "n/c",            "WKUP"
-};
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
+      "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
+      "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
+      "M7_SEV",         "n/c",            "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",      "USART6",
+      "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
+      "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
+      "LTDC",           "LTDC_ER",        "DMA2D",          "SAI2",           "QUADSPI",        "LPTIM1",         "CEC",            "I2C4_EV",
+      "I2C4_ER",        "SPDIF",          "USB2_FS_OUT",    "USB2_FS_IN",     "USB2_FS_WKUP",   "USB2_FS",        "DMAMUX1_OV",     "HRTIM1_MST",
+      "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
+      "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
+      "MDIOS",          "JPEG",           "MDMA",           "n/c",            "SDMMC2",         "HSEM0",          "n/c",            "ADC3",
+      "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
+      "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
+      "CRS",            "RAMECC",         "SAI4",           "n/c",            "n/c",            "WKUP"
+    };
 #else
     #error "No NVIC Line definitions for current MCU"
     const char * const exti_line_name[]= {};
@@ -635,22 +662,26 @@ const char * const user_nvic_name[150]= { /* fill in the array size to be sure, 
  */
 static void DBG_get_nvic_irq_name(int32_t irqnum, char *retbuf, const uint32_t maxlen)
 {
-  uint32_t cptr  = 0;
   const char *p;
 
   memset(retbuf, ' ', maxlen );
-  if ( irqnum < 0 ) 
+  if ( irqnum < 0 ) {
     p = sys_nvic_name[16+irqnum];
-  else
-      if ( irqnum < (int32_t)(sizeof(user_nvic_name)/sizeof(char *)) ) 
+    /* Copy Name to return buffer */
+    strncpy(retbuf, p, strlen(p) );
+  } else {
+      if ( irqnum < (int32_t)(sizeof(user_nvic_name)/sizeof(char *)) ) {
         p = user_nvic_name[irqnum];
-      else
-        p = nvic_name_undef;
-  /* Copy Name */
-  cptr = strlen(p);
-  strncpy(retbuf, p,cptr );
-
-  /* append terminating \0 */
+        /* Copy Name to return buffer */
+        strncpy(retbuf, p, strlen(p) );
+      } else {
+        /* write directly to return buffer */
+        snprintf(retbuf, maxlen, nvic_fmt_undef, irqnum); 
+        /* and overwrite the terminating \0 with blank to adjust length of string */
+        retbuf[strlen(retbuf)] = ' ' ;
+      }
+  }
+  /* append terminating \0 in any case */
   retbuf[maxlen] = '\0';
 }
 

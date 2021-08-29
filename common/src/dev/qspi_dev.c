@@ -644,6 +644,7 @@ static uint32_t GetEraseAddrInc(QSpiHandleT *myHandle,uint32_t erasemode)
             #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
                 LOGU_ERROR("GetEraseAddrInc - Error: unkown erasemode %d", erasemode);
             #endif
+            ;
     }
 
     return 1 << 16;

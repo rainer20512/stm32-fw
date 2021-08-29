@@ -32,7 +32,7 @@
     #include <stdio.h>
 #endif
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     #define ADC_SAMPLETIME_FAST     ADC_SAMPLETIME_24CYCLES_5
     #define ADC_SAMPLETIME_SLOW     ADC_SAMPLETIME_47CYCLES_5
     #define ADC_CLOCKSOURCE         RCC_ADCCLKSOURCE_SYSCLK
@@ -129,7 +129,7 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
      */
     Init->Resolution            = ADC_RESOLUTION_12B;               /* 12-bit resolution for converted data */
     Init->OversamplingMode      = ENABLE;                           /* enable oversampling */
-    #if defined(STM32L476xx) || defined(STM32L496xx)
+    #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
         Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;         /* Synchronous clock mode, input ADC clock divided by 2*/
         Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
         Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
@@ -350,7 +350,7 @@ uint16_t ADC_GetVdda(const HW_DeviceType *self)
         return 0;
 }    
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
 static inline __attribute__((always_inline))
 bool AdcCalibrate ( ADC_HandleTypeDef *hAdc )
 {
@@ -496,7 +496,8 @@ static bool Adc_MeasureVdda (const HW_DeviceType *self)
 static inline __attribute__((always_inline))
 ADC_Common_TypeDef *GetCommonInstance(const HW_DeviceType *self)
 {
-    #if defined(STM32L476xx) || defined(STM32L496xx)
+    UNUSED(self);
+    #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
         return __LL_ADC_COMMON_INSTANCE(self->devBase);
     #elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
         return __LL_ADC_COMMON_INSTANCE(self->devBase);

@@ -480,14 +480,14 @@ uint8_t ow_rom_search(void)
         diff = ow_one_search_pass( diff, &ow_SensorIDs[ow_nSensors][0] ); 
         if( diff == OW_PRESENCE_ERR ) {
             #if DEBUG_MODE > 0
-                if ( debuglevel > 0 ) DEBUG_PUTS( "No OW Sensor found");
+                if ( console_debuglevel > 0 ) DEBUG_PUTS( "No OW Sensor found");
             #endif
             break;
         }
          
         if( diff == OW_DATA_ERR ) {
             #if DEBUG_MODE > 0 
-                if ( debuglevel > 0 ) DEBUG_PUTS( "OW Bus Error");
+                if ( console_debuglevel > 0 ) DEBUG_PUTS( "OW Bus Error");
             #endif
             break;
         }

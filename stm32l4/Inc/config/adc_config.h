@@ -14,6 +14,15 @@
 #include "config/devices_config.h"
 #include "stm32l4xx.h"
 
+/*
+ **** 003 **** 
+ * Remap "new" DMAMUX input lines to "old" fixed DMA-Request numbers 
+ */
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    #define DMA_REQUEST_ADC1       DMA_REQUEST_0
+    #define DMA_REQUEST_ADC2       DMA_REQUEST_0
+#endif
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -39,7 +48,7 @@
     /* Definition ADC1 NVIC */
     #define ADC1_IRQ                             { ADC1_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC1_IRQHandler                      ADC1_2_IRQHandler
-    #define ADC1_RX_DMA                          DMA1_Channel1, DMA_REQUEST_0, DMA1_Channel1_IRQn, DMA_PRIORITY_HIGH
+    #define ADC1_RX_DMA                          DMA1_Channel1, DMA_REQUEST_ADC1, DMA1_Channel1_IRQn, DMA_PRIORITY_HIGH
     #define ADC1_DMA_IRQHandler                  DMA1_Channel1_IRQHandler
                                                     
 #endif
@@ -52,7 +61,7 @@
     /* Definition ADC2 NVIC */
     #define ADC2_IRQ                             { ADC2_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC2_IRQHandler                      ADC2_2_IRQHandler
-    #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_0, DMA1_Channel2_IRQn, DMA_PRIORITY_HIGH
+    #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_ADC2, DMA1_Channel2_IRQn, DMA_PRIORITY_HIGH
     #define ADC2_DMA_IRQHandler                  DMA1_Channel2_IRQHandler
 #endif
 
@@ -63,10 +72,10 @@
     #define ADC3CH_TEMPSENSOR   { ADC_CHANNEL_TEMPSENSOR,   ADC_SAMPLETIME_24CYCLES_5, NULL, 0, "ChipTemp" }
     #define ADC3CH_VBAT         { ADC_CHANNEL_VBAT,         ADC_SAMPLETIME_24CYCLES_5, NULL, 0, "Vbat" }
 
-    /* Definition ADC2 NVIC */
+    /* Definition ADC3 NVIC */
     #define ADC3_IRQ                             { ADC3_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC3_IRQHandler
-    #define ADC3_RX_DMA                          DMA1_Channel3, DMA_REQUEST_0, DMA1_Channel3_IRQn, DMA_PRIORITY_HIGH
+    #define ADC3_RX_DMA                          DMA1_Channel3, DMA_REQUEST_ADC3, DMA1_Channel3_IRQn, DMA_PRIORITY_HIGH
     #define ADC3_DMA_IRQHandler                  DMA1_Channel3_IRQHandler
 #endif
 
@@ -91,7 +100,7 @@
         #define ADC12_CH_15     { ADC_CHANNEL_15, ADC_SAMPLETIME_12CYCLES_5, GPIOB, GPIO_PIN_0, "ADC Ch.15" }
         #define ADC12_CH_16     { ADC_CHANNEL_16, ADC_SAMPLETIME_12CYCLES_5, GPIOB, GPIO_PIN_1, "ADC Ch.16" }
     #else
-        /* The dollowing channels are specific to ADC3 in larger package types only */
+        /* The following channels are specific to ADC3 in larger package types only */
         #define ADC3_CH_6       { ADC_CHANNEL_6,  ADC_SAMPLETIME_12CYCLES_5, GPIOF, GPIO_PIN_3, "ADC Ch.6" }
         #define ADC3_CH_7       { ADC_CHANNEL_7,  ADC_SAMPLETIME_12CYCLES_5, GPIOF, GPIO_PIN_4, "ADC Ch.7" }
         #define ADC3_CH_8       { ADC_CHANNEL_8,  ADC_SAMPLETIME_12CYCLES_5, GPIOF, GPIO_PIN_5, "ADC Ch.8" }

@@ -124,7 +124,7 @@ static void FmcResetMyHandle ( FmcHandleT *handle )
  * sources, we assume that FMC Clock source is HCLK. In any case make sure, that      *   
  * Fmc_SetClockSource and Fmc_GetClockSpeed() will match                              *
  *************************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* STM32L4xx has no clock mux for FMC device */
     #define Fmc_SetClockSource(a)           (true)
     #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()

@@ -60,17 +60,15 @@
 /* Private constants ---------------------------------------------------------*/
 
 /* Configuration of eeprom emulation in flash, can be custom */
-#if defined (STM32L4R5xx) || defined (STM32L4R7xx) || defined (STM32L4R9xx) || defined (STM32L4S5xx) || defined (STM32L4S7xx) || defined (STM32L4S9xx)
-    #define START_PAGE_ADDRESS      0x08100000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
-#else
     #if defined(DRAGONFLY476)
         #define START_PAGE_ADDRESS      0x0807C000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
     #elif defined(STM32L476NUCLEO) || defined(STM32L476EVAL) || defined(BL475IOT)
         #define START_PAGE_ADDRESS      0x080FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
+    #elif defined(STM32L4R9DISCOVERY)
+        #define START_PAGE_ADDRESS      0x081FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
     #else
         #error "No Start Page for EEPROM emulation set!"
     #endif
-#endif
 
 #define CYCLES_NUMBER           1U   /*!< Number of 10Kcycles requested, minimum 1 for 10Kcycles (default),
                                         for instance 10 to reach 100Kcycles. This factor will increase

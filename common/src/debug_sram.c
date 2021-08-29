@@ -108,8 +108,17 @@ static void DBG_dump_sram_area( const char *text, uint32_t start, uint32_t end )
 static void DBG_dump_sram_areas(void)
 {
   DBG_setPadLen(6);
-  DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
   DO_DUMP_RAMAREA("RAM",__RAM_segment);
+  DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
+  DEBUG_PUTC('\n');
+}
+#elif defined(STM32L4Sxxx)
+static void DBG_dump_sram_areas(void)
+{
+  DBG_setPadLen(6);
+  DO_DUMP_RAMAREA("RAM",__RAM_segment);
+  DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
+  DO_DUMP_RAMAREA("SRAM3",__SRAM3_segment);
   DEBUG_PUTC('\n');
 }
 #elif defined(STM32H747xx) || defined(STM32H745xx)

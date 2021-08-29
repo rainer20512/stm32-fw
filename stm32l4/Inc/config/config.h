@@ -22,7 +22,8 @@
  */ 
 //#define BL475IOT   
 //#define DRAGONFLY476
-#define STM32L476NUCLEO
+//#define STM32L476NUCLEO
+#define STM32L4R9DISCOVERY
 //#define STM32L476EVAL
 // #define STM32L476BAREMETAL
 
@@ -32,8 +33,8 @@
  * Application selection
  ********************************************************************************
  */ 
-#define NOEXTENSION 
-// #define UNIVERSAL 
+//#define NOEXTENSION 
+#define UNIVERSAL 
 // #define ENVIRONMENTAL
 // #define TX18LISTENER        
 
@@ -57,9 +58,9 @@
 #define USE_SECONDTIMER     1
 #define USE_PWMTIMER        1
 #define USE_BASICTIMER      1
-#define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
-#define USE_USB             1   
+#define USE_USB             0  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 
@@ -89,11 +90,17 @@
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
-//#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
-#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ_2WS   /* 48 MHz, source MSI, Vrange1, 2 WS */
+#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ_2WS   /* 48 MHz, source MSI, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ_3WS   /* 64 MHz, source PLL, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL, Vrange1, 4 WS */
 
+/******************************************************************************
+ * Choose one in case of USE_QSPI == 1 
+******************************************************************************
+ */
+#define USE_QSPI_MX25               0
+#define USE_QSPI_MT25Q              0
 
 /******************************************************************************
  * Check and set constraints for Temperarure, Humidity and Pressure sensors
@@ -172,11 +179,15 @@
 /******************************************************************************
  * Check and set constraints for differeht hardware types
  *****************************************************************************/
-#if defined(STM32L476EVAL) || defined(DRAGONFLY476)
+#if defined(STM32L476EVAL) || defined(DRAGONFLY476) || defined(STM32L4R9DISCOVERY)
     #define HW_HAS_LSE
     #define HW_HAS_LSE_CRYSTAL
     #undef  HW_HAS_LSE_BYPASS
-    #define LSE_FREQUENCY   8000000
+    #if defined(STM32L476EVAL) || defined(DRAGONFLY476)
+        #define LSE_FREQUENCY   8000000
+    #else
+        #define LSE_FREQUENCY   16000000
+    #endif
 #endif
 
 #if defined(HW_HAS_LSE_CRYSTAL) || defined(HW_HAS_LSE_BYPASS)

@@ -45,12 +45,13 @@
 /* Exported macro ------------------------------------------------------------*/
 /* Memory management macros */   
 #define USBD_malloc               USBD_StaticMalloc
-#define USBD_free(a)              
+#define USBD_free(a)              USBD_static_free
 #define USBD_memset               memset
 #define USBD_memcpy               memcpy
 
 /* declare the handcrafted static malloc function */
 void *USBD_StaticMalloc( size_t size );
+void USBD_static_free(void *p);
 
 /* DEBUG macros */  
 

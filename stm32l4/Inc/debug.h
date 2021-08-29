@@ -50,7 +50,7 @@
 
 #if DEBUG_MODE 
   #include <stdint.h>
-  extern uint32_t debuglevel;
+  extern uint32_t console_debuglevel;
 #endif
 
 #ifdef __cplusplus

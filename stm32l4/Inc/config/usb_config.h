@@ -14,7 +14,7 @@
 /************************************************************************
  * USB 
  ***********************************************************************/
-#if defined(USE_USB)
+#if USE_USB > 0
     
   /* Definition for CAN Pins
    * Alternatives  ID,   DP,  DM,     AF#:
@@ -37,7 +37,7 @@
            CAN1_RX1_IRQHandler
            CAN1_SCE_IRQHandler
  *****************************************/
-#endif // USE_CAN1 > 0
+#endif // USE_USB > 0
 
 
 

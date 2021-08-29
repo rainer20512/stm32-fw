@@ -18,6 +18,24 @@
 
 #include "stm32l4xx_hal.h"
 
+/*
+ **** 003 **** 
+ * Remap "new" DMAMUX input lines to "old" fixed DMA-Request numbers 
+ */
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    #define DMA_REQUEST_USART1_TX       DMA_REQUEST_2
+    #define DMA_REQUEST_USART1_RX       DMA_REQUEST_2
+    #define DMA_REQUEST_USART2_TX       DMA_REQUEST_2
+    #define DMA_REQUEST_USART2_RX       DMA_REQUEST_2
+    #define DMA_REQUEST_USART3_TX       DMA_REQUEST_2
+    #define DMA_REQUEST_USART3_RX       DMA_REQUEST_2
+    #define DMA_REQUEST_UART4_TX        DMA_REQUEST_2
+    #define DMA_REQUEST_UART4_RX        DMA_REQUEST_2
+    #define DMA_REQUEST_UART5_TX        DMA_REQUEST_2
+    #define DMA_REQUEST_UART5_RX        DMA_REQUEST_2
+    #define DMA_REQUEST_LPUART1_TX      DMA_REQUEST_4
+    #define DMA_REQUEST_LPUART1_RX      DMA_REQUEST_4
+#endif
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -64,13 +82,13 @@
 
   #ifdef COM1_USE_TX_DMA
     /* Definition for USART1 TX DMA */
-    #define COM1_TX_DMA                    DMA1_Channel4, DMA_REQUEST_2, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM1_TX_DMA                    DMA1_Channel4, DMA_REQUEST_USART1_TX, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
     #define COM1_DMA_TX_IRQHandler         DMA1_Channel4_IRQHandler
   #endif
 
   #ifdef COM1_USE_RX_DMA
     /* Definition for USART1 RX DMA */
-    #define COM1_RX_DMA                    DMA1_Channel5, DMA_REQUEST_2, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM1_RX_DMA                    DMA1_Channel5, DMA_REQUEST_USART1_RX, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
     #define COM1_DMA_RX_IRQHandler         DMA1_Channel5_IRQHandler
   #endif
 #endif // COM1 
@@ -107,12 +125,12 @@
 
   #ifdef COM2_USE_TX_DMA
     /* Definition for USART2 TX DMA */
-    #define COM2_TX_DMA                     DMA1_Channel7, DMA_REQUEST_2, DMA1_Channel7_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM2_TX_DMA                     DMA1_Channel7, DMA_REQUEST_USART2_TX, DMA1_Channel7_IRQn, DMA_PRIORITY_MEDIUM
     #define COM2_DMA_TX_IRQHandler          DMA1_Channel7_IRQHandler
   #endif
   #ifdef COM2_USE_RX_DMA
     /* Definition for USART2 RX DMA */
-    #define COM2_RX_DMA                     DMA1_Channel6, DMA_REQUEST_2, DMA1_Channel6_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM2_RX_DMA                     DMA1_Channel6, DMA_REQUEST_USART2_RX, DMA1_Channel6_IRQn, DMA_PRIORITY_MEDIUM
     #define COM2_DMA_RX_IRQHandler          DMA1_Channel6_IRQHandler
   #endif  
 #endif // COM2
@@ -160,12 +178,12 @@
 
   #ifdef COM3_USE_TX_DMA
     /* Definition for USART3 TX DMA */
-    #define COM3_TX_DMA                    DMA1_Channel2, DMA_REQUEST_2, DMA1_Channel2_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM3_TX_DMA                    DMA1_Channel2, DMA_REQUEST_USART3_TX, DMA1_Channel2_IRQn, DMA_PRIORITY_MEDIUM
     #define COM3_DMA_TX_IRQHandler         DMA1_Channel2_IRQHandler
   #endif
   #ifdef COM3_USE_RX_DMA
     /* Definition for USART3 RX DMA */
-    #define COM3_RX_DMA                    DMA1_Channel3, DMA_REQUEST_2, DMA1_Channel3_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM3_RX_DMA                    DMA1_Channel3, DMA_REQUEST_USART3_RX, DMA1_Channel3_IRQn, DMA_PRIORITY_MEDIUM
     #define COM3_DMA_RX_IRQHandler         DMA1_Channel3_IRQHandler
   #endif
 #endif // COM3
@@ -205,12 +223,12 @@
 
   #ifdef COM4_USE_TX_DMA
     /* Definition for UART4 TX DMA */
-    #define COM4_TX_DMA                    DMA2_Channel3, DMA_REQUEST_2, DMA2_Channel3_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM4_TX_DMA                    DMA2_Channel3, DMA_REQUEST_UART4_TX, DMA2_Channel3_IRQn, DMA_PRIORITY_MEDIUM
     #define COM4_DMA_TX_IRQHandler         DMA2_Channel3_IRQHandler
   #endif
   #ifdef COM4_USE_RX_DMA
     /* Definition for UART4 RX DMA */
-    #define COM4_RX_DMA                    DMA2_Channel5, DMA_REQUEST_2, DMA2_Channel5_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM4_RX_DMA                    DMA2_Channel5, DMA_REQUEST_UART4_RX, DMA2_Channel5_IRQn, DMA_PRIORITY_MEDIUM
     #define COM4_DMA_RX_IRQHandler         DMA2_Channel5_IRQHandler
   #endif
 #endif // COM4
@@ -241,12 +259,12 @@
 
   #ifdef COM5_USE_TX_DMA
     /* Definition for UART5 TX DMA */
-    #define COM5_TX_DMA                    DMA2_Channel1, DMA_REQUEST_2, DMA2_Channel1_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM5_TX_DMA                    DMA2_Channel1, DMA_REQUEST_UART5_TX, DMA2_Channel1_IRQn, DMA_PRIORITY_MEDIUM
     #define COM5_DMA_TX_IRQHandler         DMA2_Channel1_IRQHandler
   #endif
   #ifdef COM5_USE_RX_DMA
     /* Definition for UART5 RX DMA */
-    #define COM5_RX_DMA                    DMA2_Channel2, DMA_REQUEST_2, DMA2_Channel2_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM5_RX_DMA                    DMA2_Channel2, DMA_REQUEST_UART5_RX, DMA2_Channel2_IRQn, DMA_PRIORITY_MEDIUM
     #define COM5_DMA_RX_IRQHandler         DMA2_Channel2_IRQHandler
   #endif
 #endif // COM5
@@ -282,12 +300,12 @@
 
   #ifdef COM9_USE_TX_DMA
     /* Definition for LPUART1 TX DMA */
-    #define COM9_TX_DMA                     DMA2_Channel6, DMA_REQUEST_4, DMA2_Channel6_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM9_TX_DMA                     DMA2_Channel6, DMA_REQUEST_LPUART1_TX, DMA2_Channel6_IRQn, DMA_PRIORITY_MEDIUM
     #define COM9_DMA_TX_IRQHandler          DMA2_Channel6_IRQHandler
   #endif
   #ifdef COM9_USE_RX_DMA
     /* Definition for LPUART1 RX DMA */
-    #define COM9_RX_DMA                     DMA2_Channel7, DMA_REQUEST_4, DMA2_Channel7_IRQn, DMA_PRIORITY_MEDIUM
+    #define COM9_RX_DMA                     DMA2_Channel7, DMA_REQUEST_LPUART1_RX, DMA2_Channel7_IRQn, DMA_PRIORITY_MEDIUM
     #define COM9_DMA_RX_IRQHandler          DMA2_Channel7_IRQHandler
   #endif
 

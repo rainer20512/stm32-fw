@@ -338,6 +338,15 @@ void *USBD_StaticMalloc( size_t size )
     return ( void *)&usbdcdcHandle;
 }
 
+/**
+  * @brief  Dummy memory free
+  * @param  p: Pointer to allocated  memory address
+  * @retval None
+  */
+void USBD_static_free(void *p)
+{
+    UNUSED(p);
+}
 
 
 

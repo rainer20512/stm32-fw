@@ -291,7 +291,7 @@ static void wirelessSetMasterTime(uint8_t *test)
     /**** Common Chng010 ****/
     *avg = average3(*avg, (int16_t)(old_subsec - RTC_GetS256()) << 8 );
     #if ( DEBUG_MODE > 0 )
-        if ( debuglevel > 1 ) {
+        if ( console_debuglevel > 1 ) {
             DEBUG_PRINTF("Time sync'd @ %02d.%03d (old=%03d)",secs, subsec, old_subsec);
             DEBUG_PUTS("");
         }
