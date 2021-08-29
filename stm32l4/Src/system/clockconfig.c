@@ -35,8 +35,9 @@
   * @{
   */
 
-#include "stm32l4xx_hal.h"
 #include "config/config.h"
+
+#include "stm32l4xx_hal.h"
 #include "dev/devices.h"
 #include "eeprom.h"
 #include "system/clockconfig.h"
@@ -71,6 +72,17 @@ static void (*RestoreFn)( uint32_t, bool); /* the restore function to call      
 static bool bClockSettingVolatile;         /* true, if the clock settings will be    */
                                            /* lost in Stop mode                      */
 
+/*
+ *************************************************************************************
+ * MSI frequencies for the 12 MSI ranges and MSI_Range codings for the 12 MSI Ranges
+ *
+ *************************************************************************************/
+static const uint16_t msi_range_frq_khz[] = 
+{   100,   200,   400,   800, 
+    1000,  2000,  4000,  8000,
+    16000, 24000, 32000, 48000,
+};
+
 
 /******************************************************************************
  * returns true, iff the clock configuration is volatile in STOP mode
@@ -91,10 +103,94 @@ void ClockReconfigureAfterStop(void)
     RestoreFn( saved_mhz, saved_bSwitchOffMSI );
 }
 
+#if 0
+    old style wait state selection algorithm
+    static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint32_t khz )
+    {  
+      uint32_t flash_latency;
+      switch ( vrange ) {
+        case 1:
+              if ( khz > 80000 ) {
+                  Error_Handler(__FILE__, __LINE__); 
+                  flash_latency = FLASH_LATENCY_4;
+              }
+              if      ( khz > 64000 ) flash_latency = FLASH_LATENCY_4;
+              else if ( khz > 48000 ) flash_latency = FLASH_LATENCY_3;
+              else if ( khz > 32000 ) flash_latency = FLASH_LATENCY_2;
+              else if ( khz > 16000 ) flash_latency = FLASH_LATENCY_1;
+              else                    flash_latency = FLASH_LATENCY_0;
+            break;
+        case 2:
+              if ( khz > 26000 ) {
+                  Error_Handler(__FILE__, __LINE__); 
+                  flash_latency = FLASH_LATENCY_4;
+              }
+              if      ( khz > 18000 ) flash_latency = FLASH_LATENCY_3;
+              else if ( khz > 12000 ) flash_latency = FLASH_LATENCY_2;
+              else if ( khz > 6000  ) flash_latency = FLASH_LATENCY_1;
+              else                    flash_latency = FLASH_LATENCY_0;
+            break;
+         default:
+            Error_Handler(__FILE__, __LINE__); 
+            flash_latency = FLASH_LATENCY_4;
+      }
+
+      return flash_latency;
+    }
+#endif
+
+
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    /*
+     *******************************************************************************
+     Flash wait states in dependency of Vcore and HCLK for STM32L4 devices
+     Wait states                            HCLK (MHz) 
+     (WS)(LATENCY)               VCORE Range 1(1)   VCORE Range 2(2)
+         0 WS (1 CPU cycles)         = 16                = 6
+         1 WS (2 CPU cycles)         = 32                = 12
+         2 WS (3 CPU cycles)         = 48                = 18
+         3 WS (4 CPU cycles)         = 64                = 26
+         4 WS (5 CPU cycles)         = 80                = 26
+     maximum HCLK at Vcore Range 2 is 26 MHz!
+     *******************************************************************************
+     */
+/* Maximum allowable HCLK for Vcore Range1 and Range2 */
+/* minimum # of flash WS                    0               1                   2                   3                   4 */       
+static const uint8 hclk_range_1[]  = {16,                32,                 48,                 64,                 80, };
+static const uint8 hclk_range_2[]  = { 6,                12,                 18,                 26, };
+static const uint32_t flash_latency[] = {FLASH_LATENCY_0,   FLASH_LATENCY_1,    FLASH_LATENCY_2,    FLASH_LATENCY_3,    FLASH_LATENCY_4, };
+#elif defined(STM32L4Sxxx)
+    /*
+     *******************************************************************************
+     Flash wait states in dependency of Vcore and HCLK for STM32L4+ devices
+     (WS)(LATENCY)               VCORE Range 1(1)   VCORE Range 2(2)
+         0 WS (1 CPU cycles)         = 20                = 8
+         1 WS (2 CPU cycles)         = 40                = 16
+         2 WS (3 CPU cycles)         = 60                = 26
+         3 WS (4 CPU cycles)         = 80                = 26
+         4 WS (5 CPU cycles)         = 100               = 26
+         5 WS (6 CPU cycles)         = 120               = 26
+     maximum HCLK at Vcore Range 2 is 26 MHz!
+     *******************************************************************************
+     */
+/* Maximum allowable HCLK for Vcore Range1 and Range2 */
+/* minimum # of flash WS                    0               1                   2                   3                   4                5                   */       
+static const uint8_t hclk_range_1[]  = {20,                40,                 60,                 80,                 100,             120, };
+static const uint8_t hclk_range_2[]  = { 8,                16,                 26, };
+static const uint8_t flash_latency[] = {FLASH_LATENCY_0,   FLASH_LATENCY_1,    FLASH_LATENCY_2,    FLASH_LATENCY_3,    FLASH_LATENCY_4, FLASH_LATENCY_5, };
+
+#else
+    #error "No Flash Waitstate table for selected MCU"
+#endif
+
+#define      MAX_LATENCY()                   flash_latency[ARRSIZE(uint32_t, flash_latency)-1];
+#define      ARRSIZE(basetype,array)         (sizeof(array)/sizeof(basetype))
+
+static const uint8_t* range_tables[] = {hclk_range_1,      hclk_range_2, };
+static const uint32_t  size_tables[]  = {ARRSIZE(uint8_t, hclk_range_1),      ARRSIZE(uint8_t, hclk_range_2),  };
 /*
  *******************************************************************************
- Flash wait states in dependency of Vcore and HCLK
- Wait states                            HCLK (MHz) 
+ Flash wait states in dependency of Vcore and HCLK for STM32L4 devices
  (WS)(LATENCY)               VCORE Range 1(1)   VCORE Range 2(2)
      0 WS (1 CPU cycles)         = 16                = 6
      1 WS (2 CPU cycles)         = 32                = 12
@@ -104,37 +200,34 @@ void ClockReconfigureAfterStop(void)
  maximum HCLK at Vcore Range 2 is 26 MHz!
  *******************************************************************************
  */
-static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint32_t khz )
+static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint8_t mhz )
 {  
-  uint32_t flash_latency;
-  switch ( vrange ) {
-    case 1:
-          if ( khz > 80000 ) {
-              Error_Handler(__FILE__, __LINE__); 
-              flash_latency = FLASH_LATENCY_4;
-          }
-          if      ( khz > 64000 ) flash_latency = FLASH_LATENCY_4;
-          else if ( khz > 48000 ) flash_latency = FLASH_LATENCY_3;
-          else if ( khz > 32000 ) flash_latency = FLASH_LATENCY_2;
-          else if ( khz > 16000 ) flash_latency = FLASH_LATENCY_1;
-          else                    flash_latency = FLASH_LATENCY_0;
-        break;
-    case 2:
-          if ( khz > 26000 ) {
-              Error_Handler(__FILE__, __LINE__); 
-              flash_latency = FLASH_LATENCY_4;
-          }
-          if      ( khz > 18000 ) flash_latency = FLASH_LATENCY_3;
-          else if ( khz > 12000 ) flash_latency = FLASH_LATENCY_2;
-          else if ( khz > 6000  ) flash_latency = FLASH_LATENCY_1;
-          else                    flash_latency = FLASH_LATENCY_0;
-        break;
-     default:
-        Error_Handler(__FILE__, __LINE__); 
-        flash_latency = FLASH_LATENCY_4;
+  const uint8_t *act_range_table;
+  uint32_t act_table_size;
+  uint32_t i;
+ 
+  /* Ensure, we have a table for the passed range */
+  if ( vrange > ARRSIZE(uint32_t *, range_tables) ) {
+      Error_Handler(__FILE__, __LINE__); 
+      return MAX_LATENCY();
+  } else {
+      act_range_table = range_tables[vrange-1];
+      act_table_size  = size_tables [vrange-1];
   }
 
-  return flash_latency;
+  /* Find the apprpriate entry in the selected frequency table, ie that antry that is equal or higher than the desired HCLK frq */
+  i = 0;
+  while ( i < act_table_size && act_range_table[i] < mhz ) {
+    i++;
+  }
+
+  /* Check, whether desired frq is within allowed range */
+  if ( i >= act_table_size ) {
+      Error_Handler(__FILE__, __LINE__); 
+      return MAX_LATENCY();
+   } else {
+      return flash_latency[i];
+   }
 }
 
 #if USE_USB > 0
@@ -144,133 +237,98 @@ static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint32_t khz )
     }
 #endif
 
-/* Public functions ---------------------------------------------------------*/
 
-/**
-  * @brief  System Clock Configuration on MSI-Base
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = MSI
-  *            SYSCLK(Hz)                     = 100kHz ... 48MHz, depending from range
-  *            HCLK(Hz)                       = 100kHz ... 48MHz, depending from range
-  *            AHB Prescaler                  = 1
-  *            APB1 Prescaler                 = 1
-  *            APB2 Prescaler                 = 1
-  *            Flash Latency(WS)              = depending from SYSCLK
-  *            Main regulator output voltage  = Range 2, preferred, Range 1 when SYSCLK > 26 Mhz
-  * @param range - One of RCC_MSIRANGE0 ... RCC_MSIRANGE_11
-  *            RCC_MSIRANGE_0: range 0 around 100 kHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_1: range 1 around 200 kHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_2: range 2 around 400 kHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_3: range 3 around 800 kHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_4: range 4 around 1 MHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_5: range 5 around 2 MHz, 0 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_6: range 6 around 4 MHz, 0 WS, Vcore Range 2   (reset value)
-  *            RCC_MSIRANGE_7: range 6 around 8 MHz, 1 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_8: range 6 around 16 MHz, 2 WS, Vcore Range 2  
-  *            RCC_MSIRANGE_9: range 6 around 24 MHz, 3 WS, Vcore Range 2   
-  *            RCC_MSIRANGE_10: range 6 around 32 MHz, 1 WS, Vcore Range 1, NOT ALLOWED HERE
-  *            RCC_MSIRANGE_11: range 6 around 48 MHz, 2 WS  Vcore Range 1, NOT ALLOWED HERE
-  * @retval None
-  */
-static void SystemClock_MSI_Vrange_2(uint32_t msi_range)
+#if defined(STM32L4S9xx)
+    /*
+     *************************************************************************************************
+     * @brief  Set the Vcore voltage to Vrange1, Vrange2 or VRange1 Boost
+     * @param   vrange - 1,2 or 3 according to Vrange1, Vrange2 and  VRange1 Boost
+     */
+    static void SC_SetVrange ( uint8_t vrange )
+    {
+        uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
+
+        HAL_PWREx_ControlVoltageScaling( vrange == 1 ? PWR_REGULATOR_VOLTAGE_SCALE1 :  vrange == 2 ? PWR_REGULATOR_VOLTAGE_SCALE2 : PWR_REGULATOR_VOLTAGE_SCALE1_BOOST );
+
+        /* Switch PWR domain clock off again, if it was off before */
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+    }
+#else
+    /*
+     *************************************************************************************************
+     * @brief  Set the Vcore voltage to Vrange1 or Vrange2
+     * @param   vrange - 1or 2 according to Vrange1 and Vrange2
+     */
+    static void SC_SetVrange ( uint8_t vrange )
+    {
+        uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
+
+        HAL_PWREx_ControlVoltageScaling( vrange == 1 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
+
+        /* Switch PWR domain clock off again, if it was off before */
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+    }
+#endif
+/*
+ *************************************************************************************************
+ * @brief  System Clock Configuration on MSI-Base
+ *         The system Clock is configured as follow : 
+ *            System Clock source            = MSI
+ *            SYSCLK(Hz)                     = 100kHz ... 48MHz, depending from range
+ *            HCLK(Hz)                       = 100kHz ... 48MHz, depending from range
+ *            AHB Prescaler                  = 1
+ *            APB1 Prescaler                 = 1
+ *            APB2 Prescaler                 = 1
+ *            Flash Latency(WS)              = depending from SYSCLK
+ *            Main regulator output voltage  = Range 2
+ * @param range - any value between 0 .. 11 
+ *            0: around 100 kHz
+ *            1: around 200 kHz
+ *            2: around 400 kHz
+ *            3: around 800 kHz
+ *            4: around 1 MHz
+ *            5: around 2 MHz
+ *            6: around 4 MHz
+ *            7: around 8 MHz
+ *            8: around 16 MHz
+ *            9: around 24 MHz
+ *           10: around 32 MHz NOT ALLOWED with Vrange2
+ *           11: around 48 MHz NOT ALLOWED with Vrange2
+ * @param vrange - 1 or 2 according to Vrange1 or Vrange2
+ *
+ * @retval None
+ */
+static void SystemClock_MSI(uint8_t range, uint8_t vrange)
 {
-  uint32_t flash_latency=FLASH_LATENCY_0;
-
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  
-  /* Enable MSI Oscillator */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSIClockRange = msi_range;
-  RCC_OscInitStruct.MSICalibrationValue=0x00;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-  {
-    /* Initialization Error */
-    while(1); 
-  }
-  switch ( msi_range ) {
-    case RCC_MSIRANGE_7: flash_latency=FLASH_LATENCY_1; break;
-    case RCC_MSIRANGE_8: flash_latency=FLASH_LATENCY_2; break;
-    case RCC_MSIRANGE_9: flash_latency=FLASH_LATENCY_3; break;
-    case RCC_MSIRANGE_10:
-    case RCC_MSIRANGE_11:
+  /* Check validity of range and vrange */  
+  if ( range >= ARRSIZE(uint16_t, msi_range_frq_khz) ) {
       Error_Handler(__FILE__, __LINE__);
-      break;
+      return;
   }
-  /* Select MSI as system clock source and configure the HCLK, PCLK1 and PCLK2 
-     clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency)!= HAL_OK)
-  {
-    /* Initialization Error */
-    while(1); 
+
+  if ( vrange > ARRSIZE(uint8_t*, range_tables) ) {
+      Error_Handler(__FILE__, __LINE__);
+      return;
   }
-  /* Enable Power Control clock */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  
-  /* The voltage scaling allows optimizing the power consumption when the device is 
-     clocked below the maximum system frequency, to update the voltage scaling value 
-     regarding system frequency refer to product datasheet.  */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
-  
-  /* Disable Power Control clock */
-  __HAL_RCC_PWR_CLK_DISABLE();
-  
-  /* Select MSI as WakeUp clock */
-  CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 
-}
+  uint32_t frq_mhz       = msi_range_frq_khz[range]/1000;
+  uint32_t flash_latency = SystemClock_GetFlashLatency( vrange, frq_mhz );
+  uint32_t msi_range     = ( ((uint32_t)range) << RCC_CR_MSIRANGE_Pos ) & RCC_CR_MSIRANGE_Msk;
 
-/**
-  * @brief  System Clock Configuration on MSI-Base
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = MSI
-  *            SYSCLK(Hz)                     = 100kHz ... 48MHz, depending from range
-  *            HCLK(Hz)                       = 100kHz ... 48MHz, depending from range
-  *            AHB Prescaler                  = 1
-  *            APB1 Prescaler                 = 1
-  *            APB2 Prescaler                 = 1
-  *            Flash Latency(WS)              = depending from SYSCLK
-  *            Main regulator output voltage  = always Range 1
-  * @param range - One of RCC_MSIRANGE0 ... RCC_MSIRANGE_11
-  *            RCC_MSIRANGE_0: range 0 around 100 kHz, 0 WS
-  *            RCC_MSIRANGE_1: range 1 around 200 kHz, 0 WS
-  *            RCC_MSIRANGE_2: range 2 around 400 kHz, 0 WS
-  *            RCC_MSIRANGE_3: range 3 around 800 kHz, 0 WS
-  *            RCC_MSIRANGE_4: range 4 around 1 MHz, 0 WS
-  *            RCC_MSIRANGE_5: range 5 around 2 MHz, 0 WS
-  *            RCC_MSIRANGE_6: range 6 around 4 MHz, 0 WS  (reset value)
-  *            RCC_MSIRANGE_7: range 7 around 8 MHz, 0 WS
-  *            RCC_MSIRANGE_8: range 8 around 16 MHz, 0 WS
-  *            RCC_MSIRANGE_9: range 9 around 24 MHz, 1 WS
-  *            RCC_MSIRANGE_10: range 10 around 32 MHz, 1 WS
-  *            RCC_MSIRANGE_11: range 11 around 48 MHz, 2 WS
-  * @retval None
-  */
-static void SystemClock_MSI_Vrange_1(uint32_t msi_range)
-{
-  uint32_t flash_latency;
+  /* maximum system frq with Vrange2 is 26 Mhz, check it*/
+  if( vrange == 2 && frq_mhz > 26 ) {
+      Error_Handler(__FILE__, __LINE__);
+      return;
+  }
+
+  /* if Vrange = 1 then set it first to avoid overclocking when changing clock parameters */ 
+  if ( vrange == 1 ) SC_SetVrange(vrange);
 
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   
-  /* Enable Power Control clock and switch to Range 1 before doing any other things */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  
-  /* The voltage scaling allows optimizing the power consumption when the device is 
-     clocked below the maximum system frequency, to update the voltage scaling value 
-     regarding system frequency refer to product datasheet.  */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-  
-  /* Disable Power Control clock */
-  __HAL_RCC_PWR_CLK_DISABLE();
-
   /* Enable MSI Oscillator */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
@@ -283,24 +341,11 @@ static void SystemClock_MSI_Vrange_1(uint32_t msi_range)
     while(1); 
   }
 
-  /* Select MSI as WakeUp clock */
-  CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
-
-  flash_latency=FLASH_LATENCY_0;
-
-  switch ( msi_range ) {
-    case RCC_MSIRANGE_9: 
-    case RCC_MSIRANGE_10: 
-        flash_latency=FLASH_LATENCY_1; break;
-    case RCC_MSIRANGE_11: 
-        flash_latency=FLASH_LATENCY_2; break;
-  }
-
   /* Select MSI as system clock source and configure the HCLK, PCLK1 and PCLK2 
      clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.ClockType      = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+  RCC_ClkInitStruct.SYSCLKSource   = RCC_SYSCLKSOURCE_MSI;
+  RCC_ClkInitStruct.AHBCLKDivider  = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;  
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency)!= HAL_OK)
@@ -309,6 +354,15 @@ static void SystemClock_MSI_Vrange_1(uint32_t msi_range)
     while(1); 
   }
 
+  /* 
+   * if Vrange = 2 then set it after all other clock parameters have been set 
+   * to avoid overclocking
+   */
+  if ( vrange == 2 ) SC_SetVrange(vrange);
+  
+  
+  /* Select MSI as WakeUp clock */
+  CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 
   #if USE_USB > 0
       /* Set USB clock also to MSI 48 MHz */
@@ -317,7 +371,6 @@ static void SystemClock_MSI_Vrange_1(uint32_t msi_range)
       }
   #endif
 }
-
 
 /******************************************************************************
  * Switch MSI clock off
@@ -340,7 +393,7 @@ static void SwitchOffMSI(void)
  * as original crystal oscillator or being supplied as external clock
  * HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --- HSE --*/
 
- #if defined(HW_HAS_LSE)
+#if defined(HW_HAS_HSE)
     /******************************************************************************
      * Switch HSE clock on
      *****************************************************************************/
@@ -351,9 +404,9 @@ static void SwitchOffMSI(void)
   
       /* Enable HSE Oscillator */
       RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-      #if defined(HW_HAS_LSE_CRYSTAL)
+      #if defined(HW_HAS_HSE_CRYSTAL)
         RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-      #elif defined(HW_HAS_LSE_BYPASS)
+      #elif defined(HW_HAS_HSE_BYPASS)
         RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
       #else
         #error "Undefined LSE oscillator type"
@@ -369,7 +422,7 @@ static void SwitchOffMSI(void)
      * The initialization part that has to be restored after wakeup from stop 
      * only available, if an HSE oscillator is euqipped
      */
-    static void SystemClock_HSE_8MHz_Vrange_2_1WS_restore ( uint32_t xxmhz, bool bSwitchOffMSI)
+    static void SystemClock_HSE_Vrange2_restore ( uint32_t xxmhz, bool bSwitchOffMSI)
     {
       RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -378,32 +431,33 @@ static void SwitchOffMSI(void)
 
       RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
       RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
-      HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
+      HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency( 2, HSE_FREQUENCY/1000000 ));
 
       if ( bSwitchOffMSI ) {
         SwitchOffMSI();
       }
     }
 
-    /**
-      * @brief  System Clock Configuration on 8MHz Clock input
-      *         The system Clock is configured as follow : 
-      *            System Clock source            = 8 MHz Signal at OSC_IN pin HSE Bypass mode 
-      *            SYSCLK(Hz)                     = 8MHz
-      *            HCLK(Hz)                       = 8MhZ
-      *            AHB Prescaler                  = 1
-      *            APB1 Prescaler                 = 1
-      *            APB2 Prescaler                 = 1
-      *            Flash Latency(WS)              = 1
-      *            Main regulator output voltage  = Scale2 mode
-      * @param  bSwitchOffMSI - Set to TRUE, if MSI Clock should be switched off. When going to sleep, MSI clock
-      *         MUST be activated again, BEFORE going to sleep
-      * @note the WakeUp Clock will be MSI, so user has to take actions to switch off to LSE after wakeup
-      * @note only available, if HSE oscillator is euqipped
-      * @retval None
-      */
-
-    static void SystemClock_HSE_8MHz_Vrange_2_1WS(bool bSwitchOffMSI)
+ /*
+  ************************************************************************************************************
+  * @brief  System Clock Configuration on HSE crystal or HSE clock input with Vrange2
+  *         The system Clock is configured as follow : 
+  *            System Clock source            = HSE crystal clock or HSE bypass clock input
+  *            SYSCLK(Hz)                     = depends from HSE input clock or HSE crystal resp.
+  *            HCLK(Hz)                       = depends from HSE input clock or HSE crystal resp.
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 1
+  *            APB2 Prescaler                 = 1
+  *            Flash Latency(WS)              = set according to HSE frequency
+  *            Vrange                         = 2
+  * @param  bSwitchOffMSI - Set to TRUE, if MSI Clock should be switched off. When going to sleep, MSI clock
+  *         MUST be activated again, BEFORE going to sleep
+  * @note only available, if HSE oscillator is equipped
+  * @note the HCLK frq depends from the HSE crystal frq or the HSE clock input signal in bypass mode
+  *
+  * @retval None
+  */
+  static void SystemClock_HSE_Vrange2(bool bSwitchOffMSI)
     {
       RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -415,20 +469,14 @@ static void SwitchOffMSI(void)
       RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
       RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
       RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1)!= HAL_OK)
+      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(2, HSE_FREQUENCY/1000000) )!= HAL_OK)
       {
         /* Initialization Error */
         while(1); 
       }
 
-      /* Enable Power Control clock */
-      __HAL_RCC_PWR_CLK_ENABLE();
-  
-      /* Select Voltage Scale2  */
-      HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
-  
-      /* Disable Power Control clock */
-      __HAL_RCC_PWR_CLK_DISABLE();
+      /* Select core voltage range 2 after all other changes to prevent overclocking */
+      SC_SetVrange(2);
 
       /* Disable MSI Oscillator, if desired */
       if ( bSwitchOffMSI ) {
@@ -445,7 +493,7 @@ static void SwitchOffMSI(void)
      * The initialization part that has to be restored after wakeup from stop 
      * only available, if an HSE oscillator is euqipped
      */
-    static void SystemClock_HSE_8MHz_Vrange_1_0WS_restore ( uint32_t xxmhz, bool bSwitchOffMSI)
+    static void SystemClock_HSE_Vrange1_restore ( uint32_t xxmhz, bool bSwitchOffMSI)
     {
       RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -454,42 +502,39 @@ static void SwitchOffMSI(void)
 
       RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
       RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
-      HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0);
+      HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(1, HSE_FREQUENCY/1000000) );
       if ( bSwitchOffMSI ) {
         SwitchOffMSI();
       }
     }
 
-    /**
-      * @brief  System Clock Configuration on 8MHz Clock input
-      *         The system Clock is configured as follow : 
-      *            System Clock source            = 8 MHz Signal at OSC_IN pin HSE Bypass mode 
-      *            SYSCLK(Hz)                     = 8MHz
-      *            HCLK(Hz)                       = 8MhZ
-      *            AHB Prescaler                  = 1
-      *            APB1 Prescaler                 = 1
-      *            APB2 Prescaler                 = 1
-      *            Flash Latency(WS)              = 0
-      *            Main regulator output voltage  = Scale1 mode
-      * @param  bSwitchOffMSI - Set to TRUE, if MSI Clock should be switched off. When going to sleep, MSI clock
-      *         MUST be activated again, BEFORE going to sleep
-      * @note only available, if HSE oscillator is euqipped
-      * @retval None
-      */
-    static void SystemClock_HSE_8MHz_Vrange_1_0WS(bool bSwitchOffMSI)
+ /*
+  ************************************************************************************************************
+  * @brief  System Clock Configuration on HSE crystal or HSE clock input with Vrange1
+  *         The system Clock is configured as follow : 
+  *            System Clock source            = HSE crystal clock or HSE bypass clock input
+  *            SYSCLK(Hz)                     = depends from HSE input clock or HSE crystal resp.
+  *            HCLK(Hz)                       = depends from HSE input clock or HSE crystal resp.
+  *            AHB Prescaler                  = 1
+  *            APB1 Prescaler                 = 1
+  *            APB2 Prescaler                 = 1
+  *            Flash Latency(WS)              = set according to HSE frequency
+  *            Vrange                         = 1
+  * @param  bSwitchOffMSI - Set to TRUE, if MSI Clock should be switched off. When going to sleep, MSI clock
+  *         MUST be activated again, BEFORE going to sleep
+  * @note only available, if HSE oscillator is equipped
+  * @note the HCLK frq depends from the HSE crystal frq or the HSE clock input signal in bypass mode
+  *
+  * @retval None
+  */
+    static void SystemClock_HSE_Vrange1(bool bSwitchOffMSI)
     {
       RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  
       SwitchOnHSE();
   
-      /* Enable Power Control clock */
-      __HAL_RCC_PWR_CLK_ENABLE();
-  
-      /* Select Voltage Scale1  */
-      HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-  
-      /* Disable Power Control clock */
-      __HAL_RCC_PWR_CLK_DISABLE();
+      /* Select core voltage range 1 before any other changes */
+      SC_SetVrange(1);
 
       /* Select HSE as system clock source and configure the HCLK, PCLK1 and PCLK2 
          clocks dividers */
@@ -498,7 +543,7 @@ static void SwitchOffMSI(void)
       RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
       RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
       RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0)!= HAL_OK)
+      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(1, HSE_FREQUENCY/1000000) )!= HAL_OK)
       {
         /* Initialization Error */
         while(1); 
@@ -514,85 +559,8 @@ static void SwitchOffMSI(void)
         CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
       }
     }
-    /**
-      * @brief  Switch on LSE an select as system clock 
-      *
-      * @note Caller must assure, that core voltage and wait srtats are selected properly before!
-      * 
-      */
-#endif
+#endif /* HW_HAS_HSE */
 
-/**
-  * @brief  System Clock Configuration on 16MhZ HSI with one NVM-Waitstate and PowerScale 2
-  *         The system Clock is configured as follow : 
-  *            System Clock source            = 16MHz HSI RC-oscillator
-  *            SYSCLK(Hz)                     = 16MHz
-  *            HCLK(Hz)                       = 16MhZ
-  *            AHB Prescaler                  = 1
-  *            APB1 Prescaler                 = 1
-  *            APB2 Prescaler                 = 1
-  *            Flash Latency(WS)              = 2
-  *            Main regulator output voltage  = Scale2 mode
-  *
-  *         Alternatively, Voltage can be switched to Scale1, after that flash can operate with 0 WS
-  * 
-  * @param  bSwitchOffMSI - Set to TRUE, if MSI Clock should be switched off. When going to sleep, MSI clock
-  *         MUST be activated again, BEFORE going to sleep
-  * @retval None
-  */
-
-static void SystemClock_HSI_16MHz_Vrange_2_2WS(bool bSwitchOffMSI)
-{
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  
-  /* Enable HSI RC-Oscillator */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT; 
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-  {
-    /* Initialization Error */
-    while(1); 
-  }
-  
-  /* Select HSI as system clock source and configure the HCLK, PCLK1 and PCLK2 
-     clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2)!= HAL_OK)
-  {
-    /* Initialization Error */
-    while(1); 
-  }
-
-  /* Enable Power Control clock */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  
-  /* Select Voltage Scale2  */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE2);
-  
-  /* Disable Power Control clock */
-  __HAL_RCC_PWR_CLK_DISABLE();
-
-  /* Disable MSI Oscillator, if desired */
-  if ( bSwitchOffMSI ) {
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
-    RCC_OscInitStruct.MSIState = RCC_MSI_OFF;
-    if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-    {
-      /* Initialization Error */
-      while(1); 
-    }
-  }
-  /* Select HSI16 also as WakeUp clock */
-  SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
-
-}
 
 /**
   * @brief  Switch on HSI an select as system clock 
@@ -603,7 +571,7 @@ static void SystemClock_HSI_16MHz_Vrange_2_2WS(bool bSwitchOffMSI)
   *             - Vrange 2, min 2 flash WS
   *
   */
-static void SC_SwitchOnHSI(void)
+static void SC_SwitchOnHSI16(uint8_t vrange)
 {
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -626,7 +594,7 @@ static void SC_SwitchOnHSI(void)
     RCC_ClkInitStruct.AHBCLKDivider         = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider        = RCC_HCLK_DIV1;  
     RCC_ClkInitStruct.APB2CLKDivider        = RCC_HCLK_DIV1;
-    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0)!= HAL_OK)
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(vrange, 16))!= HAL_OK)
     {
         /* Initialization Error */
         while(1); 
@@ -634,7 +602,7 @@ static void SC_SwitchOnHSI(void)
 }
 
 /**
-  * @brief  System Clock Configuration on 16MhZ HSI with no NVM-Waitstates and Power Scale 1
+  * @brief  System Clock Configuration on 16MhZ HSI with one NVM-Waitstate and PowerScale 2
   *         The system Clock is configured as follow : 
   *            System Clock source            = 16MHz HSI RC-oscillator
   *            SYSCLK(Hz)                     = 16MHz
@@ -642,8 +610,8 @@ static void SC_SwitchOnHSI(void)
   *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 1
   *            APB2 Prescaler                 = 1
-  *            Flash Latency(WS)              = 0
-  *            Main regulator output voltage  = Scale1 mode
+  *            Flash Latency(WS)              = 2
+  *            Main regulator output voltage  = Scale2 mode
   *
   *         Alternatively, Voltage can be switched to Scale1, after that flash can operate with 0 WS
   * 
@@ -652,20 +620,17 @@ static void SC_SwitchOnHSI(void)
   * @retval None
   */
 
-static void SystemClock_HSI_16MHz_Vrange_1_0WS(bool bSwitchOffMSI)
+static void SystemClock_HSI_16MHz(bool bSwitchOffMSI, uint8_t vrange)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   
-  /* Enable Power Control clock */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  
-  /* Select Voltage Scale1  */
-  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-  
-  /* Disable Power Control clock */
-  __HAL_RCC_PWR_CLK_DISABLE();
+  /* Select core voltage range 1 before any other clock changes */
+  if ( vrange == 1 ) SC_SetVrange(vrange);
 
-  SC_SwitchOnHSI();
+  SC_SwitchOnHSI16(vrange);
+  
+  /* Select core voltage range 2 after all other clock changes */
+  if ( vrange == 2 ) SC_SetVrange(vrange);
 
   /* Disable MSI Oscillator, if desired */
   if ( bSwitchOffMSI ) {
@@ -677,9 +642,11 @@ static void SystemClock_HSI_16MHz_Vrange_1_0WS(bool bSwitchOffMSI)
       while(1); 
     }
   }
+
   /* Select HSI16 also as WakeUp clock */
   SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 }
+
 
 #if USE_USB > 0
     /**************************************************************************
@@ -706,7 +673,7 @@ static void SwitchOnPLL ( uint32_t xxmhz )
   if (  __HAL_RCC_GET_SYSCLK_SOURCE() == RCC_CFGR_SWS_PLL ) {
     /* if so, select HSI as temporary system clock source       */
     /* Vrange and Wait states have been set by caller */
-    SC_SwitchOnHSI();
+    SC_SwitchOnHSI16(1);
   }
 
   #if USE_USB > 0
@@ -718,12 +685,12 @@ static void SwitchOnPLL ( uint32_t xxmhz )
     #undef PLL_INP_FRQ
   #endif
 
-  #if defined(HW_HAS_LSE)
+  #if defined(HW_HAS_HSE)
     SwitchOnHSE();
     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
     RCC_OscInitStruct.HSEState = RCC_HSE_ON;
     pllsrc = RCC_PLLSOURCE_HSE;
-    #define PLL_INP_FRQ  LSE_FREQUENCY
+    #define PLL_INP_FRQ  HSE_FREQUENCY
   #else
       RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
       RCC_OscInitStruct.HSIState = RCC_HSI_ON;
@@ -776,11 +743,11 @@ static void SwitchOnPLL ( uint32_t xxmhz )
 /*
  * The initialization part that has to be restored after wakeup from stop 
  */
-static void SystemClock_PLL_xxMHz_Vrange_1_restore (uint32_t xxmhz, bool bSwitchOffMSI)
+static void SystemClock_PLL_xxMHz_Vrange1_restore (uint32_t xxmhz, bool bSwitchOffMSI)
 {
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  
-  uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz * 1000);
+  uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz );
   SwitchOnPLL(xxmhz);
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -790,7 +757,115 @@ static void SystemClock_PLL_xxMHz_Vrange_1_restore (uint32_t xxmhz, bool bSwitch
     SwitchOffMSI();
   }
 }
+#if defined ( STM32L4Sxxx )
+    /*
+     * Switch system Clock to PLL is somewhat complicated on L4+ devices:
+     *
+     * When Vrange1 Boost mode is selected the first time, scaling up has
+     * to be done in two steps: first with HCLK divided by 2, then
+     * with desired HCLK in second step
+     *
+     * Vice versa, if Boost mode is deselected the first time, also
+     * frq decrease has also to be done in two steps: first, set
+     * HCLK prescaler to 2, then disabel boost, then set desired clk frq
+     */
 
+    static void SC_Switch_to_PLL ( uint32_t xxmhz )
+    {
+      RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+      uint32_t flash_latency;
+      uint8_t vrange = xxmhz > 80 ? 3:1;
+      
+      /* Activate PWR, if not already activated */
+      uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
+      if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
+
+      uint32_t is_boosted = ( (PWR->CR5 & PWR_CR5_R1MODE) == 0 );
+
+      /* switch off boost mode -> first step: divide HCLK by 2 */
+      if ( is_boosted && vrange == 1 ) {
+          RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK;
+          RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+          /* We use the intermediate flash latency for 60MHz HCLK, which is always on the safe side */
+          if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(1, 60 )) != HAL_OK) {
+            /* Initialization Error */
+            while(1);
+          }
+      }
+      
+      if ( !is_boosted && vrange == 3 ) {
+          /* switch to boost mode: first step: divide HCLK by 2 */
+          RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+          flash_latency = SystemClock_GetFlashLatency(1, xxmhz/2);
+      } else {
+          RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+          flash_latency = SystemClock_GetFlashLatency(1, xxmhz);
+      }
+
+      /* Select core voltage range 1 as desired */
+      SC_SetVrange(vrange);
+
+      /* configure and switch on PLL with desired frquency */
+      SwitchOnPLL(xxmhz);
+  
+      /* 
+       * Select Pll as system clock source and configure PCLK1 and PCLK2 clocks dividers,
+       * the HCLK divider has been set above
+       */
+      RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+      RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+      // see above RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+      RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
+      RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency )!= HAL_OK)
+      {
+        /* Initialization Error */
+        while(1); 
+      }
+
+      /* last step: If boost mode is enabled the first time, now set HCLK prescaler to 1 */
+      if ( !is_boosted && vrange == 3 ) {  
+          RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK;
+          RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+          if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, SystemClock_GetFlashLatency(1, xxmhz )) != HAL_OK) {
+            /* Initialization Error */
+            while(1);
+          }
+      }
+
+      if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+    }
+#else
+    /*
+     * Switch system Clock to PLL is easy on L4 devices: Just switch 
+     */
+    static void SC_Switch_to_PLL ( uint32_t xxmhz )
+    {
+      RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+      uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz);
+      uint8_t vrange = 1;
+
+      /* Select core voltage range 1 before any other clock changes */
+      SC_SetVrange(vrange);
+
+      SwitchOnPLL(xxmhz);
+  
+      /* Select Pll as system clock source and configure the HCLK, PCLK1 and PCLK2 
+         clocks dividers */
+      RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
+      RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+      RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+      RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
+      RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+      if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency )!= HAL_OK)
+      {
+        /* Initialization Error */
+        while(1); 
+      }
+    }
+#endif
 /**
   * @brief  System Clock Configuration on 32MhZ PLL-Clock, basing on 16MhZ HSI
   *         The system Clock is configured as follow : 
@@ -810,36 +885,11 @@ static void SystemClock_PLL_xxMHz_Vrange_1_restore (uint32_t xxmhz, bool bSwitch
   * @retval None
   */
 
-static void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI)
-{
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-
-  uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz * 1000);
-
-  /* Enable Power Control clock */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  
-  /* Select Voltage Scale1  */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  
-  /* Disable Power Control clock */
-  __HAL_RCC_PWR_CLK_DISABLE();
-
-  SwitchOnPLL(xxmhz);
-  
-  /* Select Pll as system clock source and configure the HCLK, PCLK1 and PCLK2 
-     clocks dividers */
-  RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;  
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency )!= HAL_OK)
-  {
-    /* Initialization Error */
-    while(1); 
-  }
-
+static void SystemClock_PLL_xxMHz_Vrange1(uint32_t xxmhz, bool bSwitchOffMSI)
+{ 
+ 
+  SC_Switch_to_PLL(xxmhz);
+     
   #if USE_USB > 0
     SetupUSB48Clk();
   #endif
@@ -849,20 +899,25 @@ static void SystemClock_PLL_xxMHz_Vrange_1(uint32_t xxmhz, bool bSwitchOffMSI)
     SwitchOffMSI();
   }
 
-  /* Select HSI16 also as WakeUp clock */
+  /* Select HSI16 as WakeUp clock */
   SET_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
 }
 
-static const uint16_t pll_clk_rates[] = {16,24,32,48,64,80};
+static const uint16_t pll_clk_rates[] = ALLOWED_PLL_CLOCKS;
 /*******************************************************************************
  * Return the clock spped in MHz for a given CLK_CONFIG_T with PLL useage
  *******************************************************************************/
 static uint16_t GetPLLClockRate( CLK_CONFIG_T clk_config_byte )
 {
-    if ( clk_config_byte < CLK_PLL_VRNG1_16MHZ_0WS || clk_config_byte > CLK_PLL_VRNG1_80MHZ_4WS ) 
-        return 0;
+    /* check for clk_config_byte being in the PLL range of configurations */
+    if ( clk_config_byte < CLK_PLL_VRNG1_16MHZ ) return 0;
+
+    uint8_t clk_idx = clk_config_byte - CLK_PLL_VRNG1_16MHZ;
+
+    if ( clk_idx >= ARRSIZE(uint16_t, pll_clk_rates) ) 
+        return 0; 
     else   
-        return pll_clk_rates[clk_config_byte - CLK_PLL_VRNG1_16MHZ_0WS];
+        return pll_clk_rates[clk_idx];
 }
 
 
@@ -886,9 +941,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
          * any clocksetting without PLL and != MSI48 will be changed to
          * MSI48, if USB is configured.
          */
-        if ( clk_config_byte < CLK_MSI_VRNG1_48MHZ_2WS ) {
+        if ( clk_config_byte < CLK_MSI_VRNG1_48MHZ ) {
             DEBUG_PRINTF("Error: Clock config #%d not allowed with USB active. Setting SYSCLK to MSI48\n", clk_config_byte); 
-            clk_config_byte = CLK_MSI_VRNG1_48MHZ_2WS;
+            clk_config_byte = CLK_MSI_VRNG1_48MHZ;
         }
     #endif
     /* Save desired settings for restoration after Stop */
@@ -901,59 +956,65 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
      * ( eg. HSE or PLL are volatile and need a restauration 
      */
 
-    if (  clk_config_byte <= CLK_MSI_VRNG1_48MHZ_2WS ) {
+    if (  clk_config_byte <= CLK_MSI_VRNG1_48MHZ ) {
         /* First, handle all clock settings, that are not PLL based */
         bClockSettingVolatile = false;         
         RestoreFn             = NULL;
 
         switch ( clk_config_byte ) {
-            case CLK_MSI_VRNG1_08MHZ_0WS:
-                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_7);
+            case CLK_MSI_VRNG2_02MHZ:
+                SystemClock_MSI(5, 2);
                 break;
-            case CLK_MSI_VRNG2_08MHZ_1WS:
-                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_7);
+            case CLK_MSI_VRNG2_04MHZ:
+                SystemClock_MSI(6, 2);
                 break;
-            case CLK_HSE_VRNG1_08MHZ_0WS:
-                #if defined(HW_HAS_LSE)
+            case CLK_MSI_VRNG1_08MHZ:
+                SystemClock_MSI(7, 1);
+                break;
+            case CLK_MSI_VRNG2_08MHZ:
+                SystemClock_MSI(7, 2);
+                break;
+            case CLK_HSE_VRNG1:
+                #if defined(HW_HAS_HSE)
                     bClockSettingVolatile   = true; 
-                    RestoreFn               = SystemClock_HSE_8MHz_Vrange_1_0WS_restore;
-                    SystemClock_HSE_8MHz_Vrange_1_0WS(bSwitchOffMSI);
+                    RestoreFn               = SystemClock_HSE_Vrange1_restore;
+                    SystemClock_HSE_Vrange1(bSwitchOffMSI);
                 #else
                     DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
                 #endif
                 break;
-            case CLK_HSE_VRNG2_08MHZ_1WS:
-                #if defined(HW_HAS_LSE)
+            case CLK_HSE_VRNG2:
+                #if defined(HW_HAS_HSE)
                     bClockSettingVolatile   = true;         
-                    RestoreFn               = SystemClock_HSE_8MHz_Vrange_2_1WS_restore;
-                    SystemClock_HSE_8MHz_Vrange_2_1WS(bSwitchOffMSI);
+                    RestoreFn               = SystemClock_HSE_Vrange2_restore;
+                    SystemClock_HSE_Vrange2(bSwitchOffMSI);
                 #else
                     DEBUG_PRINTF("Clock option not avialable - No LSE oscillator equipped");
                 #endif
                 break;
-            case CLK_HSI_VRNG1_16MHZ_0WS:
-                SystemClock_HSI_16MHz_Vrange_1_0WS(bSwitchOffMSI);
+            case CLK_HSI_VRNG1_16MHZ:
+                SystemClock_HSI_16MHz(bSwitchOffMSI, 1);
                 break;
-            case CLK_HSI_VRNG2_16MHZ_2WS:
-                SystemClock_HSI_16MHz_Vrange_2_2WS(bSwitchOffMSI);
+            case CLK_HSI_VRNG2_16MHZ:
+                SystemClock_HSI_16MHz(bSwitchOffMSI, 2);
                 break;
-            case CLK_MSI_VRNG1_16MHZ_0WS:
-                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_8);
+            case CLK_MSI_VRNG1_16MHZ:
+                SystemClock_MSI(8, 1);
                 break;
-            case CLK_MSI_VRNG2_16MHZ_2WS:
-                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_8);
+            case CLK_MSI_VRNG2_16MHZ:
+                SystemClock_MSI(8, 2);
                 break;
-            case CLK_MSI_VRNG1_24MHZ_1WS:
-                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_9);
+            case CLK_MSI_VRNG1_24MHZ:
+                SystemClock_MSI(9,1);
                 break;
-            case CLK_MSI_VRNG2_24MHZ_3WS:
-                SystemClock_MSI_Vrange_2(RCC_MSIRANGE_9);
+            case CLK_MSI_VRNG2_24MHZ:
+                SystemClock_MSI(9,2);
                 break;
-            case CLK_MSI_VRNG1_32MHZ_1WS:
-                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_10);
+            case CLK_MSI_VRNG1_32MHZ:
+                SystemClock_MSI(10, 1);
                 break;
-            case CLK_MSI_VRNG1_48MHZ_2WS:
-                SystemClock_MSI_Vrange_1(RCC_MSIRANGE_11);
+            case CLK_MSI_VRNG1_48MHZ:
+                SystemClock_MSI(11, 1);
                 break;
             default:
                 DEBUG_PRINTF("Error: Clockconfig - Unknown config #%d\n", clk_config_byte);       
@@ -964,13 +1025,13 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
          * volatile and require a restore function after wakeup from stop
          */
         bClockSettingVolatile = true;         
-        RestoreFn             = SystemClock_PLL_xxMHz_Vrange_1_restore;
+        RestoreFn             = SystemClock_PLL_xxMHz_Vrange1_restore;
         saved_mhz             = GetPLLClockRate(clk_config_byte );
         if ( saved_mhz == 0 ) { 
             DEBUG_PRINTF("Error: Clockconfig - Unknown config #%d, setting 48Mhz PLL clk\n", clk_config_byte);       
             saved_mhz = 48;
         }                
-        SystemClock_PLL_xxMHz_Vrange_1(saved_mhz, bSwitchOffMSI);
+        SystemClock_PLL_xxMHz_Vrange1(saved_mhz, bSwitchOffMSI);
     } // if
 
     /* Notice all devices about frequency change                             */
@@ -989,7 +1050,8 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
     #endif
 }
 
-/******************************************************************************
+/*
+ *****************************************************************************
  * Set the system clock configuration as configured in config-variable
  *****************************************************************************/
 void SystemClock_SetConfiguredClock(void)
@@ -998,6 +1060,10 @@ void SystemClock_SetConfiguredClock(void)
   SystemClock_Set(config.clk_config, true );
 }
 
+/*
+ *****************************************************************************
+ * Configure LSE clock
+ *****************************************************************************/
 void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
 {
   RCC_OscInitTypeDef        RCC_OscInitStruct;
@@ -1035,6 +1101,10 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
   __HAL_RCC_PWR_CLK_DISABLE(); 
 }
 
+/*
+ *****************************************************************************
+ * Configure HSI clock
+ *****************************************************************************/
 void HSIClockConfig(bool bHSIon)
 {
   RCC_OscInitTypeDef        RCC_OscInitStruct;
@@ -1407,7 +1477,7 @@ bool HSIClockCalibrate ( void )
       return false;
 
     /* switch to HSI16, Vrange1, 0 WS*/
-    SystemClock_Set(CLK_HSI_VRNG1_16MHZ_0WS, false); 
+    SystemClock_Set(CLK_HSI_VRNG1_16MHZ, false); 
 
     /* Prepare TIM15 for calibration */
     HSI_TIMx_ConfigForCalibration();

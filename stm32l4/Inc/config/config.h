@@ -85,15 +85,15 @@
 
 #define FSK_CARRIER_FREQUENCY	433.450
 
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG2_08MHZ_1WS   /*  8 MHz, source MSI, Vrange2, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_HSE_VRNG1_08MHZ_0WS   /*  8 MHz, source HSE, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ_0WS   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
-#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ_1WS   /* 24 MHz, source MSI, Vrange1, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ_2WS   /* 48 MHz, source MSI, Vrange1, 2 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ_3WS   /* 64 MHz, source PLL, Vrange1, 3 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ_4WS   /* 80 MHz, source PLL, Vrange1, 4 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG2_08MHZ   /*  8 MHz, source MSI, Vrange2, 1 WS */
+//#define USER_CLOCKCONFIG         CLK_HSE_VRNG1         /*  8 MHz, source HSE, Vrange1, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
+#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ   /* 64 MHz, source PLL, Vrange1, 3 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ   /* 80 MHz, source PLL, Vrange1, 4 WS */
 
 /******************************************************************************
  * Choose one in case of USE_QSPI == 1 
@@ -180,20 +180,21 @@
  * Check and set constraints for differeht hardware types
  *****************************************************************************/
 #if defined(STM32L476EVAL) || defined(DRAGONFLY476) || defined(STM32L4R9DISCOVERY)
-    #define HW_HAS_LSE
-    #define HW_HAS_LSE_CRYSTAL
-    #undef  HW_HAS_LSE_BYPASS
+    #define HW_HAS_HSE
+    #define HW_HAS_HSE_CRYSTAL
+    #undef  HW_HAS_HSE_BYPASS
     #if defined(STM32L476EVAL) || defined(DRAGONFLY476)
-        #define LSE_FREQUENCY   8000000
+        #define HSE_FREQUENCY   8000000UL
     #else
-        #define LSE_FREQUENCY   16000000
+        #define HSE_FREQUENCY   16000000UL
     #endif
 #endif
 
-#if defined(HW_HAS_LSE_CRYSTAL) || defined(HW_HAS_LSE_BYPASS)
-    #define HW_HAS_LSE
+#if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)
+    #define HW_HAS_HSE
+    #define HSE_VALUE           HSE_FREQUENCY
 #else
-    #undef  HW_HAS_LSE
+    #undef  HW_HAS_HSE
 #endif
 
 

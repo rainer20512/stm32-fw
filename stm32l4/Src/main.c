@@ -281,7 +281,7 @@ int main(void)
 
     TogglePin(4);
 
-    // Switch HSI Clock on 
+    // HSI16 Clock always on , it may be used by some peripherals
     HSIClockConfig(true);
     TogglePin(5);
 

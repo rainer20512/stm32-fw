@@ -21,6 +21,9 @@
 #ifndef __STM32L4xx_HAL_CONF_H
 #define __STM32L4xx_HAL_CONF_H
 
+/* Get the actual HSE_VALUE */
+#include "config/config.h"
+
 #ifdef __cplusplus
  extern "C" {
 #endif

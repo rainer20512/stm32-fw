@@ -40,9 +40,16 @@
  *************************************************************
  */
 
-const char * const vos_txt[]={"Illegal","Range 1: 1.2V","Range 2: 1.0V","Illegal"};
-static const char* DBG_get_pwr_cr1_vos_txt(uint32_t sel)
+const char * const vos_txt[]={"Illegal","Range 1: 1.2V","Range 2: 1.0V","Range 1 Boost: 1.28V"};
+static const char* DBG_get_pwr_cr1_vos_txt(void)
 {
+  uint32_t sel = ( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos;
+
+#if defined(STM32L4Sxxx)
+    /* Check for boost mode*/
+    if ( sel == 1 && ( PWR->CR5 & PWR_CR5_R1MODE ) == 0 ) sel = 3;
+#endif
+
   if ( sel < sizeof(vos_txt)/sizeof(char *) ) 
     return vos_txt[sel];
   else
@@ -71,7 +78,7 @@ static void DBG_dump_pwr_cr1(void)
 {
   DBG_setPadLen(24);
   DBG_dump_textvalue("LP Run Mode", READ_BIT(PWR->CR1, PWR_CR1_LPR) ? "LowPower Mode" : "Main Mode" );    
-  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt(( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos) );
+  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt() );
   DBG_dump_bitvalue("Disable BkUp Wr Protect ", PWR->CR1, PWR_CR1_DBP);
   DBG_dump_textvalue("Low power Mode", DBG_get_pwr_cr1_lpms_txt(( PWR->CR1 & PWR_CR1_LPMS_Msk  ) >> PWR_CR1_LPMS_Pos) );
 }
@@ -107,7 +114,15 @@ static void DBG_dump_pwr_cr4(void)
   DBG_setPadLen(24);
   DBG_dump_uint32_hex("PWR->CR4 raw", PWR->CR4);
 }
- 
+
+#if defined ( STM32L4Sxxx )
+    static void DBG_dump_pwr_cr5(void)
+    {
+      DBG_setPadLen(24);
+      DBG_dump_uint32_hex("PWR->CR5 raw", PWR->CR5);
+    }
+#endif 
+
 static void DBG_dump_pwr_sr1(void)
 {
   DBG_setPadLen(24);
@@ -158,6 +173,13 @@ void DBG_dump_powersetting(void)
   DBG_setIndentRel(+2);
   DBG_dump_pwr_cr4();
   DBG_setIndentRel(-2);
+
+#if defined ( STM32L4Sxxx )
+  DBG_printf_indent("PWR: Power Control Register 5 \n" );
+  DBG_setIndentRel(+2);
+  DBG_dump_pwr_cr5();
+  DBG_setIndentRel(-2);
+#endif
 
   /********  PWR Status registers *****************/
   DBG_printf_indent("PWR: Power Status Register 1 \n" );
@@ -399,7 +421,7 @@ static void DBG_dump_clocks(void)
   DBG_dump_number("PCLK1",  HAL_RCC_GetPCLK1Freq());
   DBG_dump_number("PCLK2",  HAL_RCC_GetPCLK2Freq());
   HAL_RCC_GetClockConfig(&v, &f_latency);
-  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt(( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos) );
+  DBG_dump_textvalue("Vcore value", DBG_get_pwr_cr1_vos_txt());
   DBG_dump_number("Flash Latency", f_latency);  
 }
 
