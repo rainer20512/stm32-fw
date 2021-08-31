@@ -500,13 +500,15 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    #define USE_USART2
+    // #define USE_USART2
     // PA2, PA3 
-    #define USE_USART2_ALTN1
-    #define COM2_USE_TX_DMA
-    //#define COM2_USE_RX_DMA
-    #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    #define USE_USART2_DEBUG
+    #if defined(USE_USART2)
+        #define USE_USART2_ALTN1
+        #define COM2_USE_TX_DMA
+        //#define COM2_USE_RX_DMA
+        #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+        #define USE_USART2_DEBUG
+    #endif
 
     // #define USE_USART3
     #define COM3_USE_TX_DMA
@@ -529,8 +531,119 @@
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     // PC0, PC1
     #define USE_LPUART1_ALTN2
-    // #define USE_LPUART1_DEBUG
+    #define USE_LPUART1_DEBUG
  
+    // #define USE_SPI1
+    #define SPIDEV1_USE_IRQ
+    #define USE_SPIDEV1_ALTN2
+    #define SPIDEV1_USE_IRQ
+    #define USE_SPI1_BAUDRATE        400000
+    #define USE_SPI1_MASTER
+    
+    //#define USE_SPI2
+    #define SPIDEV2_USE_IRQ
+    #define SPIDEV2_USE_DMA
+    #define USE_SPIDEV2_ALTN1
+    #define USE_SPI2_BAUDRATE        400000
+    #define USE_SPI2_MASTER
+    // #define USE_SPI3
+    #define SPIDEV3_USE_IRQ
+    #define SPIDEV3_USE_DMA
+    #define USE_SPIDEV3_ALTN1
+    #define USE_SPI3_BAUDRATE        400000
+    #define USE_SPI3_MASTER
+
+    // #define USE_I2C1
+
+    // #define USE_I2C2
+    #define I2C2_CLKSOURCE           I2cClock_HSI
+    #define I2C2_SPEED               I2c_StandardMode
+    #define I2C2_USE_IRQ
+    #define I2C2_USE_DMA
+
+    #define USE_ADC1
+    #define ADC1_USE_IRQ
+    #define ADC1_USE_DMA 
+    #define USER_ADC      HW_ADC1
+  
+    #if USE_PWMTIMER > 0
+      #define USE_TIM3
+      #define USE_TIM3_ALTN2
+      #define PWM_FREQUENCY 20000
+      #define HW_PWMTIMER HW_TIM3
+      #define LCD_BKLGHT_CH         1
+    #endif
+
+    #if USE_QSPI > 0
+      #define QSPI_DEV          HW_QSPI1
+      #define USE_QSPI1
+      #define QSPI1_CLKSPEED    500000
+      #define USE_QSPI1_ALTN1
+      #define QSPI1_USE_IRQ
+      #define QSPI1_USE_DMA
+    #endif
+
+    #if USE_CAN > 0
+      #define USE_CAN1
+      #define USE_CANDEV1_ALTN1  /* PB8/PB9 for Can Rx/Tx */
+      #define CAN1_USE_IRQ
+    #endif
+
+    #define DEFAULT_STOP_MODE                2
+
+#elif defined(STM32L4S9ZXXREF)
+
+    #if USE_ONEWIRE > 0
+        #define USE_USART1
+        #define ONEWIRE_DEV            HW_COM1
+        #define USE_USART1_ALTN1
+        #define COM1_USE_TX_DMA
+        #define COM1_USE_RX_DMA
+        #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
+    #endif
+
+    #if USE_USB > 0
+    #endif
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM1
+    #define RTCTIMER_IRQn           LPTIM1_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
+
+    #define USE_USART2
+    // PA2, PA3 
+    #if defined(USE_USART2)
+        #define USE_USART2_ALTN1
+        #define COM2_USE_TX_DMA
+        //#define COM2_USE_RX_DMA
+        #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+        #define USE_USART2_DEBUG
+    #endif
+
+    // #define USE_USART3
+    #define COM3_USE_TX_DMA
+    #define COM3_USE_RX_DMA
+    #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
+
+    // #define USE_UART4
+    #define COM4_USE_TX_DMA
+    #define COM4_USE_RX_DMA
+    #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
+
+    // #define USE_UART5  
+    #define COM5_USE_TX_DMA
+    #define COM5_USE_RX_DMA
+    #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
+
+    // #define USE_LPUART1
+    #if defined(USE_LPUART1)
+        #define COM9_USE_TX_DMA
+        //#define COM9_USE_RX_DMA
+        #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
+        // PC0, PC1
+        #define USE_LPUART1_ALTN2
+        #define USE_LPUART1_DEBUG
+    #endif 
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ
     #define USE_SPIDEV1_ALTN2

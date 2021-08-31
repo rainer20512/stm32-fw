@@ -244,6 +244,8 @@
 
 #elif defined(STM32L4R9DISCOVERY)
 
+#elif defined(STM32L4S9ZXXREF)
+
 #elif defined(BL475IOT)
 
   #define BBSPI1_MOSI                           { GPIO_PIN_15, GPIOB, 0, GPIO_NOPULL, "BbSpi1_Mosi" }

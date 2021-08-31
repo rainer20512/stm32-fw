@@ -23,7 +23,8 @@
 //#define BL475IOT   
 //#define DRAGONFLY476
 //#define STM32L476NUCLEO
-#define STM32L4R9DISCOVERY
+//#define STM32L4R9DISCOVERY
+#define STM32L4S9ZXXREF
 //#define STM32L476EVAL
 // #define STM32L476BAREMETAL
 
@@ -56,7 +57,7 @@
 #define USE_DISPLAY         0
 #define USE_DOGM132         0
 #define USE_SECONDTIMER     1
-#define USE_PWMTIMER        1
+#define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
@@ -179,7 +180,7 @@
 /******************************************************************************
  * Check and set constraints for differeht hardware types
  *****************************************************************************/
-#if defined(STM32L476EVAL) || defined(DRAGONFLY476) || defined(STM32L4R9DISCOVERY)
+#if defined(STM32L476EVAL) || defined(DRAGONFLY476) || defined(STM32L4R9DISCOVERY) || defined(STM32L4S9ZXXREF)
     #define HW_HAS_HSE
     #define HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS

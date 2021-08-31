@@ -101,7 +101,7 @@ extern const EE_LimitsT eelimits[];
     /* 1a */ {                 1,   0,   1, EEType_YesNo,       "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
     /* 1b */ {                 0,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
     /* 1c */ { DEFAULT_STOP_MODE,   0,   2, EEType_Uint8_Dec,   "StopMode to enter on stop" },                             \
-    /* 1d */ { USER_CLOCKCONFIG,    0,  23, EEType_Uint8_Dec,   "Clock configuration to use" },                            
+    /* 1d */ { USER_CLOCKCONFIG,    0,  25, EEType_Uint8_Dec,   "Clock configuration to use" },                            
 #if defined(TX18LISTENER)
     #define EELIMITS1E EELIMITS10 \
     /* 1e */ {        TX_OOK_FRQ,   0,  1, EEType_Uint8_Dec,   "OOK-Frequency\n0=434.000, 1=433.850" },                    

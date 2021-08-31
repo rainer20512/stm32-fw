@@ -1058,9 +1058,6 @@ void UsartIRQHandler(UsartHandleT *uhandle)
     /* Check for Character Reception */
     if(((isrflags & USART_ISR_RXNE) != RESET) && ((cr1its & USART_CR1_RXNEIE) != RESET)) {
         ch = (uint8_t) (READ_REG(uhandle->Instance->RDR) & 0xFF );
-        if ( uhandle->Instance == LPUART1 ) {
-          DEBUG_PRINTF("Read from LPUART1:'%c'\d", ch);
-        }
         if ( uhandle->bRxCharMode ) {
             assert ( uhandle->in );
             /* Store only, if there were no errors */
@@ -1096,9 +1093,6 @@ void UsartIRQHandler(UsartHandleT *uhandle)
       #endif
       /* Transmit next character */
       uhandle->Instance->TDR = ch;
-      if ( uhandle->Instance == LPUART1 ) {
-        DEBUG_PRINTF("Write to LPUART1:'%c'\d", ch);
-      }
       uhandle->TxCount++;
     } else {
       /*
