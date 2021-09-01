@@ -15,6 +15,16 @@
 
 #if USE_USB > 0 
 
+/******************************************************************************
+ * The name of the USB device depends from MCU type
+ *****************************************************************************/
+#if defined ( STM32L4Sxxx )
+    #define USB_HARDWARE        USB_OTG_FS
+#else
+    #define USB_HARDWARE        USB2_OTG_FS
+#endif
+
+
 #include "hardware.h"
 #include "hw_device.h"
 #include "devices.h"
@@ -60,7 +70,7 @@ void USBD_CDC_Transmit ( uint32_t actlen );
 
 
 /* Public Variables -------------------------------------------------------------------------- */
-#if defined(USB2_OTG_FS) && defined(USE_USB)
+#if defined(USB_HARDWARE) && defined(USE_USB)
     extern UsbdHandleT USBDFSHandle;
     extern const HW_DeviceType HW_USBDFS;
 #endif

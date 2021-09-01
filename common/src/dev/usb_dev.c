@@ -25,7 +25,7 @@
 #include "config/usb_config.h"
 #include "debug_helper.h"
 
-#include "usbd_msc.h"
+#include "usbd_cdc.h"
 #include "usbd_desc.h"
 
 
@@ -141,17 +141,16 @@ void HAL_PCD_MspDeInit(PCD_HandleTypeDef *hpcd)
     HW_SetHWClock( hpcd->Instance, false );
 }
 
-#if 0
+
 void USBD_CDC_SetCallbacks   ( USBD_CDC_CallbacksT *usb_cbs)
 {
-    USBDHandle.cdc_callbacks = *usb_cbs;
+    USBDFSHandle.cdc_callbacks = *usb_cbs;
 }
 
 void USBD_CDC_StartReceive(void)
 {
-    USBD_CDC_ReceivePacket(&USBDHandle.hUsb);
+    USBD_CDC_ReceivePacket(&USBDFSHandle.hUsb);
 }
-#endif
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Check, whether the system may enter Stop 2 mode. 
@@ -176,8 +175,8 @@ bool USBD_CanStop(const HW_DeviceType *self)
     return false;
 }
 
-// extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
-extern USBD_StorageTypeDef USBD_DISK_fops;
+extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
+//extern USBD_StorageTypeDef USBD_DISK_fops;
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Can Device initialization: Reset handle, init GPIO pins and interrupts,
@@ -199,7 +198,6 @@ bool USBD_InitDev(const HW_DeviceType *self)
     uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
 #endif
-     HAL_PWREx_EnableUSBVoltageDetector();
  
 #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* enable USB power on Pwrctrl CR2 register */
@@ -215,7 +213,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
 #endif
 
-#if 0
+
     /* Init Device Library */
     USBD_Init(hUsbd, &VCP_Desc, 0);
 
@@ -227,8 +225,8 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     /* Start Device Process */
     USBD_Start(hUsbd);
-#endif
 
+#if 0 
   /* Init Device Library */
   USBD_Init(hUsbd, &MSC_Desc, 0);
 
@@ -240,6 +238,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
   /* Start Device Process */
   USBD_Start(hUsbd);
+#endif
 
     return true;
 }
@@ -262,7 +261,7 @@ void USBD_DeInitDev(const HW_DeviceType *self)
 
 /* Static configurations ---------------------------------------------------------*/
 
-#if defined(USB2_OTG_FS) && defined(USE_USB)
+#if defined(USB_HARDWARE) && defined(USE_USB)
     UsbdHandleT USBDFSHandle;
 
     static const HW_GpioList_AF gpioaf_usb = {
@@ -282,11 +281,7 @@ void USBD_DeInitDev(const HW_DeviceType *self)
 
     const HW_DeviceType HW_USBDFS = {
         .devName        = "USBFS_MSC",
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
-        .devBase        = USB_OTG_FS,
-#else
-        .devBase        = USB2_OTG_FS,
-#endif
+        .devBase        = USB_HARDWARE,
         .devGpioAF      = &gpioaf_usb,
         .devGpioIO      = &gpioio_usb,
         .devType        = HW_DEVICE_USBD,

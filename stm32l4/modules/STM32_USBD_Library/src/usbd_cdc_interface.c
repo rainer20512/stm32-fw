@@ -63,7 +63,7 @@ UART_HandleTypeDef UartHandle;
 /* TIM handler declaration */
 TIM_HandleTypeDef  TimHandle;
 
-#define MyDevice        ( &USBDHandle.hUsb )
+#define MyDevice        ( &USBDFSHandle.hUsb )
 
 /* Private function prototypes -----------------------------------------------*/
 static int8_t CDC_Itf_Init     (void);
@@ -99,7 +99,7 @@ static int8_t CDC_Itf_Init(void)
   USBD_CDC_SetRxBuffer(MyDevice, UserRxBuffer);
   
   /* Call callback, if set */
-  if ( USBDHandle.cdc_callbacks.USBD_CDC_OnInit ) USBDHandle.cdc_callbacks.USBD_CDC_OnInit();
+  if ( USBDFSHandle.cdc_callbacks.USBD_CDC_OnInit ) USBDFSHandle.cdc_callbacks.USBD_CDC_OnInit();
 
   return (USBD_OK);
 }
@@ -113,7 +113,7 @@ static int8_t CDC_Itf_Init(void)
 static int8_t CDC_Itf_DeInit(void)
 {
   /* Call callback, if set */
-  if ( USBDHandle.cdc_callbacks.USBD_CDC_OnDeInit ) USBDHandle.cdc_callbacks.USBD_CDC_OnDeInit();
+  if ( USBDFSHandle.cdc_callbacks.USBD_CDC_OnDeInit ) USBDFSHandle.cdc_callbacks.USBD_CDC_OnDeInit();
 
   return (USBD_OK);
 }
@@ -161,7 +161,7 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
     LineCoding.datatype   = pbuf[6];
     
     /* Decode and call callback, if set */
-    if ( USBDHandle.cdc_callbacks.USBD_CDC_OnChngCommParams ) {
+    if ( USBDFSHandle.cdc_callbacks.USBD_CDC_OnChngCommParams ) {
         /* Set the new configuration */
         LineCoding_To_UartParms();
     }
@@ -169,7 +169,7 @@ static int8_t CDC_Itf_Control (uint8_t cmd, uint8_t* pbuf, uint16_t length)
 
   case CDC_GET_LINE_CODING:
     /* if Query-Callback is set then get comm params and copy to LineCoding */
-    if ( USBDHandle.cdc_callbacks.USBD_CDC_QueryCommParams ) {
+    if ( USBDFSHandle.cdc_callbacks.USBD_CDC_QueryCommParams ) {
         /* Set the new configuration */
         UartParms_To_LineCoding();
     }
@@ -212,7 +212,7 @@ static int8_t CDC_Itf_Receive(uint8_t* buf, uint32_t *len)
   HAL_UART_Transmit_DMA(&UartHandle, Buf, *Len);
   #endif
   /* Call callback, if set */
-  if ( USBDHandle.cdc_callbacks.USBD_CDC_OnReceive ) USBDHandle.cdc_callbacks.USBD_CDC_OnReceive( buf, *len);
+  if ( USBDFSHandle.cdc_callbacks.USBD_CDC_OnReceive ) USBDFSHandle.cdc_callbacks.USBD_CDC_OnReceive( buf, *len);
   
   return (USBD_OK);
 }
@@ -306,7 +306,7 @@ static void LineCoding_To_UartParms(void)
   }
 
   /* The presence of setter callback has been checked before, so just call here w/o check */
-  USBDHandle.cdc_callbacks.USBD_CDC_OnChngCommParams(baudrate, stopbits, parity, wordlength);  
+  USBDFSHandle.cdc_callbacks.USBD_CDC_OnChngCommParams(baudrate, stopbits, parity, wordlength);  
 }
 
 
@@ -315,7 +315,7 @@ static void UartParms_To_LineCoding(void)
   uint32_t baudrate, stopbits, parity, wordlength;
   uint32_t temp;
   /* The presence of query callback has been checked before, so just call here w/o check */
-  USBDHandle.cdc_callbacks.USBD_CDC_QueryCommParams(&baudrate, &stopbits, &parity, &wordlength);  
+  USBDFSHandle.cdc_callbacks.USBD_CDC_QueryCommParams(&baudrate, &stopbits, &parity, &wordlength);  
 
   LineCoding.bitrate    = baudrate;
   LineCoding.format     = ( stopbits == UART_STOPBITS_2      ? 2 : 0 );

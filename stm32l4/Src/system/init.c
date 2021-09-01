@@ -197,9 +197,9 @@ void Init_OtherDevices(void)
   #endif
   #if defined(USB_OTG_FS) && USE_USB > 0 
       void USBD_PostInit( const HW_DeviceType *self, void *args);
-      dev_idx = AddDevice(&HW_USBD, NULL, NULL);
+      dev_idx = AddDevice(&HW_USBDFS, NULL, NULL);
       if ( dev_idx < 0 ) {
-        DEBUG_PUTS("Failed to init USBD-device");
+        DEBUG_PUTS("Failed to init USBDFS-device");
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }

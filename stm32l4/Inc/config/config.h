@@ -61,7 +61,7 @@
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
-#define USE_USB             0  
+#define USE_USB             1  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 
