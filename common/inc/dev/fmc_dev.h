@@ -67,7 +67,7 @@ typedef struct FmcHandleType {
     uint32_t        allCtlBits;
 } FmcHandleT; 
 
-// void FMC_SRAM_Init              (QSpiHandleT *myHandle, QSpiGeometryT *pInfo);
+// void FMC_SRAM_Init              (QSpiHandleT *myHandle, XSpiGeometryT *pInfo);
 
 /* Global variables ---------------------------------------------------------------------*/
 #if defined(USE_FMC)

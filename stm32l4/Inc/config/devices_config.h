@@ -283,11 +283,11 @@
     #endif
 
     #if USE_QSPI > 0
-        #define QSPI_DEV          HW_QSPI1
+        #define QSPI_DEV          HW_XSPI1
         #define USE_QSPI1
         #define USE_QSPI1_ALTN1
-        #define QSPI1_USE_IRQ
-        #define QSPI1_USE_DMA
+        #define XSPI1_USE_IRQ
+        #define XSPI1_USE_DMA
     #endif
 
     #define DEFAULT_STOP_MODE                2
@@ -450,12 +450,12 @@
   #endif
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
+      #define QSPI_DEV          HW_XSPI1
       #define USE_QSPI1
       #define QSPI1_CLKSPEED    500000
       #define USE_QSPI1_ALTN1
-      #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
+      #define XSPI1_USE_IRQ
+      #define XSPI1_USE_DMA
   #endif
 
   #if USE_CAN > 0
@@ -573,12 +573,12 @@
     #endif
 
     #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
+      #define QSPI_DEV          HW_XSPI1
       #define USE_QSPI1
       #define QSPI1_CLKSPEED    500000
       #define USE_QSPI1_ALTN1
-      #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
+      #define XSPI1_USE_IRQ
+      #define XSPI1_USE_DMA
     #endif
 
     #if USE_CAN > 0
@@ -633,14 +633,14 @@
     #define COM5_USE_RX_DMA
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
-    // #define USE_LPUART1
+    #define USE_LPUART1
     #if defined(USE_LPUART1)
         #define COM9_USE_TX_DMA
         //#define COM9_USE_RX_DMA
         #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
         // PC0, PC1
         #define USE_LPUART1_ALTN2
-        #define USE_LPUART1_DEBUG
+        // #define USE_LPUART1_DEBUG
     #endif 
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ
@@ -683,13 +683,13 @@
       #define LCD_BKLGHT_CH         1
     #endif
 
-    #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
-      #define USE_QSPI1
-      #define QSPI1_CLKSPEED    500000
-      #define USE_QSPI1_ALTN1
-      #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
+    #if USE_OSPI > 0
+      #define XSPI_DEV          HW_XSPI1
+      #define USE_OSPI1
+      #define XSPI1_CLKSPEED    500000
+      #define USE_OSPI1_ALTN1
+      #define XSPI1_USE_IRQ
+      #define XSPI1_USE_DMA
     #endif
 
     #if USE_CAN > 0
@@ -712,11 +712,11 @@
   #define ADC1_USE_DMA 
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
+      #define QSPI_DEV          HW_XSPI1
       #define USE_QSPI1
       #define USE_QSPI1_ALTN1
-      #define QSPI1_USE_IRQ
-      #define QSPI1_USE_DMA
+      #define XSPI1_USE_IRQ
+      #define XSPI1_USE_DMA
   #endif
 
   #define DEFAULT_STOP_MODE                2

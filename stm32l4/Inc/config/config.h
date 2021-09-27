@@ -60,6 +60,7 @@
 #define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_OSPI            1            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
 #define USE_USB             1  
 #define USE_FMC_SRAM        0
@@ -100,7 +101,7 @@
  * Choose one in case of USE_QSPI == 1 
 ******************************************************************************
  */
-#define USE_QSPI_MX25               0
+#define USE_QSPI_MX25               1
 #define USE_QSPI_MT25Q              0
 
 /******************************************************************************
@@ -208,7 +209,6 @@
 #else
     #define USE_FMC 0
 #endif
-
 
 /*
  ********************************************************************************

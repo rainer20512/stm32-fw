@@ -254,7 +254,7 @@ void Init_OtherDevices(void)
 #endif
 
 void task_handle_out  (uint32_t);
-void task_handle_qspi (uint32_t);
+void task_handle_xspi (uint32_t);
 
 /******************************************************************************
  * Initially put all tasks to task list. 
@@ -291,7 +291,7 @@ void Init_DefineTasks(void)
   TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
 #endif
 #if USE_QSPI > 0
-  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,    JOB_TASK_QSPI,     "QSPI task");
+  TaskRegisterTask(NULL,          task_handle_xspi, TASK_QSPI,    JOB_TASK_QSPI,     "QSPI task");
 #endif
 #ifdef TX18LISTENER
     TaskRegisterTask(PulsesInit,  task_handle_pulse,TASK_PULSE,   JOB_TASK_MAIN,     "Pulse sequencer");

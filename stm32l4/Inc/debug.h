@@ -16,7 +16,18 @@
  extern "C" {
 #endif
 
-#define DEBUG_MODE          1
+#if defined(DEBUG)
+    #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE    /* max. loglevel that will be generated in code */
+    #define DEBUG_MODE          1
+#else
+    #define STATIC_LOGLIMIT     LOGLEVEL_ALWAYS 
+    #define DEBUG_MODE          0
+#endif
+
+/* Enable/Disable different logging destinations */
+#define LOGTO_FATFS         1   
+#define LOGTO_CONSOLE       1   
+
 
 #define DEBUG_STARTUP       0
 #define DEBUG_FEATURES      1
@@ -30,7 +41,7 @@
 // DEBUG_QENC in qencoder.h
 // DEBUG_ADC in adc_dev.c
 // DEBUG_CAN in can_dev.c  
-// DEBUG_QSPI in qspi_dev.c  
+// DEBUG_XSPI in qspi_dev.c  
 #define DEBUG_PROFILING     1
 #define DEBUG_PERIODIC      0
 #define DEBUG_SLEEP_STOP    0

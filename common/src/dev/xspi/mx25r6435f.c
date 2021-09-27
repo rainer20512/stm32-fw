@@ -15,10 +15,10 @@
  
 #include "system/clockconfig.h"
 #include "mx25r6435f.h"
-#include "dev/qspi_dev.h"
-#include "dev/qspi/qspecific.h"
+#include "dev/xspi_dev.h"
+#include "dev/xspi/xspecific.h"
 
-#if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
     #include "debug_helper.h"
 #endif
 
@@ -49,17 +49,17 @@
 static uint8_t  MX25_GetStatus               (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WriteEnable        (QSPI_HandleTypeDef *hqspi);
        bool     QSpecific_WaitForWriteDone   (QSPI_HandleTypeDef *hqspi, uint32_t Timeout);
-static bool     MX25_QuadMode                (QSpiHandleT *myHandle, uint8_t Operation);
-static bool     MX25_GetGeometry             (QSpiHandleT *myHandle);
+static bool     MX25_QuadMode                (XSpiHandleT *myHandle, uint8_t Operation);
+static bool     MX25_GetGeometry             (XSpiHandleT *myHandle);
 static bool     MX25RXX35_HighPerfMode       (QSPI_HandleTypeDef *hqspi, uint8_t Operation);
-static uint16_t MX25_GetType                 (QSpiHandleT *myHandle); 
+static uint16_t MX25_GetType                 (XSpiHandleT *myHandle); 
 
 /* Exported functions -------------------------------------------------------*/
 
 bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
 {
     bool ret = MX25RXX35_HighPerfMode(hqspi, bHPerf ? MX25_HIGH_PERF_ENABLE : MX25_HIGH_PERF_DISABLE);
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         if ( !ret ) 
             DEBUG_PRINTF("QSpi - Error: Unable to set %s mode\n", bHPerf ? "high perf.":"ultra low power");
         else
@@ -100,7 +100,7 @@ bool QSpecific_HPerfMode ( QSPI_HandleTypeDef *hqspi, bool bHPerf )
  * This routine dowes not check for max. Frq. in Ultra low power mode ( 33MHz )
  * It is the callers responsibility to do so
  *****************************************************************************/
-bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
+bool QSpecific_BasicInit(XSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desired_frq, uint32_t flash_size, bool bFirstInit )
 {  
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
     bool ret;
@@ -112,13 +112,13 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
     desired_frq = clk_frq / (prescaler+1);
 
     if ( prescaler > 255 ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PRINTF("QSpecific_BasicInit - QSPI clk too low, minimum is %d\n", clk_frq/256 );
         #endif
         return false;
     }
 
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         DEBUG_PRINTF("Qspi: Clk=%d\n", desired_frq );
     #endif
 
@@ -139,7 +139,7 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
     hqspi->Init.ClockMode          = QSPI_CLOCK_MODE_0;
 
     if (HAL_QSPI_Init(hqspi) != HAL_OK) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpecific_BasicInit - Error: HAL Init failed");
         #endif
         return false;
@@ -157,7 +157,7 @@ bool QSpecific_BasicInit(QSpiHandleT *myHandle, uint32_t clk_frq, uint32_t desir
   * @param  hqspi : QSPI handle
   * @retval None
   */
-bool QSpecific_ResetMemory(QSpiHandleT *myHandle)
+bool QSpecific_ResetMemory(XSpiHandleT *myHandle)
 {
   QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
@@ -200,7 +200,7 @@ bool QSpecific_ResetMemory(QSpiHandleT *myHandle)
  *       offset 2 : Memory density
  *       offset 3 : Device ID
  *****************************************************************************/
-uint32_t QSpecific_GetID ( QSpiHandleT *me )
+uint32_t QSpecific_GetID ( XSpiHandleT *me )
 {
   QSPI_CommandTypeDef sCommand;
 
@@ -242,7 +242,7 @@ uint32_t QSpecific_GetID ( QSpiHandleT *me )
 /******************************************************************************
  * Dump the status of Status and Configuration register
  *****************************************************************************/
-void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
+void QSpecific_DumpStatusInternal(XSpiHandleT *myHandle)
 {
   QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
   QSPI_CommandTypeDef sCommand;
@@ -331,7 +331,7 @@ void QSpecific_DumpStatusInternal(QSpiHandleT *myHandle)
  * - set the flash size and timing parameters 
  * - reset flash controller
  *****************************************************************************/
-bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t clk_frq)
+bool QSpecific_SpecificInit(const HW_DeviceType *self,XSpiHandleT *myHandle, uint32_t clk_frq)
 { 
     UNUSED(self);
     uint32_t clkspeed = myHandle->clkspeed;
@@ -354,31 +354,31 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
 
     /* QSPI memory reset */
     if (!QSpecific_ResetMemory(myHandle) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificInit - Error: ResetMemory failed");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PUTS("QSPI SpecificInit - Error: ResetMemory failed");
         #endif
     }
 
     /* read ID bytes */
     if ( QSpecific_GetID(myHandle) != QSPI_OK ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificInit - Error: Cannot read ID bytes");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PUTS("QSPI SpecificInit - Error: Cannot read ID bytes");
         #endif
         return false;
     }
 
     /* QSPI quad enable */
     if ( !MX25_QuadMode(myHandle, MX25_QUAD_ENABLE) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificInit - Error: Quad mode not set");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PUTS("QSPI SpecificInit - Error: Quad mode not set");
         #endif
         return false;
     }
 
     /* Get geometry data */
     if ( !MX25_GetGeometry(myHandle) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            DEBUG_PUTS("QSpi_SpecificInit - Error: Cannot set geometry");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PUTS("QSPI SpecificInit - Error: Cannot set geometry");
         #endif
         return false;
     }
@@ -394,7 +394,7 @@ bool QSpi_SpecificInit(const HW_DeviceType *self,QSpiHandleT *myHandle, uint32_t
   * @brief  This function enter the QSPI memory in deep power down mode.
   * @retval QSPI memory status
   */
-bool QSpecific_EnterDeepPowerDown(QSpiHandleT *myHandle)
+bool QSpecific_EnterDeepPowerDown(XSpiHandleT *myHandle)
 {
 
   /* check for deep sleep capbility */
@@ -428,7 +428,7 @@ bool QSpecific_EnterDeepPowerDown(QSpiHandleT *myHandle)
   * @brief  This function leave the QSPI memory from deep power down mode.
   * @retval QSPI memory status
   */
-bool QSpecific_LeaveDeepPowerDown(QSpiHandleT *myHandle)
+bool QSpecific_LeaveDeepPowerDown(XSpiHandleT *myHandle)
 {
   /* check for deep sleep capbility */
   if (!myHandle->dsInfo ) return false;
@@ -464,7 +464,7 @@ bool QSpecific_LeaveDeepPowerDown(QSpiHandleT *myHandle)
   * @brief  Configure the QSPI in memory-mapped mode
   * @retval QSPI memory status
   */
-bool QSpecific_EnableMemoryMappedMode(QSpiHandleT *myHandle)
+bool QSpecific_EnableMemoryMappedMode(XSpiHandleT *myHandle)
 {
   QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
   QSPI_CommandTypeDef      sCommand;
@@ -598,7 +598,7 @@ bool QSpecific_ReadCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 
     /* Configure the command */
     if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpi_Read - Error: Command not send");
         #endif
         return false;
@@ -631,7 +631,7 @@ bool QSpecific_WriteCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 
     /* Enable write operations */
     if ( !QSpecific_WriteEnable(hqspi) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpecific_WriteCMD - Error: Write enable failed");
         #endif
       return false;
@@ -639,7 +639,7 @@ bool QSpecific_WriteCMD(QSPI_HandleTypeDef *hqspi, uint32_t Addr, uint32_t Size)
 
     /* Configure the command */
         if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpecific_WriteCMD - Error: Command not send");
         #endif
         return false;
@@ -675,7 +675,7 @@ bool QSpecific_GetEraseParams(uint32_t erasemode, uint32_t *timeout_ms, uint8_t 
             *opcode     = CHIP_ERASE_CMD;
             break;
         default:
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 DEBUG_PRINTF("GetEraseTimeout - Error: unkown erasemode %d\n", erasemode);
             #endif
             *timeout_ms = MX25R6435F_SECTOR_ERASE_MAX_TIME;
@@ -719,7 +719,7 @@ bool QSpecific_EraseCMD(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t er
 
     /* Enable write operations */
     if ( !QSpecific_WriteEnable(hqspi) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpi_SpecificEraseBlockWait - Error: Write enable failed");
         #endif
         return false;
@@ -727,7 +727,7 @@ bool QSpecific_EraseCMD(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t er
 
     /* Send the command */
     if (HAL_QSPI_Command(hqspi, &sCommand, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("QSpi_SpecificEraseBlockWait - Error: send command failed");
         #endif
       return false;
@@ -747,7 +747,7 @@ bool QSpecific_EraseCMD(QSPI_HandleTypeDef *hqspi, uint32_t Address, uint32_t er
 /******************************************************************************
  * Return the device identification ( 16 bit ) from the ID bytes
  *****************************************************************************/
-static uint16_t MX25_GetType(QSpiHandleT *myHandle)
+static uint16_t MX25_GetType(XSpiHandleT *myHandle)
 {
     uint16_t ret = myHandle->id[1];
     return ret << 8 | myHandle->id[2];
@@ -757,7 +757,7 @@ static uint16_t MX25_GetType(QSpiHandleT *myHandle)
 /******************************************************************************
  * Set the geometry data according to flash deviceID set in myHandle->id
  *****************************************************************************/
-static bool MX25_GetGeometry(QSpiHandleT *myHandle)
+static bool MX25_GetGeometry(XSpiHandleT *myHandle)
 {
     /* get type and set all geometry parameters according to that */
     uint16_t devID = MX25_GetType(myHandle);
@@ -931,7 +931,7 @@ static bool MX25_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Ti
         case QSPI_MODE_IRQ:
         case QSPI_MODE_DMA:
             if (HAL_QSPI_AutoPolling_IT(hqspi, &sCommand, &sConfig) != HAL_OK) {
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     DEBUG_PUTS("QSpi_AutoPolling_IT - Error: Setup failed");
                 #endif
                 return false;
@@ -939,7 +939,7 @@ static bool MX25_WaitForWriteDoneInternal(QSPI_HandleTypeDef *hqspi, uint32_t Ti
             break;
         default:
             if (HAL_QSPI_AutoPolling(hqspi, &sCommand, &sConfig, Timeout) != HAL_OK) {
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     DEBUG_PUTS("QSpi_AutoPolling - Error: Timeout when waiting for write done");
                 #endif
                 return false;
@@ -961,7 +961,7 @@ bool QSpecific_WaitForWriteDone_IT(QSPI_HandleTypeDef *hqspi) {
   * @param  Operation : MX25_QUAD_ENABLE or MX25_QUAD_DISABLE mode  
   * @retval None
   */
-static bool MX25_QuadMode(QSpiHandleT *myHandle, uint8_t Operation)
+static bool MX25_QuadMode(XSpiHandleT *myHandle, uint8_t Operation)
 {
     QSPI_HandleTypeDef *hqspi = &myHandle->hqspi;
     QSPI_CommandTypeDef sCommand;

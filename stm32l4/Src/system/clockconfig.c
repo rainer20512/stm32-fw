@@ -156,8 +156,8 @@ void ClockReconfigureAfterStop(void)
      */
 /* Maximum allowable HCLK for Vcore Range1 and Range2 */
 /* minimum # of flash WS                    0               1                   2                   3                   4 */       
-static const uint8 hclk_range_1[]  = {16,                32,                 48,                 64,                 80, };
-static const uint8 hclk_range_2[]  = { 6,                12,                 18,                 26, };
+static const uint8_t hclk_range_1[]  = {16,                32,                 48,                 64,                 80, };
+static const uint8_t hclk_range_2[]  = { 6,                12,                 18,                 26, };
 static const uint32_t flash_latency[] = {FLASH_LATENCY_0,   FLASH_LATENCY_1,    FLASH_LATENCY_2,    FLASH_LATENCY_3,    FLASH_LATENCY_4, };
 #elif defined(STM32L4Sxxx)
     /*

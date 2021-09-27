@@ -53,12 +53,12 @@
   #endif
 
   /* Definition for COM1's NVIC */
-  #if defined(QSPI1_USE_IRQ)
+  #if defined(XSPI1_USE_IRQ)
      #define QSPI1_IRQ                        { QUADSPI_IRQn, SPI_IRQ_PRIO, 0    }
      #define QSPI1_IRQHandler                  QUADSPI_IRQHandler
   #endif
 
-  #ifdef QSPI1_USE_DMA
+  #ifdef XSPI1_USE_DMA
     /* Definition for USART1 TX DMA */
     #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn, DMA_PRIORITY_VERY_HIGH 
     #define QSPI1_DMA_IRQHandler           DMA2_Channel7_IRQHandler

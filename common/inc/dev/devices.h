@@ -35,8 +35,8 @@
 #if USE_QENCODER > 0 
     #include "dev/qencode.h"
 #endif
-#if USE_QSPI > 0 
-    #include "dev/qspi_dev.h"
+#if USE_QSPI > 0 || USE_OSPI > 0    
+    #include "dev/xspi_dev.h"
 #endif
 #if USE_CAN > 0
     #include "dev/can_dev.h"

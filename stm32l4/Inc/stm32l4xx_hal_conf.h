@@ -65,7 +65,12 @@
 /* #define HAL_OPAMP_MODULE_ENABLED */
 #define HAL_PCD_MODULE_ENABLED
 #define HAL_PWR_MODULE_ENABLED
-#define HAL_QSPI_MODULE_ENABLED */
+#if USE_OSPI > 0 
+    #define HAL_OSPI_MODULE_ENABLED
+#endif
+#if USE_QSPI > 0 
+    #define HAL_QSPI_MODULE_ENABLED
+#endif
 #define HAL_RCC_MODULE_ENABLED
 /* #define HAL_RNG_MODULE_ENABLED */
 #define HAL_RTC_MODULE_ENABLED */
@@ -301,6 +306,10 @@
 #ifdef HAL_OPAMP_MODULE_ENABLED
 #include "stm32l4xx_hal_opamp.h"
 #endif /* HAL_OPAMP_MODULE_ENABLED */
+
+#ifdef HAL_OSPI_MODULE_ENABLED
+  #include "stm32l4xx_hal_ospi.h"
+#endif /* HAL_OSPI_MODULE_ENABLED */
 
 #ifdef HAL_PWR_MODULE_ENABLED
  #include "stm32l4xx_hal_pwr.h"

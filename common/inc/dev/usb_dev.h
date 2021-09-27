@@ -18,7 +18,7 @@
 /******************************************************************************
  * The name of the USB device depends from MCU type
  *****************************************************************************/
-#if defined ( STM32L4Sxxx )
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     #define USB_HARDWARE        USB_OTG_FS
 #else
     #define USB_HARDWARE        USB2_OTG_FS

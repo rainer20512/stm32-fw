@@ -15,8 +15,8 @@
 #define OUTBUF_SIZE 2048
 #define INBUF_SIZE  2048
 
-#define HWUART      HW_COM2
-#define UARTHND     (&HandleCOM2)
+#define HWUART      HW_COM9
+#define UARTHND     (&HandleCOM9)
 
 typedef enum {
     NO_ACTION  = 0,
@@ -71,7 +71,7 @@ void Usbd_SetComm( uint32_t  baudrate, uint32_t  stopbits, uint32_t  parity, uin
     comm.stopbits   = stopbits;
     comm.parity     = parity;
     comm.wordlength = wordlength;
-    Usart_SetCommParamsLong(&HW_COM2, &comm, false );
+    Usart_SetCommParamsLong(&HWUART, &comm, false );
     USBD_CDC_StartReceive();
 }
 

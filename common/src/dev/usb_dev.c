@@ -35,7 +35,7 @@ void USB_DeInitDev(const HW_DeviceType *self);
 
 /**************************************************************************************
  * Some Devices support different clock sources for QSPI. Make sure, that             *   
-  * QSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+  * UsbSetClockSource and UsbGetClockSpeed() will match                            *
  *************************************************************************************/
 #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     /* STM32L4xx has no clock mux for USB device */

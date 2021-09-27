@@ -33,6 +33,10 @@
   #include "dev/spi.h"
 #endif
 
+#if defined(USE_QSPI) || defined(USE_OSPI)
+  #include "dev/xspi_dev.h"
+#endif
+
 #if defined(USE_TIM7) || defined(USE_TIM6)
     #include "dev/timer_dev.h"
 #endif
@@ -632,20 +636,36 @@ void SysTick_Handler(void)
     }
 #endif
 
-#if USE_QSPI > 0
+#if USE_QSPI > 0 
 
-    #if defined(QSPI1_USE_IRQ)
+    #if defined(XSPI1_USE_IRQ)
         #if !defined(QSPI1_IRQHandler)
             #error "QSPI1_IRQHandler undefined!"
         #endif
         void QSPI1_IRQHandler ( void ) 
         {
-            HAL_QSPI_IRQHandler(&QSpi1Handle.hqspi);
+            HAL_QSPI_IRQHandler(&XSpi1Handle.hqspi);
         }
     #endif
 
-    #if defined(QSPI1_USE_DMA)
+    #if defined(XSPI1_USE_DMA)
         void QSPI1_DMA_IRQHandler ( void ) 
+        {
+        }
+    #endif
+#elif USE_OSPI > 0 
+    #if defined(XSPI1_USE_IRQ)
+        #if !defined(OCTOSPI1_IRQHandler)
+            #error "OCTOSPI1_IRQHandler undefined!"
+        #endif
+        void OCTOSPI1_IRQHandler ( void ) 
+        {
+            HAL_OSPI_IRQHandler(&XSpi1Handle.hxspi);
+        }
+    #endif
+
+    #if defined(XSPI1_USE_DMA)
+        void OSPI1_DMA_IRQHandler ( void ) 
         {
         }
     #endif

@@ -81,22 +81,22 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 
 /* U(s)art ----------------------------------------------------------------------------------------------------------------- */
 #if defined(USART1) && defined(USE_USART1)
-   { USART1, &RCC->APB2ENR, RCC_APB2ENR_USART1EN_Pos, &RCC->APB2RSTR, RCC_APB2RSTR_USART1RST_Pos, COMBINE('U', 1) },
+   { USART1, &RCC->APB2ENR, RCC_APB2ENR_USART1EN_Pos, &RCC->APB2RSTR, RCC_APB2RSTR_USART1RST_Pos, COMBINE('C', 1) },
 #endif
 #if defined(USART2) && defined(USE_USART2)
-   { USART2, &RCC->APB1ENR1, RCC_APB1ENR1_USART2EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_USART2RST_Pos, COMBINE('U', 2) },
+   { USART2, &RCC->APB1ENR1, RCC_APB1ENR1_USART2EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_USART2RST_Pos, COMBINE('C', 2) },
 #endif
 #if defined(USART3) && defined(USE_USART3)
-   { USART3, &RCC->APB1ENR1, RCC_APB1ENR1_USART3EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_USART3RST_Pos, COMBINE('U', 3) },
+   { USART3, &RCC->APB1ENR1, RCC_APB1ENR1_USART3EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_USART3RST_Pos, COMBINE('C', 3) },
 #endif
 #if defined(UART4) && defined(USE_UART4)
-   { UART4, &RCC->APB1ENR1, RCC_APB1ENR1_UART4EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_UART4RST_Pos, COMBINE('U', 4) },
+   { UART4, &RCC->APB1ENR1, RCC_APB1ENR1_UART4EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_UART4RST_Pos, COMBINE('C', 4) },
 #endif
 #if defined(UART5) && defined(USE_UART5)
-   { UART5, &RCC->APB1ENR1, RCC_APB1ENR1_UART5EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_UART5RST_Pos, COMBINE('U', 5) },
+   { UART5, &RCC->APB1ENR1, RCC_APB1ENR1_UART5EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_UART5RST_Pos, COMBINE('C', 5) },
 #endif
 #if defined(LPUART1) && defined(USE_LPUART1)
-   { LPUART1, &RCC->APB1ENR2, RCC_APB1ENR2_LPUART1EN_Pos, &RCC->APB1RSTR2, RCC_APB1RSTR2_LPUART1RST_Pos, COMBINE('U', 6) },
+   { LPUART1, &RCC->APB1ENR2, RCC_APB1ENR2_LPUART1EN_Pos, &RCC->APB1RSTR2, RCC_APB1RSTR2_LPUART1RST_Pos, COMBINE('C', 9) },
 #endif
 
 /* SPI --------------------------------------------------------------------------------------------------------------------- */
@@ -172,9 +172,15 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
    { LPTIM1, &RCC->APB1ENR1, RCC_APB1ENR1_LPTIM1EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_LPTIM1RST_Pos, COMBINE('T', 20) },
 #endif
 /* LPTIM2 not coded */
-/* QUADSPI  --------------------------------------------------------------------------------------------------------------- */
+/* QUADSPI/OCTOSPI  ------------------------------------------------------------------------------------------------------- */
 #if defined(QUADSPI) && defined(USE_QSPI1) 
    { QUADSPI, &RCC->AHB3ENR, RCC_AHB3ENR_QSPIEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_QSPIRST_Pos, COMBINE('Q', 1) },
+#endif
+#if defined(OCTOSPI1) && defined(USE_OSPI1) 
+   { OCTOSPI1, &RCC->AHB3ENR, RCC_AHB3ENR_OSPI1EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_OSPI1RST_Pos, COMBINE('O', 1) },
+#endif
+#if defined(OCTOSPI2) && defined(USE_OSPI2) 
+   { OCTOSPI2, &RCC->AHB3ENR, RCC_AHB3ENR_OSPI2EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_OSPI2RST_Pos, COMBINE('O', 2) },
 #endif
 /* CAN1  ------------------------------------------------------------------------------------------------------------------ */
 #if defined(CAN1) && defined(USE_CAN1) 
@@ -182,7 +188,7 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #endif
 /* USB OTG  --------------------------------------------------------------------------------------------------------------- */
 #if defined(USB_OTG_FS) && defined(USE_USB) 
-   { USB_OTG_FS, &RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_OTGFSRST_Pos, COMBINE('O', 1) },
+   { USB_OTG_FS, &RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_OTGFSRST_Pos, COMBINE('U', 1) },
 #endif
 #if defined(FMC_Bank1_R) && USE_FMC > 0 
    { FMC_Bank1_R, &RCC->AHB3ENR, RCC_AHB3ENR_FMCEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_FMCRST_Pos, COMBINE('F', 1) },
@@ -422,7 +428,6 @@ static const char *Get_PackageName( uint16_t package )
             case 0b10001: return "WLCSP100";
             default: return "Unknown Package";
         }
-    }
     #elif defined(STM32L4Sxxx) || defined(STM32L4Rxxx)
         switch(package&0b11111) {
             case 0b00010: return "LQFP100 without DSI";

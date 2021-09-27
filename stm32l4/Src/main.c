@@ -50,6 +50,12 @@
 
 #include "system/profiling.h"
 
+#include "system/tm1637.h"
+#define  STATUS(i)          TM1637_displayInteger(i,0,99)
+TM1637PinT clk = { GPIOB, 0 };
+TM1637PinT dio = { GPIOB, 1 };
+
+
 /* Private typedef -----------------------------------------------------------*/
 
 /* Private define ------------------------------------------------------------*/
@@ -258,6 +264,8 @@ int main(void)
 
     /* configure "simulated EEPROM" in flash and read config settings */
     Config_Init();
+
+    // TM1637_Init( clk, dio, DELAY_TYPICAL);
 
     /* Init variables and structures for device handling */
     DevicesInit();

@@ -2,7 +2,7 @@
  ******************************************************************************
  * @file    qspi_dev.c
  * @author  Rainer
- * @brief   QUADSPI hardware wrapped into HW_Device
+ * @brief   QUADSPI or OCTOSPI hardware wrapped into HW_Device
  *
  *****************************************************************************/
 
@@ -12,8 +12,9 @@
 */
 #include "config/config.h"
 
-#if USE_QSPI > 0 
+#include "hardware.h"
 
+#if USE_QSPI > 0 || USE_OSPI > 0
 
 #include "config/devices_config.h"
 #include "config/qspi_config.h"
@@ -27,33 +28,43 @@
 
 #include "log.h"
 
-#include "dev/qspi/qspecific.h"
+#include "dev/xspi/xspi_specific.h"
+
+#if USE_OSPI > 0
+    #define     XSpiStr                         "OSPI"
+    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_OSPI_TIMEOUT_DEFAULT_VALUE
+
+#else
+    #define     XSpiStr                         "QSPI"
+    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_QSPI_TIMEOUT_DEFAULT_VALUE
+#endif
+
 
 /* My macros --------------------------------------------------------------------*/
 
 /* Private typedef --------------------------------------------------------------*/
-typedef enum QSpiDmaDirectionEnum {
-  QSPI_DMA_RD=0,                      // Read DMA
-  QSPI_DMA_WR,                        // Write DMA
-} QSpiDmaDirectionEnumType;
+typedef enum XSpiDmaDirectionEnum {
+  XSPI_DMA_RD=0,                      // Read DMA
+  XSPI_DMA_WR,                        // Write DMA
+} XSpiDmaDirectionEnumType;
 
 
 
 typedef struct {
-    QSpiHandleT     *myQSpiHandle;   /* my associated handle */
+    XSpiHandleT     *myXSpiHandle;   /* my associated handle */
     uint32_t        default_speed;   /* default speed in MHz */
-    QSpiDeepSleepT  *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
+    XSpiDeepSleepT  *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
     uint8_t         bHasLPMode;      /* != 0, if device supports low power mode */
-} QSpi_AdditionalDataType;
+} XSpi_AdditionalDataType;
 
 
 /* Forward declarations -------------------------------------------------------------*/
 
 
 /* Private or driver functions ------------------------------------------------------*/
-static QSpi_AdditionalDataType * QSpi_GetAdditionalData(const HW_DeviceType *self)
+static XSpi_AdditionalDataType * XSpi_GetAdditionalData(const HW_DeviceType *self)
 {
-    return (QSpi_AdditionalDataType *)(self->devData);
+    return (XSpi_AdditionalDataType *)(self->devData);
 }
 
 #if 0 /* currently not used */
@@ -61,12 +72,12 @@ static QSpi_AdditionalDataType * QSpi_GetAdditionalData(const HW_DeviceType *sel
  * Initialize the dma channel. This has to be done before every read or write, because
  * QUADSPI only has one dma channel
  ************************************************************************************/
-static void QSpiDmaChannelInit(const HW_DeviceType *self, QSpiDmaDirectionEnumType dmadir )
+static void XSpiDmaChannelInit(const HW_DeviceType *self, XSpiDmaDirectionEnumType dmadir )
 {
     const HW_DmaType *dma           = self->devDmaRx;
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    QSpiHandleT *myHandle           = adt->myQSpiHandle;
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+    XSpiHandleT *myHandle           = adt->myXSpiHandle;
+    XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
     DMA_HandleTypeDef *hdma         = dma->dmaHandle;
 
     hdma->Instance                 = dma->dmaChannel;
@@ -81,13 +92,13 @@ static void QSpiDmaChannelInit(const HW_DeviceType *self, QSpiDmaDirectionEnumTy
 
     switch ( dmadir ) 
     {
-    case QSPI_DMA_RD:
+    case XSPI_DMA_RD:
       hdma->Init.Direction = DMA_PERIPH_TO_MEMORY;
-      hqspi->hdma = dma->dmaHandle;
+      hxspi->hdma = dma->dmaHandle;
       break;
-    case QSPI_DMA_WR:
+    case XSPI_DMA_WR:
       hdma->Init.Direction = DMA_MEMORY_TO_PERIPH;
-      hqspi->hdma = dma->dmaHandle;
+      hxspi->hdma = dma->dmaHandle;
       break;
     default:
         Error_Handler(__FILE__, __LINE__);
@@ -100,7 +111,7 @@ static void QSpiDmaChannelInit(const HW_DeviceType *self, QSpiDmaDirectionEnumTy
 }
 #endif
 
-static void QSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
+static void XSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 {
     GPIO_InitTypeDef Init;
 
@@ -112,68 +123,78 @@ static void QSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 
 /**************************************************************************************
  * Some Devices support different clock sources for QSPI. Make sure, that             *   
-  * QQSpiSetClockSource and QSpiGetClockSpeed() will match                            *
+  * XSpiSetClockSource and XGetClockSpeed() will match                                *
  *************************************************************************************/
 #if defined(STM32L476xx) || defined(STM32L496xx)
     /* STM32L4xx has no clock mux for QUADSPI device */
-    #define QSpiSetClockSource(a)           (true)
-    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
-    static bool QSpiSetClockSource(const void *hw)
+    #define XSpiSetClockSource(a)           (true)
+    #define XSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx) || defined(STM32L4Sxxx)
+    static bool XSpiSetClockSource(const void *hw)
     {
       UNUSED(hw);
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-      /* QUADSPI has to be operaterd with HCLK. Routines, which will set */
-      /* qspi speed, rely on HCLK as Clock source                        */
+      /* QSPI/OSPI has to be operaterd with HCLK. Routines, which will set */
+      /* qspi/ospi speed, rely on HCLK as Clock source                     */
 
-      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
-      PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_D1HCLK;
 
+      #if defined(STM32L4Sxxx)
+          /* STM32L4S devices */
+          PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_OSPI; 
+          PeriphClkInit.OspiClockSelection   = RCC_OSPICLKSOURCE_SYSCLK;
+      #else
+          /* STM32H7 devices */
+          PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
+          PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_D1HCLK;        
+      #endif
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        LOG_FATAL("failed to set CLK source for QUADSPI");
+        LOG_FATAL("failed to set CLK source for %s", XSpiStr);
         return false;
       }
 
       return true;
     }
     //#include "hardware.h"
-    //#define  QSpiGetClockSpeed()            GetPerClkFrequency()
-    #define QSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+    //#define  XSpiGetClockSpeed()            GetPerClkFrequency()
+    #define XSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #else 
-    #error "No qspi clock assignment defined"
+    #error "No xspi clock assignment defined"
 #endif
 
 /*
  * Init or DeInit Clock / clocksource 
  */
-static bool QSpiClockInit(const HW_DeviceType *self, bool bDoInit)
+static bool XSpiClockInit(const HW_DeviceType *self, bool bDoInit)
 {
     /* Select clock source on init*/
     if ( bDoInit ) {
-        if ( !QSpiSetClockSource( self->devBase ) ) return false;
+        if ( !XSpiSetClockSource( (const void *)self->devBase ) ) return false;
     }
 
     /* Enable/Disable clock */
-    HW_SetHWClock( (QUADSPI_TypeDef*)self->devBase, bDoInit );
+    HW_SetHWClock(( void *)self->devBase, bDoInit);
     return true;
 }
 
 /**************************************************************************************
  * Initialize the flash memories specific geometry data                               *
  *************************************************************************************/
-void QSpi_SetGeometry ( QSpiGeometryT *geometry, uint32_t flash_size, uint32_t page_size, uint32_t sector_size )
+void XSpi_SetGeometry ( XSpiGeometryT *geometry, uint32_t flash_size, uint32_t page_size, uint32_t sector_size )
 {
     
    #if DEBUG_MODE > 0
         /* Check validity */
         #define PWROF2(a)   ( (a & (a-1)) == 0 ) 
-        if ( !PWROF2(flash_size) )
+        if ( !PWROF2(flash_size) ) {
             LOG_WARN("Flash size 0x%x is not a power of 2, sure?", flash_size);
-        if ( !PWROF2(page_size) )
+        }
+        if ( !PWROF2(page_size) ) {
             LOG_WARN("Page size 0x%x is not a power of 2, sure?", page_size);
-        if ( !PWROF2(sector_size) )
+        }
+        if ( !PWROF2(sector_size) ) {
             LOG_WARN("Sector size 0x%x is not a power of 2, sure?", sector_size);
+        }
    #endif
 
    geometry->FlashSize          = flash_size;
@@ -187,9 +208,9 @@ void QSpi_SetGeometry ( QSpiGeometryT *geometry, uint32_t flash_size, uint32_t p
 /**************************************************************************************
  * Return the flash memories specific geometry data                               *
  *************************************************************************************/
-void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
+void XSpi_GetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *pInfo)
 {
-    memcpy(pInfo, &myHandle->geometry, sizeof(QSpiGeometryT) );
+    memcpy(pInfo, &myHandle->geometry, sizeof(XSpiGeometryT) );
 }
 
 
@@ -197,7 +218,7 @@ void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
     /**************************************************************************************
      * Return the Manufacturer Name as string                                             *
      *************************************************************************************/
-    const char *QSpi_GetChipManufacturer(uint8_t mf_id )
+    const char *XSpi_GetChipManufacturer(uint8_t mf_id )
     {
         switch(mf_id) {
             case 0x20: return "Micron"; 
@@ -213,23 +234,23 @@ void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
      * Read the chip ID and print chip info. Can be used to set chip specific parameters  *
      * automatically later. Now just chip info is dumped                                  *
      *************************************************************************************/
-    static void QSpi_DumpChipInfo(uint8_t *idbuf)
+    static void XSpi_DumpChipInfo(uint8_t *idbuf)
     {
         char type[25];
-        const char *mf   =  QSpi_GetChipManufacturer(idbuf[0] );
+        const char *mf   =  XSpi_GetChipManufacturer(idbuf[0] );
         QSpecific_GetChipTypeText(idbuf, type, 25);
-        LOG_INFO("QSpi: Found %s %s", mf, type);
+        LOG_INFO("%s: Found %s %s", XSpiStr, mf, type);
     }
 
     /**************************************************************************************
      * Dump the geometry data  *
      * automatically later. Now just chip info is dumped                                  *
      *************************************************************************************/
-    static void QSpi_DumpGeometry(QSpiGeometryT *geo)
+    static void XSpi_DumpGeometry(XSpiGeometryT *geo)
     {
-        LOG_INFO("QSpi: Flash size is %dkiB", geo->FlashSize>>10);
-        LOG_INFO("QSpi: %d write pages with %d bytes", geo->ProgPagesNumber, geo->ProgPageSize);
-        LOG_INFO("QSpi: %d erase sectors with %d bytes", geo->EraseSectorsNumber, geo->EraseSectorSize);
+        LOG_INFO("%s: Flash size is %dkiB", XSpiStr, geo->FlashSize>>10);
+        LOG_INFO("%s: %d write pages with %d bytes", XSpiStr, geo->ProgPagesNumber, geo->ProgPageSize);
+        LOG_INFO("%s: %d erase sectors with %d bytes", XSpiStr, geo->EraseSectorsNumber, geo->EraseSectorSize);
     }
 
 #endif
@@ -237,15 +258,15 @@ void QSpi_GetGeometry(QSpiHandleT *myHandle, QSpiGeometryT *pInfo)
 /**************************************************************************************
  * Change the Qspi clock speed on the fly                                             *
  *************************************************************************************/
-bool QSpi_SetSpeed (QSpiHandleT *myHandle, uint32_t new_clkspeed)
+bool XSpi_SetSpeed (XSpiHandleT *myHandle, uint32_t new_clkspeed)
 {
-    return QSpecific_BasicInit(myHandle, QSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
+    return QSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
 }
 
 /**************************************************************************************
  * returns value != 0, iff successfully initialized                                   *
  *************************************************************************************/
-bool QSpi_IsInitialized(QSpiHandleT *myHandle)
+bool XSpi_IsInitialized(XSpiHandleT *myHandle)
 {
     return myHandle->bIsInitialized;
 }
@@ -254,13 +275,13 @@ bool QSpi_IsInitialized(QSpiHandleT *myHandle)
 /**************************************************************************************
  * Dump Status and restore DeepSleep-Status afterwards                                *
  *************************************************************************************/
-void QSpi_DumpStatus(QSpiHandleT *myHandle)
+void XSpi_DumpStatus(XSpiHandleT *myHandle)
 {
     bool sleep = myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep;
     /* Wake up device, if in deep sleep */
     if ( sleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            LOG_ERROR("QSpi_DumpStatus - Error: Cannot wake up flash device");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOG_ERROR("XSpi_DumpStatus - Error: Cannot wake up flash device");
         #endif
         return;
     }
@@ -271,15 +292,15 @@ void QSpi_DumpStatus(QSpiHandleT *myHandle)
 }
 
 /**************************************************************************************
- * Set QSpi read, write/erase and error callbacks                                     *
+ * Set XSpi read, write/erase and error callbacks                                     *
  * After successful initialization, the device is deactivated to reduce power         *
  * consumption. So, to use the device, it has to be activated first                   *
  *************************************************************************************/
-void QSpi_SetAsyncCallbacks(QSpiHandleT *myHandle, QSpiCallbackT rdDoneCB, QSpiCallbackT wrDoneCB, QSpiCallbackT errorCB)
+void XSpi_SetAsyncCallbacks(XSpiHandleT *myHandle, XSpiCallbackT rdDoneCB, XSpiCallbackT wrDoneCB, XSpiCallbackT errorCB)
 {
-    myHandle->QSpi_RdDoneCB  = rdDoneCB;
-    myHandle->QSpi_WrDoneCB  = wrDoneCB;
-    myHandle->QSpi_ErrorCB   = errorCB; 
+    myHandle->XSpi_RdDoneCB  = rdDoneCB;
+    myHandle->XSpi_WrDoneCB  = wrDoneCB;
+    myHandle->XSpi_ErrorCB   = errorCB; 
 }
 
 /******************************************************************************
@@ -289,86 +310,98 @@ void QSpi_SetAsyncCallbacks(QSpiHandleT *myHandle, QSpiCallbackT rdDoneCB, QSpiC
  * in polling, irq or dma mode   
  ******************************************************************************
  *****************************************************************************/
-bool QSpi_ReadOperation(QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size, uint32_t opmode)
+bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size, uint32_t opmode)
 {
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
+    XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
     bool ret;
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
     if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-        LOGU_VERBOSE("QSPI read, area: 0x%08x ... 0x%08x", ReadAddr, ReadAddr+Size-1);
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+        LOGU_VERBOSE("%s read, area: 0x%08x ... 0x%08x", XSpiStr, ReadAddr, ReadAddr+Size-1);
     #endif
 
     /* Send the read command */
-    if ( !QSpecific_ReadCMD(hqspi, ReadAddr, Size) ) return false;
+    if ( !QSpecific_ReadCMD(hxspi, ReadAddr, Size) ) return false;
     
     switch ( opmode ) {
-        case QSPI_MODE_POLL:
+        case XSPI_MODE_POLL:
             /* Reception of the data in polling mode with timeout */
-            ret =  HAL_QSPI_Receive(hqspi, pData, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #if USE_OSPI > 0
+                ret =  HAL_OSPI_Receive(hxspi, pData, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #else
+                ret =  HAL_QSPI_Receive(hxspi, pData, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #endif
             break;
-#if defined(QSPI1_USE_IRQ)
-        case QSPI_MODE_IRQ:
+#if defined(XSPI1_USE_IRQ)
+        case XSPI_MODE_IRQ:
            /* Reception of the data in interrupt mode*/
             myHandle->bAsyncBusy = true;
-            ret = HAL_QSPI_Receive_IT(hqspi, pData) == HAL_OK;
+            #if USE_OSPI > 0
+                ret = HAL_OSPI_Receive_IT(hxspi, pData) == HAL_OK;
+            #else
+                ret = HAL_QSPI_Receive_IT(hxspi, pData) == HAL_OK;
+            #endif
             if ( !ret) myHandle->bAsyncBusy = false;
             break;
 #endif
-#if defined(QSPI1_USE_DMA)
-        case QSPI_MODE_DMA:
+#if defined(XSPI1_USE_DMA)
+        case XSPI_MODE_DMA:
            /* Reception of the data in DMA mode*/
             myHandle->bAsyncBusy = true;
-            ret = HAL_QSPI_Receive_DMA(hqspi, pData) == HAL_OK;
+            #if USE_OSPI > 0
+                ret = HAL_OSPI_Receive_DMA(hxspi, pData) == HAL_OK;
+            #else
+                ret = HAL_QSPI_Receive_DMA(hxspi, pData) == HAL_OK;
+            #endif
             if ( !ret) myHandle->bAsyncBusy = false;
             break;
 #endif
         default:
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-                LOGU_ERROR("QSpi_ReadOperation - Error: Mode %d not implemented", opmode);
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                LOGU_ERROR("XSpi_ReadOperation - Error: Mode %d not implemented", opmode);
             #endif
             return false;
     } // switch
 
     /* report errors, if configured */
     if ( !ret ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            LOGU_ERROR("QSpi_ReadOperation - Error: Receive error in mode %d", opmode);
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOGU_ERROR("XSpi_ReadOperation - Error: Receive error in mode %d", opmode);
         #endif
     }
 
     return ret;
 }
 
-bool QSpi_ReadWait  (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
-    return QSpi_ReadOperation(myHandle, pData, ReadAddr, Size, QSPI_MODE_POLL );
+bool XSpi_ReadWait  (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
+    return XSpi_ReadOperation(myHandle, pData, ReadAddr, Size, XSPI_MODE_POLL );
 }
 
-bool QSpi_ReadIT    (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
-    return QSpi_ReadOperation(myHandle, pData, ReadAddr, Size, QSPI_MODE_IRQ );
+bool XSpi_ReadIT    (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
+    return XSpi_ReadOperation(myHandle, pData, ReadAddr, Size, XSPI_MODE_IRQ );
 }
 
-bool QSpi_ReadDMA   (QSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
-    return QSpi_ReadOperation(myHandle, pData, ReadAddr, Size, QSPI_MODE_DMA );
+bool XSpi_ReadDMA   (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
+    return XSpi_ReadOperation(myHandle, pData, ReadAddr, Size, XSPI_MODE_DMA );
 }
 
 /******************************************************************************
  ******************************************************************************
  * Implementation of the write operation:
- * Transmit the read command ( this is device specific ) and start writing
+ * Transmit the write command ( this is device specific ) and start writing
  * in polling, irq or dma mode   
  * Since maximum one page can be written with one write operation, the write
  * operation is repeaded as often as possible, until the whole buffer is written
  ******************************************************************************
  *****************************************************************************/
-typedef bool ( *QSpi_SM_Fn ) (void);     // Typedef for Statemachine function
+typedef bool ( *XSpi_SM_Fn ) (void);     // Typedef for Statemachine function
 typedef union {
     struct {
         uint32_t wrOpmode;             // operation mode of write op
         uint32_t wrState;              // current state of write state machine
-        QSpiHandleT *wrHandle;         // current QSpi handle for write op
+        XSpiHandleT *wrHandle;         // current QSpi handle for write op
         uint32_t currWriteAddr;        // current write Address 
         uint32_t currWriteSize;        // current write Size
         uint32_t WriteEndAddr;         // last write Address + 1
@@ -377,8 +410,8 @@ typedef union {
     struct {
         uint32_t erOpmode;             // operation mode of erase op
         uint32_t erState;              // current state of erase state machine
-        QSpiHandleT *erHandle;         // current QSpi handle for erase op
-        QSpi_SM_Fn erSM;               // currently used Statemachine for erase
+        XSpiHandleT *erHandle;         // current XSpi handle for erase op
+        XSpi_SM_Fn erSM;               // currently used Statemachine for erase
         uint32_t currEraseAddr;        // current erase address
         uint32_t EraseAddrInc;         // Address Increment for next erase item
         uint32_t EraseItemCnt;         // number of items to erase
@@ -387,11 +420,11 @@ typedef union {
 } Qspi_SM_DataT;
 
 static Qspi_SM_DataT smData;
-static QSpi_SM_Fn wrSM;               // currently used Statemachine for write
-static QSpi_SM_Fn erSM;               // currently used Statemachine for erase
+static XSpi_SM_Fn wrSM;               // currently used Statemachine for write
+static XSpi_SM_Fn erSM;               // currently used Statemachine for erase
 
-#define GETWRHANDLE()                   (&(smData.wrHandle->hqspi))
-#define GETERHANDLE()                   (&(smData.erHandle->hqspi))
+#define GETWRHANDLE()                   (&(smData.wrHandle->hxspi))
+#define GETERHANDLE()                   (&(smData.erHandle->hxspi))
 
 /*-----------------------------------------------------------------------------
  * Write - Write - Write - Write - Write - Write - Write - Write - Write - Writ
@@ -406,11 +439,11 @@ static QSpi_SM_Fn erSM;               // currently used Statemachine for erase
  * This is done, because the loop execution is triggered direcly ( in polling mode )
  * or by interrupts ( in IRQ or DMA mode )
  *****************************************************************************/
-static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr, uint32_t Size, uint32_t opmode, QSpi_SM_Fn stateMachine)
+static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr, uint32_t Size, uint32_t opmode, XSpi_SM_Fn stateMachine)
 {
-    if ( opmode != QSPI_MODE_POLL ) {
+    if ( opmode != XSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 LOGU_ERROR("WriteWait - Error: Another Async Op is active");
             #endif
             return false;
@@ -420,7 +453,7 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
 
     /* check for positive size */
     if ( Size == 0 ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_WARN("WriteWait - Writing 0 bytes not allowed");
         #endif
         return false;
@@ -442,7 +475,7 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     wrSM               = stateMachine;
     erSM               = NULL;
 
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("Write Init, area: 0x%08x ... 0x%08x, written in %d steps", WriteAddr,smData.WriteEndAddr-1, Size/myHandle->geometry.ProgPageSize);
     #endif
 
@@ -452,11 +485,11 @@ static bool WriteInit(QSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     return true;
 }
 
-static void WriteEraseTerminate(bool finalState, uint32_t opmode, QSpiHandleT *myHandle)
+static void WriteEraseTerminate(bool finalState, uint32_t opmode, XSpiHandleT *myHandle)
 {
-    if ( opmode != QSPI_MODE_POLL ) {
+    if ( opmode != XSPI_MODE_POLL ) {
         if ( !myHandle->bAsyncBusy ) {
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 LOGU_ERROR("WriteEraseTerminate - Error: Async Op not active");
             #endif
         }
@@ -465,7 +498,7 @@ static void WriteEraseTerminate(bool finalState, uint32_t opmode, QSpiHandleT *m
     LOGU_VERBOSE("Write/Erase terminated %s",finalState ? "ok" : "with error");
 
     /* Activate Callback, if specified */
-    if (myHandle->QSpi_WrDoneCB) myHandle->QSpi_WrDoneCB(myHandle);
+    if (myHandle->XSpi_WrDoneCB) myHandle->XSpi_WrDoneCB(myHandle);
 }
 
 
@@ -480,20 +513,32 @@ static bool WriteBlock (void )
     if ( !QSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
 
     switch ( smData.wrOpmode ) {
-        case QSPI_MODE_POLL:
+        case XSPI_MODE_POLL:
             /* Transmission of the data in polling mode*/
-            ret = HAL_QSPI_Transmit(GETWRHANDLE(), smData.WriteSource, HAL_QPSI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #if USE_OSPI > 0
+                ret = HAL_OSPI_Transmit(GETWRHANDLE(), smData.WriteSource, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #else
+                ret = HAL_QSPI_Transmit(GETWRHANDLE(), smData.WriteSource, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+            #endif
             break;
-        case QSPI_MODE_IRQ:
+        case XSPI_MODE_IRQ:
             /* Transmission of the data in irq mode*/
-            ret = HAL_QSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #if USE_OSPI > 0
+                ret = HAL_OSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #else
+                ret = HAL_QSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #endif
             break;
-        case QSPI_MODE_DMA:
+        case XSPI_MODE_DMA:
             /* Transmission of the data in irq mode*/
-            ret = HAL_QSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #if USE_OSPI > 0
+                ret = HAL_OSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #else
+                ret = HAL_QSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+            #endif
             break;
         default:
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 LOGU_ERROR("WriteLoop - Error: Mode %d not implemented", smData.wrOpmode);
             #endif
             return false;
@@ -501,7 +546,7 @@ static bool WriteBlock (void )
 
     /* report errors, if configured */
     if ( !ret ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_ERROR("WriteLoop - Error: Transmit error in mode %d", smData.wrOpmode);
         #endif
     }
@@ -514,13 +559,13 @@ static bool WaitForWriteDone(void)
     bool ret;
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
-    if ( smData.wrOpmode == QSPI_MODE_POLL ) 
-        ret = QSpecific_WaitForWriteDone(GETWRHANDLE(), HAL_QPSI_TIMEOUT_DEFAULT_VALUE);
+    if ( smData.wrOpmode == XSPI_MODE_POLL ) 
+        ret = QSpecific_WaitForWriteDone(GETWRHANDLE(), XSPI_TIMEOUT_DEFAULT_VALUE);
     else 
         ret = QSpecific_WaitForWriteDone_IT(GETWRHANDLE());
  
     if ( !ret ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_ERROR("QSpi_SpecificWriteWait - Error: Timeout while autopll");
         #endif
         return false;
@@ -529,7 +574,7 @@ static bool WaitForWriteDone(void)
     return true;
 }
 
-static bool WriteIncement(QSpiHandleT *myHandle)
+static bool WriteIncement(XSpiHandleT *myHandle)
 {
     /* Update the address and size variables for next page programming */
     smData.currWriteAddr += smData.currWriteSize;
@@ -552,7 +597,7 @@ static bool WriteSM(void)
     bool bSmPause = false;
 
     while (!bSmPause ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_VERBOSE("WriteSM in state %d", smData.wrState);
         #endif
         switch ( smData.wrState ) {
@@ -567,13 +612,13 @@ static bool WriteSM(void)
                 if (!WriteBlock() ) goto WriteSmTerminate;
                 WR_NEXTSTATE(WRSTATE_WAITFORDONE);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
-                WR_SM_PAUSE( smData.wrOpmode != QSPI_MODE_POLL );
+                WR_SM_PAUSE( smData.wrOpmode != XSPI_MODE_POLL );
                 break;
             case WRSTATE_WAITFORDONE:
                 if ( !WaitForWriteDone() ) goto WriteSmTerminate;
                 WR_NEXTSTATE(WRSTATE_INCREMENT);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
-                WR_SM_PAUSE( smData.wrOpmode != QSPI_MODE_POLL );
+                WR_SM_PAUSE( smData.wrOpmode != XSPI_MODE_POLL );
                 break;
             case WRSTATE_INCREMENT:
                 /* increment the loop counters and check for termination */
@@ -592,7 +637,7 @@ static bool WriteSM(void)
                 /* Error state, reached only by error Interrupt; */
                 goto WriteSmTerminate;    
             default:
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     LOGU_ERROR("WriteSM - Error: illegal state %d", smData.wrState);
                 #endif
                 goto WriteSmTerminate;
@@ -606,16 +651,16 @@ WriteSmTerminate:
     return false;
 }
 
-bool QSpi_WriteWait(QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
-    if ( !WriteInit(myHandle, pData, WriteAddr, Size, QSPI_MODE_POLL, WriteSM) ) return false;
+bool XSpi_WriteWait(XSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
+    if ( !WriteInit(myHandle, pData, WriteAddr, Size, XSPI_MODE_POLL, WriteSM) ) return false;
     return WriteSM();
 }
-bool QSpi_WriteIT  (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
-    if ( !WriteInit(myHandle, pData, WriteAddr, Size, QSPI_MODE_IRQ, WriteSM) ) return false;
+bool XSpi_WriteIT  (XSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
+    if ( !WriteInit(myHandle, pData, WriteAddr, Size, XSPI_MODE_IRQ, WriteSM) ) return false;
     return WriteSM();
 }
-bool QSpi_WriteDMA  (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
-    if ( !WriteInit(myHandle, pData, WriteAddr, Size, QSPI_MODE_DMA, WriteSM) ) return false;
+bool XSpi_WriteDMA  (XSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, uint32_t Size) {
+    if ( !WriteInit(myHandle, pData, WriteAddr, Size, XSPI_MODE_DMA, WriteSM) ) return false;
     return WriteSM();
 }
 
@@ -626,22 +671,22 @@ bool QSpi_WriteDMA  (QSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, 
 /******************************************************************************
  * Get the address increment depending from the erase mode
  *****************************************************************************/
-static uint32_t GetEraseAddrInc(QSpiHandleT *myHandle,uint32_t erasemode)
+static uint32_t GetEraseAddrInc(XSpiHandleT *myHandle,uint32_t erasemode)
 {
     switch(erasemode)
     {
-        case QSPI_ERASE_SECTOR:
+        case XSPI_ERASE_SECTOR:
             return myHandle->geometry.EraseSectorSize;
             break;
-        case QSPI_ERASE_BLOCK:
+        case XSPI_ERASE_BLOCK:
             // RHB tbd return myHandle->geometry.EraseBlockSize;
             return 1 << 15;
             break;
-        case QSPI_ERASE_ALL:
+        case XSPI_ERASE_ALL:
             return 1 << 16;
             break;
         default:
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 LOGU_ERROR("GetEraseAddrInc - Error: unkown erasemode %d", erasemode);
             #endif
             ;
@@ -659,11 +704,11 @@ static uint32_t GetEraseAddrInc(QSpiHandleT *myHandle,uint32_t erasemode)
  * This is done, because the loop execution is triggered direcly ( in polling mode )
  * or by interrupts ( in IRQ or DMA mode )
  *****************************************************************************/
-static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numItems, uint32_t opmode, uint32_t erasemode, QSpi_SM_Fn stateMachine)
+static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numItems, uint32_t opmode, uint32_t erasemode, XSpi_SM_Fn stateMachine)
 {
-    if ( opmode != QSPI_MODE_POLL ) {
+    if ( opmode != XSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
-            #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 LOGU_ERROR("EraseInit - Error: Another Async Op is active");
             #endif
             return false;
@@ -673,7 +718,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
 
     /* check for positive size */
     if ( numItems == 0 ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_ERROR("EraseInit - Erasing 0 items not allowed");
         #endif
         return false;
@@ -682,7 +727,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     /* Initialize the neccessary erase data */
     smData.currEraseAddr = EraseAddr;
     smData.EraseAddrInc  = GetEraseAddrInc(myHandle, erasemode);
-    smData.EraseItemCnt  = ( erasemode == QSPI_ERASE_ALL ? 1 : numItems);
+    smData.EraseItemCnt  = ( erasemode == XSPI_ERASE_ALL ? 1 : numItems);
     smData.EraseMode     = erasemode;
     smData.erOpmode      = opmode;
     smData.wrOpmode    = opmode;
@@ -691,7 +736,7 @@ static bool EraseInit(QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     erSM               = stateMachine;
     wrSM               = NULL;
 
-    #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
     #endif
 
@@ -706,14 +751,14 @@ static bool WaitForEraseDone(uint32_t timeout_ms)
     bool ret;
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
-    if ( smData.erOpmode == QSPI_MODE_POLL ) 
+    if ( smData.erOpmode == XSPI_MODE_POLL ) 
         ret = QSpecific_WaitForWriteDone(GETERHANDLE(), timeout_ms);
     else 
         ret = QSpecific_WaitForWriteDone_IT(GETERHANDLE());
  
     if ( !ret ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
-            LOGU_ERROR("QSpi_SpecificWait - Error: Timeout while autopll");
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOGU_ERROR("QSpi_SpecificWait - Error: Timeout while autopoll");
         #endif
         return false;
     }
@@ -747,7 +792,7 @@ static bool EraseSM(void)
     uint8_t opcode_unused;
 
     while (!bSmPause ) {
-        #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOGU_VERBOSE("EraseSM in state %d", smData.erState);
         #endif
         switch ( smData.erState ) {
@@ -766,7 +811,7 @@ static bool EraseSM(void)
                 LOGU_VERBOSE("Erase done");
                 ER_NEXTSTATE(ERSTATE_INCREMENT);
                 /* In Async mode the next state will be triggered by interrupt, proceed directly in polling mode */
-                ER_SM_PAUSE( smData.erOpmode != QSPI_MODE_POLL );
+                ER_SM_PAUSE( smData.erOpmode != XSPI_MODE_POLL );
                 break;
             case ERSTATE_INCREMENT:
                 /* increment the loop counters and check for termination */
@@ -785,7 +830,7 @@ static bool EraseSM(void)
                 /* Error state, reached only by error Interrupt; */
                 goto EraseSmTerminate;    
             default:
-                #if DEBUG_MODE > 0 && DEBUG_QSPI > 0
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     LOGU_ERROR("EraseSM - Error: illegal state %d", smData.erState);
                 #endif
                 goto EraseSmTerminate;
@@ -803,38 +848,38 @@ EraseSmTerminate:
 
 
 /* Erase <numSect> consecutive sectors, first sector specified by <EraseAddr> */
-bool QSpi_EraseSectorWait       (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
+bool XSpi_EraseSectorWait       (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
 {
-    if (!EraseInit(myHandle, EraseAddr, numSect, QSPI_MODE_POLL, QSPI_ERASE_SECTOR, EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numSect, XSPI_MODE_POLL, XSPI_ERASE_SECTOR, EraseSM )) return false;
     return EraseSM();
 }
-bool QSpi_EraseSectorIT         (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
+bool XSpi_EraseSectorIT         (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
 {
-    if (!EraseInit(myHandle, EraseAddr, numSect, QSPI_MODE_IRQ, QSPI_ERASE_SECTOR, EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numSect, XSPI_MODE_IRQ, XSPI_ERASE_SECTOR, EraseSM )) return false;
     return EraseSM();
 }
 
 /* Erase <numSect> consecutive block, first block specified by <EraseAddr> */
-bool QSpi_EraseBlockWait        (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+bool XSpi_EraseBlockWait        (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
 {
-    if (!EraseInit(myHandle, EraseAddr, numBlock, QSPI_MODE_POLL, QSPI_ERASE_BLOCK , EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numBlock, XSPI_MODE_POLL, XSPI_ERASE_BLOCK , EraseSM )) return false;
     return EraseSM();
 }
-bool QSpi_EraseBlockIT          (QSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+bool XSpi_EraseBlockIT          (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
 {
-    if (!EraseInit(myHandle, EraseAddr, numBlock, QSPI_MODE_IRQ, QSPI_ERASE_BLOCK, EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numBlock, XSPI_MODE_IRQ, XSPI_ERASE_BLOCK, EraseSM )) return false;
     return EraseSM();
 }
 
 /* Erase entire chip */
-bool QSpi_EraseChipWait         (QSpiHandleT *myHandle)
+bool XSpi_EraseChipWait         (XSpiHandleT *myHandle)
 {
-    if (!EraseInit(myHandle, 0, 1, QSPI_MODE_POLL, QSPI_ERASE_ALL , EraseSM )) return false;
+    if (!EraseInit(myHandle, 0, 1, XSPI_MODE_POLL, XSPI_ERASE_ALL , EraseSM )) return false;
     return EraseSM();
 }
-bool QSpi_EraseChipIT           (QSpiHandleT *myHandle)
+bool XSpi_EraseChipIT           (XSpiHandleT *myHandle)
 {
-    if (!EraseInit(myHandle, 0, 1, QSPI_MODE_IRQ, QSPI_ERASE_ALL , EraseSM )) return false;
+    if (!EraseInit(myHandle, 0, 1, XSPI_MODE_IRQ, XSPI_ERASE_ALL , EraseSM )) return false;
     return EraseSM();
 }
 
@@ -842,21 +887,25 @@ bool QSpi_EraseChipIT           (QSpiHandleT *myHandle)
  * Abort current operation ( i.e. MemoryMapped or DMA mode and
  * reset functional mode configuration to indirect write mode by default 
  *****************************************************************************/
-bool QSpi_Abort(QSpiHandleT *myHandle)
+bool XSpi_Abort(XSpiHandleT *myHandle)
 {
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
-    return HAL_QSPI_Abort(hqspi) == HAL_OK;
+    XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
+    #if USE_OSPI > 0
+        return HAL_OSPI_Abort(hxspi) == HAL_OK;
+    #else
+        return HAL_QSPI_Abort(hxspi) == HAL_OK;
+    #endif
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Device functions ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void QSpi_DeInit(const HW_DeviceType *self)
+void XSpi_DeInit(const HW_DeviceType *self)
 {
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    QSpiHandleT *myHandle           = adt->myQSpiHandle;  
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+    XSpiHandleT *myHandle           = adt->myXSpiHandle;  
+    XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
 
     /* DeInit GPIO */
     uint32_t devIdx = GetDevIdx(self);
@@ -879,14 +928,18 @@ void QSpi_DeInit(const HW_DeviceType *self)
         UNUSED(dma);
     #endif
 
-    /* Disable QUADSPI hardware */
-    HAL_QSPI_DeInit(hqspi);
+    /* Disable QUADSPI/OCTOSPI hardware */
+    #if USE_OSPI > 0
+        HAL_OSPI_DeInit(hxspi);
+    #else
+        HAL_QSPI_DeInit(hxspi);
+    #endif
 
     /* To leave a clean state, reset QUADSPI hardware */
-    HW_Reset(hqspi->Instance);
+    HW_Reset(hxspi->Instance);
 
     /* disable QUADSPI clock */
-    HW_SetHWClock(hqspi->Instance, false);
+    HW_SetHWClock(hxspi->Instance, false);
 }
 
 /**************************************************************************************
@@ -894,13 +947,17 @@ void QSpi_DeInit(const HW_DeviceType *self)
  * After successful initialization, the device is deactivated to reduce power         *
  * consumption. So, to use the device, it has to be activated first                   *
  *************************************************************************************/
-bool QSpi_Init(const HW_DeviceType *self)
+bool XSpi_Init(const HW_DeviceType *self)
 {
     bool ret;
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    QSpiHandleT *myHandle           = adt->myQSpiHandle;  
-    QSPI_HandleTypeDef *hqspi       = &myHandle->hqspi;
-    hqspi->Instance                 = (QUADSPI_TypeDef*)self->devBase;
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+    XSpiHandleT *myHandle           = adt->myXSpiHandle;  
+    XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
+    #if USE_OSPI > 0
+        hxspi->Instance                 = (OCTOSPI_TypeDef*)self->devBase;
+    #else
+        hxspi->Instance                 = (QUADSPI_TypeDef*)self->devBase;
+    #endif
     /* If deep sleep is supported, setup the deep sleep information block */
     if ( adt->myDsInfo ) {
         myHandle->dsInfo            = adt->myDsInfo;
@@ -914,15 +971,21 @@ bool QSpi_Init(const HW_DeviceType *self)
     myHandle->bIsInitialized        = false;
     myHandle->clkspeed              = adt->default_speed;
 
-    QSpiClockInit(self, true);
-    HW_SetHWClock(hqspi->Instance, true);
-    HW_Reset(hqspi->Instance);
+    XSpiClockInit(self, true);
+    HW_SetHWClock(hxspi->Instance, true);
+    HW_Reset(hxspi->Instance);
 
     uint32_t devIdx = GetDevIdx(self);
-    QSpiGpioInitAF(devIdx, self->devGpioAF);
+    XSpiGpioInitAF(devIdx, self->devGpioAF);
 
-    HAL_QSPI_DeInit(&myHandle->hqspi);
-    ret = QSpi_SpecificInit(self, myHandle, QSpiGetClockSpeed() );
+    /* First disable QUADSPI/OCTOSPI hardware */
+    #if USE_OSPI > 0
+        HAL_OSPI_DeInit(hxspi);
+    #else
+        HAL_QSPI_DeInit(hxspi);
+    #endif
+
+    ret = QSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed() );
     if ( ret ) {
         if ( self->devIrqList ) {
             /* Configure the NVIC, enable interrupts */
@@ -930,9 +993,9 @@ bool QSpi_Init(const HW_DeviceType *self)
         }
 
         #if DEBUG_MODE > 0
-            QSpi_DumpChipInfo(myHandle->id);
-            QSpi_DumpGeometry(&myHandle->geometry);
-            if ( console_debuglevel > 2 )  QSpi_DumpStatus(myHandle);
+            XSpi_DumpChipInfo(myHandle->id);
+            XSpi_DumpGeometry(&myHandle->geometry);
+            if ( console_debuglevel > 2 )  XSpi_DumpStatus(myHandle);
         #endif
 
  
@@ -945,7 +1008,7 @@ bool QSpi_Init(const HW_DeviceType *self)
 
 
     /* If Initialization was unsuccessful, deactivate all */
-    if ( !ret ) QSpi_DeInit(self);
+    if ( !ret ) XSpi_DeInit(self);
 
     /* Otherwise set "initialized" flag and return with success */
     myHandle->bIsInitialized = true;
@@ -955,12 +1018,12 @@ bool QSpi_Init(const HW_DeviceType *self)
 /**********************************************************************************
  * Early Init of QSPI Device to enable R/W of config values
  *********************************************************************************/
-void QSPI_EarlyInit(void)
+void XSpi_EarlyInit(void)
 {
     int32_t dev_idx;
 
     /* Init QSPI device */
-    dev_idx = AddDevice(&QSPI_DEV, NULL ,NULL);
+    dev_idx = AddDevice(&HW_XSPI1, NULL ,NULL);
     DeviceInitByIdx(dev_idx, NULL);
 }
 
@@ -969,10 +1032,14 @@ void QSPI_EarlyInit(void)
  * Check, whether the system may enter Stop 2 mode. 
  * This is the case, if neither transmit nor receive are active
  *****************************************************************************/
-bool QSpi_AllowStop(const HW_DeviceType *self)
+bool XSpi_AllowStop(const HW_DeviceType *self)
 {
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    return ! (adt->myQSpiHandle->hqspi.Instance->SR & QUADSPI_SR_BUSY);
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+#if USE_OSPI > 0 
+    return ! (adt->myXSpiHandle->hxspi.Instance->SR & OCTOSPI_SR_BUSY);
+#else
+    return ! (adt->myXSpiHandle->hxspi.Instance->SR & QUADSPI_SR_BUSY);
+#endif
 }
 
 
@@ -980,12 +1047,12 @@ bool QSpi_AllowStop(const HW_DeviceType *self)
  * Callback _before_ frequency changes: To be on the safe side, switch to
  * high performance mode
  *****************************************************************************/
-void QSpi_BeforeFrqChange(const HW_DeviceType *self)
+void XSpi_BeforeFrqChange(const HW_DeviceType *self)
 {
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    QSpiHandleT *myHandle           = adt->myQSpiHandle;  
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+    XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    if ( adt->bHasLPMode) QSpecific_HPerfMode( &myHandle->hqspi, true);
+    if ( adt->bHasLPMode) QSpecific_HPerfMode( &myHandle->hxspi, true);
 }
 
 
@@ -993,31 +1060,31 @@ void QSpi_BeforeFrqChange(const HW_DeviceType *self)
  * Callback _after_ frequency changes: Recalculate the QUADSPI hardware 
  * prescaler to a give an operating freqency at or below desired frequency
  *****************************************************************************/
-bool QSpi_OnFrqChange(const HW_DeviceType *self)
+bool XSpi_OnFrqChange(const HW_DeviceType *self)
 {
-    QSpi_AdditionalDataType *adt    = QSpi_GetAdditionalData(self);
-    QSpiHandleT *myHandle           = adt->myQSpiHandle;  
+    XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+    XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    return QSpecific_BasicInit(myHandle, QSpiGetClockSpeed(), adt->default_speed, myHandle->geometry.FlashSize, false );
+    return QSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), adt->default_speed, myHandle->geometry.FlashSize, false );
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables  /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#if defined(QUADSPI) && defined(USE_QSPI1)
-    QSpiHandleT QSpi1Handle;
+#if ( defined(QUADSPI) && defined(USE_QSPI1) ) || ( defined(OCTOSPI) && ( defined(USE_OSPI1) || defined(USE_OSPI2) ) )
+    XSpiHandleT XSpi1Handle;
 
     #if defined(QSPI1_HAS_DS_MODE)
-        static QSpiDeepSleepT ds_qspi1;
+        static XSpiDeepSleepT ds_qspi1;
     #endif
 
-    #ifdef QSPI1_USE_DMA
+    #ifdef XSPI1_USE_DMA
       static DMA_HandleTypeDef hdma_qspi1;
       static const HW_DmaType dma_qspi1 = { &hdma_qspi1, QSPI1_DMA };
     #endif
 
-    #if defined( QSPI1_USE_IRQ )
+    #if defined( XSPI1_USE_IRQ )
     const HW_IrqList irq_qspi1 = {
         .num = 1,
         .irq = {QSPI1_IRQ },
@@ -1036,8 +1103,8 @@ bool QSpi_OnFrqChange(const HW_DeviceType *self)
 
 
 
-    static const QSpi_AdditionalDataType additional_qspi1 = {
-        .myQSpiHandle       = &QSpi1Handle,
+    static const XSpi_AdditionalDataType additional_qspi1 = {
+        .myXSpiHandle       = &XSpi1Handle,
         .default_speed      = QSPI1_CLKSPEED,                 
         .myDsInfo           =
             #if defined(QSPI1_HAS_DS_MODE)
@@ -1055,33 +1122,41 @@ bool QSpi_OnFrqChange(const HW_DeviceType *self)
     };
 
 
-const HW_DeviceType HW_QSPI1 = {
-    .devName        = "QSPI1",
-    .devBase        = QUADSPI,
+const HW_DeviceType HW_XSPI1 = {
+    .devName        = XSpiStr,
+    #if USE_QSPI > 0
+        .devBase        = QUADSPI,
+    #else
+        #if USE_OSPI2
+            .devBase        = OCTOSPI2,
+        #else
+            .devBase        = OCTOSPI1,
+        #endif
+    #endif
     .devGpioAF      = &gpio_qspi1,
     .devGpioIO      = NULL,
     .devGpioADC     = NULL,
     .devType        = HW_DEVICE_QSPI,
     .devData        = &additional_qspi1,
     .devIrqList     = 
-        #if defined(QSPI1_USE_IRQ) 
+        #if defined(XSPI1_USE_IRQ) 
             &irq_qspi1,
         #else
             NULL,
         #endif
     /* There is only one dma channel for quadspi, so we assign that  *
      * to .devDmaRx, even it's used for both directions              */
-    #if defined(QSPI1_USE_DMA)
+    #if defined(XSPI1_USE_DMA)
         .devDmaRx = &dma_qspi1,
     #else
         .devDmaRx   = NULL,
     #endif
     .devDmaTx       = NULL,         /* .devDmaTx  is never used */
-    .Init           = QSpi_Init,
-    .DeInit         = QSpi_DeInit,
-    .BeforeFrqChange= QSpi_BeforeFrqChange,
-    .OnFrqChange    = QSpi_OnFrqChange,
-    .AllowStop      = QSpi_AllowStop,
+    .Init           = XSpi_Init,
+    .DeInit         = XSpi_DeInit,
+    .BeforeFrqChange= XSpi_BeforeFrqChange,
+    .OnFrqChange    = XSpi_OnFrqChange,
+    .AllowStop      = XSpi_AllowStop,
     .OnSleep        = NULL,
     .OnWakeUp       = NULL,
 };
@@ -1091,13 +1166,17 @@ const HW_DeviceType HW_QSPI1 = {
 ///////////////////////////////////////////////////////////////////////////////
 // Interrupt routines /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#if defined(QSPI1_USE_IRQ)
+#if defined(XSPI1_USE_IRQ)
     /**
       * @brief  Command completed callbacks.
-      * @param  hqspi: QSPI handle
+      * @param  hxspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_CmdCpltCallback(QSPI_HandleTypeDef *hqspi)
+#if USE_OSPI > 0
+    void HAL_OSPI_CmdCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#else
+    void HAL_QSPI_CmdCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#endif
     {
         UNUSED(hqspi);
         LOGU_VERBOSE("CmdCplt Callback");
@@ -1109,12 +1188,16 @@ const HW_DeviceType HW_QSPI1 = {
       * @param  hqspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_RxCpltCallback(QSPI_HandleTypeDef *hqspi)
+#if USE_OSPI > 0
+    void HAL_OSPI_RxCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#else
+    void HAL_QSPI_RxCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#endif
     {
       UNUSED(hqspi);
       LOGU_VERBOSE("RxCplt Callback");
-      QSpi1Handle.bAsyncBusy = false;  
-      if ( QSpi1Handle.QSpi_RdDoneCB ) QSpi1Handle.QSpi_RdDoneCB(&QSpi1Handle);
+      XSpi1Handle.bAsyncBusy = false;  
+      if ( XSpi1Handle.XSpi_RdDoneCB ) XSpi1Handle.XSpi_RdDoneCB(&XSpi1Handle);
     }
 
     /**
@@ -1122,7 +1205,11 @@ const HW_DeviceType HW_QSPI1 = {
       * @param  hqspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_TxCpltCallback(QSPI_HandleTypeDef *hqspi)
+#if USE_OSPI > 0
+    void HAL_OSPI_TxCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#else
+    void HAL_QSPI_TxCpltCallback(XXSPI_HandleTypeDef *hqspi)
+#endif
     {
         UNUSED(hqspi);
         LOGU_VERBOSE("TxCplt Callback");
@@ -1134,14 +1221,22 @@ const HW_DeviceType HW_QSPI1 = {
       * @param  hqspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_StatusMatchCallback(QSPI_HandleTypeDef *hqspi)
+#if USE_OSPI > 0
+    void HAL_OSPI_StatusMatchCallback(XXSPI_HandleTypeDef *hqspi)
+#else
+    void HAL_QSPI_StatusMatchCallback(XXSPI_HandleTypeDef *hqspi)
+#endif
     {
         UNUSED(hqspi);
         LOGU_VERBOSE("StatusMatch Callback");
         TaskNotify(TASK_QSPI);
     }
 
-    void HAL_QSPI_ErrorCallback(QSPI_HandleTypeDef *hqspi)
+#if USE_OSPI > 0
+    void HAL_OSPI_ErrorCallback(XXSPI_HandleTypeDef *hqspi)
+#else
+    void HAL_QSPI_ErrorCallback(XXSPI_HandleTypeDef *hqspi)
+#endif
     {
       UNUSED(hqspi);
       LOGU_VERBOSE("ERROR CALLBACK");
@@ -1149,10 +1244,10 @@ const HW_DeviceType HW_QSPI1 = {
       smData.wrState = STATE_ERROR;
       TaskNotify(TASK_QSPI);
     }
-#endif /* if defined(QSPI1_USE_IRQ) */
+#endif /* if defined(XSPI1_USE_IRQ) */
 
 
-void task_handle_qspi(uint32_t arg)
+void task_handle_xspi(uint32_t arg)
 {
     UNUSED(arg);
     /* Only one SM may be active at one time, check which */
