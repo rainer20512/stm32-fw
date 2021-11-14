@@ -37,7 +37,7 @@ typedef struct  HWDTS HW_DeviceType;
 #define     HW_DEVICE_QENC        8
 #define     HW_DEVICE_PWMTIMER    9
 #define     HW_DEVICE_BASETIMER   10
-#define     HW_DEVICE_QSPI        11
+#define     HW_DEVICE_XSPI        11
 #define     HW_DEVICE_CAN         12
 #define     HW_DEVICE_ETH         13
 #define     HW_DEVICE_USBD        14
@@ -169,7 +169,7 @@ typedef struct {
     #error "No setup for DMA Channel or Stream"
 #endif
     uint8_t              dmaRequest;    //!< Associated DMA Request    
-    uint8_t              dmaIrqNum;     //!< IRQ for this channel/request
+//  uint8_t              dmaIrqNum;     //!< IRQ for this channel/request
     uint32_t             dmaPrio;       //!< DMA channel priority as defined in stm32xxxxhal_dma.h
 } HW_DmaType;
 

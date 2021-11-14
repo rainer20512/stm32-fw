@@ -14,6 +14,9 @@
   * @{
   */
 #include "config/config.h"
+
+#if LOGTO_FATFS > 0
+
 #include "debug_helper.h"
 #include "rtc.h"
 #include "circbuf.h"
@@ -41,7 +44,7 @@ static char logfilename[FILENAMELEN]; /* Logfilename in 8.3 format  */
 static uint8_t logOpen = 0;           /* != 0 if logfile is open for write */
 
 
-extern Diskio_drvTypeDef FatFsQspi_Driver;
+extern Diskio_drvTypeDef FatFsXspi_Driver;
 
 /* forward declarations -----------------------------------------------------*/
 static void     LogFile_ExplainError     (FRESULT res, const char * const op );
@@ -56,7 +59,7 @@ int32_t LogFile_Init(void)
 {
   FRESULT res;
 
-  if(FATFS_LinkDriver(&FatFsQspi_Driver, DevPath) == 0)
+  if(FATFS_LinkDriver(&FatFsXspi_Driver, DevPath) == 0)
   /* Register the file system object to the FatFs module */
   res = f_mount(&LogFileFs, (TCHAR const*)DevPath, 0);
   if ( res != FR_OK ) {
@@ -151,7 +154,7 @@ void LogFile_CRLF(void)
 {
     CircBuff_Put(&o, '\r');
     CircBuff_Put(&o, '\n');
-    TaskNotify(TASK_LOGFILE);
+    TaskNotify(TASK_LOG);
 }
 
 
@@ -286,6 +289,7 @@ static void LogFile_ExplainError( FRESULT res, const char * const op )
 #endif
 }
 
+#endif /* LOGTO_FATFS > 0 */
 
 
 /**

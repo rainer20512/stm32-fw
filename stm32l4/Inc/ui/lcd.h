@@ -45,7 +45,7 @@ extern char LCD_numbuf[];
     #define LDC_Display_Splash(a)
     #define LCD_ClearDisplay(a)
     #define LDC_Display_Progress(a)
-    #define LCD_SwitchToStatus()
+    #define LCD_SwitchToStatus(a)
     #define LCD_SwitchToMenu()
     #define LCD_SwitchToDateTime()
     #define LCD_SwitchToSelector(...)

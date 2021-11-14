@@ -18,6 +18,8 @@
 
 #include "config/config.h"
 #include "stm32l4xx_hal.h"
+#include "system/dma_request_data.h" /**** 004 ****/
+
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -60,10 +62,10 @@
 
   #ifdef I2C1_USE_DMA
       /* Definition for I2C1's DMA, only used if DMA useage is configured */
-      #define I2C1_TX_DMA                    DMA1_Channel6, DMA_REQUEST_3, DMA1_Channel6_IRQn, DMA_PRIORITY_MEDIUM
-      #define I2C1_RX_DMA                    DMA1_Channel7, DMA_REQUEST_3, DMA1_Channel7_IRQn, DMA_PRIORITY_MEDIUM
-      #define I2C1_DMA_TX_IRQHandler         DMA1_Channel6_IRQHandler
-      #define I2C1_DMA_RX_IRQHandler         DMA1_Channel7_IRQHandler
+      #define I2C1_TX_DMA                    GET_DMA_CHANNEL(DMA_DATA_I2C1_TX), GET_DMA_REQUEST(DMA_DATA_I2C1_TX), DMA_PRIORITY_MEDIUM
+      #define I2C1_RX_DMA                    GET_DMA_CHANNEL(DMA_DATA_I2C1_RX), GET_DMA_REQUEST(DMA_DATA_I2C1_RX), DMA_PRIORITY_MEDIUM
+//      #define I2C1_DMA_TX_IRQHandler         DMA1_Channel6_IRQHandler
+//      #define I2C1_DMA_RX_IRQHandler         DMA1_Channel7_IRQHandler
   #endif
 #endif // I2C1
 
@@ -104,10 +106,10 @@
 
   #ifdef I2C2_USE_DMA
       /* Definition for I2C2's DMA, only used if DMA useage is configured */
-      #define I2C2_TX_DMA                    DMA1_Channel4, DMA_REQUEST_3, DMA1_Channel4_IRQn, DMA_PRIORITY_MEDIUM
-      #define I2C2_RX_DMA                    DMA1_Channel5, DMA_REQUEST_3, DMA1_Channel5_IRQn, DMA_PRIORITY_MEDIUM
-      #define I2C2_DMA_TX_IRQHandler         DMA1_Channel4_IRQHandler
-      #define I2C2_DMA_RX_IRQHandler         DMA1_Channel5_IRQHandler
+      #define I2C2_TX_DMA                    GET_DMA_CHANNEL(DMA_DATA_I2C2_TX), GET_DMA_REQUEST(DMA_DATA_I2C2_TX), DMA_PRIORITY_MEDIUM
+      #define I2C2_RX_DMA                    GET_DMA_CHANNEL(DMA_DATA_I2C2_RX), GET_DMA_REQUEST(DMA_DATA_I2C2_RX), DMA_PRIORITY_MEDIUM
+//      #define I2C2_DMA_TX_IRQHandler         DMA1_Channel4_IRQHandler
+//      #define I2C2_DMA_RX_IRQHandler         DMA1_Channel5_IRQHandler
   #endif
 #endif // I2C2
 

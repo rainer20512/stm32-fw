@@ -1166,6 +1166,9 @@ static bool Test_Menu ( char *cmdline, size_t len, const void * arg )
   ********************************************************************************/
 static bool System_Menu ( char *cmdline, size_t len, const void * arg )
 {
+  typedef void (*func) (void);
+  func fn=NULL;
+  uint32_t *test = NULL;  
   UNUSED(cmdline);UNUSED(len);
 
   switch((uint32_t)arg) {
@@ -1174,6 +1177,12 @@ static bool System_Menu ( char *cmdline, size_t len, const void * arg )
         break;
     case 1:
         PeriodicDumpList();
+        break;
+    case 2:
+        fn();
+        break;
+    case 3:
+        *test = 17;
         break;
 
     /* sample entry
@@ -1209,6 +1218,8 @@ static const CommandSetT cmdTest[] = {
 #endif
   { "Task list",       ctype_fn, .exec.fn = System_Menu,    VOID(0), "Show task list" },
   { "Periodic lists",  ctype_fn, .exec.fn = System_Menu,    VOID(1), "Show periodic lists" },
+  { "Call 0",          ctype_fn, .exec.fn = System_Menu,    VOID(2), "Provoke NULL ptr error" },
+  { "Access 0",        ctype_fn, .exec.fn = System_Menu,    VOID(3), "write to NULL ptr" },
 
   { "TmrAbs",          ctype_fn, .exec.fn = Test_TmrAbs,    VOID(0), "Set Abs Timer" },
   { "TmrRel",          ctype_fn, .exec.fn = Test_TmrRel,    VOID(0), "Set Rel Timer" },
@@ -1667,10 +1678,23 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(PWM);
 #endif
 
-#if USE_QSPI > 0
+#if USE_QSPI > 0 || USE_OSPI > 0
 
+    #if   USE_OSPI1 > 0
+        #define XSpi1Handle         OSpi1Handle
+        #define XSPI1_USE_IRQ       OSPI1_USE_IRQ
+        #define XSPI_BASE           OCTOSPI1_BASE
+    #elif USE_OSPI2 > 0
+        #define XSpi1Handle         OSpi2Handle
+        #define XSPI1_USE_IRQ       OSPI2_USE_IRQ
+        #define XSPI_BASE           OCTOSPI2_BASE
+    #else
+        #define XSpi1Handle         QSpi1Handle
+        #define XSPI1_USE_IRQ       QSPI1_USE_IRQ
+        #define XSPI_BASE           QSPI_BASE
+    #endif
     #include "dev/xspi_dev.h"
-    #include "dev/qspi/qspecific.h"
+    #include "dev/xspi/xspi_specific.h"
 
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
@@ -1712,7 +1736,7 @@ ADD_SUBMODULE(Test);
       
       UNUSED(cmdline);UNUSED(len);
 #if defined(XSPI1_USE_IRQ)
-      QSpi_SetAsyncCallbacks(&XSpi1Handle, rddoneCB, wrdoneCB, errorCB);
+      XSpi_SetAsyncCallbacks(&XSpi1Handle, rddoneCB, wrdoneCB, errorCB);
 #endif
 
       switch((uint32_t)arg) {
@@ -1739,7 +1763,7 @@ ADD_SUBMODULE(Test);
             }
             addr =  XSpi1Handle.geometry.EraseSectorSize * num;
             printf("Erase sector %d to %d (startaddr=0x%08x)\n", num, num+cnt, addr);
-            ret = QSpi_EraseSectorIT(&XSpi1Handle, addr, cnt+1);
+            ret = XSpi_EraseSectorIT(&XSpi1Handle, addr, cnt+1);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
@@ -1764,7 +1788,7 @@ ADD_SUBMODULE(Test);
                 for ( j  = 0; j < XSpi1Handle.geometry.ProgPageSize; j++ )
                     PageBuffer[j]=i+j;
                 printf("Write page %d (startaddr=0x%08x) - ", num+i, addr );
-                ret = QSpi_WriteWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize );
+                ret = XSpi_WriteWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize );
                 printf ( "%s\n", ret ? "ok": "fail");
                 addr += XSpi1Handle.geometry.ProgPageSize;
             }
@@ -1790,9 +1814,9 @@ ADD_SUBMODULE(Test);
             for ( i=0; i <=cnt; i++ ) {
                 printf("compare page %d (startaddr=0x%08x) - Read ", num+i, addr );
                 #if defined(XSPI1_USE_IRQ)
-                    ret = QSpi_ReadIT(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadIT(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
                 #else
-                    ret = QSpi_ReadWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
                 #endif
                 printf ( "%s\n", ret ? "ok": "fail");
                 #if defined(XSPI1_USE_IRQ)
@@ -1835,7 +1859,7 @@ ADD_SUBMODULE(Test);
             for ( i=0; i <=cnt; i++ ) {
                 printf("Read page %d (startaddr=0x%08x) in %s mode - ", num+i, addr,  XSpi1Handle.bIsMemoryMapped ? "MemoryMapped" : "QSPI" );
                 if ( XSpi1Handle.bIsMemoryMapped ) {
-                    memmove(PageBuffer,(void *)(QSPI_BASE+addr), XSpi1Handle.geometry.ProgPageSize);
+                    memmove(PageBuffer,(void *)(XSPI_BASE+addr), XSpi1Handle.geometry.ProgPageSize);
                     /*
                     for ( j  = 0; j < XSpi1Handle.geometry.ProgPageSize; j++ ) {
                         PageBuffer[j] = *((uint8_t *)(QSPI_BASE+addr+j));
@@ -1843,7 +1867,7 @@ ADD_SUBMODULE(Test);
                     */
                     ret = true;
                 } else {
-                    ret = QSpi_ReadWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
                 }
                 printf ( "%s\n", ret ? "ok": "fail");
                 for ( j  = 0; j < XSpi1Handle.geometry.ProgPageSize; j++ ) {
@@ -1856,26 +1880,26 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = QSpecific_EnableMemoryMappedMode(&XSpi1Handle);
+            ret = XSpecific_EnableMemoryMappedMode(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
             printf("Abort operation - ");
-            ret = QSpi_Abort(&XSpi1Handle);
+            ret = XSpi_Abort(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 7:
             printf("Read Status");
-            QSpi_DumpStatus(&XSpi1Handle);
+            XSpi_DumpStatus(&XSpi1Handle);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = QSpecific_EnterDeepPowerDown(&XSpi1Handle);
+            ret = XSpecific_EnterDeepPowerDown(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = QSpecific_LeaveDeepPowerDown(&XSpi1Handle);
+            ret = XSpecific_LeaveDeepPowerDown(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:
@@ -1898,9 +1922,9 @@ ADD_SUBMODULE(Test);
             printf("Write %d bytes from addr 0x%08x\n", cnt, addr );
              
             if ( (uint32_t)arg == 11 )
-                ret = QSpi_WriteDMA(&XSpi1Handle, PageBuffer, addr, cnt );
+                ret = XSpi_WriteDMA(&XSpi1Handle, PageBuffer, addr, cnt );
             else
-                ret = QSpi_WriteIT(&XSpi1Handle, PageBuffer, addr, cnt );
+                ret = XSpi_WriteIT(&XSpi1Handle, PageBuffer, addr, cnt );
             printf ( "%s\n", ret ? "ok": "fail");
 
             DEBUG_PRINTTS("Waiting for Async op to be done\n");
@@ -1914,7 +1938,7 @@ ADD_SUBMODULE(Test);
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d kHz",  addr );
              
-                ret = QSpi_SetSpeed(&XSpi1Handle, addr * 1000 );
+                ret = XSpi_SetSpeed(&XSpi1Handle, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:
@@ -2479,6 +2503,7 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
                 console_debuglevel = CMD_to_number ( word, wordlen );
             }
             printf("Console Debuglevel=%d\n", console_debuglevel);
+            printf("FatFS   Debuglevel=%d\n", fatfs_debuglevel);
             break;
 #endif
         default:
@@ -2532,8 +2557,8 @@ static const CommandSetT cmdBasic[] = {
 #if USE_PWMTTIMER > 0
   { "PWM test",        ctype_sub, .exec.sub = &mdlPWM,         0,       "Test PWM functions" },
 #endif
-#if USE_QSPI > 0
-  { "QSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test QuadSpi functions" },
+#if USE_QSPI > 0 || USE_OSPI > 0
+  { "XSpi test",       ctype_sub, .exec.sub = &mdlQSPI,        0,       "Test Quad/OctoSpi functions" },
 #endif
 #if USE_BME280 > 0 ||  USE_BMP085 > 0  || USE_CCS811 > 0
   { "THP Sensor test", ctype_sub, .exec.sub = &mdlTHP,        0,       "Test THP Sensor functions" },

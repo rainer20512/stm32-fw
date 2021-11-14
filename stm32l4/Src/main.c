@@ -83,6 +83,7 @@ int16_t avg_skew_30=0;      // Average time skew when syncing at 30 *** Chng 052
 
 #if DEBUG_MODE 
   uint32_t console_debuglevel;
+  uint32_t fatfs_debuglevel;
 #endif
 
 

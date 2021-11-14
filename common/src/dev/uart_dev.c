@@ -23,6 +23,7 @@
 #include "config/config.h"
 #include "error.h"
 #include "dev/hw_device.h"
+#include "system/dma_handler.h" /**** 004 ****/
 #include "system/hw_util.h"
 
 #include "dev/uart_dev.h"
@@ -496,19 +497,25 @@ bool COM_Init(const HW_DeviceType *self)
     /* Enable DMA, if specified */            
     if ( self->devDmaRx || self->devDmaTx ) {
 
-        HW_SetDmaChClock(self->devDmaTx, self->devDmaRx);
         // Take the first interrupt to copy prio and subprio to dma channel interrupts
         const HW_IrqType *irq = self->devIrqList->irq;
+        DMA_HandleTypeDef *hdma;
 
         if ( self->devDmaRx ) {
-            UsartDmaChannelInit( myHandle, self->devDmaRx, USART_DMA_RX );
-            HAL_NVIC_SetPriority(self->devDmaRx->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-            HAL_NVIC_EnableIRQ(self->devDmaRx->dmaIrqNum);
+            /**** 004 ****/
+            hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
+            if ( hdma ) {
+                UsartDmaChannelInit( myHandle, self->devDmaRx, USART_DMA_RX );
+                HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+            }
         }
         if ( self->devDmaTx ) {
-            UsartDmaChannelInit( myHandle, self->devDmaTx, USART_DMA_TX );
-            HAL_NVIC_SetPriority(self->devDmaTx->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-            HAL_NVIC_EnableIRQ(self->devDmaTx->dmaIrqNum);
+            /**** 004 ****/
+            hdma = HW_DMA_RegisterDMAChannel(self->devDmaTx);
+            if ( hdma ) {
+                UsartDmaChannelInit( myHandle, self->devDmaTx, USART_DMA_TX );
+                HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+            }
         }
     } // if DMA
     return true;
@@ -527,14 +534,12 @@ void COM_DeInit(const HW_DeviceType *self)
 
     /* Disable the DMA, if used */
     if(self->devDmaTx) {
-      /* De-Initialize the Tx part  */
-      HAL_DMA_DeInit(self->devDmaTx->dmaHandle);
-      HAL_NVIC_DisableIRQ(self->devDmaTx->dmaIrqNum);
+      /**** 004 **** De-Initialize the Tx part  */
+      HW_DMA_HandleDeInit(self->devDmaTx->dmaHandle);
     }
     if(self->devDmaRx) {
-      /* De-Initialize the Rx part  */
-      HAL_DMA_DeInit(self->devDmaRx->dmaHandle);
-      HAL_NVIC_DisableIRQ(self->devDmaRx->dmaIrqNum);
+      /**** 004 **** De-Initialize the Rx part  */
+      HW_DMA_HandleDeInit(self->devDmaRx->dmaHandle);
     }
 
     /* Disable clock */

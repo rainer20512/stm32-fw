@@ -17,6 +17,8 @@
 #include "error.h"
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
+#include "system/dma_handler.h"
+
 #include "dev/devices.h"
 #include "config/adc_config.h"
 #include "task/minitask.h"
@@ -726,14 +728,16 @@ bool ADC_Init(const HW_DeviceType *self)
     
     if ( ADC_HAS_REFINT(self->devBase) ) ADC_MeasureVdda((void *)self);
 
-    const HW_IrqType *irq;
-    const HW_DmaType *dma;
 
     /* Configure the NVIC, enable interrupts */
     HW_SetAllIRQs(self->devIrqList, true);
 
     /* Enable DMA, if specified, ADC has only Rx dma */            
     if ( self->devDmaRx ) {
+
+      // Take the first interrupt to copy prio and subprio to dma channel interrupts
+      const HW_IrqType *irq = self->devIrqList->irq;
+
       /*make sure, that also interrupts are configured, MA won't work without */
       if ( self->devIrqList->num == 0 ) {
          #if DEBUG_MODE > 0 && DEBUG_ADC > 0
@@ -743,15 +747,19 @@ bool ADC_Init(const HW_DeviceType *self)
          return false;
       }
 
-      HW_SetDmaChClock(NULL, self->devDmaRx);
-      // Take the first interrupt to copy prio and subprio to dma channel interrupts
-      irq = self->devIrqList->irq;
+      DMA_HandleTypeDef *hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
+      if ( hdma ) {
+         AdcDmaChannelInit( myHandle, self->devDmaRx);
+         HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+      }
+/*
       dma = self->devDmaRx;
       if (dma ) {
-         AdcDmaChannelInit( myHandle ,dma);
-         HAL_NVIC_SetPriority(dma->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(dma->dmaIrqNum);
+         AdcDmaChannelInit( myHandle, self->devDmaRx);
+         HAL_NVIC_SetPriority(self->devDmaRx->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
+         HAL_NVIC_EnableIRQ(self->devDmaRx->dmaIrqNum);
       }
+ */ 
     }
 
     return true;
@@ -761,7 +769,6 @@ void ADC_DeInit(const HW_DeviceType *self)
 {
     ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
-    const HW_DmaType *dma;
 
     HAL_ADC_Stop(hAdc);
 
@@ -772,10 +779,8 @@ void ADC_DeInit(const HW_DeviceType *self)
     HW_SetAllIRQs(self->devIrqList, false);
 
     /* Disable the DMA, if used */
-    dma = self->devDmaRx;
-    if(dma) {
-       HAL_DMA_DeInit(dma->dmaHandle);
-       HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
+    if(self->devDmaRx) {
+      HW_DMA_HandleDeInit(self->devDmaRx->dmaHandle);
     }
  
     /* disable ADC clock */

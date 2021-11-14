@@ -24,9 +24,9 @@
 //#define DRAGONFLY476
 //#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
-#define STM32L4S9ZXXREF
+//#define STM32L4S9ZXXREF
 //#define STM32L476EVAL
-// #define STM32L476BAREMETAL
+#define STM32L476BAREMETAL
 
 
 /*
@@ -45,13 +45,13 @@
  ********************************************************************************
  */ 
 #define USE_RFM12           0
-#define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_RFM69           1           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
-#define USE_BME280          0
+#define USE_BME280          1
 #define USE_CCS811          0
 #define USE_EPAPER          0
-#define USE_ONEWIRE         0
-#define USE_DS18X20         0
+#define USE_ONEWIRE         1
+#define USE_DS18X20         1
 #define USE_EEPROM_EMUL     1
 #define USE_QENCODER        0
 #define USE_DISPLAY         0
@@ -60,9 +60,9 @@
 #define USE_PWMTIMER        0
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
-#define USE_OSPI            1            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_OSPI            0            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
-#define USE_USB             1  
+#define USE_USB             0  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 
@@ -101,8 +101,8 @@
  * Choose one in case of USE_QSPI == 1 
 ******************************************************************************
  */
-#define USE_QSPI_MX25               1
-#define USE_QSPI_MT25Q              0
+#define USE_XSPI_MX25               0
+#define USE_XSPI_MT25Q              0
 
 /******************************************************************************
  * Check and set constraints for Temperarure, Humidity and Pressure sensors
@@ -209,6 +209,7 @@
 #else
     #define USE_FMC 0
 #endif
+
 
 /*
  ********************************************************************************

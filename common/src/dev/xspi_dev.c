@@ -17,7 +17,13 @@
 #if USE_QSPI > 0 || USE_OSPI > 0
 
 #include "config/devices_config.h"
-#include "config/qspi_config.h"
+
+#if USE_OSPI > 0
+    #include "config/ospi_config.h"
+#else
+    #include "config/qspi_config.h"
+#endif
+
 #include "error.h"
 #include "task/minitask.h"
 #include "system/profiling.h"
@@ -31,16 +37,29 @@
 #include "dev/xspi/xspi_specific.h"
 
 #if USE_OSPI > 0
-    #define     XSpiStr                         "OSPI"
-    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_OSPI_TIMEOUT_DEFAULT_VALUE
-
+    /* Currently the driver cannot handle both OCTOSPI devices in parallel */
+    #if USE_OSPI1 > 0 && USE_OSPI2 > 0
+        #error "Cannot handle OCTOSPI1 and OCTOSPI2 both active"
+    #endif
+    #if USE_OSPI1 > 0
+        #define     XSpiStr                         "OSPI1"
+        #define     XSPI_USE_IRQ                    OSPI1_USE_IRQ
+        #define     XSPI_USE_DMA                    OSPI1_USE_DMA
+    #else
+        #define     XSpiStr                         "OSPI2"
+        #define     XSPI_USE_IRQ                    OSPI2_USE_IRQ
+        #define     XSPI_USE_DMA                    OSPI2_USE_DMA
+    #endif
 #else
-    #define     XSpiStr                         "QSPI"
-    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_QSPI_TIMEOUT_DEFAULT_VALUE
+        #define     XSpiStr                         "QSPI"
+        #define     XSPI_USE_IRQ                    QSPI1_USE_IRQ
+        #define     XSPI_USE_DMA                    QSPI1_USE_DMA
 #endif
 
 
 /* My macros --------------------------------------------------------------------*/
+
+#define DEBUG_XSPI                  2
 
 /* Private typedef --------------------------------------------------------------*/
 typedef enum XSpiDmaDirectionEnum {
@@ -48,14 +67,24 @@ typedef enum XSpiDmaDirectionEnum {
   XSPI_DMA_WR,                        // Write DMA
 } XSpiDmaDirectionEnumType;
 
-
+#if USE_OSPI > 0
+    typedef enum OSpiSizeEnum {
+        OSPI_QUAD=4,                     /* OCTOSPI used in QuadSpi-Mode */   
+        OSPI_OCTO=8,                     /* OCTOSPI used in OctoSpi-Mode */   
+    } OSpiSizeEnumType;
+#endif
 
 typedef struct {
-    XSpiHandleT     *myXSpiHandle;   /* my associated handle */
-    uint32_t        default_speed;   /* default speed in MHz */
-    XSpiDeepSleepT  *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
-    uint8_t         bHasLPMode;      /* != 0, if device supports low power mode */
+    XSpiHandleT         *myXSpiHandle;   /* my associated handle */
+    uint32_t            default_speed;   /* default speed in MHz */
+    XSpiDeepSleepT      *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
+#if USE_OSPI > 0
+    OSpiSizeEnumType    ospiMode;        /* currently QUADSPI and OCTOSPI mode are impelemted */
+    uint8_t             bUseDQS;         /* true, iff DQS signal is active/used  */       
+#endif
+    uint8_t             bHasLPMode;      /* != 0, if device supports low power mode */
 } XSpi_AdditionalDataType;
+
 
 
 /* Forward declarations -------------------------------------------------------------*/
@@ -238,7 +267,7 @@ void XSpi_GetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *pInfo)
     {
         char type[25];
         const char *mf   =  XSpi_GetChipManufacturer(idbuf[0] );
-        QSpecific_GetChipTypeText(idbuf, type, 25);
+        XSpecific_GetChipTypeText(idbuf, type, 25);
         LOG_INFO("%s: Found %s %s", XSpiStr, mf, type);
     }
 
@@ -260,7 +289,7 @@ void XSpi_GetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *pInfo)
  *************************************************************************************/
 bool XSpi_SetSpeed (XSpiHandleT *myHandle, uint32_t new_clkspeed)
 {
-    return QSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
+    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
 }
 
 /**************************************************************************************
@@ -279,16 +308,16 @@ void XSpi_DumpStatus(XSpiHandleT *myHandle)
 {
     bool sleep = myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep;
     /* Wake up device, if in deep sleep */
-    if ( sleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) {
+    if ( sleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOG_ERROR("XSpi_DumpStatus - Error: Cannot wake up flash device");
         #endif
         return;
     }
 
-    QSpecific_DumpStatusInternal(myHandle);
+    XSpecific_DumpStatusInternal(myHandle);
     
-    if ( sleep ) QSpecific_EnterDeepPowerDown(myHandle);
+    if ( sleep ) XSpecific_EnterDeepPowerDown(myHandle);
 }
 
 /**************************************************************************************
@@ -316,14 +345,14 @@ bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     bool ret;
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
     #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("%s read, area: 0x%08x ... 0x%08x", XSpiStr, ReadAddr, ReadAddr+Size-1);
     #endif
 
     /* Send the read command */
-    if ( !QSpecific_ReadCMD(hxspi, ReadAddr, Size) ) return false;
+    if ( !XSpecific_ReadCMD(hxspi, ReadAddr, Size) ) return false;
     
     switch ( opmode ) {
         case XSPI_MODE_POLL:
@@ -334,7 +363,7 @@ bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
                 ret =  HAL_QSPI_Receive(hxspi, pData, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
             #endif
             break;
-#if defined(XSPI1_USE_IRQ)
+#if defined(XSPI_USE_IRQ)
         case XSPI_MODE_IRQ:
            /* Reception of the data in interrupt mode*/
             myHandle->bAsyncBusy = true;
@@ -346,7 +375,7 @@ bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
             if ( !ret) myHandle->bAsyncBusy = false;
             break;
 #endif
-#if defined(XSPI1_USE_DMA)
+#if defined(XSPI_USE_DMA)
         case XSPI_MODE_DMA:
            /* Reception of the data in DMA mode*/
             myHandle->bAsyncBusy = true;
@@ -480,7 +509,7 @@ static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
     return true;
 }
@@ -510,7 +539,7 @@ static bool WriteBlock (void )
     LOGU_VERBOSE("First Bytes (hex)= %02x, %02x, %02x, %02x, ...", 
                   smData.WriteSource[0], smData.WriteSource[1], smData.WriteSource[2], smData.WriteSource[3]);
     /* Enable write and send write command */
-    if ( !QSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
+    // if ( !XSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
 
     switch ( smData.wrOpmode ) {
         case XSPI_MODE_POLL:
@@ -560,9 +589,9 @@ static bool WaitForWriteDone(void)
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
     if ( smData.wrOpmode == XSPI_MODE_POLL ) 
-        ret = QSpecific_WaitForWriteDone(GETWRHANDLE(), XSPI_TIMEOUT_DEFAULT_VALUE);
+        ret = XSpecific_WaitForWriteDone(GETWRHANDLE(), XSPI_TIMEOUT_DEFAULT_VALUE);
     else 
-        ret = QSpecific_WaitForWriteDone_IT(GETWRHANDLE());
+        ret = XSpecific_WaitForWriteDone_IT(GETWRHANDLE());
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
@@ -603,7 +632,7 @@ static bool WriteSM(void)
         switch ( smData.wrState ) {
             case WRSTATE_START: 
                 /* Enable Write and Send Write Command - both in one step */
-                if ( !QSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) goto WriteSmTerminate;
+                if ( !XSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) goto WriteSmTerminate;
                 /* Continue with next state in any case*/
                 WR_NEXTSTATE(WRSTATE_WRITEBLOCK);
                 WR_SM_PAUSE(false);
@@ -741,7 +770,7 @@ static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! QSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
 
     return true;
 }
@@ -752,9 +781,9 @@ static bool WaitForEraseDone(uint32_t timeout_ms)
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
     if ( smData.erOpmode == XSPI_MODE_POLL ) 
-        ret = QSpecific_WaitForWriteDone(GETERHANDLE(), timeout_ms);
+        ret = XSpecific_WaitForWriteDone(GETERHANDLE(), timeout_ms);
     else 
-        ret = QSpecific_WaitForWriteDone_IT(GETERHANDLE());
+        ret = XSpecific_WaitForWriteDone_IT(GETERHANDLE());
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
@@ -797,16 +826,16 @@ static bool EraseSM(void)
         #endif
         switch ( smData.erState ) {
             case ERSTATE_START: 
-                /* Enable Write and Send Write Command - both in one step */
+                /* Enable Write and Send Erase Command - both in one step */
                 LOGU_VERBOSE("Erase @0x%08x, mode=%d", smData.currEraseAddr, smData.EraseMode);
-                if ( !QSpecific_EraseCMD(GETERHANDLE(), smData.currEraseAddr, smData.EraseMode) ) goto EraseSmTerminate;
+                if ( !XSpecific_EraseCMD(GETERHANDLE(), smData.currEraseAddr, smData.EraseMode) ) goto EraseSmTerminate;
                 /* Continue with next state in any case*/
                 ER_NEXTSTATE(ERSTATE_WAITFORDONE);
                 /* Continue with waiting for completion immediately */
                 ER_SM_PAUSE( false );
                 break;
             case ERSTATE_WAITFORDONE:
-                if ( !QSpecific_GetEraseParams(smData.EraseMode, &tmo_ms, &opcode_unused ) ) goto EraseSmTerminate;
+                if ( !XSpecific_GetEraseParams(smData.EraseMode, &tmo_ms, &opcode_unused ) ) goto EraseSmTerminate;
                 if ( !WaitForEraseDone(tmo_ms) ) goto EraseSmTerminate;
                 LOGU_VERBOSE("Erase done");
                 ER_NEXTSTATE(ERSTATE_INCREMENT);
@@ -935,12 +964,58 @@ void XSpi_DeInit(const HW_DeviceType *self)
         HAL_QSPI_DeInit(hxspi);
     #endif
 
-    /* To leave a clean state, reset QUADSPI hardware */
+    /* To leave a clean state, reset QUAD/OCTOSPI hardware */
     HW_Reset(hxspi->Instance);
 
-    /* disable QUADSPI clock */
+    /* disable QUAD/OCTOSPI clock and -if present- OCTOSPI manager*/
     HW_SetHWClock(hxspi->Instance, false);
+    #if defined(OCTOSPIM)
+        HW_SetHWClock(OCTOSPIM, false);
+    #endif
 }
+
+#if USE_OSPI > 0
+    /**************************************************************************************
+     * Incase of OSIP being used, configure the OSPIM IP                                  *  
+     * The initialization is always done on that way, that there is no pin swapping       *
+     * I.e. OCTOSPI1 uses the dedicated OCTOSPI1-Pins, OCTOSPI2 uses the OCTOSPI2-Pins    * 
+     * consumption. So, to use the device, it has to be activated first                   *
+     *************************************************************************************/
+    static bool OSPI_Configure_OSPIM(const HW_DeviceType *self)
+    {
+        bool ret;
+        XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
+        XSpiHandleT *myHandle           = adt->myXSpiHandle;  
+        XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
+        OSPIM_CfgTypeDef OSPIM_Cfg_Struct;
+
+        
+        #if USE_OSPI1 > 0
+            /* Configure the OctoSPI IO Manager for OCTOSPI1 */
+            OSPIM_Cfg_Struct.ClkPort    = 1;
+            OSPIM_Cfg_Struct.NCSPort    = 1;
+            OSPIM_Cfg_Struct.DQSPort    = ( adt->bUseDQS ? 1 : 0 );
+            OSPIM_Cfg_Struct.IOLowPort  = HAL_OSPIM_IOPORT_1_LOW;
+            OSPIM_Cfg_Struct.IOHighPort = ( adt->ospiMode ==  OSPI_OCTO ? HAL_OSPIM_IOPORT_1_HIGH : HAL_OSPIM_IOPORT_NONE );
+        #else
+            /* Configure the OctoSPI IO Manager for OCTOSPI2 */
+            OSPIM_Cfg_Struct.ClkPort    = 2;
+            OSPIM_Cfg_Struct.NCSPort    = 2;
+            OSPIM_Cfg_Struct.DQSPort    = ( adt->bUseDQS ? 2 : 0 );
+            OSPIM_Cfg_Struct.IOLowPort  = HAL_OSPIM_IOPORT_2_LOW;
+            OSPIM_Cfg_Struct.IOHighPort = ( adt->ospiMode ==  OSPI_OCTO ? HAL_OSPIM_IOPORT_2_HIGH : HAL_OSPIM_IOPORT_NONE );
+        #endif
+
+        ret = HAL_OSPIM_Config(hxspi, &OSPIM_Cfg_Struct, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+        if ( !ret ) {
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                LOGU_ERROR("Failed to config Octospi-Manager");
+            #endif
+        }
+
+        return ret;
+    }
+#endif
 
 /**************************************************************************************
  * Initialize quadrature encoder, i.e. set all GPIO pins and activate all interrupts  *
@@ -972,7 +1047,12 @@ bool XSpi_Init(const HW_DeviceType *self)
     myHandle->clkspeed              = adt->default_speed;
 
     XSpiClockInit(self, true);
+
     HW_SetHWClock(hxspi->Instance, true);
+    #if defined(OCTOSPIM)
+        HW_SetHWClock(OCTOSPIM, true);
+    #endif
+
     HW_Reset(hxspi->Instance);
 
     uint32_t devIdx = GetDevIdx(self);
@@ -985,7 +1065,12 @@ bool XSpi_Init(const HW_DeviceType *self)
         HAL_QSPI_DeInit(hxspi);
     #endif
 
-    ret = QSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed() );
+    ret = XSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed() );
+    
+    #if USE_OSPI > 0
+        if (ret) ret = OSPI_Configure_OSPIM(self);
+    #endif
+
     if ( ret ) {
         if ( self->devIrqList ) {
             /* Configure the NVIC, enable interrupts */
@@ -1003,7 +1088,7 @@ bool XSpi_Init(const HW_DeviceType *self)
            because there is only one dma channel                                      */
 
         /* If deep sleep is supported, put flash chip into deep sleep mode */
-        if ( adt->myDsInfo ) QSpecific_EnterDeepPowerDown(myHandle);
+        if ( adt->myDsInfo ) XSpecific_EnterDeepPowerDown(myHandle);
     }
 
 
@@ -1023,7 +1108,7 @@ void XSpi_EarlyInit(void)
     int32_t dev_idx;
 
     /* Init QSPI device */
-    dev_idx = AddDevice(&HW_XSPI1, NULL ,NULL);
+    dev_idx = AddDevice(&XSPI_DEV, NULL ,NULL);
     DeviceInitByIdx(dev_idx, NULL);
 }
 
@@ -1052,7 +1137,7 @@ void XSpi_BeforeFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    if ( adt->bHasLPMode) QSpecific_HPerfMode( &myHandle->hxspi, true);
+    if ( adt->bHasLPMode) XSpecific_HPerfMode( &myHandle->hxspi, true);
 }
 
 
@@ -1065,33 +1150,34 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    return QSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), adt->default_speed, myHandle->geometry.FlashSize, false );
+    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), adt->default_speed, myHandle->geometry.FlashSize, false );
 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global Variables  /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#if ( defined(QUADSPI) && defined(USE_QSPI1) ) || ( defined(OCTOSPI) && ( defined(USE_OSPI1) || defined(USE_OSPI2) ) )
-    XSpiHandleT XSpi1Handle;
+#if defined(QUADSPI) && USE_QSPI > 0
+
+    XSpiHandleT QSpi1Handle;
 
     #if defined(QSPI1_HAS_DS_MODE)
         static XSpiDeepSleepT ds_qspi1;
     #endif
 
-    #ifdef XSPI1_USE_DMA
+    #ifdef QSPI1_USE_DMA
       static DMA_HandleTypeDef hdma_qspi1;
-      static const HW_DmaType dma_qspi1 = { &hdma_qspi1, QSPI1_DMA };
+      static const HW_DmaType dma_qspi = { &hdma_qspi1, QSPI1_DMA };
     #endif
 
-    #if defined( XSPI1_USE_IRQ )
+    #if defined( QSPI1_USE_IRQ )
     const HW_IrqList irq_qspi1 = {
         .num = 1,
         .irq = {QSPI1_IRQ },
     };
     #endif
 
-    /* 6 AF-Pins, NCS, CLK, SIO0, ..., SIO3 */
+    /* QUADSPI: 6 AF-Pins, NCS, CLK, SIO0, ..., SIO3 */
     static const HW_GpioList_AF gpio_qspi1 = {
         .num  = 6,
         .gpio = { 
@@ -1102,9 +1188,8 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
     };
 
 
-
     static const XSpi_AdditionalDataType additional_qspi1 = {
-        .myXSpiHandle       = &XSpi1Handle,
+        .myXSpiHandle       = &QSpi1Handle,
         .default_speed      = QSPI1_CLKSPEED,                 
         .myDsInfo           =
             #if defined(QSPI1_HAS_DS_MODE)
@@ -1118,35 +1203,26 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
             #else
                 0,
             #endif
-
     };
 
 
-const HW_DeviceType HW_XSPI1 = {
+const HW_DeviceType HW_QSPI1 = {
     .devName        = XSpiStr,
-    #if USE_QSPI > 0
-        .devBase        = QUADSPI,
-    #else
-        #if USE_OSPI2
-            .devBase        = OCTOSPI2,
-        #else
-            .devBase        = OCTOSPI1,
-        #endif
-    #endif
+    .devBase        = QUADSPI,
     .devGpioAF      = &gpio_qspi1,
     .devGpioIO      = NULL,
     .devGpioADC     = NULL,
-    .devType        = HW_DEVICE_QSPI,
+    .devType        = HW_DEVICE_XSPI,
     .devData        = &additional_qspi1,
     .devIrqList     = 
-        #if defined(XSPI1_USE_IRQ) 
+        #if defined(QSPI1_USE_IRQ) 
             &irq_qspi1,
         #else
             NULL,
         #endif
     /* There is only one dma channel for quadspi, so we assign that  *
      * to .devDmaRx, even it's used for both directions              */
-    #if defined(XSPI1_USE_DMA)
+    #if defined(QSPI1_USE_DMA)
         .devDmaRx = &dma_qspi1,
     #else
         .devDmaRx   = NULL,
@@ -1160,41 +1236,257 @@ const HW_DeviceType HW_XSPI1 = {
     .OnSleep        = NULL,
     .OnWakeUp       = NULL,
 };
-#endif
+#endif /* defined(QUADSPI) && USE_QSPI > 0 */
+
+
+#if defined(OCTOSPI) && USE_OSPI1 > 0
+    XSpiHandleT OSpi1Handle;
+
+    #if defined(OSPI1_HAS_DS_MODE)
+        static XSpiDeepSleepT ds_ospi1;
+    #endif
+
+    #ifdef OSPI1_USE_DMA
+      static DMA_HandleTypeDef hdma_ospi1;
+      static const HW_DmaType dma_ospi1 = { &hdma_ospi1, OSPI1_DMA };
+    #endif
+
+    #if defined( OSPI1_USE_IRQ )
+    const HW_IrqList irq_ospi1 = {
+        .num = 1,
+        .irq = {OSPI1_IRQ },
+    };
+    #endif
+
+    /* OCTOSPI: 11 AF-Pins, NCS, CLK, DQS, SIO0, ..., SIO3, SIO4, ..., SIO7 */
+    static const HW_GpioList_AF gpio_ospi1 = {
+        .gpio = { 
+            OSPI1_NCS, OSPI1_CLK, 
+        #if defined(OSPI1_USE_DQS)
+            OSPI1_DQS, 
+            #define GPIO_NUM1       3
+        #else
+            #define GPIO_NUM1       2
+        #endif
+            OSPI1_SI_SIO0, OSPI1_SO_SIO1, OSPI1_SIO2, OSPI1_SIO3,
+        #if defined(OSPI1_MODE_OCTO)
+            OSPI1_SI_SIO4, OSPI1_SO_SIO5, OSPI1_SIO6, OSPI1_SIO7,
+            #define GPIO_NUM2       8
+        #else
+            #define GPIO_NUM2       4
+        #endif
+        },
+        .num = GPIO_NUM1 + GPIO_NUM2,
+    };
+
+
+    static const XSpi_AdditionalDataType additional_ospi1 = {
+        .myXSpiHandle       = &OSpi1Handle,
+        .default_speed      = OSPI1_CLKSPEED,                 
+        .myDsInfo           =
+            #if definedOSPI1_HAS_DS_MODE)
+                &ds_ospi1,
+            #else
+                NULL,
+            #endif
+        .bHasLPMode =
+            #if defined(OSPI1_HAS_LP_MODE)
+                1,
+            #else
+                0,
+            #endif
+    #if USE_OSPI > 0
+        .ospiMode =
+            #if defined(OSPI1_MODE_OCTO)
+                OSPI_OCTO,
+            #elif defined((OSPI1_MODE_QUAD)
+                OSPI_QUAD,
+            #else
+                error "Operating mode for OCTOSPI1 not set"
+            #endif
+        .bUseDQS =
+            #if defined(OSPI1_USE_DQS)
+                1,
+            #else
+                0,
+            #endif
+    #endif
+    };
+
+
+const HW_DeviceType HW_OSPI1 = {
+    .devName        = XSpiStr,
+    #if USE_QSPI > 0
+        .devBase        = QUADSPI,
+    #else
+        #if USE_OSPI2
+            .devBase        = OCTOSPI2,
+        #else
+            .devBase        = OCTOSPI1,
+        #endif
+    #endif
+    .devGpioAF      = &gpio_ospi1,
+    .devGpioIO      = NULL,
+    .devGpioADC     = NULL,
+    .devType        = HW_DEVICE_XSPI,
+    .devData        = &additional_ospi1,
+    .devIrqList     = 
+        #if defined(OSPI1_USE_IRQ) 
+            &irq_ospi1,
+        #else
+            NULL,
+        #endif
+    /* There is only one dma channel for quadspi, so we assign that  *
+     * to .devDmaRx, even it's used for both directions              */
+    #if defined(OSPI1_USE_DMA)
+        .devDmaRx = &dma_ospi1,
+    #else
+        .devDmaRx   = NULL,
+    #endif
+    .devDmaTx       = NULL,         /* .devDmaTx  is never used */
+    .Init           = XSpi_Init,
+    .DeInit         = XSpi_DeInit,
+    .BeforeFrqChange= XSpi_BeforeFrqChange,
+    .OnFrqChange    = XSpi_OnFrqChange,
+    .AllowStop      = XSpi_AllowStop,
+    .OnSleep        = NULL,
+    .OnWakeUp       = NULL,
+};
+#endif /* ( defined(QUADSPI) && defined(USE_QSPI) ) || ( defined(OCTOSPI) && defined(USE_OSPI1) ) */
+
+#if defined(OCTOSPI2) && defined(USE_OSPI2) 
+    XSpiHandleT OSpi2Handle;
+
+    #if defined(OSPI2_HAS_DS_MODE)
+        static XSpiDeepSleepT ds_ospi2;
+    #endif
+
+    #ifdef OSPI2_USE_DMA
+      static DMA_HandleTypeDef hdma_ospi2;
+      static const HW_DmaType dma_ospi2 = { &hdma_ospi2, OSPI2_DMA };
+    #endif
+
+    #if defined( OSPI2_USE_IRQ )
+    const HW_IrqList irq_ospi2 = {
+        .num = 1,
+        .irq = {OSPI2_IRQ },
+    };
+    #endif
+
+    /* OCTOSPI: 11 AF-Pins, NCS, CLK, DQS, SIO0, ..., SIO3, SIO4, ..., SIO7 */
+    static const HW_GpioList_AF gpio_ospi2 = {
+        .gpio = { 
+            OSPI2_NCS, OSPI2_CLK, 
+        #if defined(OSPI2_USE_DQS)
+            OSPI2_DQS, 
+            #define GPIO_NUM1       3
+        #else
+            #define GPIO_NUM1       2
+        #endif
+            OSPI2_SI_SIO0, OSPI2_SO_SIO1, OSPI2_SIO2, OSPI2_SIO3,
+        #if defined(OSPI2_MODE_OCTO)
+            OSPI2_SI_SIO4, OSPI2_SO_SIO5, OSPI2_SIO6, OSPI2_SIO7,
+            #define GPIO_NUM2       8
+        #else
+            #define GPIO_NUM2       4
+        #endif
+        },
+        .num = GPIO_NUM1 + GPIO_NUM2,
+    };
+
+
+    static const XSpi_AdditionalDataType additional_ospi2 = {
+        .myXSpiHandle       = &OSpi2Handle,
+        .default_speed      = OSPI2_CLKSPEED,                 
+        .myDsInfo           =
+            #if defined(OSPI2_HAS_DS_MODE)
+                &ds_ospi2,
+            #else
+                NULL,
+            #endif
+        .bHasLPMode =
+            #if defined(OSPI2_HAS_LP_MODE)
+                1,
+            #else
+                0,
+            #endif
+    #if USE_OSPI > 0
+        .ospiMode =
+            #if defined(OSPI2_MODE_OCTO)
+                OSPI_OCTO,
+            #elif defined(OSPI2_MODE_QUAD)
+                OSPI_QUAD,
+            #else
+                error "Operating mode for OCTOSPI2 not set"
+            #endif
+        .bUseDQS =
+            #if defined(OSPI2_USE_DQS)
+                1,
+            #else
+                0,
+            #endif
+    #endif
+    };
+
+
+const HW_DeviceType HW_OSPI2 = {
+    .devName        = XSpiStr,
+    .devBase        = OCTOSPI2,
+    .devGpioAF      = &gpio_ospi2,
+    .devGpioIO      = NULL,
+    .devGpioADC     = NULL,
+    .devType        = HW_DEVICE_XSPI,
+    .devData        = &additional_ospi2,
+    .devIrqList     = 
+        #if defined(OSPI2_USE_IRQ) 
+            &irq_ospi2,
+        #else
+            NULL,
+        #endif
+    /* There is only one dma channel for quadspi, so we assign that  *
+     * to .devDmaRx, even it's used for both directions              */
+    #if defined(OSPI2_USE_DMA)
+        .devDmaRx = &dma_ospi2,
+    #else
+        .devDmaRx   = NULL,
+    #endif
+    .devDmaTx       = NULL,         /* .devDmaTx  is never used */
+    .Init           = XSpi_Init,
+    .DeInit         = XSpi_DeInit,
+    .BeforeFrqChange= XSpi_BeforeFrqChange,
+    .OnFrqChange    = XSpi_OnFrqChange,
+    .AllowStop      = XSpi_AllowStop,
+    .OnSleep        = NULL,
+    .OnWakeUp       = NULL,
+};
+#endif /* defined(OCTOSPI2) && defined(USE_OSPI2) */
+
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Interrupt routines /////////////////////////////////////////////////////////
+// Interrupt routines QUADSPI /////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#if defined(XSPI1_USE_IRQ)
+#if USE_QSPI > 0 && defined(QSPI_USE_IRQ)
     /**
       * @brief  Command completed callbacks.
       * @param  hxspi: QSPI handle
       * @retval None
       */
-#if USE_OSPI > 0
-    void HAL_OSPI_CmdCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#else
-    void HAL_QSPI_CmdCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#endif
+    void HAL_QSPI_CmdCpltCallback(QSPI1_HandleTypeDef *hxspi)
     {
-        UNUSED(hqspi);
+        UNUSED(hxspi);
         LOGU_VERBOSE("CmdCplt Callback");
-        TaskNotify(TASK_QSPI);
+        TaskNotify(TASK_XSPI);
     }
 
     /**
       * @brief  Rx Transfer completed callbacks.
-      * @param  hqspi: QSPI handle
+      * @param  hxspi: QSPI handle
       * @retval None
       */
-#if USE_OSPI > 0
-    void HAL_OSPI_RxCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#else
-    void HAL_QSPI_RxCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#endif
+    void HAL_QSPI_RxCpltCallback(QSPI1_HandleTypeDef *hxspi)
     {
-      UNUSED(hqspi);
+      UNUSED(hxspi);
       LOGU_VERBOSE("RxCplt Callback");
       XSpi1Handle.bAsyncBusy = false;  
       if ( XSpi1Handle.XSpi_RdDoneCB ) XSpi1Handle.XSpi_RdDoneCB(&XSpi1Handle);
@@ -1202,49 +1494,104 @@ const HW_DeviceType HW_XSPI1 = {
 
     /**
       * @brief  Tx Transfer completed callbacks.
-      * @param  hqspi: QSPI handle
+      * @param  hxspi: QSPI handle
       * @retval None
       */
-#if USE_OSPI > 0
-    void HAL_OSPI_TxCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#else
-    void HAL_QSPI_TxCpltCallback(XXSPI_HandleTypeDef *hqspi)
-#endif
+    void HAL_QSPI_TxCpltCallback(QSPI1_HandleTypeDef *hxspi)
     {
-        UNUSED(hqspi);
+        UNUSED(hxspi);
         LOGU_VERBOSE("TxCplt Callback");
-        TaskNotify(TASK_QSPI);
+        TaskNotify(TASK_XSPI);
     }
 
     /**
       * @brief  Status Match callbacks
-      * @param  hqspi: QSPI handle
+      * @param  hxspi: QSPI handle
       * @retval None
       */
-#if USE_OSPI > 0
-    void HAL_OSPI_StatusMatchCallback(XXSPI_HandleTypeDef *hqspi)
-#else
-    void HAL_QSPI_StatusMatchCallback(XXSPI_HandleTypeDef *hqspi)
-#endif
+    void HAL_QSPI_StatusMatchCallback(QSPI1_HandleTypeDef *hxspi)
     {
-        UNUSED(hqspi);
+        UNUSED(hxspi);
         LOGU_VERBOSE("StatusMatch Callback");
-        TaskNotify(TASK_QSPI);
+        TaskNotify(TASK_XSPI);
     }
 
-#if USE_OSPI > 0
-    void HAL_OSPI_ErrorCallback(XXSPI_HandleTypeDef *hqspi)
-#else
-    void HAL_QSPI_ErrorCallback(XXSPI_HandleTypeDef *hqspi)
-#endif
+    void HAL_QSPI_ErrorCallback(QSPI1_HandleTypeDef *hxspi)
     {
-      UNUSED(hqspi);
+      UNUSED(hxspi);
       LOGU_VERBOSE("ERROR CALLBACK");
       /* Set error state and trigger next call of SM */
       smData.wrState = STATE_ERROR;
-      TaskNotify(TASK_QSPI);
+      TaskNotify(TASK_XSPI);
     }
-#endif /* if defined(XSPI1_USE_IRQ) */
+#endif /* USE_QSPI > 0 && defined(QSPI_USE_IRQ) */
+
+
+
+#if USE_OSPI > 0 && ( defined(OSPI1_USE_IRQ) || defined(OSPI2_USE_IRQ) )
+    /**
+      * @brief  Command completed callbacks.
+      * @param  hxspi: QSPI handle
+      * @retval None
+      */
+    void HAL_OSPI_CmdCpltCallback(OSPI_HandleTypeDef *hxspi)
+    {
+        UNUSED(hxspi);
+        LOGU_VERBOSE("CmdCplt Callback");
+        TaskNotify(TASK_XSPI);
+    }
+
+    /**
+      * @brief  Rx Transfer completed callbacks.
+      * @param  hxspi: QSPI handle
+      * @retval None
+      */
+    void HAL_OSPI_RxCpltCallback(OSPI_HandleTypeDef *hxspi)
+    {
+      UNUSED(hxspi);
+      LOGU_VERBOSE("RxCplt Callback");
+      #if USE_OSPI1 > 0
+          OSpi1Handle.bAsyncBusy = false;  
+          if ( OSpi1Handle.XSpi_RdDoneCB ) OSpi1Handle.XSpi_RdDoneCB(&OSpi1Handle);
+      #else
+          OSpi2Handle.bAsyncBusy = false;  
+          if ( OSpi2Handle.XSpi_RdDoneCB ) OSpi2Handle.XSpi_RdDoneCB(&OSpi2Handle);
+       #endif
+    }
+
+    /**
+      * @brief  Tx Transfer completed callbacks.
+      * @param  hxspi: QSPI handle
+      * @retval None
+      */
+    void HAL_OSPI_TxCpltCallback(OSPI_HandleTypeDef *hxspi)
+    {
+        UNUSED(hxspi);
+        LOGU_VERBOSE("TxCplt Callback");
+        TaskNotify(TASK_XSPI);
+    }
+
+    /**
+      * @brief  Status Match callbacks
+      * @param  hxspi: QSPI handle
+      * @retval None
+      */
+    void HAL_OSPI_StatusMatchCallback(OSPI_HandleTypeDef *hxspi)
+    {
+        UNUSED(hxspi);
+        LOGU_VERBOSE("StatusMatch Callback");
+        TaskNotify(TASK_XSPI);
+    }
+
+    void HAL_OSPI_ErrorCallback(OSPI_HandleTypeDef *hxspi)
+    {
+      UNUSED(hxspi);
+      LOGU_VERBOSE("ERROR CALLBACK");
+      /* Set error state and trigger next call of SM */
+      smData.wrState = STATE_ERROR;
+      TaskNotify(TASK_XSPI);
+    }
+#endif /* USE_OSPI > 0 && ( defined(OSPI1_USE_IRQ) || defined(OSPI2_USE_IRQ) ) */
 
 
 void task_handle_xspi(uint32_t arg)
@@ -1255,7 +1602,7 @@ void task_handle_xspi(uint32_t arg)
     else if (erSM) erSM(); 
 }
 
-#endif /* if USE_QSPI > 0 */
+#endif /* if USE_QSPI > 0 || USE_OSPI > 0 */
 
 
 /**

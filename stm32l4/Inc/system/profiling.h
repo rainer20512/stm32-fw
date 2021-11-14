@@ -35,8 +35,8 @@ typedef enum ActiveJobEnum {
 #if USE_ONEWIRE > 0
     JOB_TASK_ONEWIRE,
 #endif
-#if USE_QSPI > 0
-    JOB_TASK_QSPI,
+#if USE_QSPI > 0 || USE_OSPI  >0
+    JOB_TASK_XSPI,
 #endif
 #if USE_USB > 0
     JOB_TASK_USBD,
@@ -52,6 +52,7 @@ typedef enum ActiveJobEnum {
     JOB_IRQ_RTC,
     JOB_IRQ_TMR,
     JOB_IRQ_EXTI,
+    JOB_IRQ_DMA,
     JOB_IRQ_PROFILER,
     JOB_TASK_PROFILER,
 
@@ -86,9 +87,9 @@ typedef enum ActiveJobEnum {
 #else
     #define JOBNAMES3 JOBNAMES2
 #endif             
-#if USE_QSPI > 0
+#if USE_QSPI > 0 || USE_OSPI  >0
     #define JOBNAMES4 JOBNAMES3 \
-    "QUADSPI",
+    "QUAD/OCTOSPI",
 #else
     #define JOBNAMES4 JOBNAMES3
 #endif             
@@ -112,6 +113,7 @@ typedef enum ActiveJobEnum {
     "IRQ_RTC",    \
     "IRQ_TMR",    \
     "IRQ_EXTI",   \
+    "IRQ_DMA",    \
     "IRQ_PROFILER",\
     "PROFILER",
 

@@ -22,6 +22,7 @@
 #include "error.h"
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
+#include "system/dma_handler.h"     /**** 004 ****/
 #include "dev/spi.h"
 
 #include "config/spi_config.h"
@@ -415,21 +416,15 @@ void SPI_DeInit(const HW_DeviceType *self)
         Exti_UnRegister_Callback(irq->irq_num);
     }
 
+    /* Disable the DMA, if used */
     if (self->devType == HW_DEVICE_HWSPI) {
         const HW_DmaType *dma;
-        /* Disable the DMA, if used */
+        /**** 004 **** De-Initialize the Rx part  */
         dma = self->devDmaRx;
-        if(dma) {
-          /* De-Initialize the Rx part  */
-          HAL_DMA_DeInit(dma->dmaHandle);
-          HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
-        }
+        if(dma) HW_DMA_HandleDeInit(dma->dmaHandle);
+        /**** 004 **** De-Initialize the Tx part  */
         dma = self->devDmaTx;
-        if(dma) {
-          /* De-Initialize the Tx part  */
-          HAL_DMA_DeInit(dma->dmaHandle);
-          HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
-        }
+        if(dma) HW_DMA_HandleDeInit(dma->dmaHandle);
     } 
 }
 

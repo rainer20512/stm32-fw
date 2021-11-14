@@ -37,7 +37,6 @@ typedef struct DeviceIdType {
 void *        HW_GetHW                ( uint16_t key );
 bool          HW_GetHWClockStatus     ( void *hw );
 void          HW_SetHWClock           ( void *hw, bool bOn );
-void          HW_SetDmaChClock        ( const HW_DmaType *tx, const HW_DmaType *rx);
 void          HW_Reset                ( void *hw );
 uint16_t      HW_GetLn2               ( uint16_t pwrof2 );
 uint32_t *    HW_GetPeriphBitBandAddr ( __IO uint32_t *periphAddr, uint16_t bit_number );
@@ -51,7 +50,6 @@ char          HW_GetGPIOLetter        (GPIO_TypeDef *gp);
 void          HW_ReadID               (DeviceIdT *id );
 bool          HW_DumpID               (char *cmdline, size_t len, const void * arg );
 
-void          HW_DMA_HandleInit       (DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent );
 
 #ifdef __cplusplus
 }

@@ -13,10 +13,35 @@
 
 #include "config/config.h"
 #include "devices.h"
+
 #if USE_OSPI > 0
-    #define     XXSPI_HandleTypeDef        OSPI_HandleTypeDef
+    #define     XXSPI_HandleTypeDef             OSPI_HandleTypeDef
+    #define     XSPI_CommandTypeDef             OSPI_RegularCmdTypeDef
+    #define     XSPI_AutoPollingTypeDef         OSPI_AutoPollingTypeDef
+    #define     XSPI_MemoryMappedTypeDef        OSPI_MemoryMappedTypeDef
+    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_OSPI_TIMEOUT_DEFAULT_VALUE
+
+    #define     HAL_XSPI_Init                   HAL_OSPI_Init
+    #define     HAL_XSPI_Command                HAL_OSPI_Command
+    #define     HAL_XSPI_Receive                HAL_OSPI_Receive
+    #define     HAL_XSPI_MemoryMapped           HAL_OSPI_MemoryMapped
+    #define     HAL_XSPI_AutoPolling            HAL_OSPI_AutoPolling
+    #define     HAL_XSPI_AutoPolling_IT         HAL_OSPI_AutoPolling_IT
+    #define     HAL_XSPI_Transmit               HAL_OSPI_Transmit
 #else
-    #define     XXSPI_HandleTypeDef        QSPI_HandleTypeDef
+    #define     XXSPI_HandleTypeDef             QSPI_HandleTypeDef
+    #define     XSPI_CommandTypeDef             QSPI_CommandTypeDef
+    #define     XSPI_AutoPollingTypeDef         QSPI_AutoPollingTypeDef
+    #define     XSPI_MemoryMappedTypeDef        QSPI_MemoryMappedTypeDef
+    #define     XSPI_TIMEOUT_DEFAULT_VALUE      HAL_QSPI_TIMEOUT_DEFAULT_VALUE
+ 
+    #define     HAL_XSPI_Init                   HAL_QSPI_Init
+    #define     HAL_XSPI_Command                HAL_QSPI_Command
+    #define     HAL_XSPI_Receive                HAL_QSPI_Receive
+    #define     HAL_XSPI_MemoryMapped           HAL_QSPI_MemoryMapped
+    #define     HAL_XSPI_AutoPolling            HAL_QSPI_AutoPolling
+    #define     HAL_XSPI_AutoPolling_IT         HAL_QSPI_AutoPolling_IT
+    #define     HAL_XSPI_Transmit               HAL_QSPI_Transmit
 #endif
 
 #ifdef __cplusplus
@@ -114,9 +139,19 @@ void XSpi_EarlyInit             (void);
 void XSpi_SetGeometry           ( XSpiGeometryT *geometry, uint32_t flash_size, uint32_t page_size, uint32_t sector_size );
 
 /* Global variables ---------------------------------------------------------------------*/
-#if defined(USE_QSPI) || USE_OSPI
-    extern const HW_DeviceType HW_XSPI1;
-    extern XSpiHandleT XSpi1Handle;
+#if defined(QUADSPI) && USE_QSPI > 0 
+    extern const HW_DeviceType HW_QSPI1;
+    extern XSpiHandleT QSpi1Handle;
+#endif
+
+#if defined(OCTOSPI1) && USE_OSPI1 > 0 
+    extern const HW_DeviceType HW_OSPI1;
+    extern XSpiHandleT OSpi1Handle;
+#endif
+
+#if defined(OCTOSPI2) && USE_OSPI2 > 0 
+    extern const HW_DeviceType HW_OSPI2;
+    extern XSpiHandleT OSpi2Handle;
 #endif
 
 #ifdef __cplusplus

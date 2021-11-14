@@ -31,7 +31,7 @@
  *------------------------------+------------------------------+------------------------------+
  *
  */
-#ifdef USE_QSPI1
+#if USE_QSPI > 0
   #if defined(USE_QSPI1_ALTN1)
     /* PA9/PA10 with AF7 */
     #define QSPI1_NCS                       { GPIO_PIN_11, GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi nCS"  }
@@ -53,12 +53,12 @@
   #endif
 
   /* Definition for COM1's NVIC */
-  #if defined(XSPI1_USE_IRQ)
+  #if defined(QSPI1_USE_IRQ)
      #define QSPI1_IRQ                        { QUADSPI_IRQn, SPI_IRQ_PRIO, 0    }
      #define QSPI1_IRQHandler                  QUADSPI_IRQHandler
   #endif
 
-  #ifdef XSPI1_USE_DMA
+  #ifdef QSPI1_USE_DMA
     /* Definition for USART1 TX DMA */
     #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn, DMA_PRIORITY_VERY_HIGH 
     #define QSPI1_DMA_IRQHandler           DMA2_Channel7_IRQHandler

@@ -270,7 +270,7 @@ static void prvCore1InitTask( void *pvParameters )
     TaskInitAll();
     STATUS(8);
     
-    TaskNotify(TASK_OUT);
+    TaskNotify(TASK_LOG);
 
     STATUS(44);
 

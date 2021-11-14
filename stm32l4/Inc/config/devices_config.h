@@ -283,11 +283,11 @@
     #endif
 
     #if USE_QSPI > 0
-        #define QSPI_DEV          HW_XSPI1
+        #define XSPI_DEV            HW_QSPI1
         #define USE_QSPI1
         #define USE_QSPI1_ALTN1
-        #define XSPI1_USE_IRQ
-        #define XSPI1_USE_DMA
+        #define QSPI1_USE_IRQ
+        #define QSPI1_USE_DMA
     #endif
 
     #define DEFAULT_STOP_MODE                2
@@ -305,7 +305,7 @@
     #define USER_I2C1
 #endif
 
-#elif defined(STM32L476NUCLEO)
+#elif defined(STM32L476NUCLEO) || defined(STM32L476BAREMETAL)
 
     #if USE_ONEWIRE > 0
         #define USE_USART1
@@ -450,12 +450,12 @@
   #endif
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_XSPI1
+      #define XSPI_DEV          HW_QSPI1
       #define USE_QSPI1
       #define QSPI1_CLKSPEED    500000
       #define USE_QSPI1_ALTN1
-      #define XSPI1_USE_IRQ
-      #define XSPI1_USE_DMA
+      #define QSPI1_USE_IRQ
+      #define QSPI1_USE_DMA
   #endif
 
   #if USE_CAN > 0
@@ -573,12 +573,12 @@
     #endif
 
     #if USE_QSPI > 0
-      #define QSPI_DEV          HW_XSPI1
+      #define XSPI_DEV          HW_QSPI1
       #define USE_QSPI1
       #define QSPI1_CLKSPEED    500000
       #define USE_QSPI1_ALTN1
-      #define XSPI1_USE_IRQ
-      #define XSPI1_USE_DMA
+      #define QSPI1_USE_IRQ
+      #define QSPI1_USE_DMA
     #endif
 
     #if USE_CAN > 0
@@ -684,12 +684,14 @@
     #endif
 
     #if USE_OSPI > 0
-      #define XSPI_DEV          HW_XSPI1
-      #define USE_OSPI1
-      #define XSPI1_CLKSPEED    500000
-      #define USE_OSPI1_ALTN1
-      #define XSPI1_USE_IRQ
-      #define XSPI1_USE_DMA
+      #define XSPI_DEV          HW_OSPI2
+      #define USE_OSPI2         1
+      #define OSPI2_CLKSPEED    500000
+      #define USE_OSPI2_ALTN1
+      #define OSPI2_USE_IRQ
+      #define OSPI2_USE_DMA
+      #define OSPI2_MODE_QUAD
+      #undef  OSPI2_USE_DQS
     #endif
 
     #if USE_CAN > 0
@@ -712,11 +714,11 @@
   #define ADC1_USE_DMA 
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_XSPI1
+      #define XSPI_DEV          HW_QSPI1
       #define USE_QSPI1
       #define USE_QSPI1_ALTN1
-      #define XSPI1_USE_IRQ
-      #define XSPI1_USE_DMA
+      #define QSPI1_USE_IRQ
+      #define QSPI1_USE_DMA
   #endif
 
   #define DEFAULT_STOP_MODE                2

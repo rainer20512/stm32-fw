@@ -70,7 +70,7 @@
 
   #define IO_NUM                            2
 
-#elif defined(STM32L476NUCLEO)
+#elif defined(STM32L476NUCLEO) || defined(STM32L476BAREMETAL)
   // LEDs  
   #define IO_00                             { GPIO_PIN_5 , GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_LOW,    GPIO_NO_IRQ, "UserLed1" }
   #define IO_01                             { GPIO_PIN_12, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   GPIO_NO_IRQ, "UserLed2" }

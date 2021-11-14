@@ -15,6 +15,8 @@
 #include "dev/i2c_dev.h"
 
 #include "system/hw_util.h"
+#include "system/dma_handler.h" /**** 004 ****/
+
 #include "config/devices_config.h"
 #include "config/i2c_config.h"
 #include "debug_helper.h"
@@ -239,8 +241,7 @@ static void I2cDmaChannelInit(I2cHandleT *myi2c, const HW_DmaType *dma, I2cDmaDi
 static bool I2C_MspInitInt(const HW_DeviceType *self)
 {
     const HW_IrqType *irq;
-    const HW_DmaType *dma;
-    
+    DMA_HandleTypeDef *hdma;
 
     /* Init GPIO and Clocks */
     I2c_GPIO_Init(self);
@@ -249,24 +250,27 @@ static bool I2C_MspInitInt(const HW_DeviceType *self)
     HW_SetAllIRQs(self->devIrqList, true);
 
     /* Enable DMA, if specified */            
-    if ( self->devDmaRx || self->devDmaTx ) {
+    if ( self->devDmaRx || self->devDmaTx ) {        
 
-      HW_SetDmaChClock(self->devDmaTx, self->devDmaRx);
       // Take the first interrupt to copy prio and subprio to dma channel interrupts
       irq = self->devIrqList->irq;
       
-      dma = self->devDmaRx;
-      if ( dma ) {
-         I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, dma, I2C_DMA_RX );
-         HAL_NVIC_SetPriority(dma->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(dma->dmaIrqNum);
+      if (  self->devDmaRx ) {
+        /**** 004 ****/
+        hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
+        if ( hdma ) {
+          I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaRx, I2C_DMA_RX );
+          HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+        }
       }
       
-      dma = self->devDmaTx;
-      if (dma ) {
-         I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle,dma, I2C_DMA_TX );
-         HAL_NVIC_SetPriority(dma->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(dma->dmaIrqNum);
+      if (self->devDmaTx ) {
+        /**** 004 ****/
+        hdma = HW_DMA_RegisterDMAChannel(self->devDmaTx);
+         if ( hdma ) {
+            I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaTx, I2C_DMA_TX );
+            HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+         }
       }
     } // if DMA
 
@@ -276,7 +280,6 @@ static bool I2C_MspInitInt(const HW_DeviceType *self)
 
 static void I2C_MspDeInitInt(const HW_DeviceType *self)
 {
-    const HW_DmaType *dma;
 
     /*Reset peripherals */
     HW_Reset((I2C_TypeDef *)self->devBase );
@@ -287,18 +290,11 @@ static void I2C_MspDeInitInt(const HW_DeviceType *self)
     HW_SetAllIRQs(self->devIrqList, false);
 
     /* Disable the DMA, if used */
-    dma = self->devDmaRx;
-    if(dma) {
-      /* De-Initialize the Rx part  */
-      HAL_DMA_DeInit(dma->dmaHandle);
-      HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
-    }
-    dma = self->devDmaTx;
-    if(dma) {
-      /* De-Initialize the Tx part  */
-      HAL_DMA_DeInit(dma->dmaHandle);
-      HAL_NVIC_DisableIRQ(dma->dmaIrqNum);
-    }
+    /**** 004 **** De-Initialize the Rx part  */
+    if(self->devDmaRx) HW_DMA_HandleDeInit(self->devDmaRx->dmaHandle);
+
+    /**** 004 **** De-Initialize the Tx part  */
+    if(self->devDmaTx) HW_DMA_HandleDeInit(self->devDmaTx->dmaHandle);
 }
 
 /******************************************************************************

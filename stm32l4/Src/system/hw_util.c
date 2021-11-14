@@ -182,6 +182,10 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(OCTOSPI2) && defined(USE_OSPI2) 
    { OCTOSPI2, &RCC->AHB3ENR, RCC_AHB3ENR_OSPI2EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_OSPI2RST_Pos, COMBINE('O', 2) },
 #endif
+#if ( defined(OCTOSPI1) && defined(USE_OSPI1) ) || ( defined(OCTOSPI2) && defined(USE_OSPI2)  )
+   { OCTOSPIM, &RCC->AHB2ENR, RCC_AHB2ENR_OSPIMEN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_OSPIMRST_Pos, COMBINE('O', 9) },
+#endif
+
 /* CAN1  ------------------------------------------------------------------------------------------------------------------ */
 #if defined(CAN1) && defined(USE_CAN1) 
    { CAN1, &RCC->APB1ENR1, RCC_APB1ENR1_CAN1EN_Pos, &RCC->APB1RSTR1, RCC_APB1RSTR1_CAN1RST_Pos, COMBINE('C', 1) },
@@ -296,7 +300,7 @@ void HW_SetDmaChClock ( const HW_DmaType *tx, const HW_DmaType *rx)
         use = rx->dmaChannel;
     else 
         use = tx->dmaChannel;
-    #if !defined(DMA1)
+    #if !defined(DMA2)
         HW_SetHWClock(DMA1, 1 );
     #else
         /* Get the DMA instance from DMA channel */
@@ -502,22 +506,5 @@ bool HW_DumpID(char *cmdline, size_t len, const void * arg )
     printf("Wafer#=%d (X=%d,Y=%d)\n",id->waferNum, id->waferX, id->waferY);
 
     return true;
-}
-
-/******************************************************************************
- * Init an HAL DMA handle to the given parameters. This initialization is
- * hardware specific
- *****************************************************************************/
-void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent )
-{
-  hdma->Instance                 = dma->dmaChannel;
-  hdma->Parent                   = parent;
-  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma->Init.MemInc              = DMA_MINC_ENABLE;
-  hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-  hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-  hdma->Init.Mode                = DMA_NORMAL;
-  hdma->Init.Priority            = dma->dmaPrio;
-  hdma->Init.Request             = dma->dmaRequest;
 }
 

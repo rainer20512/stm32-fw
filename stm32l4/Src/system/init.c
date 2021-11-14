@@ -166,10 +166,10 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_QSPI > 0
-      dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
+  #if USE_QSPI > 0 || USE_OSPI > 0
+      dev_idx = AddDevice(&XSPI_DEV, NULL, NULL);
       if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
+        DEBUG_PRINTF("Failed to init Quad/OctoSpi device %s\n", XSPI_DEV.devName );
       } else {
         /* Init QuadSpi device */
         DeviceInitByIdx(dev_idx, NULL );
@@ -270,7 +270,7 @@ void Init_DefineTasks(void)
 #endif
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
   TaskRegisterTask(CMD_Init,      task_handle_com, TASK_COM,      JOB_TASK_DBGIO,    "Debug input");
-  TaskRegisterTask(NULL,          task_handle_out, TASK_OUT,      JOB_TASK_DBGIO,    "Debug output");  
+  TaskRegisterTask(NULL,          task_handle_out, TASK_LOG,      JOB_TASK_DBGIO,    "Debug output");  
 #endif
   TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, "periodic task");
 
@@ -290,8 +290,9 @@ void Init_DefineTasks(void)
 #if USE_DS18X20 > 0
   TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
 #endif
-#if USE_QSPI > 0
-  TaskRegisterTask(NULL,          task_handle_xspi, TASK_QSPI,    JOB_TASK_QSPI,     "QSPI task");
+#if USE_QSPI > 0 || USE_OSPI > 0
+
+  TaskRegisterTask(NULL,          task_handle_xspi, TASK_XSPI,    JOB_TASK_XSPI,     "QSPI task");
 #endif
 #ifdef TX18LISTENER
     TaskRegisterTask(PulsesInit,  task_handle_pulse,TASK_PULSE,   JOB_TASK_MAIN,     "Pulse sequencer");

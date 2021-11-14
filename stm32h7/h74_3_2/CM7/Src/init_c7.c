@@ -119,10 +119,10 @@ void Init_OtherDevices(void)
        * QSPI may have been initialized before due to read eeprom parameters or fatfs logging
        * so check, whether already registered before adding 
        */
-      if ( FindDevIdx(&QSPI_DEV)  == DEV_NOTFOUND ) {
-          dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
+      if ( FindDevIdx(&XSPI_DEV)  == DEV_NOTFOUND ) {
+          dev_idx = AddDevice(&XSPI_DEV, NULL, NULL);
           if ( dev_idx < 0 ) {
-            DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
+            DEBUG_PRINTF("Failed to init QuadSpi device %s\n", XSPI_DEV.devName );
           } else {
             /* Init QuadSpi device */
             DeviceInitByIdx(dev_idx, NULL );
@@ -205,7 +205,7 @@ void Init_OtherDevices(void)
 #endif
 
 void task_handle_out  (uint32_t);
-void task_handle_qspi (uint32_t);
+void task_handle_xspi (uint32_t);
 void CM7_handle_remote(uint32_t);
 
 /* Stack sizes are in 32bit words */
@@ -237,7 +237,7 @@ void Init_DefineTasks(void)
   /* The priority is defined by the sequence: The higher in the list, the higher the priority */
 #if USE_QSPI > 0
   static StackType_t qspStack[QSP_STACK_SIZE];
-  TaskRegisterTask(NULL,          task_handle_qspi, TASK_QSPI,       JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
+  TaskRegisterTask(NULL,          task_handle_xspi, TASK_XSPI,       JOB_TASK_XSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
 #endif
   TaskRegisterTask(task_init_rtc, task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
   TaskRegisterTask(NULL,          task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");
@@ -245,7 +245,7 @@ void Init_DefineTasks(void)
   TaskRegisterTask(task_init_adc, task_handle_adc,  TASK_ADC,        JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
   TaskRegisterTask(CMD_Init,      task_handle_com,  TASK_COM,        JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
-  TaskRegisterTask(NULL,          task_handle_out,  TASK_OUT,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
+  TaskRegisterTask(NULL,          task_handle_out,  TASK_LOG,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
 #if USE_THPSENSOR > 0
   TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
@@ -261,6 +261,6 @@ void Init_DefineTasks(void)
 #endif
 #if LOGTO_FATFS > 0
   static StackType_t logStack[LOG_STACK_SIZE];
-  TaskRegisterTask(NULL,          task_handle_log, TASK_LOGFILE,     JOB_TASK_LOG,     logStack, LOG_STACK_SIZE, "LOG task");
+  TaskRegisterTask(NULL,          task_handle_log, TASK_LOG,     JOB_TASK_LOG,     logStack, LOG_STACK_SIZE, "LOG task");
 #endif
 }

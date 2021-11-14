@@ -75,6 +75,8 @@ wegnehmen, s. dazu die Punkte c - f:
    e  altes ld-file löschen (!)
    f  Crossworks beenden und neu starten 
 
+   zu b: Möglich sind: STM32L476xx, STM32L496xx, STM32L4Sxxx
+
 003: Crosswork mkld loadfile generator files anpassen
 -----------------------------------------------------
 - Original liegen die in den Benutzerspezifischen Verzeichnissen 

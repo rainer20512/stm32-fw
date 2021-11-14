@@ -17,7 +17,6 @@
 #include "config/spi_config.h"
 #include "config/i2c_config.h"
 #include "config/adc_config.h"
-#include "config/qspi_config.h"
 #include "system/profiling.h"
 
 #if USE_QENCODER > 0
@@ -33,8 +32,13 @@
   #include "dev/spi.h"
 #endif
 
-#if defined(USE_QSPI) || defined(USE_OSPI)
-  #include "dev/xspi_dev.h"
+#if USE_QSPI > 0 || USE_OSPI > 0
+    #include "dev/xspi_dev.h"
+    #if USE_OSPI > 0
+        #include "config/ospi_config.h"
+    #else
+        #include "config/qspi_config.h"
+    #endif
 #endif
 
 #if defined(USE_TIM7) || defined(USE_TIM6)
@@ -147,6 +151,9 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   stacked_pc = ((unsigned long) hardfault_args[6]);
   stacked_psr = ((unsigned long) hardfault_args[7]);
  
+  debug_printf("Priv.lvl  = %s\n", __get_CONTROL() & CONTROL_nPRIV_Msk ? "Unpriv." : "Privileged");
+  debug_printf("Stack     = %s\n", __get_CONTROL() & CONTROL_SPSEL_Msk ? "Process" : "Main");
+  debug_printf("FP contxt = %s\n", __get_CONTROL() & CONTROL_FPCA_Msk  ? "Active"  : "Inactive");
   debug_printf ("\n\n[Hard fault handler - all numbers in hex]\n");
   debug_printf ("R0       = %08x\n", stacked_r0);
   debug_printf ("R1       = %08x\n", stacked_r1);
@@ -156,8 +163,30 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   debug_printf ("LR [R14] = %08x  subroutine call return address\n", stacked_lr);
   debug_printf ("PC [R15] = %08x  program counter\n", stacked_pc);
   debug_printf ("PSR      = %08x\n", stacked_psr);
-  debug_printf ("BFAR     = %08x\n", (*((volatile unsigned long *)(0xE000ED38))));
-  debug_printf ("CFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED28))));
+
+  uint32_t cfsr = SCB->CFSR;
+  debug_printf ("CFSR     = %08x\n", cfsr);
+  if ( cfsr & SCB_CFSR_DIVBYZERO_Msk ) debug_printf("   Div. by zero\n");
+  if ( cfsr & SCB_CFSR_UNALIGNED_Msk ) debug_printf("   Unaligned\n");
+  if ( cfsr & SCB_CFSR_NOCP_Msk )      debug_printf("   No coprocessor\n");
+  if ( cfsr & SCB_CFSR_INVPC_Msk )     debug_printf("   Invalid PC load\n");
+  if ( cfsr & SCB_CFSR_INVSTATE_Msk )  debug_printf("   invalid state of EPSR, PSR=%08x\n", stacked_psr);
+  if ( cfsr & SCB_CFSR_UNDEFINSTR_Msk )debug_printf("   Undef. Instruction\n");
+ 
+  if ( cfsr & SCB_CFSR_BFARVALID_Msk ) debug_printf("   Bus Fault BFAR=%08x\n",SCB->BFAR);
+  if ( cfsr & SCB_CFSR_LSPERR_Msk )    debug_printf("   FP lazy state pres.\n");
+  if ( cfsr & SCB_CFSR_STKERR_Msk )    debug_printf("   BF on exception stacking\n");
+  if ( cfsr & SCB_CFSR_UNSTKERR_Msk )  debug_printf("   BF on exception unstacking\n");
+  if ( cfsr & SCB_CFSR_IMPRECISERR_Msk)debug_printf("   Imprecise Data bus error\n");
+  if ( cfsr & SCB_CFSR_PRECISERR_Msk ) debug_printf("   Precise Data bus error\n");
+  if ( cfsr & SCB_CFSR_IBUSERR_Msk )   debug_printf("   Instr. bus error\n");
+
+  if ( cfsr & SCB_CFSR_MMARVALID_Msk ) debug_printf("   MemMgr flt MMAR=%08x\n",SCB->MMFAR);
+  if ( cfsr & SCB_CFSR_MSTKERR_Msk )   debug_printf("   MemMgr flt on exception stacking\n");
+  if ( cfsr & SCB_CFSR_MUNSTKERR_Msk ) debug_printf("   MemMgr flt on exception unstacking\n");
+  if ( cfsr & SCB_CFSR_DACCVIOL_Msk )  debug_printf("   Data access violation\n");
+  if ( cfsr & SCB_CFSR_IACCVIOL_Msk )  debug_printf("   Instr. access violation\n");
+
   debug_printf ("HFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED2C))));
   debug_printf ("DFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED30))));
   debug_printf ("AFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED3C))));
@@ -267,6 +296,7 @@ void SysTick_Handler(void)
 
     ProfilerPop();
   }
+/*
   #if defined(COM1_USE_TX_DMA) || defined(COM1_USE_RX_DMA) 
 
     #if defined(COM1_USE_TX_DMA)
@@ -286,6 +316,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(USART2) && defined(USE_USART2)
@@ -298,7 +329,9 @@ void SysTick_Handler(void)
     UsartIRQHandler(&HandleCOM2);
     ProfilerPop();
   }
+/*
   #if defined(COM2_USE_TX_DMA) || defined(COM2_USE_RX_DMA) 
+
 
     #if defined(COM2_USE_TX_DMA)
         void COM2_DMA_TX_IRQHandler(void) 
@@ -317,6 +350,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 
@@ -331,6 +365,7 @@ void SysTick_Handler(void)
     UsartIRQHandler(&HandleCOM3);
     ProfilerPop();
   }
+/*
   #if defined(COM3_USE_TX_DMA) || defined(COM3_USE_RX_DMA) 
 
     #if defined(COM3_USE_TX_DMA)
@@ -350,6 +385,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(UART4) && defined(USE_UART4)
@@ -362,6 +398,7 @@ void SysTick_Handler(void)
         UsartIRQHandler(&HandleCOM4);
         ProfilerPop();
     }
+/*
   #if defined(COM4_USE_TX_DMA) || defined(COM4_USE_RX_DMA) 
 
     #if defined(COM4_USE_TX_DMA)
@@ -381,6 +418,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(UART5) && defined(USE_UART5)
@@ -393,6 +431,7 @@ void SysTick_Handler(void)
         UsartIRQHandler(&HandleCOM5);
         ProfilerPop();
     }
+/*
   #if defined(COM5_USE_TX_DMA) || defined(COM5_USE_RX_DMA) 
 
     #if defined(COM5_USE_TX_DMA)
@@ -412,6 +451,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(LPUART1) && defined(USE_LPUART1)
@@ -424,6 +464,7 @@ void SysTick_Handler(void)
         UsartIRQHandler(&HandleCOM9);
         ProfilerPop();
     }
+/*
   #if defined(COM9_USE_TX_DMA) || defined(COM9_USE_RX_DMA) 
     #if defined(COM9_USE_TX_DMA)
         void COM9_DMA_TX_IRQHandler(void) 
@@ -442,6 +483,7 @@ void SysTick_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 /******************************************************************************
@@ -559,6 +601,7 @@ void SysTick_Handler(void)
         }
     #endif
 
+/*
     #ifdef I2C1_USE_DMA
         void I2C1_DMA_RX_IRQHandler(void)
         {
@@ -576,6 +619,7 @@ void SysTick_Handler(void)
             ProfilerPop();
         }
         #endif
+*/
 #endif
 
 #if defined(ADC1) && defined(USE_ADC1)
@@ -591,6 +635,7 @@ void SysTick_Handler(void)
         }
     #endif
 
+/*
     #ifdef ADC1_USE_DMA
         #if !defined(ADC1_DMA_IRQHandler)
             #error "DMA-IRQ handler not defined for ADC1"
@@ -602,6 +647,7 @@ void SysTick_Handler(void)
             ProfilerPop();
         }
     #endif
+*/
 #endif
 
 #if USE_QENCODER > 0
@@ -638,34 +684,51 @@ void SysTick_Handler(void)
 
 #if USE_QSPI > 0 
 
-    #if defined(XSPI1_USE_IRQ)
+    #if defined(QSPI1_USE_IRQ)
         #if !defined(QSPI1_IRQHandler)
             #error "QSPI1_IRQHandler undefined!"
         #endif
         void QSPI1_IRQHandler ( void ) 
         {
-            HAL_QSPI_IRQHandler(&XSpi1Handle.hqspi);
+            HAL_QSPI_IRQHandler(&QSpi1Handle.hqspi);
         }
     #endif
 
-    #if defined(XSPI1_USE_DMA)
+    #if defined(QSPI1_USE_DMA)
         void QSPI1_DMA_IRQHandler ( void ) 
         {
         }
     #endif
+
 #elif USE_OSPI > 0 
-    #if defined(XSPI1_USE_IRQ)
-        #if !defined(OCTOSPI1_IRQHandler)
-            #error "OCTOSPI1_IRQHandler undefined!"
+    #if USE_OSPI1> 0 && defined(OSPI1_USE_IRQ)
+        #if !defined(OSPI1_IRQHandler)
+            #error "OSPI1_IRQHandler undefined!"
         #endif
-        void OCTOSPI1_IRQHandler ( void ) 
+        void OSPI1_IRQHandler ( void ) 
         {
-            HAL_OSPI_IRQHandler(&XSpi1Handle.hxspi);
+            HAL_OSPI_IRQHandler(&OSpi1Handle.hxspi);
         }
     #endif
 
-    #if defined(XSPI1_USE_DMA)
+    #if defined(OSPI1_USE_DMA)
         void OSPI1_DMA_IRQHandler ( void ) 
+        {
+        }
+    #endif
+
+    #if USE_OSPI2 > 0 && defined(OSPI2_USE_IRQ)
+        #if !defined(OSPI2_IRQHandler)
+            #error "OSPI2_IRQHandler undefined!"
+        #endif
+        void OSPI2_IRQHandler ( void ) 
+        {
+            HAL_OSPI_IRQHandler(&OSpi2Handle.hxspi);
+        }
+    #endif
+
+    #if defined(OSPI2_USE_DMA)
+        void OSPI2_DMA_IRQHandler ( void ) 
         {
         }
     #endif
@@ -705,39 +768,6 @@ void SysTick_Handler(void)
     {
       HAL_PCD_IRQHandler(&hpcd);
     }
-
-#if 0
-    /**
-      * @brief  This function handles DMA interrupt request.
-      * @param  None
-      * @retval None
-      */
-    void USARTx_DMA_TX_IRQHandler(void)
-    {
-      HAL_DMA_IRQHandler(UartHandle.hdmatx);
-    }
-
-    /**
-      * @brief  This function handles UART interrupt request.  
-      * @param  None
-      * @retval None
-      */
-    void USARTx_IRQHandler(void)
-    {
-      HAL_UART_IRQHandler(&UartHandle);
-    }
-
-    /**
-      * @brief  This function handles TIM interrupt request.
-      * @param  None
-      * @retval None
-      */
-    void TIMx_IRQHandler(void)
-    {
-      HAL_TIM_IRQHandler(&TimHandle);
-    }
-#endif
-
 #endif
 
 /******************************************************************************

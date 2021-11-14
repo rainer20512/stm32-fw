@@ -16,6 +16,19 @@
  extern "C" {
 #endif
 
+/*
+ * Define different levels of logging detail depth 
+ * the higher the loglevel, the more debug/log info is generated/displayed
+ */
+
+#define LOGLEVEL_NOTHING   0                    /* Don't debug/log anything at all   */
+#define LOGLEVEL_ALWAYS    1                    /* Log always, independent from console_debuglevel       */
+#define LOGLEVEL_FATAL     2                    /* debug/log only severe errors      */
+#define LOGLEVEL_ERROR     3                    /* debug/log all kinds errors        */
+#define LOGLEVEL_WARN      4                    /* debug/log also warnings           */ 
+#define LOGLEVEL_INFO      5                    /* debug/log all kind of useful info */
+#define LOGLEVEL_VERBOSE   6                    /* debug/log even more               */
+
 #if defined(DEBUG)
     #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE    /* max. loglevel that will be generated in code */
     #define DEBUG_MODE          1
@@ -25,7 +38,7 @@
 #endif
 
 /* Enable/Disable different logging destinations */
-#define LOGTO_FATFS         1   
+#define LOGTO_FATFS         0   
 #define LOGTO_CONSOLE       1   
 
 
@@ -41,7 +54,7 @@
 // DEBUG_QENC in qencoder.h
 // DEBUG_ADC in adc_dev.c
 // DEBUG_CAN in can_dev.c  
-// DEBUG_XSPI in qspi_dev.c  
+// DEBUG_XSPI in xspi_dev.c  
 #define DEBUG_PROFILING     1
 #define DEBUG_PERIODIC      0
 #define DEBUG_SLEEP_STOP    0
@@ -62,6 +75,7 @@
 #if DEBUG_MODE 
   #include <stdint.h>
   extern uint32_t console_debuglevel;
+  extern uint32_t fatfs_debuglevel;
 #endif
 
 #ifdef __cplusplus

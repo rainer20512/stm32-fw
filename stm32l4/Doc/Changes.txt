@@ -16,3 +16,7 @@ where <nnn> is the threeed igit number from below
 *** 23.08.21 Version V1.04
 
 003 Adaptions for STM32L4+ series
+
+004 Unify the handling of assigning DMA channels/requests: in case of no DMA Multiplexer is implemented, the
+    assignment is fixed, in case of DMA MUX present, a handcrafted DMA Manager will assign Channels one by one
+    When no DMA Multiplexer is present, the preprocesser symbol HAS_NO_DMAMUX is set to 1.

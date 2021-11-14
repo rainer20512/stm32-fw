@@ -62,7 +62,7 @@
 /* Configuration of eeprom emulation in flash, can be custom */
     #if defined(DRAGONFLY476)
         #define START_PAGE_ADDRESS      0x0807C000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
-    #elif defined(STM32L476NUCLEO) || defined(STM32L476EVAL) || defined(BL475IOT)
+    #elif defined(STM32L476NUCLEO) || defined(STM32L476BAREMETAL) || defined(STM32L476EVAL) || defined(BL475IOT)
         #define START_PAGE_ADDRESS      0x080FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
     #elif defined(STM32L4R9DISCOVERY) || defined( STM32L4S9ZXXREF)
         #define START_PAGE_ADDRESS      0x081FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */

@@ -9,7 +9,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "ff_gen_drv.h"
-#include "dev/qspi_dev.h"
+#include "dev/xspi_dev.h"
 
 #include "log.h"
 
@@ -25,39 +25,39 @@
 static volatile DSTATUS Stat = STA_NOINIT;
 
 /* Private function prototypes -----------------------------------------------*/
-static DSTATUS QspiIo_CheckStatus(BYTE lun);
+static DSTATUS XspiIo_CheckStatus(BYTE lun);
 
-DSTATUS QspiIo_initialize (BYTE);
-DSTATUS QspiIo_status (BYTE);
-DRESULT QspiIo_read (BYTE, BYTE*, DWORD, UINT);
+DSTATUS XspiIo_initialize (BYTE);
+DSTATUS XspiIo_status (BYTE);
+DRESULT XspiIo_read (BYTE, BYTE*, DWORD, UINT);
 #if _USE_WRITE == 1
-  DRESULT QspiIo_write (BYTE, const BYTE*, DWORD, UINT);
+  DRESULT XspiIo_write (BYTE, const BYTE*, DWORD, UINT);
 #endif /* _USE_WRITE == 1 */
 #if _USE_IOCTL == 1
-  DRESULT QspiIo_ioctl (BYTE, BYTE, void*);
+  DRESULT XspiIo_ioctl (BYTE, BYTE, void*);
 #endif  /* _USE_IOCTL == 1 */
 
-const Diskio_drvTypeDef  FatFsQspi_Driver =
+const Diskio_drvTypeDef  FatFsXspi_Driver =
 {
-  QspiIo_initialize,
-  QspiIo_status,
-  QspiIo_read,
+  XspiIo_initialize,
+  XspiIo_status,
+  XspiIo_read,
 #if  _USE_WRITE == 1
-  QspiIo_write,
+  XspiIo_write,
 #endif /* _USE_WRITE == 1 */
 
 #if  _USE_IOCTL == 1
-  QspiIo_ioctl,
+  XspiIo_ioctl,
 #endif /* _USE_IOCTL == 1 */
 };
 
 /* Private functions ---------------------------------------------------------*/
 
-static DSTATUS QspiIo_CheckStatus(BYTE lun)
+static DSTATUS XspiIo_CheckStatus(BYTE lun)
 {
   UNUSED(lun);  
     
-  Stat =  QSpi_IsInitialized(&FATFS_HND) ?  0 : STA_NOINIT;
+  Stat =  XSpi_IsInitialized(&FATFS_HND) ?  0 : STA_NOINIT;
   return Stat;
 }
 
@@ -66,9 +66,9 @@ static DSTATUS QspiIo_CheckStatus(BYTE lun)
   * @param  lun : not used
   * @retval DSTATUS: Operation status
   */
-DSTATUS QspiIo_initialize(BYTE lun)
+DSTATUS XspiIo_initialize(BYTE lun)
 {
-    return QspiIo_CheckStatus(lun);
+    return XspiIo_CheckStatus(lun);
 }
 
 /**
@@ -76,9 +76,9 @@ DSTATUS QspiIo_initialize(BYTE lun)
   * @param  lun : not used
   * @retval DSTATUS: Operation status
   */
-DSTATUS QspiIo_status(BYTE lun)
+DSTATUS XspiIo_status(BYTE lun)
 {
-  return QspiIo_CheckStatus(lun);
+  return XspiIo_CheckStatus(lun);
 }
 
 /**
@@ -89,7 +89,7 @@ DSTATUS QspiIo_status(BYTE lun)
   * @param  count: Number of sectors to read (1..128)
   * @retval DRESULT: Operation result
   */
-DRESULT QspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
+DRESULT XspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
     UNUSED(lun);
     DRESULT res = RES_ERROR;
@@ -98,7 +98,7 @@ DRESULT QspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
     DBGU_VERBOSE("FatFS read %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
 
-    if (QSpi_ReadWait(&FATFS_HND, buff, byte_addr, byte_size)) {
+    if (XSpi_ReadWait(&FATFS_HND, buff, byte_addr, byte_size)) {
         res = RES_OK;
     } else {
         #if DEBUG_MODE > 0 
@@ -120,7 +120,7 @@ DRESULT QspiIo_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
   * @retval DRESULT: Operation result
   */
 #if _USE_WRITE == 1
-DRESULT QspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
+DRESULT XspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
     UNUSED(lun);
     DRESULT res = RES_ERROR;
@@ -129,13 +129,13 @@ DRESULT QspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
     uint32_t byte_size = count  * FATFS_HND.geometry.EraseSectorSize;
 
     DBGU_VERBOSE("FatFS Write %d Sector(s), start=%d, Mem=%p...%p", count, sector, byte_addr, byte_addr+byte_size-1); 
-    if ( ! QSpi_EraseSectorWait(&FATFS_HND, byte_addr, count ) ) {
+    if ( ! XSpi_EraseSectorWait(&FATFS_HND, byte_addr, count ) ) {
         #if DEBUG_MODE > 0 
             DBGU_ERROR("FatFS: Erase %d sectors beginning with sector %d failed", sector, count);
         #endif
         return res;
     }
-    if ( !QSpi_WriteWait(&FATFS_HND, (uint8_t *)buff, byte_addr, byte_size) ) {
+    if ( !XSpi_WriteWait(&FATFS_HND, (uint8_t *)buff, byte_addr, byte_size) ) {
         #if DEBUG_MODE > 0 
             DBGU_ERROR("FatFS: Write %d sectors beginning with sector %d failed", sector, count);
         #endif
@@ -158,7 +158,7 @@ DRESULT QspiIo_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
   * @retval DRESULT: Operation result
   */
 #if _USE_IOCTL == 1
-DRESULT QspiIo_ioctl(BYTE lun, BYTE cmd, void *buff)
+DRESULT XspiIo_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
     UNUSED(lun);
     DRESULT res = RES_ERROR;

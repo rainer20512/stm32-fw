@@ -26,6 +26,16 @@ extern "C" {
     #define APP_NAME "Unknown App"
 #endif
 
+#if defined(STM32L476xx)
+    #define MCU "STM32L476xx"
+#elif defined(STM32L496xx)
+    #define MCU "STM32L496xx"
+#elif defined(STM32L4Sxxx)
+    #define MCU "STM32L4Sxxx"
+#else
+    #define MCU "Unknown"
+#endif
+
 /*-----------------------------------------------------------------------------
  * Don't change below
  *-----------------------------------------------------------------------------
@@ -33,11 +43,12 @@ extern "C" {
 
 #define VERSION_NUMBER  "V" STR(MAJOR_VERSION) "." STR(MINOR_VERSION)
 
+#define MCU_TYPE "for " MCU "family" 
 #define VERSION_STRING2  __DATE__ " " __TIME__ 
 
 #define VERSION_STRING1  APP_NAME " " VERSION_NUMBER 
 
-#define VERSION_STRING   VERSION_STRING1 " Built " VERSION_STRING2
+#define VERSION_STRING   VERSION_STRING1 " " MCU_TYPE " Built " VERSION_STRING2
 
 #ifdef __cplusplus
 }

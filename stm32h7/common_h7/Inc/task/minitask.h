@@ -37,12 +37,12 @@
 #define TASK_OW               1
 #define TASK_COM              2
 #define TASK_RTC              3
-#define TASK_OUT              4
+#define TASK_LOG              4
 #define TASK_RFM              5
 #define TASK_PERIODIC         6
 #define TASK_ADC              7
 #define TASK_LCD              8
-#define TASK_QSPI             9
+#define TASK_XSPI             9
 #define TASK_REMOTE_CM7       10
 #define TASK_REMOTE_CM4       11
 #define TASK_SERIN            12

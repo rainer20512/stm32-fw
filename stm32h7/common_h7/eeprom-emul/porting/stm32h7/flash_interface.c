@@ -50,7 +50,7 @@
 
 #include "../../core/eeprom_emul.h"
 #include "flash_interface.h"
-#include "dev/qspi_dev.h"
+#include "dev/xspi_dev.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private constants ---------------------------------------------------------*/

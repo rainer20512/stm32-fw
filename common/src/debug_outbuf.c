@@ -115,7 +115,7 @@ void DebugOutputCompleteCB ( uint32_t size )
   /* If we kept in mind an delayed flush, initiate it now */
   if ( bDelayedFlush ) {
     bDelayedFlush = 0;
-    TaskNotify(TASK_OUT);
+    TaskNotify(TASK_LOG);
   }
 
 }
@@ -162,10 +162,10 @@ int __putchar(int ch, __printf_tag_ptr uu) {
    */
 
   if ( !CircBuff_Put(&o, ch ) ) {
-      TaskNotify(TASK_OUT);
+      TaskNotify(TASK_LOG);
   } else { 
     if ( ch == '\n') {
-      TaskNotify(TASK_OUT);
+      TaskNotify(TASK_LOG);
     }
   }
      
@@ -187,7 +187,7 @@ int __putchar(int ch, __printf_tag_ptr uu) {
     {
         /* write ti buffer and start transfer, if full */
         if ( CircBuff_PutStr(&o, (uint8_t *)data, len ) < len )
-            TaskNotify(TASK_OUT);
+            TaskNotify(TASK_LOG);
 
         return true;
     }
@@ -213,7 +213,7 @@ int __putchar(int ch, __printf_tag_ptr uu) {
     {
         if ( bExpandCrToCrlf ) CircBuff_Put(&o, '\r');
         CircBuff_Put(&o, '\n');
-        TaskNotify(TASK_OUT);
+        TaskNotify(TASK_LOG);
     }
 #endif
 
@@ -262,7 +262,7 @@ void DebugRxCpltCallback(UsartHandleT *uhandle, uint8_t ch)
     if ( ch == '\r' ) DEBUG_PUTC('\n');
 
     DEBUG_PUTC(ch);
-    TaskNotify(TASK_OUT);
+    TaskNotify(TASK_LOG);
 
     /* Del = remove DEL and last character */
     if ( ch == 0x07f ) { LBUF_DEL(*(uhandle->in));LBUF_DEL(*(uhandle->in)); }

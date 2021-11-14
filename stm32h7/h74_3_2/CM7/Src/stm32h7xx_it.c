@@ -672,7 +672,7 @@ void DebugMon_Handler(void)
         #endif
         void QSPI1_IRQHandler ( void ) 
         {
-            HAL_QSPI_IRQHandler(&XSpi1Handle.hxspi);
+            HAL_QSPI_IRQHandler(&QSpi1Handle.hxspi);
         }
     #endif
 

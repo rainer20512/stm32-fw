@@ -27,7 +27,7 @@
 #include "usbd_storage.h"
 
 #if defined(USE_EXTMEM_QSPI)
-    #include "dev/qspi_dev.h"
+    #include "dev/xspi_dev.h"
 #else
     #include "stm32h743i_eval_sd.h"
 #endif

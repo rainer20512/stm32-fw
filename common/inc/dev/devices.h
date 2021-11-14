@@ -22,6 +22,18 @@
  extern "C" {
 #endif
 
+/*******************************************************************************
+ * Devices, which have no DMA-Multiplexer use fixed DMA-Requests and -channels
+ * These are defined in the corresponding devices' header files
+ * Otherwise, when a DMA MUX is present, these channels/requests are assigned
+ * by the handcrafted DMA-Request manager **** 004 ****
+ ******************************************************************************/
+#if defined(STM32L476xx) || defined(STM32L496xx)
+    #define HAS_NO_DMAMUX   1
+#else
+    #define HAS_NO_DMAMUX   0    
+#endif
+
 /* Includes ------------------------------------------------------------------*/
 #include "dev/hw_device.h"
 #include "dev/uart_dev.h"

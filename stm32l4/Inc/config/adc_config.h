@@ -12,16 +12,8 @@
 #define __ADC_CONFIG_H
 
 #include "config/devices_config.h"
+#include "system/dma_request_data.h"
 #include "stm32l4xx.h"
-
-/*
- **** 003 **** 
- * Remap "new" DMAMUX input lines to "old" fixed DMA-Request numbers 
- */
-#if defined(STM32L476xx) || defined(STM32L496xx)
-    #define DMA_REQUEST_ADC1       DMA_REQUEST_0
-    #define DMA_REQUEST_ADC2       DMA_REQUEST_0
-#endif
 
 #ifdef __cplusplus
  extern "C" {
@@ -48,8 +40,8 @@
     /* Definition ADC1 NVIC */
     #define ADC1_IRQ                             { ADC1_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC1_IRQHandler                      ADC1_2_IRQHandler
-    #define ADC1_RX_DMA                          DMA1_Channel1, DMA_REQUEST_ADC1, DMA1_Channel1_IRQn, DMA_PRIORITY_HIGH
-    #define ADC1_DMA_IRQHandler                  DMA1_Channel1_IRQHandler
+    #define ADC1_RX_DMA                          GET_DMA_CHANNEL(DMA_DATA_ADC1), GET_DMA_REQUEST(DMA_DATA_ADC1), DMA_PRIORITY_HIGH
+//    #define ADC1_DMA_IRQHandler                  DMA1_Channel1_IRQHandler
                                                     
 #endif
 
@@ -62,7 +54,7 @@
     #define ADC2_IRQ                             { ADC2_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC2_IRQHandler                      ADC2_2_IRQHandler
     #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_ADC2, DMA1_Channel2_IRQn, DMA_PRIORITY_HIGH
-    #define ADC2_DMA_IRQHandler                  DMA1_Channel2_IRQHandler
+//    #define ADC2_DMA_IRQHandler                  DMA1_Channel2_IRQHandler
 #endif
 
 #if defined(USE_ADC3) && defined(ADC3)
@@ -76,7 +68,7 @@
     #define ADC3_IRQ                             { ADC3_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC3_IRQHandler
     #define ADC3_RX_DMA                          DMA1_Channel3, DMA_REQUEST_ADC3, DMA1_Channel3_IRQn, DMA_PRIORITY_HIGH
-    #define ADC3_DMA_IRQHandler                  DMA1_Channel3_IRQHandler
+//    #define ADC3_DMA_IRQHandler                  DMA1_Channel3_IRQHandler
 #endif
 
 #if defined(USE_ADC1) || defined(USE_ADC2) || defined(USE_ADC3)
