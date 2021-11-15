@@ -17,6 +17,7 @@
 #define __QSPI_CONFIG_H
 
 #include "hardware.h"
+#include "system/dma_request_data.h" /**** 004 ****/
 
 
 /* Exported types ------------------------------------------------------------*/
@@ -59,11 +60,8 @@
   #endif
 
   #ifdef QSPI1_USE_DMA
-    /* Definition for USART1 TX DMA */
-    #define QSPI1_DMA                      DMA2_Channel7, DMA_REQUEST_3, DMA2_Channel7_IRQn, DMA_PRIORITY_VERY_HIGH 
-    #define QSPI1_DMA_IRQHandler           DMA2_Channel7_IRQHandler
-//    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn, DMA_PRIORITY_VERY_HIGH 
-//    #define QSPI1_DMA_IRQHandler           DMA1_Channel5_IRQHandler
+    /* Definition for QSPI DMA */
+    #define QSPI1_DMA                      GET_DMA_CHANNEL(DMA_DATA_QSPI1), GET_DMA_REQUEST(DMA_DATA_QSPI1), DMA_PRIORITY_VERY_HIGH 
   #endif
 
   /* Set a default QSPI clock if not yet set */

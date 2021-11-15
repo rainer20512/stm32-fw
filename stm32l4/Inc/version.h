@@ -43,7 +43,7 @@ extern "C" {
 
 #define VERSION_NUMBER  "V" STR(MAJOR_VERSION) "." STR(MINOR_VERSION)
 
-#define MCU_TYPE "for " MCU "family" 
+#define MCU_TYPE "for " MCU " family" 
 #define VERSION_STRING2  __DATE__ " " __TIME__ 
 
 #define VERSION_STRING1  APP_NAME " " VERSION_NUMBER 

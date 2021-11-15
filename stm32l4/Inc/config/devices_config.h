@@ -316,6 +316,35 @@
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
     #endif
 
+    // SPI for RFM12
+    #if USE_RFM12 > 0 || USE_RFM69 > 0
+        #define USE_BBSPI2
+        // #define USE_SPI2
+        #define RFM12_DEV SPIDEV2_DEV
+        #define USE_SPI2_ALTN1
+        #define SPI2_USE_MISO
+        #if USE_RFM12 > 0
+            #define SPI2_USE_MISO_IRQ
+        #else
+            /* "Abuse" Busy-Pin for DIO0-Interrupt */
+            #define SPI2_USE_BUSY
+            #define SPI2_USE_BUSY_IRQ
+        #endif
+        #if USE_RFM_OOK
+            /* Use General purpose input as interrupt line for "ook data available" */
+            #define SPI2_USE_INP
+            #define SPI2_USE_INP_IRQ            
+        #endif
+        #define SPI2_BAUDRATE 400000
+        #define SPI2_DATASIZE 8
+        //#define SPI2_USE_DNC
+        //#define SPI2_USE_HW_IRQ
+        //#define SPI2_USE_DMA
+        //#define SPI2_USE_RST
+        //#define SPI2_USE_BUSY
+        //#define SPI2_USE_BUSY_IRQ
+    #endif
+
     #if USE_USB > 0
         #define USE_USART2
         #define USE_USART2_ALTN1
@@ -400,34 +429,6 @@
         //#define SPI1_USE_BUSY_IRQ
     #endif
 
-    // SPI for RFM12
-    #if USE_RFM12 > 0 || USE_RFM69 > 0
-        #define USE_BBSPI2
-        // #define USE_SPI2
-        #define RFM12_DEV SPIDEV2_DEV
-        #define USE_SPI2_ALTN1
-        #define SPI2_USE_MISO
-        #if USE_RFM12 > 0
-            #define SPI2_USE_MISO_IRQ
-        #else
-            /* "Abuse" Busy-Pin for DIO0-Interrupt */
-            #define SPI2_USE_BUSY
-            #define SPI2_USE_BUSY_IRQ
-        #endif
-        #if USE_RFM_OOK
-            /* Use General purpose input as interrupt line for "ook data available" */
-            #define SPI2_USE_INP
-            #define SPI2_USE_INP_IRQ            
-        #endif
-        #define SPI2_BAUDRATE 400000
-        #define SPI2_DATASIZE 8
-        //#define SPI2_USE_DNC
-        //#define SPI2_USE_HW_IRQ
-        //#define SPI2_USE_DMA
-        //#define SPI2_USE_RST
-        //#define SPI2_USE_BUSY
-        //#define SPI2_USE_BUSY_IRQ
-    #endif
 
     #if USE_QENCODER > 0
         #define QENC_DEV        HW_QENC1
@@ -594,7 +595,7 @@
     #if USE_ONEWIRE > 0
         #define USE_USART1
         #define ONEWIRE_DEV            HW_COM1
-        #define USE_USART1_ALTN1
+        // #define USE_USART1_ALTN1
         #define COM1_USE_TX_DMA
         #define COM1_USE_RX_DMA
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
@@ -693,6 +694,48 @@
       #define OSPI2_MODE_QUAD
       #undef  OSPI2_USE_DQS
     #endif
+
+    // SPI for RFM12
+    #if USE_RFM12 > 0 || USE_RFM69 > 0
+        #define USE_BBSPI2
+        // #define USE_SPI2
+        #define RFM12_DEV SPIDEV2_DEV
+        #define USE_SPI2_ALTN1
+        #define SPI2_USE_MISO
+        #if USE_RFM12 > 0
+            #define SPI2_USE_MISO_IRQ
+        #else
+            /* "Abuse" Busy-Pin for DIO0-Interrupt */
+            #define SPI2_USE_BUSY
+            #define SPI2_USE_BUSY_IRQ
+        #endif
+        #if USE_RFM_OOK
+            /* Use General purpose input as interrupt line for "ook data available" */
+            #define SPI2_USE_INP
+            #define SPI2_USE_INP_IRQ            
+        #endif
+        #define SPI2_BAUDRATE 400000
+        #define SPI2_DATASIZE 8
+        //#define SPI2_USE_DNC
+        //#define SPI2_USE_HW_IRQ
+        //#define SPI2_USE_DMA
+        //#define SPI2_USE_RST
+        //#define SPI2_USE_BUSY
+        //#define SPI2_USE_BUSY_IRQ
+    #endif
+
+  #if USE_THPSENSOR > 0  
+      /* User I2C is I2C1 with PB6=SCL, PB7=SDA                                  */
+      #define USE_I2C1
+      #define I2C
+      #define  USE_I2CDEV1_ALTN1
+      #undef  USE_I2CDEV1_ALTN2
+      #define I2C1_CLKSOURCE           I2cClock_HSI
+      #define I2C1_SPEED               I2c_StandardMode
+      #define I2C1_USE_IRQ
+      #define I2C1_USE_DMA
+      #define USER_I2C1
+  #endif
 
     #if USE_CAN > 0
       #define USE_CAN1

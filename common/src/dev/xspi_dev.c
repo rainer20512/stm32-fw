@@ -28,6 +28,7 @@
 #include "task/minitask.h"
 #include "system/profiling.h"
 #include "system/hw_util.h"
+#include "system/dma_handler.h" /**** 004 ****/
 #include "system/clockconfig.h"
 #include "dev/hw_device.h"
 #include "dev/devices.h"
@@ -911,6 +912,99 @@ bool XSpi_EraseChipIT           (XSpiHandleT *myHandle)
     if (!EraseInit(myHandle, 0, 1, XSPI_MODE_IRQ, XSPI_ERASE_ALL , EraseSM )) return false;
     return EraseSM();
 }
+#if 0
+    //RHB todo
+
+    /**
+      * @brief DMA UART transmit process complete callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void XSpi_DMATransmitCplt(DMA_HandleTypeDef *hdma)
+    {
+      XSpiHandleT *uhandle = (XSpiHandleT *)(hdma->Parent);
+      (void)(uhandle);
+  
+      /* DMA Normal mode */
+      // debug_putchar('x');
+      if ( DMA_IS_LINEAR(hdma) ) {  
+        // RHB tbd
+      } else {
+        /* DMA Circular mode, not implemented */
+        Error_Handler_XX(-16, __FILE__, __LINE__);
+      }
+    }
+
+    /**
+      * @brief DMA UART receive process complete callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void XSpi_DMAReceiveCplt(DMA_HandleTypeDef *hdma)
+    {
+      XSpiHandleT *uhandle = (XSpiHandleT *)(hdma->Parent);
+      (void)(uhandle);
+
+      /* DMA Normal mode */
+      if ( DMA_IS_LINEAR(hdma) ) {
+        // RHB tbd
+      }
+  
+    }
+
+    /**
+      * @brief DMA UART communication error callback.
+      * @param hdma DMA handle.
+      * @retval None
+      */
+    static void XSpi_DMAError(DMA_HandleTypeDef *hdma)
+    {
+      XSpiHandleT *uhandle = (XSpiHandleT *)(hdma->Parent);
+      // RHB tbd
+      (void)(uhandle);
+    }
+
+    static void XspiDmaChannelInit(XSpiHandleT *xhandle, const HW_DmaType *dma, XSpiDmaDirectionEnumType dmadir )
+    {
+      DMA_HandleTypeDef *hdma = dma->dmaHandle;
+  
+      HW_DMA_HandleInit(hdma, dma, xhandle );
+
+      switch ( dmadir ) 
+      {
+        case XSPI_DMA_RD:
+          hdma->Init.Direction = DMA_PERIPH_TO_MEMORY;
+          break;
+        case XSPI_DMA_WR:
+          hdma->Init.Direction = DMA_MEMORY_TO_PERIPH;
+          break;
+        default:
+            Error_Handler_XX(-18, __FILE__, __LINE__);
+            return;
+      }
+
+      HAL_DMA_Init(hdma);
+
+      /* 
+       * All callbacks have been set to NULL by Init, 
+       * now set Callbacks for DMA complete and DMA error 
+       */
+
+      switch ( dmadir ) 
+      {
+        case XSPI_DMA_RD:
+          hdma->XferCpltCallback = XSpi_DMAReceiveCplt;
+          hdma->XferErrorCallback = XSpi_DMAError;
+          break;
+        case XSPI_DMA_WR:
+          hdma->XferCpltCallback = XSpi_DMATransmitCplt;   
+          hdma->XferErrorCallback = XSpi_DMAError;
+          break;
+      }
+
+      return;
+    }
+#endif
 
 /******************************************************************************
  * Abort current operation ( i.e. MemoryMapped or DMA mode and
@@ -1033,6 +1127,7 @@ bool XSpi_Init(const HW_DeviceType *self)
     #else
         hxspi->Instance                 = (QUADSPI_TypeDef*)self->devBase;
     #endif
+
     /* If deep sleep is supported, setup the deep sleep information block */
     if ( adt->myDsInfo ) {
         myHandle->dsInfo            = adt->myDsInfo;
@@ -1083,9 +1178,23 @@ bool XSpi_Init(const HW_DeviceType *self)
             if ( console_debuglevel > 2 )  XSpi_DumpStatus(myHandle);
         #endif
 
- 
+        /* 
+         * Initialize DMA channel, if configured to use DMA
+         * only regard devDmaRx, ...Tx is never used, because there is only one DMA request type
+         */
+        #if 0  
+        // RHB tbd
+        if ( self->devDmaRx ) {
+        /**** 004 ****/
+        DMA_HandleTypeDef *hdma;
+        hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
+        ret = hdma != NULL;
         /* dma channel initiialization has to be done before every rd or wr operation
            because there is only one dma channel                                      */
+        if ( ret ) {
+            xhandle->hRxDma = dma->dmaHandle;
+        }
+        #endif
 
         /* If deep sleep is supported, put flash chip into deep sleep mode */
         if ( adt->myDsInfo ) XSpecific_EnterDeepPowerDown(myHandle);
@@ -1167,7 +1276,7 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
 
     #ifdef QSPI1_USE_DMA
       static DMA_HandleTypeDef hdma_qspi1;
-      static const HW_DmaType dma_qspi = { &hdma_qspi1, QSPI1_DMA };
+      static const HW_DmaType dma_qspi1 = { &hdma_qspi1, QSPI1_DMA };
     #endif
 
     #if defined( QSPI1_USE_IRQ )

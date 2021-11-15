@@ -258,19 +258,17 @@ static bool I2C_MspInitInt(const HW_DeviceType *self)
       if (  self->devDmaRx ) {
         /**** 004 ****/
         hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
-        if ( hdma ) {
-          I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaRx, I2C_DMA_RX );
-          HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
-        }
+        if ( !hdma ) return false;
+        I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaRx, I2C_DMA_RX );
+        HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
       }
       
       if (self->devDmaTx ) {
         /**** 004 ****/
         hdma = HW_DMA_RegisterDMAChannel(self->devDmaTx);
-         if ( hdma ) {
-            I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaTx, I2C_DMA_TX );
-            HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
-         }
+        if ( !hdma ) return false;
+        I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaTx, I2C_DMA_TX );
+        HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
       }
     } // if DMA
 

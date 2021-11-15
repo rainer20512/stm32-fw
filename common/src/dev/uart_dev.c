@@ -504,18 +504,16 @@ bool COM_Init(const HW_DeviceType *self)
         if ( self->devDmaRx ) {
             /**** 004 ****/
             hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
-            if ( hdma ) {
-                UsartDmaChannelInit( myHandle, self->devDmaRx, USART_DMA_RX );
-                HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
-            }
+            if ( !hdma ) return false;
+            UsartDmaChannelInit( myHandle, self->devDmaRx, USART_DMA_RX );
+            HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
         }
         if ( self->devDmaTx ) {
             /**** 004 ****/
             hdma = HW_DMA_RegisterDMAChannel(self->devDmaTx);
-            if ( hdma ) {
-                UsartDmaChannelInit( myHandle, self->devDmaTx, USART_DMA_TX );
-                HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
-            }
+            if ( !hdma ) return false;
+            UsartDmaChannelInit( myHandle, self->devDmaTx, USART_DMA_TX );
+            HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
         }
     } // if DMA
     return true;

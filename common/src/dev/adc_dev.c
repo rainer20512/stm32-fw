@@ -747,19 +747,11 @@ bool ADC_Init(const HW_DeviceType *self)
          return false;
       }
 
+      /**** 004 ****/
       DMA_HandleTypeDef *hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
-      if ( hdma ) {
-         AdcDmaChannelInit( myHandle, self->devDmaRx);
-         HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
-      }
-/*
-      dma = self->devDmaRx;
-      if (dma ) {
-         AdcDmaChannelInit( myHandle, self->devDmaRx);
-         HAL_NVIC_SetPriority(self->devDmaRx->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(self->devDmaRx->dmaIrqNum);
-      }
- */ 
+      if ( !hdma ) return false;
+      AdcDmaChannelInit( myHandle, self->devDmaRx);
+      HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
     }
 
     return true;

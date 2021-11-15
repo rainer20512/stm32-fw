@@ -317,7 +317,7 @@ static bool CheckHardwareUnique ( const HW_DeviceType *dev )
     for ( uint32_t i = 0; i < act_devices; i++ ) {
         if ( devices[i]->devBase &&  devices[i]->devBase == dev->devBase ) {
             ret = false;
-            DEBUG_PRINTF("Devices %s and %s share thesame hardware!\n", devices[i]->devName, dev->devName);
+            DEBUG_PRINTF("Devices %s and %s share the same hardware!\n", devices[i]->devName, dev->devName);
         }
     }
 
@@ -356,6 +356,7 @@ int32_t AddDevice(const HW_DeviceType *dev, HW_DynInitT postInit, HW_DynDeInitT 
 
     if ( !CheckHardwareUnique(dev) ) {
         DEBUG_PRINTF("AddDevice: %s causes hardware collision\n", dev->devName);
+        return -1;
     }
 
     devices[act_devices]     = dev;

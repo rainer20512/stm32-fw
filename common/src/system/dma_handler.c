@@ -140,9 +140,11 @@ static void HW_DMA_SetDmaChClock ( DMA_Channel_TypeDef *channel)
 /*******************************************************************************************************
  * register one DMA channel for the DMA specified in dmadata                                 
  * @param 
- *    dmadata [in] -  ptr to all neccessary DMA data: associated DMA_HandleTypeDef, DMA channel, DMA request
- *                    number, DMA priority. The DMA channel in dmadata may be NULL, in which case the first
- *                    unused DMA channel will be allocated.
+ *    dmadata [in]  -  ptr to all neccessary DMA data: associated DMA_HandleTypeDef, DMA channel, DMA request
+ *                     number, DMA priority. The DMA channel in dmadata may be NULL, in which case the first
+ *                     unused DMA channel will be allocated.
+ *    dmadata [out] -  dmadata->dmaHandle->Instance will receive the ( manually or auotmatically ) assigned
+ *                     DMA channel on successful returns
  * @retval 
  *    DMA handle is returned in case of success,
  *    NULL in case of channel already in use

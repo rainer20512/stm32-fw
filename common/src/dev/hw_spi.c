@@ -31,6 +31,7 @@
 
 #include "dev/hw_device.h"
 #include "system/hw_util.h"
+#include "system/dma_handler.h" /**** 004 ****/
 
 #include "dev/devices.h"
 
@@ -519,22 +520,30 @@ bool HwSpi_DefaultInit(SpiDataT *data, const HW_DeviceType *SpiDev)
         return false;
       }
         
-      HW_SetDmaChClock(SpiDev->devDmaTx, SpiDev->devDmaRx);
-
       const HW_IrqType *irq = SpiDev->devIrqList->irq;
-      const HW_DmaType *dma;
-      dma = SpiDev->devDmaRx;
-      if ( dma ) {
-         HwSpiDmaChannelInit( data, dma, SPI_DMA_RX );
-         HAL_NVIC_SetPriority(dma->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(dma->dmaIrqNum);
+      DMA_HandleTypeDef *hdma;
+
+        /**** 004 ****
+        hdma = HW_DMA_RegisterDMAChannel(self->devDmaRx);
+        if ( hdma ) {
+          I2cDmaChannelInit( I2C_GetAdditionalData(self)->myI2cHandle, self->devDmaRx, I2C_DMA_RX );
+          HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
+        }
+      } */
+      if ( SpiDev->devDmaRx ) {
+        /**** 004 ****/
+        hdma = HW_DMA_RegisterDMAChannel(SpiDev->devDmaRx);
+        if ( !hdma ) return false;
+        HwSpiDmaChannelInit( data, SpiDev->devDmaRx, SPI_DMA_RX );
+        HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
       }
       
-      dma = SpiDev->devDmaTx;
-      if (dma ) {
-         HwSpiDmaChannelInit( data ,dma, SPI_DMA_TX );
-         HAL_NVIC_SetPriority(dma->dmaIrqNum, irq->irq_prio, irq->irq_subprio);
-         HAL_NVIC_EnableIRQ(dma->dmaIrqNum);
+      if (SpiDev->devDmaTx ) {
+        /**** 004 ****/
+        hdma = HW_DMA_RegisterDMAChannel(SpiDev->devDmaTx);
+        if ( !hdma ) return false;
+        HwSpiDmaChannelInit( data, SpiDev->devDmaTx, SPI_DMA_TX );
+        HW_DMA_SetAndEnableChannelIrq(hdma->Instance, irq->irq_prio, irq->irq_subprio);
       }
     } // if DMA
 

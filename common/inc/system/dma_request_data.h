@@ -41,6 +41,7 @@
 //    #define DMA_DATA_ADC1               DMA_REQUEST_0, DMA2_Channel3
 //    #define DMA_DATA_ADC2               DMA_REQUEST_0, DMA2_Channel4
 //    #define DMA_DATA_ADC3               DMA_REQUEST_0, DMA2_Channel5
+
     /* Multiple choices for USART1 */
     #define DMA_DATA_USART1_TX          DMA_REQUEST_2, DMA1_Channel4 
     #define DMA_DATA_USART1_RX          DMA_REQUEST_2, DMA1_Channel5 
@@ -56,6 +57,7 @@
     #define DMA_DATA_UART5_RX           DMA_REQUEST_2, DMA2_Channel1 
     #define DMA_DATA_LPUART1_TX         DMA_REQUEST_4, DMA2_Channel6 
     #define DMA_DATA_LPUART1_RX         DMA_REQUEST_4, DMA2_Channel7 
+
     #define DMA_DATA_I2C1_TX            DMA_REQUEST_3, DMA1_Channel6
     #define DMA_DATA_I2C1_RX            DMA_REQUEST_3, DMA1_Channel7
 //    #define DMA_DATA_I2C1_TX            DMA_REQUEST_5, DMA2_Channel7
@@ -66,7 +68,19 @@
     #define DMA_DATA_I2C3_RX            DMA_REQUEST_3, DMA1_Channel3
     #define DMA_DATA_I2C4_TX            DMA_REQUEST_0, DMA2_Channel2
     #define DMA_DATA_I2C4_RX            DMA_REQUEST_0, DMA2_Channel1
+
+    #define DMA_DATA_SPI1_TX            DMA_REQUEST_1, DMA1_Channel3
+    #define DMA_DATA_SPI1_RX            DMA_REQUEST_1, DMA1_Channel2
+//    #define DMA_DATA_SPI1_TX            DMA_REQUEST_4, DMA2_Channel4
+//    #define DMA_DATA_SPI1_RX            DMA_REQUEST_4, DMA2_Channel3
+    #define DMA_DATA_SPI2_TX            DMA_REQUEST_1, DMA1_Channel5
+    #define DMA_DATA_SPI2_RX            DMA_REQUEST_1, DMA1_Channel4
+    #define DMA_DATA_SPI3_TX            DMA_REQUEST_3, DMA2_Channel2
+    #define DMA_DATA_SPI3_RX            DMA_REQUEST_3, DMA2_Channel1
     
+    #define DMA_DATA_QSPI1              DMA_REQUEST_5, DMA1_Channel5
+//    #define DMA_DATA_QSPI1              DMA_REQUEST_3, DMA2_Channel7
+
 #else
     /*
      **** 004 **** 
@@ -80,6 +94,7 @@
     #define DMA_DATA_ADC1               DMA_REQUEST_ADC1,       NULL 
     #define DMA_DATA_ADC2               DMA_REQUEST_ADC2,       NULL 
     #define DMA_DATA_ADC3               DMA_REQUEST_ADC3,       NULL 
+
     #define DMA_DATA_USART1_TX          DMA_REQUEST_USART1_TX,  NULL 
     #define DMA_DATA_USART1_RX          DMA_REQUEST_USART1_RX,  NULL 
     #define DMA_DATA_USART2_TX          DMA_REQUEST_USART2_TX,  NULL
@@ -92,6 +107,7 @@
     #define DMA_DATA_UART5_RX           DMA_REQUEST_UART4_RX,   NULL 
     #define DMA_DATA_LPUART1_TX         DMA_REQUEST_LPUART1_TX, NULL 
     #define DMA_DATA_LPUART1_RX         DMA_REQUEST_LPUART1_RX, NULL 
+
     #define DMA_DATA_I2C1_TX            DMA_REQUEST_I2C1_TX,    NULL
     #define DMA_DATA_I2C1_RX            DMA_REQUEST_I2C1_RX,    NULL
     #define DMA_DATA_I2C2_TX            DMA_REQUEST_I2C2_TX,    NULL
@@ -100,6 +116,15 @@
     #define DMA_DATA_I2C3_RX            DMA_REQUEST_I2C3_RX,    NULL
     #define DMA_DATA_I2C4_TX            DMA_REQUEST_I2C4_TX,    NULL
     #define DMA_DATA_I2C4_RX            DMA_REQUEST_I2C4_RX,    NULL
+
+    #define DMA_DATA_SPI1_TX            DMA_REQUEST_SPI1_TX,    NULL
+    #define DMA_DATA_SPI1_RX            DMA_REQUEST_SPI1_RX,    NULL
+    #define DMA_DATA_SPI2_TX            DMA_REQUEST_SPI2_TX,    NULL
+    #define DMA_DATA_SPI2_RX            DMA_REQUEST_SPI2_RX,    NULL
+    #define DMA_DATA_SPI3_TX            DMA_REQUEST_SPI3_TX,    NULL
+    #define DMA_DATA_SPI3_RX            DMA_REQUEST_SPI3_RX,    NULL
+
+    #define DMA_DATA_QSPI1              DMA_REQUEST_QSPI1,      NULL
 #endif
 
 /* 
