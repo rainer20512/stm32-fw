@@ -616,7 +616,7 @@
         #define COM2_USE_TX_DMA
         //#define COM2_USE_RX_DMA
         #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-        #define USE_USART2_DEBUG
+        //#define USE_USART2_DEBUG
     #endif
 
     // #define USE_USART3
@@ -641,7 +641,7 @@
         #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
         // PC0, PC1
         #define USE_LPUART1_ALTN2
-        // #define USE_LPUART1_DEBUG
+        #define USE_LPUART1_DEBUG
     #endif 
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ
