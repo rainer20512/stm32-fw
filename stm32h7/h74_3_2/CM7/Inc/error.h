@@ -67,7 +67,7 @@ void Error_Handler_XX(int32_t code, char *file, int line);
 #define log_error(...)   do { DEBUG_PRINTF("Error: "); DEBUG_PRINTF(__VA_ARGS__ ); CRLF(); } while (0)
 
 #ifdef  USE_FULL_ASSERT
-    void assert_failed(uint8_t *file, uint32_t line);
+    void assert_failed(char *file, uint32_t line);
     #define assert(condition) if(!(condition)) assert_failed(__FILE__, __LINE__)
 #else
     #define assert(a) (void)(a)

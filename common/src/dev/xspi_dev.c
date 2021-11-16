@@ -159,7 +159,7 @@ static void XSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
     /* STM32L4xx has no clock mux for QUADSPI device */
     #define XSpiSetClockSource(a)           (true)
     #define XSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx) || defined(STM32L4Sxxx)
+#elif defined(STM32H7_FAMILY) || defined(STM32L4Sxxx)
     static bool XSpiSetClockSource(const void *hw)
     {
       UNUSED(hw);

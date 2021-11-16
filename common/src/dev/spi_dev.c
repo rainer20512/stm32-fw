@@ -448,10 +448,10 @@ bool SPI_OnFrqChange(const HW_DeviceType *self)
  *****************************************************************************/
 bool SPI_AllowStop(const HW_DeviceType *self)
 {
-#if defined(STM32L476xx)|| defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* Allow sleep, if not busy */
     return (((SPI_TypeDef *)self->devBase)->SR & SPI_SR_BSY_Msk ) == 0;
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     /* Allow sleep, if not enabled */
     return (((SPI_TypeDef *)self->devBase)->CR1 & SPI_CR1_SPE ) == 0;
 #else

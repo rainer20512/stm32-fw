@@ -159,12 +159,10 @@ typedef struct HWINIT {
  *****************************************************************************/
 typedef struct {
     DMA_HandleTypeDef   *dmaHandle;     //!< DMA handle to use at runtime
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     DMA_Channel_TypeDef *dmaChannel;     //!< Associated DMA channel / Stream
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
-    void                *dmaChannel;     //!< Associated DMA channel / Stream
-                                         //!< may be of type DMA_Stream_TypeDef *
-                                         //!< or BDMA_Channel_TypeDef *
+#elif defined(STM32H7_FAMILY)
+    DMA_Stream_TypeDef  *dmaChannel;     //!< Associated DMA channel / Stream
 #else
     #error "No setup for DMA Channel or Stream"
 #endif

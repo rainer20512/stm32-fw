@@ -69,7 +69,7 @@ void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
  * Some Devices support different clock sources for QSPI. Make sure, that             *   
   * SpiSetClockSource and SpiGetClockSpeed() will match                            *
  *************************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* STM32L4xx has no clock mux for SPI devices */
     #define SpiSetClockSource(a)           (true)
     uint32_t SpiGetClockSpeed(const void *hw)
@@ -81,7 +81,7 @@ void OnTxRxComplete   (SPI_HandleTypeDef *hspi);
             return HAL_RCC_GetPCLK1Freq();
     }
                  
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     static bool SpiSetClockSource(SPI_TypeDef *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -218,9 +218,9 @@ static uint32_t HwSpiGetBRPrescaler(SPI_TypeDef *hspi, uint32_t baudrate )
 
     DEBUG_PRINTF("SPI prescaler=%d, resulting in baudrate %d\n", 2 << min_idx, spiclk >> ( min_idx+1) ); 
     
-#if defined(STM32L476xx)|| defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
    return min_idx << SPI_CR1_BR_Pos;
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
    return min_idx << SPI_CFG1_MBR_Pos;
 #else
     #error "No receipe to set baudrate prescaler"
@@ -234,9 +234,9 @@ static uint32_t HwSpiGetBRPrescaler(SPI_TypeDef *hspi, uint32_t baudrate )
 void HwSpiSetPrescaler (SPI_TypeDef *hspi, uint32_t baudrate )
 {
     uint32_t newPscVal = HwSpiGetBRPrescaler(hspi, baudrate );
-#if defined(STM32L476xx)|| defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
    MODIFY_REG(hspi->CR1, SPI_CR1_BR_Msk, newPscVal);
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
    MODIFY_REG(hspi->CFG1, SPI_CFG1_MBR_Msk, newPscVal);
 #else
     #error "No receipe to set baudrate prescaler"
@@ -245,9 +245,9 @@ void HwSpiSetPrescaler (SPI_TypeDef *hspi, uint32_t baudrate )
 
 static uint32_t HwGetDataSize ( uint8_t plainDataSize ) 
 {
-#if defined(STM32L476xx)|| defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
    return  ((uint16_t)plainDataSize - 1) << 8;
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
    return  ((uint16_t)plainDataSize - 1);
 #else
     #error "No receipe to set baudrate prescaler"
@@ -311,7 +311,7 @@ static void HwSpiSetTxDMAMemInc(SPI_HandleTypeDef *hspi, bool bDoIncrement )
     /* Reenable */
     __HAL_DMA_ENABLE(hspi->hdmatx);
 }
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /**
       * @brief DMA UART transmit process complete callback.
       * @param hdma DMA handle.
@@ -399,7 +399,7 @@ static void HwSpiSetTxDMAMemInc(SPI_HandleTypeDef *hspi, bool bDoIncrement )
       */
     }
 
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     static void SPI_DMATransmitCplt(DMA_HandleTypeDef *hdma)
     {
       SPI_HandleTypeDef *hSpi = &((SpiDataT *)(hdma->Parent))->hw.myHalHandle;

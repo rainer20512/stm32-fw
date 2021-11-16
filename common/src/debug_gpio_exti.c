@@ -327,7 +327,7 @@ void DBG_deinit_pin(char portletter, uint8_t portnum)
 
 const char exti_gpio_name[] = "GPIO";
 
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     #if defined(STM32L476xx) || defined(STM32L496xx)
         const char * const exti_line_name[]= { 
         /* insert pattern ( max length is 12 ) 
@@ -337,7 +337,7 @@ const char exti_gpio_name[] = "GPIO";
           "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "LCD wkup",
           "I2C4 wkup",
         };
-    #else // defined(STM32L4Sxxx)
+    #elif defined(STM32L4Sxxx)
         const char * const exti_line_name[]= { 
         /* insert pattern ( max length is 12 ) 
           "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
@@ -346,6 +346,8 @@ const char exti_gpio_name[] = "GPIO";
           "LPTIM1   ",    "LPTIM2   ",    "Reserved   ",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "Reserved",
           "I2C4 wkup",
         };
+    #else
+        #error "missing EXTI-line names"
     #endif
 const char * const exti_domain_name[]= { "EXTI   " };
 #define EXTI_MAXNUM             40
@@ -568,7 +570,7 @@ const char * const sys_nvic_name[]= {
   "",           "",           "NMI",        "HardFault",  "MemMgmt",    "BusFault",   "UsageFault", "", 
   "",           "",           "",           "SVCall",     "DebugMon",   "",           "PendSV",     "SysTick"
 };
-
+#
 #if defined(STM32L476xx) || defined(STM32L496xx)
 const char * const user_nvic_name[]= { 
     /*.                 .                 .                 .                 .                 .                 .                 . */

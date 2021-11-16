@@ -104,7 +104,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 #define USE_UART8
 #endif
 
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     static bool Usart_SetClockSource(const void *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -159,7 +159,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 
       return true;
     }
-#elif defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     static bool Usart_SetClockSource(const void *hw)
     {
       RCC_PeriphCLKInitTypeDef PeriphClkInit;

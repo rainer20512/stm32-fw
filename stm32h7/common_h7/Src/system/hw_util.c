@@ -356,39 +356,6 @@ void HW_Reset( void *hw )
     #endif
 }
 
-void HW_SetDmaChClock ( const HW_DmaType *tx, const HW_DmaType *rx)
-{
-    DMA_Stream_TypeDef *use;
-    /* At least one handler muist be specified */
-    if ( !tx && !rx ) return;
-
-    /* first try rx handler */
-    if ( rx ) 
-        use = rx->dmaChannel;
-    else 
-        use = tx->dmaChannel;
-
-    #if defined ( BDMA )
-        if ((uint32_t)(use) >= (uint32_t)(BDMA_Channel0) && (uint32_t)(use) <= (uint32_t)(BDMA_Channel7) ) {
-            HW_SetHWClock(BDMA, 1 );
-            return;
-        }
-    #endif
-
-    #if !defined(DMA2)
-        HW_SetHWClock(DMA1, 1 );
-    #else
-        /* Get the DMA instance from DMA channel */
-        if ((uint32_t)(use) < (uint32_t)(DMA2_Stream0)) {
-            /* DMA1 */
-            HW_SetHWClock(DMA1, 1 );
-        } else  {
-            /* DMA2 */
-            HW_SetHWClock(DMA2, 1 );
-        }
-    #endif
-}
-
 /*
  * No bit banding in STM32H7
  */
@@ -563,22 +530,5 @@ bool HW_DumpID(char *cmdline, size_t len, const void * arg )
     return true;
 }
 
-void HW_DMA_HandleInit(DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent )
-{
-  hdma->Instance                 = dma->dmaChannel;
-  hdma->Parent                   = parent;
-  hdma->Init.PeriphInc           = DMA_PINC_DISABLE;
-  hdma->Init.MemInc              = DMA_MINC_ENABLE;
-  hdma->Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-  hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
-  hdma->Init.Mode                = DMA_NORMAL;
-  hdma->Init.Priority            = dma->dmaPrio;
-  hdma->Init.Request             = dma->dmaRequest;
-  hdma->Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
-  hdma->Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-  hdma->Init.MemBurst            = DMA_MBURST_INC4;
-  hdma->Init.PeriphBurst         = DMA_MBURST_INC4;
-
-}
 
 

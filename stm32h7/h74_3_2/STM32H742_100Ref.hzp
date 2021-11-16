@@ -318,6 +318,7 @@
         <folder Name="system">
           <file file_name="../common_h7/Src/system/hw_util.c" />
           <file file_name="../common_h7/Src/system/mpu.c" />
+          <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
       </folder>
@@ -326,6 +327,7 @@
         <folder Name="system">
           <file file_name="../common_h7/Inc/system/hw_util.h" />
           <file file_name="../common_h7/Inc/system/mpu.h" />
+          <file file_name="../common_h7/Inc/system/dma_handler.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />

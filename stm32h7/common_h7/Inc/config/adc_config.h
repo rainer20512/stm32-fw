@@ -51,11 +51,11 @@
     #define ADC3CH_TEMPSENSOR   { ADC_CHANNEL_TEMPSENSOR,   ADC_SAMPLETIME_32CYCLES_5, NULL, 0, "ChipTemp" }
     #define ADC3CH_VBAT         { ADC_CHANNEL_VBAT,         ADC_SAMPLETIME_32CYCLES_5, NULL, 0, "Vbat" }
  
-    /* Definition ADC1 NVIC */
+    /* Definition ADC3 NVIC */
     #define ADC3_IRQ                             { ADC_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC_IRQHandler
-    #define ADC3_RX_DMA                          DMA1_Stream6, DMA_REQUEST_ADC3,  DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
-    #define ADC3_DMA_IRQHandler                  DMA1_Stream6_IRQHandler
+    #define ADC3_RX_DMA                          NULL, DMA_REQUEST_ADC3, DMA_PRIORITY_LOW
+//    #define ADC3_DMA_IRQHandler                  DMA1_Stream6_IRQHandler
                                                     
 #endif
 

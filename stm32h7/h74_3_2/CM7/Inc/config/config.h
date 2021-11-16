@@ -142,7 +142,7 @@
 #endif
 
 /******************************************************************************
- * Check and set constraints for differeht hardware types
+ * Check and set constraints for different hardware types
  *****************************************************************************/
 #if defined(STM32H745NUCLEO)
     #undef  HW_HAS_HSE_CRYSTAL
@@ -185,6 +185,17 @@
 /* Can we use an HSE Clock ? */
 #if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)
     #define HW_HAS_HSE
+#endif
+
+/******************************************************************************
+ * Setup the MCU family
+ *****************************************************************************/
+#if  defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    #define STM32H7_FAMILY
+#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+    #define STM32L4_FAMILY
+#else
+    #error "Unkonwn MCU family!"
 #endif
 
 /*

@@ -37,11 +37,11 @@ void USB_DeInitDev(const HW_DeviceType *self);
  * Some Devices support different clock sources for QSPI. Make sure, that             *   
   * UsbSetClockSource and UsbGetClockSpeed() will match                            *
  *************************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* STM32L4xx has no clock mux for USB device */
     #define UsbSetClockSource(a)           (true)
     #define UsbGetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     static bool UsbSetClockSource(const void *hw)
     {
       UNUSED(hw);
@@ -193,22 +193,22 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     UsbSetClockSource(self);
 
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* Get clock status of PWR domain and switch on, if not already on*/
     uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
 #endif
  
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* enable USB power on Pwrctrl CR2 register */
     HAL_PWREx_EnableVddUSB();
-#elif defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H7_FAMILY)
     HAL_PWREx_EnableUSBVoltageDetector();
 #else 
     #error "No suitable USB Initialization for selected MCU"  
 #endif
 
-#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#if defined(STM32L4_FAMILY)
     /* Switch PWR domain clock off again, if it was off before */
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
 #endif

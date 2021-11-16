@@ -22,16 +22,9 @@
 #include "system/profiling.h"
 #include "system/dma_handler.h"
 
-#define DMA_INSTANCES 2
-#define DMA_CHANNELS 7
 
-
-/* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
-DMA_HandleTypeDef   *handles    [DMA_INSTANCES][DMA_CHANNELS] = {0 };
-
-/* Array of "is in use"-flags for all available DMA channels */
-uint8_t             bDmaChUsed  [DMA_INSTANCES][DMA_CHANNELS] = {0 };
-
+#define DMA_INSTANCES       2
+#define DMA_CHANNELS        7
 /* Array of all DMA channels */
 static DMA_Channel_TypeDef* AllChannels[DMA_INSTANCES][DMA_CHANNELS] =
 {
@@ -45,6 +38,13 @@ static IRQn_Type AllChannelIrqNums[DMA_INSTANCES][DMA_CHANNELS] =
   { DMA1_Channel1_IRQn, DMA1_Channel2_IRQn, DMA1_Channel3_IRQn, DMA1_Channel4_IRQn, DMA1_Channel5_IRQn, DMA1_Channel6_IRQn, DMA1_Channel7_IRQn },
   { DMA2_Channel1_IRQn, DMA2_Channel2_IRQn, DMA2_Channel3_IRQn, DMA2_Channel4_IRQn, DMA2_Channel5_IRQn, DMA2_Channel6_IRQn, DMA2_Channel7_IRQn }
 };
+
+/* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+DMA_HandleTypeDef   *handles    [DMA_INSTANCES][DMA_CHANNELS] = {0 };
+
+/* Array of "is in use"-flags for all available DMA channels */
+uint8_t             bDmaChUsed  [DMA_INSTANCES][DMA_CHANNELS] = {0 };
+
 
 /*******************************************************************************************************
  * Return the DMA channel index for a given DMA Channel
@@ -66,6 +66,7 @@ static int8_t GetDmaChannelIdx(DMA_Channel_TypeDef *ch, uint8_t DmaInstanceIdx )
  ******************************************************************************************************/
 static DMA_TypeDef *GetDmaInstance(DMA_Channel_TypeDef *ch )
 {
+
     if ( ch >= DMA1_Channel1 && ch <= DMA1_Channel7 )   return DMA1;
     if ( ch >= DMA2_Channel1 && ch <= DMA2_Channel7 )   return DMA2;
     DBG_ERROR("GetDmaInstance: Illegal DMA-Channel %p\n", ch);  
@@ -131,7 +132,7 @@ static void HW_DMA_SetDmaChClock ( DMA_Channel_TypeDef *channel)
         }
     #endif
 
-    /* Enable Clock for DMAMUX1 in nay case */
+    /* Enable Clock for DMAMUX1 in any case */
     #if defined(DMAMUX1)
         HW_SetHWClock(DMAMUX1, 1 );
     #endif

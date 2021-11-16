@@ -36,7 +36,6 @@ void          HW_InitJtagDebug        (void);
 void *        HW_GetHW                ( uint16_t key );
 bool          HW_GetHWClockStatus     ( void *hw );
 void          HW_SetHWClock           ( void *hw, bool bOn );
-void          HW_SetDmaChClock        ( const HW_DmaType *tx, const HW_DmaType *rx);
 void          HW_Reset                ( void *hw );
 uint16_t      HW_GetLn2               ( uint32_t pwrof2 );
 uint32_t *    HW_GetPeriphBitBandAddr ( __IO uint32_t *periphAddr, uint16_t bit_number );
@@ -47,7 +46,6 @@ char          HW_GetGPIOLetter        (GPIO_TypeDef *gp);
 #define       HW_GetGPIO(a)           (GPIO_TypeDef *) HW_GetHW( COMBINE('G', a) );
 #define       HW_GetIdxFromPin(pin)   HW_GetLn2((uint16_t)pin)
 
-void          HW_DMA_HandleInit      (DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent );
 
 void          HW_ReadID               (DeviceIdT *id );
 bool          HW_DumpID               (char *cmdline, size_t len, const void * arg );

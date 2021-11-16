@@ -70,14 +70,14 @@
 
   #ifdef COM1_USE_TX_DMA
     /* Definition for USART1 TX DMA */
-    #define COM1_TX_DMA                    DMA1_Stream5, DMA_REQUEST_USART1_TX, DMA1_Stream5_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM1_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
+    #define COM1_TX_DMA                    NULL, DMA_REQUEST_USART1_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM1_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
   #endif
 
   #ifdef COM1_USE_RX_DMA
     /* Definition for USART1 RX DMA */
-    #define COM1_RX_DMA                    DMA1_Stream7, DMA_REQUEST_USART1_RX, DMA1_Stream7_IRQn, DMA_PRIORITY_LOW
-    #define COM1_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
+    #define COM1_RX_DMA                   NULL, DMA_REQUEST_USART1_RX, DMA_PRIORITY_LOW
+//    #define COM1_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
   #endif
 #endif // COM1 
 
@@ -113,13 +113,13 @@
 
   #ifdef COM2_USE_TX_DMA
     /* Definition for USART2 TX DMA */
-    #define COM2_TX_DMA                    DMA1_Stream5, DMA_REQUEST_USART2_TX, DMA1_Stream5_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM2_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
+    #define COM2_TX_DMA                    NULL, DMA_REQUEST_USART2_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM2_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
   #endif
   #ifdef COM2_USE_RX_DMA
     /* Definition for USART2 RX DMA */
-    #define COM2_RX_DMA                    DMA1_Stream7, DMA_REQUEST_USART2_RX, DMA1_Stream7_IRQn, DMA_PRIORITY_LOW
-    #define COM2_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
+    #define COM2_RX_DMA                    NULL, DMA_REQUEST_USART2_RX, DMA_PRIORITY_LOW
+//    #define COM2_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
   #endif  
 #endif // COM2
 
@@ -161,13 +161,13 @@
 
   #ifdef COM3_USE_TX_DMA
     /* Definition for USART3 TX DMA */
-    #define COM3_TX_DMA                    DMA1_Stream4, DMA_REQUEST_USART3_TX, DMA1_Stream4_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM3_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
+    #define COM3_TX_DMA                    NULL, DMA_REQUEST_USART3_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM3_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
   #endif
   #ifdef COM3_USE_RX_DMA
     /* Definition for USART3 RX DMA */
-    #define COM3_RX_DMA                    DMA1_Stream6, DMA_REQUEST_USART3_RX, DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
-    #define COM3_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
+    #define COM3_RX_DMA                    NULL, DMA_REQUEST_USART3_RX, DMA_PRIORITY_LOW
+//    #define COM3_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
   #endif
 #endif // COM3
 
@@ -214,20 +214,22 @@
 
   #ifdef COM4_USE_TX_DMA
     /* Definition for UART4 TX DMA */
-    #define COM4_TX_DMA                    DMA1_Stream1, DMA_REQUEST_UART4_TX, DMA1_Stream1_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM4_DMA_TX_IRQHandler         DMA1_Stream1_IRQHandler
+    #define COM4_TX_DMA                    NULL, DMA_REQUEST_UART4_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM4_DMA_TX_IRQHandler         DMA1_Stream1_IRQHandler
   #endif
   #ifdef COM4_USE_RX_DMA
     /* Definition for UART4 RX DMA */
-    #define COM4_RX_DMA                    DMA1_Stream0, DMA_REQUEST_UART4_RX, DMA1_Stream0_IRQn, DMA_PRIORITY_LOW
-    #define COM4_DMA_RX_IRQHandler         DMA1_Stream0_IRQHandler
+    #define COM4_RX_DMA                    NULL, DMA_REQUEST_UART4_RX, DMA_PRIORITY_LOW
+//    #define COM4_DMA_RX_IRQHandler         DMA1_Stream0_IRQHandler
   #endif
 
 #endif // COM4
 
 /************************************************************************
  * Definition for UART5 clock resources
- * UART5 : TX:[PC12] RX:[PD2]
+ * UART5 : TX:[PB6]  RX:[PB5]   AF14
+ *         TX:[PB13] RX:[PB12]  AF14
+ *         TX:[PC12] RX:[PD2]   AF8
  */
 #ifdef USE_UART5
   #define COM5                           UART5
@@ -266,20 +268,20 @@
     #define COM6_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
     #define COM6_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Rx" }
   #else
-    /* DEFAULT TX:PB6  RX:PB7  AF8   */
+    /* DEFAULT TX:PC6  RX:PC7  AF8   */
     #define COM6_TX                        { GPIO_PIN_6, GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
     #define COM6_RX                        { GPIO_PIN_7, GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
   #endif
 
   #ifdef COM6_USE_TX_DMA
     /* Definition for USART3 TX DMA */
-    #define COM6_TX_DMA                    DMA1_Stream4, DMA_REQUEST_USART6_TX, DMA1_Stream4_IRQn, DMA_PRIORITY_MEDIUM 
-    #define COM6_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
+    #define COM6_TX_DMA                    NULL, DMA_REQUEST_USART6_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM6_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
   #endif
   #ifdef COM6_USE_RX_DMA
     /* Definition for USART3 RX DMA */
-    #define COM6_RX_DMA                    DMA1_Stream6, DMA_REQUEST_USART6_RX, DMA1_Stream6_IRQn, DMA_PRIORITY_LOW
-    #define COM6_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
+    #define COM6_RX_DMA                    NULL, DMA_REQUEST_USART6_RX, DMA_PRIORITY_LOW
+//    #define COM6_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
   #endif
 
   /* Definition for COM9's NVIC */
@@ -292,7 +294,7 @@
 
 #endif // COM9
 
-/* USART6, UART7, UART8 tbd */
+/* UART7, UART8 tbd */
 
 /************************************************************************
  * Definition for LPUART1 clock resources
@@ -338,8 +340,6 @@
   #define COM9_IRQHandler                   LPUART1_IRQHandler
 
 #endif // COM9
-
-/* USART6, UART7, UART8 tbd */
 
 #endif /* __UART_CONFIG_H */
 

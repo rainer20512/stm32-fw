@@ -101,6 +101,8 @@
           <file file_name="Inc/system/hw_util.h" />
           <file file_name="Inc/hardware.h" />
           <file file_name="Inc/system/profiling.h" />
+          <file file_name="Inc/system/dma_handler.h" />
+          <file file_name="Inc/system/dma_request_data.h" />
         </folder>
         <folder Name="ui">
           <file file_name="$(ProjectDir)/Inc/ui/lcd.h" />
@@ -172,6 +174,7 @@
           <file file_name="$(ProjectDir)/Src/system/init.c" />
           <file file_name="Src/system/hardware.c" />
           <file file_name="Src/system/hw_util.c" />
+          <file file_name="Src/system/dma_handler.c" />
         </folder>
         <file file_name="$(ProjectDir)/Src/onewire.c" />
         <file file_name="$(ProjectDir)/Src/ds18xxx20.c" />
@@ -352,8 +355,6 @@
           <file file_name="../common/src/system/profiling.c" />
           <file file_name="../common/src/system/tm1637.c" />
           <file file_name="../common/src/system/timer_handler.c" />
-          <file file_name="../common/src/system/dma_handler.c" />
-          <file file_name="../common/inc/system/dma_request_data.h" />
         </folder>
         <file file_name="../common/src/timer.c" />
         <file file_name="../common/src/eeprom.c" />
@@ -394,7 +395,6 @@
           <file file_name="../common/inc/system/periodic.h" />
           <file file_name="../common/inc/system/tm1637.h" />
           <file file_name="../common/inc/system/timer_handler.h" />
-          <file file_name="../common/inc/system/dma_handler.h" />
         </folder>
         <file file_name="../common/inc/rtc.h" />
         <file file_name="../common/inc/timer.h" />

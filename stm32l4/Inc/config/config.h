@@ -210,6 +210,17 @@
     #define USE_FMC 0
 #endif
 
+/******************************************************************************
+ * Setup the MCU family
+ *****************************************************************************/
+#if  defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    #define STM32H7_FAMILY
+#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+    #define STM32L4_FAMILY
+#else
+    #error "Unkonwn MCU family!"
+#endif
+
 
 /*
  ********************************************************************************

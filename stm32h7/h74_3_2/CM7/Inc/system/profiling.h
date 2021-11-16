@@ -62,6 +62,7 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
     JOB_IRQ_RTC,
     JOB_IRQ_TMR,
     JOB_IRQ_EXTI,
+    JOB_IRQ_DMA,
     JOB_IRQ_PROFILER,
     JOB_TASK_PROFILER,
     JOB_TASK_SEMWAIT,
@@ -120,6 +121,7 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
   "IRQ_RTC",    \
   "IRQ_TMR",    \
   "IRQ_EXTI",   \
+  "IRQ_DMA",    \
   "IRQ_PROFILER",\
   "PROFILER",   \
   "SEMWAIT",    \
