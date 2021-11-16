@@ -402,7 +402,7 @@
 
     #define USE_SPI3
     #define USE_SPI3_ALTN3
-    #define SPI3_USE_IRQ
+    //  #define SPI3_USE_IRQ
     #define SPI3_USE_MISO
     #define SPI3_BAUDRATE            6000000
     #define USE_SPI3_MASTER
