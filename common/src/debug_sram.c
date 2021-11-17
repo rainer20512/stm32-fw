@@ -12,7 +12,6 @@
 /** @addtogroup DEBUG_UTILS
   * @{
   */
-
 #include "debug.h"
 
 #if DEBUG_FEATURES > 0
@@ -143,7 +142,7 @@ static void DBG_dump_sram_areas(void)
   DO_DUMP_RAMAREA("AXISRAM",__AXISRAM_segment);
   DO_DUMP_RAMAREA("SRAM1",__SRAM1_segment);
   DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
-  #if defined(STM32H743xx)
+  #if !defined(STM32H742xx)
       DO_DUMP_RAMAREA("SRAM3",__SRAM3_segment);
   #endif
   DO_DUMP_RAMAREA("SRAM4",__SRAM4_segment);

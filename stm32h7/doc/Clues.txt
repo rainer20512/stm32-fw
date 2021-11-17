@@ -1,0 +1,11 @@
+Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
+--------------------------------------------------------------------------------
+
+001. Wenn man als Target-Processor in den Project-Properties unter "Build" 
+     irgendeinen STM32H742xx auswählt, wird als Vectorfile immer STM32H743xx.vec 
+     und als command-line-define IMMER STM32H743xx=1 gesetzt, ohne daß man da was
+     ändern kann.
+
+     Wenn man also explizit auf STM32H743 abfragen will ( der im Gegensatz zum 742)
+     ein SRAM3 hat, dann MUSS man das über !defined(STM32H742xx) machen.
+     s. debug.sram.c
