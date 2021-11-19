@@ -255,6 +255,11 @@ static void IPC_Signal( uint32_t HW_sem )
     {
         bool bNullPtr;
 
+        if ( !AMPCtrl_Ptr ) {
+            DEBUG_PUTS("AMP Control Block not assigned");
+        }
+
+        
         if ( AMPCtrl_Ptr->ID != AMP_ID ) {
             DEBUG_PUTS("AMP Control Block invalid");
         }

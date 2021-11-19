@@ -9,3 +9,24 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Wenn man also explizit auf STM32H743 abfragen will ( der im Gegensatz zum 742)
      ein SRAM3 hat, dann MUSS man das über !defined(STM32H742xx) machen.
      s. debug.sram.c
+
+002. SRAM1, SRAM2 und ggf SRAM3 liegen in der D2 Domain und sind damit nach
+     Reset nicht getaktet. Dies muss explizit eingeschaltet werden.
+
+     dazu in SystemInit in stm32h7xx.c diese Zeilen einfügen:
+
+      #if defined(STM32H742xx)
+        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
+      #else
+        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
+      #endif
+
+      /* Wait for D2 becoming ready */
+      while ( !(RCC->CR & RCC_CR_D2CKRDY) );
+
+     Das Einbinden von ram_preset.inc in STM32_Startup.s muss dann _nach_ dem
+     Aufruf von SystemInit erfolgen!
+
+003: Die ST-Link-Firmware nicht auf Version > 35 flashen.
+     mit Version > 35 wird STM32H742 von Rowley Crossworks nicht mehr als solcher erkannt  
+

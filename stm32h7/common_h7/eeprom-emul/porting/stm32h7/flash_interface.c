@@ -64,14 +64,14 @@
 EE_ELEMENT_TYPE ElementRead( uint32_t Address )
 {
     EE_ELEMENT_TYPE ret;
-    QSpi_ReadWait(&QSPI_HND, (uint8_t*)&ret, Address, EE_ELEMENT_SIZE ); 
+    XSpi_ReadWait(&QSPI_HND, (uint8_t*)&ret, Address, EE_ELEMENT_SIZE ); 
        
     return ret;
 }
 
 HAL_StatusTypeDef EE_FLASH_PROGRAM(uint32_t Address, uint64_t Data) 
 {
-    if ( QSpi_WriteWait(&QSPI_HND, (uint8_t*)&Data, Address,  EE_ELEMENT_SIZE ) )
+    if ( XSpi_WriteWait(&QSPI_HND, (uint8_t*)&Data, Address,  EE_ELEMENT_SIZE ) )
         return HAL_OK;
     else
       return HAL_ERROR;
@@ -90,7 +90,7 @@ EE_Status PageErase(uint32_t Page, uint16_t NbPages)
 {
    uint32_t addr;
    addr = PAGE_ADDRESS(Page);
-   if ( !QSpi_EraseSectorWait(&QSPI_HND, addr, NbPages) ) return EE_ERASE_ERROR;
+   if ( !XSpi_EraseSectorWait(&QSPI_HND, addr, NbPages) ) return EE_ERASE_ERROR;
 
   return EE_OK;
 }

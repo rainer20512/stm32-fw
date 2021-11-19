@@ -37,13 +37,15 @@
 /* Common Config */
 #define USBD_MAX_NUM_INTERFACES               1
 #define USBD_MAX_NUM_CONFIGURATION            1
-#define USBD_MAX_STR_DESC_SIZ                 64
+#define USBD_MAX_STR_DESC_SIZ                 0x100U
 #define USBD_SUPPORT_USER_STRING_DESC         0
 #define USBD_SELF_POWERED                     1
 #define USBD_DEBUG_LEVEL                      0
 
 /* MSC Class Config */
 #define MSC_MEDIA_PACKET                      (8 * 1024)
+/* CDC Class Config */
+#define USBD_CDC_INTERVAL                           2000U
 
 /* Exported macro ------------------------------------------------------------*/
 /* Memory management macros */
@@ -52,29 +54,37 @@
 #define USBD_memset               memset
 #define USBD_memcpy               memcpy
 
+/** Alias for delay. */
+#define USBD_Delay          HAL_Delay
 /* DEBUG macros */
-#if (USBD_DEBUG_LEVEL > 0)
-#define  USBD_UsrLog(...)   printf(__VA_ARGS__);\
-                            printf("\n");
+#if (USBD_DEBUG_LEVEL > 0U)
+#define  USBD_UsrLog(...)   do { \
+                                 printf(__VA_ARGS__); \
+                                 printf("\n"); \
+                               } while (0)
 #else
-#define USBD_UsrLog(...)
+#define USBD_UsrLog(...) do {} while (0)
 #endif
 
-#if (USBD_DEBUG_LEVEL > 1)
+#if (USBD_DEBUG_LEVEL > 1U)
 
-#define  USBD_ErrLog(...)   printf("ERROR: ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#define  USBD_ErrLog(...) do { \
+                               printf("ERROR: ") ; \
+                               printf(__VA_ARGS__); \
+                               printf("\n"); \
+                             } while (0)
 #else
-#define USBD_ErrLog(...)
+#define USBD_UsrLog(...) do {} while (0)
 #endif
 
-#if (USBD_DEBUG_LEVEL > 2)
-#define  USBD_DbgLog(...)   printf("DEBUG : ") ;\
-                            printf(__VA_ARGS__);\
-                            printf("\n");
+#if (USBD_DEBUG_LEVEL > 2U)
+#define  USBD_DbgLog(...)   do { \
+                                 printf("DEBUG : ") ; \
+                                 printf(__VA_ARGS__); \
+                                 printf("\n"); \
+                               } while (0)
 #else
-#define USBD_DbgLog(...)
+#define USBD_UsrLog(...) do {} while (0)
 #endif
 
 /* Exported functions ------------------------------------------------------- */

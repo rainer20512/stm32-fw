@@ -52,3 +52,9 @@ Within the sources, the changes are marked as **** <num> ****
 
     B) also in inc/FreeRTOSConfig.h:
         - set configGENERATE_RUN_TIME_STATS to 1
+
+*** Update to STM32H7Cube Firmware V1.9
+    - Redo adaptions of 001 and 002 in tasks.c and FreeRTOSConfig.h
+    - minor changes in STM's USB-Device-Library
+
+

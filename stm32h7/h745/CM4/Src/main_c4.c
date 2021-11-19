@@ -97,8 +97,6 @@ l   */
 int main(void)
 {
     BaseType_t x;
-    BSP_LED_Init(LED1);
-    LedToggle(250, 2);  
     AMPCtrl_t *ref;
 
     /* Activate wakeup from CM7 */
@@ -111,6 +109,8 @@ int main(void)
     HAL_PWREx_ClearPendingEvent();
     HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
+    BSP_LED_Init(LED1);
+    LedToggle(250, 2);  
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 
@@ -159,7 +159,7 @@ int main(void)
 
     TaskInitAll();
     
-    TaskNotify(TASK_OUT);    
+    TaskNotify(TASK_LOG);    
 
     LwIP_Start();
 

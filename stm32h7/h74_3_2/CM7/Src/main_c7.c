@@ -160,7 +160,7 @@ int main(void)
     #endif
 
     #if ( USE_QSPI  > 0 && USE_EEPROM_EMUL > 0 )
-        QSPI_EarlyInit();
+        XSpi_EarlyInit();
     #endif
     
     HAL_Init();

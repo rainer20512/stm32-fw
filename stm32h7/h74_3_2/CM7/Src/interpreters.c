@@ -17,6 +17,7 @@
 
 #include "system/clockconfig.h"
 #include "config/devices_config.h"
+#include "version.h"
 #include "interpreters.h"
 #include "debug_helper.h"
 #include "system/profiling.h"
@@ -2289,6 +2290,9 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
             }
             break;
 #endif
+        case 3:
+            puts(VersionString);
+            break;
         default:
             DEBUG_PUTS("MainMenu: command not implemented");
             return false;
@@ -2310,6 +2314,7 @@ static const CommandSetT cmdBasic[] = {
 #if DEBUG_FEATURES > 0 
   { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
+  { "Version",          ctype_fn,  .exec.fn = MainMenu,       VOID(3),  "Version info"  },
 #endif
 #if USE_I2C > 0
   { "I2C"    ,         ctype_sub, .exec.sub = &mdlI2C,         0,       "I2C submenu" },

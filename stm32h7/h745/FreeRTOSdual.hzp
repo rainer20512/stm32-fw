@@ -67,20 +67,24 @@
         <folder Name="system">
           <file file_name="CM4/Src/system/devices_cm4.c" />
           <file file_name="CM4/Src/system/clockconfig_cm4.c" />
+          <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="CM4/Src/msg_direct_c4.c" />
+        <file file_name="CM4/Src/version.c" />
       </folder>
       <folder Name="inc">
         <folder Name="system">
           <file file_name="CM4/Inc/system/ram_preset.inc" />
           <file file_name="CM4/Inc/system/profiling.h" />
           <file file_name="CM4/Inc/system/clockconfig_cm4.h" />
+          <file file_name="../common_h7/Inc/system/dma_handler.h" />
         </folder>
         <file file_name="CM4/Inc/debug.h" />
         <file file_name="CM4/Inc/error.h" />
         <file file_name="CM4/Inc/eeprom.h" />
         <file file_name="CM4/Inc/global_flags.h" />
         <file file_name="../common_h7/Inc/config/can_config.h" />
+        <file file_name="CM4/Inc/version.h" />
       </folder>
       <folder Name="config">
         <file file_name="CM4/Inc/config/config.h" />
@@ -507,6 +511,7 @@
         <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
           <file file_name="../common_h7/Src/system/hw_util.c" />
+          <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
         <file file_name="../common_h7/Src/ipc.c" />
@@ -515,6 +520,7 @@
         <file file_name="../common_h7/Inc/hardware.h" />
         <folder Name="system">
           <file file_name="../common_h7/Inc/system/hw_util.h" />
+          <file file_name="../common_h7/Inc/system/dma_handler.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />
@@ -552,7 +558,6 @@
           <file file_name="../../common/src/dev/i2c_dev.c" />
           <file file_name="../../common/src/dev/io_dev.c" />
           <file file_name="../../common/src/dev/qencoder.c" />
-          <file file_name="../../common/src/dev/qspi_dev.c" />
           <file file_name="../../common/src/dev/spi_dev.c" />
           <file file_name="../../common/src/dev/timer_dev.c" />
           <file file_name="../../common/src/dev/uart_dev.c" />
@@ -563,6 +568,7 @@
             <file file_name="../../common/src/dev/qspi/mx25r6435f.h" />
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
+          <file file_name="../../common/src/dev/xspi_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />

@@ -222,7 +222,7 @@ void Init_DefineTasks(void)
   TaskRegisterTask(task_init_ser_in,task_handle_serin,TASK_SERIN,      JOB_SER,           sinStack, SER_STACK_SIZE, "Display in task");
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
   TaskRegisterTask(CMD_Init,        task_handle_com,  TASK_COM,        JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
-  TaskRegisterTask(NULL,            task_handle_out,  TASK_OUT,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
+  TaskRegisterTask(NULL,            task_handle_out,  TASK_LOG,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
 #if USE_THPSENSOR > 0
   TaskRegisterTask(task_init_thp,   task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");

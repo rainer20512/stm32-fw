@@ -194,7 +194,22 @@ void SystemInit (void)
     /* Change  the switch matrix read issuing capability to 1 for the AXI SRAM target (Target 7) */
     *((__IO uint32_t*)0x51008108) = 0x000000001U;
   }
- 
+
+  /* 
+   * Enable SRAM 1,2, and SRAM3, if available 
+   * **** 002 in clues.txt RHB added ****
+   */
+  #if defined(STM32H742xx)
+    RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
+  #else
+    RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
+  #endif
+
+  /* Wait for D2 becoming ready */
+  while ( !(RCC->CR & RCC_CR_D2CKRDY) );
+
+  /* End of insertion */
+
 #endif /* CORE_CM7*/
 
 #ifdef CORE_CM4

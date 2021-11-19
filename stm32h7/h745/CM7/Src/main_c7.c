@@ -140,6 +140,16 @@ int main(void)
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
 
+    /* Wait until CPU2 boots and enters stop mode */
+    timeout = 0xFFFFFF;
+    while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
+    if ( timeout < 0 )
+    {
+        Error_Handler_XX(-1, __FILE__, __LINE__);
+    }
+
+
+
 
     /* 
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 
@@ -159,13 +169,6 @@ int main(void)
     /* Init variables and structures for device handling */
     DevicesInit();
 
-    /* Wait until CPU2 boots and enters in stop mode or timeout*/
-    timeout = 0xFFFFFF;
-    while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-    if ( timeout < 0 )
-    {
-        Error_Handler_XX(-1, __FILE__, __LINE__);
-    }
 
 
     /* STM32H7xx HAL library initialization:
@@ -320,7 +323,7 @@ static void prvCore1InitTask( void *pvParameters )
     TaskInitAll();
     STATUS(8);
     
-    TaskNotify(TASK_OUT);
+    TaskNotify(TASK_LOG);
 
     /* Wake up CM4 from initial stop */
     Ipc_CM7_WakeUp_CM4 ();

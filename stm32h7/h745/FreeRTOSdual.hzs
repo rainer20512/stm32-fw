@@ -123,12 +123,12 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="13" y="18" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="0" top="108" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="42" y="221" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="85" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="18" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Inc/config/config.h" selected="0" top="45" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="221" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/init_c7.c" selected="0" top="195" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1833" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/interpreters.c" selected="0" top="1782" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="282" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="240" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="282" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/main_c7.c" selected="0" top="240" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="456" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM7/Src/system/devices_c7.c" selected="0" top="424" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="41" y="193" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/uart_config.h" selected="0" top="186" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="193" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/uart_config.h" selected="0" top="186" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="8" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../doc/Changes.txt" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Inc/config/spi_config.h" selected="0" top="96" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="63" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/nextion/Example.c" selected="0" top="19" codecName="Default"/>
@@ -169,13 +169,14 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../../common/src/system/profiling.c" selected="0" top="71" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="144" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/Src/task/minitask.c" selected="0" top="103" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="89" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/init_c4.c" selected="0" top="48" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="37" y="61" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Inc/config/config.h" selected="0" top="18" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="61" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Inc/config/config.h" selected="0" top="18" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="34" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="flash_placement_CM4.xml" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="flash_placement_CM7.xml" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="H745_CM7_MemoryMap.xml" selected="0" top="3" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="H745_CM4_MemoryMap.xml" selected="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="159" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="../common_h7/lwip/lwipopts.h" selected="0" top="117" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/main_c4.c" selected="1" top="71" codecName=""/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="97" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Src/main_c4.c" selected="0" top="71" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="" useBinaryEdit="0" left="0" path="CM4/Inc/system/clockconfig_cm4.h" selected="1" top="0" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM4" fileDialogDefaultFilter="*.c" autoConnectTarget="ST-LINK/V2" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/inc" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

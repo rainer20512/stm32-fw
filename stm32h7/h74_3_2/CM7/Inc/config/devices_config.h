@@ -583,7 +583,7 @@
   #endif
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
+      #define XSPI_DEV          HW_QSPI1
       #define QSPI_HND          QSpi1Handle
       #define USE_QSPI1
       /* 
@@ -597,6 +597,12 @@
       #define QSPI1_HAS_LP_MODE                     // has low power mode
       // #define QSPI1_USE_DMA Not implemented yet 
   #endif
+
+  #if USE_FATFS > 0
+      #define FATFS_DEV     XSPI_DEV
+      #define FATFS_HND     QSpi1Handle
+  #endif
+
 
   #if USE_ETH > 0
     #define ETH_USE_RMII

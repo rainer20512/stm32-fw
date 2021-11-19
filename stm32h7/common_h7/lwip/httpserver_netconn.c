@@ -31,6 +31,7 @@
 #include "httpserver_netconn.h"
 #include "cmsis_os.h"
 #include "debug_helper.h"
+#include "version.h"
 
 #define DEBUG_HTTPSRV         0       /* Debug Http server level */
 
@@ -111,7 +112,17 @@ typedef struct {
 #define LINE_LEN        120
 #define HOME_PAGE_IDX   0           /* Index of home page in page list        */
 #define HTML_404        "/404.html" /* static page for 404                    */
-
+#if   defined(STM32H742xx)
+    #define MCUSTR "STM32H742"
+#elif defined(STM32H743xx)
+    #define MCUSTR "STM32H743"
+#elif defined(STM32H745xx)
+    #define MCUSTR "STM32H745"
+#elif defined(STM32H747xx)
+    #define MCUSTR "STM32H747"
+#else
+    #define MCUSTR "Unknown MCU"
+#endif
 
 /* Private variables ---------------------------------------------------------*/
 u32_t TaskListPageHits = 0;
@@ -124,13 +135,14 @@ void HtmlSetCM7         ( struct netconn *conn, void *arg);
 void HtmlSettingsLocal  ( struct netconn *conn, void *arg); 
 void HtmlSetLocal       ( struct netconn *conn, void *arg); 
 void HtmlShowEthIf      ( struct netconn *conn, void *arg);
+void HtmlBuildInfo      ( struct netconn *conn, void *arg);
 
 /**********************************************************************************************************************************
  * Web pages file and menu structures
  * @note: Home page has to be the first entry -> see HOME_PAGE_IDX
  *********************************************************************************************************************************/
 static const OnePageT WebPages[] = {
-    { "STM32H745 WebServer", "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
+    { MCUSTR " WebServer",      "Startseite",   "/",                    0, NULL,              PDstatic,  .FileName = "/home.html" },
     { "Task List",           "Tasklist",     "/tasks.html",          5, &TaskListPageHits, PDdynamic, .DetailCB = HtmlTaskList,      .SetterCB = NULL },
 #if defined(DUAL_CORE)
     { "Settings CM7",        "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsCM7,   .SetterCB = HtmlSetCM7 },
@@ -139,6 +151,7 @@ static const OnePageT WebPages[] = {
     { "Settings",            "Settings CM7", "/settings_cm7.html",   0, NULL,              PDdynamic, .DetailCB = HtmlSettingsLocal, .SetterCB = HtmlSetLocal },
 #endif
     { "ETH IF Statistic",    "ETH Interface","/eth_if.html",         0, NULL,              PDdynamic, .DetailCB = HtmlShowEthIf,     .SetterCB = NULL },
+    { "Build Info",          "Build Info",   "/binfo.html",          0, NULL,              PDdynamic, .DetailCB = HtmlBuildInfo,     .SetterCB = NULL },
 };
 
 /* Private functions ---------------------------------------------------------*/
@@ -200,6 +213,7 @@ static cc BODY_POSTFIX[] =                                                      
 "</span></small></body></html>"
 ;
 
+static cc PRE[] = "<pre>";
 
 /******************************************************************************
  * transfer a static header, which is common to all pages via "conn"
@@ -693,6 +707,7 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
 #endif
 
 const char ethif_header[]   ="<p><b>Eth interface statistic</b></p>";
+const char build_header[]   ="<p><b>Build Information</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
 
@@ -928,7 +943,7 @@ void HtmlShowEthIf ( struct netconn *conn, void *arg)
     char *ret;
 
     /* Task List */
-    netconn_write(conn, "<pre>", 5, NETCONN_COPY);
+    netconn_write(conn, PRE, strlen(PRE), NETCONN_NOCOPY);
 
     linecount = ETHSTAT_GetLineCount();
     for ( uint32_t i=0; i < linecount; i++ ) {
@@ -938,6 +953,33 @@ void HtmlShowEthIf ( struct netconn *conn, void *arg)
     
 }
 
+/******************************************************************************
+ * HTML function to dump ETH interface statistics
+ *****************************************************************************/
+void HtmlBuildInfo( struct netconn *conn, void *arg) 
+{
+    UNUSED(arg);
+
+    /* remote settings */
+    netconn_write(conn, build_header, strlen(build_header), NETCONN_NOCOPY );
+
+    portCHAR line[MAXLEN];
+    uint32_t linecount;
+    char *ret;
+
+    netconn_write(conn, PRE, strlen(PRE), NETCONN_NOCOPY);
+    netconn_write(conn, VersionString, strlen(VersionString), NETCONN_NOCOPY);
+    netconn_write(conn, "\n\n", 2, NETCONN_NOCOPY);
+
+    /* Task List */
+
+    linecount = ETHSTAT_GetLineCount();
+    for ( uint32_t i=0; i < linecount; i++ ) {
+        ret = ETHSTAT_GetLine(line, MAXLEN, i );
+        if ( ret ) netconn_write(conn, line, strlen(line), NETCONN_COPY);
+    }
+    
+}
 
 #if 0
 void DynWebPage(struct netconn *conn)

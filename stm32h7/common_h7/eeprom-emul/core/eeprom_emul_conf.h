@@ -59,7 +59,7 @@
 
 /* Private constants ---------------------------------------------------------*/
 
-/* Configuration of eeprom emulation in flash, can be custom */
+/* Configuration of eeprom emulation in QSPI flash, can be custom */
 #if defined(STM32H747xx) || defined (STM32H745xx) || defined (STM32H742xx) || defined(STM32H743xx)
     #define START_PAGE_ADDRESS      0x7F8000   /*!< Last 8 sectors of 4kiByte size each = 0x7f8000 .. 0x7fffff */
 #else

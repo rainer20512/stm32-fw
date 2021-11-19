@@ -4,9 +4,6 @@
   * @author  Rainer
   * @brief   global configuration and definitions
   *
-  * @note    This is the CM7 config part !!!
-  *                      ---
-  * 
   ******************************************************************************
   */
 
@@ -23,7 +20,7 @@
  * Board selection
  ********************************************************************************
  */ 
-//#define STM32H745NUCLEO
+
 #define STM32H742REF
 //#define STM32H743EVAL2
 
@@ -37,12 +34,20 @@
 
 /*
  ********************************************************************************
+ * Versioning
+ ********************************************************************************
+ */ 
+#define MAJOR_VERSION   1
+#define MINOR_VERSION   04
+
+/*
+ ********************************************************************************
  * Application tayloring
  ********************************************************************************
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             0
+#define USE_EEPROM_EMUL             1
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0

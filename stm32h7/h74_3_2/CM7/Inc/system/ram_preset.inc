@@ -20,10 +20,20 @@
   ldr r1, =__SRAM2_segment_end__
 r00:
   cmp r0, r1
-  beq r03
+  beq r01
   str r2, [r0]
   adds r0, r0, #4
   b r00
+
+r01:
+  ldr r0, =__SRAM1_segment_start__
+  ldr r1, =__SRAM1_segment_end__
+r02:
+  cmp r0, r1
+  beq r03
+  str r2, [r0]
+  adds r0, r0, #4
+  b r02
 
 r03:
   ldr r0, =__AXISRAM_segment_start__

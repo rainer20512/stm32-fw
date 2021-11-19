@@ -8,10 +8,14 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "config/config.h"
 #include "ff_gen_drv.h"
 #include "dev/xspi_dev.h"
 
 #include "log.h"
+
+
+#if USE_FATFS > 0
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -193,4 +197,4 @@ DRESULT XspiIo_ioctl(BYTE lun, BYTE cmd, void *buff)
 }
 #endif /* _USE_IOCTL == 1 */
 
-
+#endif /* USE_FATFS > 0 */

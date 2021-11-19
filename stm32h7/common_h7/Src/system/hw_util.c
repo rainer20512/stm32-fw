@@ -437,9 +437,7 @@ void HW_InitJtagDebug(void)
 static const char *Get_DeviceName ( uint16_t devID )
 {
     switch(devID) {
-        case 0x461: return "STM32L496xx/4A6xx";
-        case 0x415: return "STM32L475xx/476xx/486xx";
-        case 0x450: return "STM32H745/755/747/757xx";
+        case 0x450: return "STM32H7XX";
         default:    return "Unknown Device";
     }
 }
@@ -472,17 +470,12 @@ char Get_RevisionName( uint16_t devID, uint16_t revID)
 {
     char work;
     switch (revID) {
-        case 0x1000 : work = '1'; break;
-        case 0x1001 : work = '2'; break;
-        case 0x1003 : work = '3'; break;
-        case 0x1007 : work = '4'; break;
+        case 0x1001 : work = 'Z'; break;
+        case 0x1003 : work = 'Y'; break;
         case 0x2001 : work = 'X'; break;
         case 0x2003 : work = 'V'; break;
         default: return '?';
     }
-    if ( devID == 0x461 ) 
-        work = work - '1'+'A';
-
     return work;
 }
 
