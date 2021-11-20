@@ -36,7 +36,6 @@ void Handle_Receive_2(void);
 void Handle_Receive_3(void);
 void Handle_Receive_4(void);
 void Handle_Receive_5(void);
-void Handle_Receive_6(void);
 
 
 /******************************************************************************
@@ -103,10 +102,6 @@ void CM7_handle_remote( uint32_t arg )
     case  MSGTYPE_SETTINGS_SET_CM7:
         /* Set one CM7 settings item */
         Handle_Receive_5();
-        break;
-    case  MSGTYPE_REGISTER_DMA_CHANNEL:
-        /* Set one CM7 settings item */
-        Handle_Receive_6();
         break;
     default:
         DEBUG_PRINTF("CM7_handle_remote: unknown msg_id %d\n", AMP_DirectBuffer.msg_id );
@@ -210,50 +205,6 @@ void Handle_Receive_4(void)
 void Handle_Receive_5(void)
 {
     AMP_DirectBuffer.msg4.bIsValid = Config_SetVal(AMP_DirectBuffer.msg4.idx, AMP_DirectBuffer.msg4.val );
-    AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
-    Ipc_CM7_SendDirect();
-}
-
-/******************************************************************************
- * CM7 Handler for remote DMA channel registration
- *****************************************************************************/
-void Handle_Receive_6(void)
-{
-    DMA_HandleTypeDef *ret;
-    const HW_DmaType *dma;
-    /* 
-     * get HW_DmaType data. This data contains an DMA-Handle, which is owned
-     * by CM4. By registration only the Instance-Element of this handle is
-     * modified. To avoid cache incoherence by a deferred CM7 wait, this
-     * modified instance is copyied to AMP memory, which is uncached.
-     */
-    uint8_t dmagroup      = AMP_DirectBuffer.msg6.dmaGroup;
-
-    /* 
-     * use dmagroup field to distinct between DMA ord BDMA channel request 
-     * RHB tbd
-     */
-    UNUSED(dmagroup);
-
-    switch (AMP_DirectBuffer.msg6.opMode ) {
-        case MSGTYPE6_MODE_UNREG:
-            HW_DMA_UnregisterDMAChannel(AMP_DirectBuffer.msg6.hdma);
-            ret = NULL;
-            break;
-        case MSGTYPE6_MODE_REG:
-            dma = AMP_DirectBuffer.msg6.dmaDesc;
-            ret = HW_DMA_RegisterDMAChannelRemote(dma);
-            /* 
-             * Because Dcache is active on CM7, copy the assigned channel to return
-             * buffer, which is noncached, to avoid cache incoherence on CM4 core 
-             */
-            if ( ret ) AMP_DirectBuffer.msg6.responseChannel = ret->Instance;
-            break;
-        default: 
-            ret = NULL;
-    }
-
-    AMP_DirectBuffer.msg6.responseHandle = ret;
     AMP_DirectBuffer.msg_status    = MSGSTATUS_CM7_TO_CM4_ACTIVE;
     Ipc_CM7_SendDirect();
 }

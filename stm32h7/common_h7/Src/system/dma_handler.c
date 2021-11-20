@@ -9,6 +9,9 @@
  *          second, do all the DMA interrupt handling 
  *          **** 004 **** Implemented to handle both devices with DMAMUX and
  *          older devices with fixed dma channels
+ *
+ * @note    Special considerations for dual cores: The channels are split
+ *          between both cores, code has to be include by both cores
  ******************************************************************************
  */
 
@@ -22,59 +25,89 @@
 #include "system/profiling.h"
 #include "system/dma_handler.h"
 
+/*
+ * on dual core architectures, the DMA ressources are split equally between both cores
+ * DMA1 for CM7, DMA2 for CM4
+ *
+ * the split may be changed in other ways, if required
+ */
+#if defined(CORE_CM7)
+    #if defined(DUAL_CORE)
+        #define MAX_DMA_CHANNELS        8
+        #define MAX_BDMA_CHANNELS       4
 
-#define DMA_INSTANCES       2
-#define DMA_CHANNELS        8
-#define BDMA_INSTANCES      1
-#define BDMA_CHANNELS       8
+        /* Array of all DMA Streams for core CM7 */
+        static DMA_Stream_TypeDef* AllChannels[MAX_DMA_CHANNELS] =
+          { DMA1_Stream0, DMA1_Stream1, DMA1_Stream2, DMA1_Stream3, DMA1_Stream4, DMA1_Stream5, DMA1_Stream6, DMA1_Stream7 };
 
+        /* Array of all corresponding DMA stream interrupt numbers */
+        static IRQn_Type AllChannelIrqNums[MAX_DMA_CHANNELS] =
+          { DMA1_Stream0_IRQn, DMA1_Stream1_IRQn, DMA1_Stream2_IRQn, DMA1_Stream3_IRQn, DMA1_Stream4_IRQn, DMA1_Stream5_IRQn, DMA1_Stream6_IRQn, DMA1_Stream7_IRQn };
 
-/* Array of all DMA Streams */
-static DMA_Stream_TypeDef* AllChannels[DMA_INSTANCES][DMA_CHANNELS] =
-{
-  { DMA1_Stream0, DMA1_Stream1, DMA1_Stream2, DMA1_Stream3, DMA1_Stream4, DMA1_Stream5, DMA1_Stream6, DMA1_Stream7 },
-  { DMA2_Stream0, DMA2_Stream1, DMA2_Stream2, DMA2_Stream3, DMA2_Stream4, DMA2_Stream5, DMA2_Stream6, DMA2_Stream7 }
-};
+        /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+        DMA_HandleTypeDef   *handles    [MAX_DMA_CHANNELS] = {0 };
 
-/* Array of all corresponding DMA stream interrupt numbers */
-static IRQn_Type AllChannelIrqNums[DMA_INSTANCES][DMA_CHANNELS] =
-{
-  { DMA1_Stream0_IRQn, DMA1_Stream1_IRQn, DMA1_Stream2_IRQn, DMA1_Stream3_IRQn, DMA1_Stream4_IRQn, DMA1_Stream5_IRQn, DMA1_Stream6_IRQn, DMA1_Stream7_IRQn },
-  { DMA2_Stream0_IRQn, DMA2_Stream1_IRQn, DMA2_Stream2_IRQn, DMA2_Stream3_IRQn, DMA2_Stream4_IRQn, DMA2_Stream5_IRQn, DMA2_Stream6_IRQn, DMA2_Stream7_IRQn }
-};
+        /* Array of "is in use"-flags for all available DMA channels */
+        uint8_t             bDmaChUsed  [MAX_DMA_CHANNELS] = {0 };
 
-/* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
-DMA_HandleTypeDef   *handles    [DMA_INSTANCES][DMA_CHANNELS] = {0 };
+    #else
+        /* CM7 single core */
+        #define MAX_DMA_CHANNELS        16
+        #define MAX_BDMA_CHANNELS       8
 
-/* Array of "is in use"-flags for all available DMA channels */
-uint8_t             bDmaChUsed  [DMA_INSTANCES][DMA_CHANNELS] = {0 };
+        /* Array of all DMA Streams for core CM7 */
+        static DMA_Stream_TypeDef* AllChannels[MAX_DMA_CHANNELS] =
+          { DMA1_Stream0, DMA1_Stream1, DMA1_Stream2, DMA1_Stream3, DMA1_Stream4, DMA1_Stream5, DMA1_Stream6, DMA1_Stream7, 
+            DMA2_Stream0, DMA2_Stream1, DMA2_Stream2, DMA2_Stream3, DMA2_Stream4, DMA2_Stream5, DMA2_Stream6, DMA2_Stream7 };
+
+        /* Array of all corresponding DMA stream interrupt numbers */
+        static IRQn_Type AllChannelIrqNums[MAX_DMA_CHANNELS] =
+          { DMA1_Stream0_IRQn, DMA1_Stream1_IRQn, DMA1_Stream2_IRQn, DMA1_Stream3_IRQn, DMA1_Stream4_IRQn, DMA1_Stream5_IRQn, DMA1_Stream6_IRQn, DMA1_Stream7_IRQn,
+            DMA2_Stream0_IRQn, DMA2_Stream1_IRQn, DMA2_Stream2_IRQn, DMA2_Stream3_IRQn, DMA2_Stream4_IRQn, DMA2_Stream5_IRQn, DMA2_Stream6_IRQn, DMA2_Stream7_IRQn };
+
+        /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+        DMA_HandleTypeDef   *handles    [MAX_DMA_CHANNELS] = {0 };
+
+        /* Array of "is in use"-flags for all available DMA channels */
+        uint8_t             bDmaChUsed  [MAX_DMA_CHANNELS] = {0 };
+    #endif
+
+#elif defined(DUAL_CORE) && defined(CORE_CM4)
+    #define MAX_DMA_CHANNELS        8
+    #define MAX_BDMA_CHANNELS       4
+
+    /* Array of all DMA Streams for core CM4 */
+    static DMA_Stream_TypeDef* AllChannels[MAX_DMA_CHANNELS] =
+      { DMA2_Stream0, DMA2_Stream1, DMA2_Stream2, DMA2_Stream3, DMA2_Stream4, DMA2_Stream5, DMA2_Stream6, DMA2_Stream7 };
+
+    /* Array of all corresponding DMA stream interrupt numbers */
+    static IRQn_Type AllChannelIrqNums[MAX_DMA_CHANNELS] =
+      { DMA2_Stream0_IRQn, DMA2_Stream1_IRQn, DMA2_Stream2_IRQn, DMA2_Stream3_IRQn, DMA2_Stream4_IRQn, DMA2_Stream5_IRQn, DMA2_Stream6_IRQn, DMA2_Stream7_IRQn };
+
+    /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+    DMA_HandleTypeDef   *handles    [MAX_DMA_CHANNELS] = {0 };
+
+    /* Array of "is in use"-flags for all available DMA channels */
+    uint8_t             bDmaChUsed  [MAX_DMA_CHANNELS] = {0 };
+
+#else
+    #error "No DMA handler for unknown core"
+#endif
 
 
 /*******************************************************************************************************
  * Return the DMA channel index for a given DMA Channel
  * -1 is returned in case of illegal DMA channel
  ******************************************************************************************************/
-static int8_t GetDmaChannelIdx(DMA_Stream_TypeDef *ch, uint8_t DmaInstanceIdx )
+static int8_t GetDmaChannelIdx(DMA_Stream_TypeDef *ch )
 {
-    for ( uint32_t i = 0; i < DMA_CHANNELS; i++ )
-        if ( AllChannels[DmaInstanceIdx][i] == ch ) return (int8_t)i;
+    for ( uint32_t i = 0; i < MAX_DMA_CHANNELS; i++ )
+        if ( AllChannels[i] == ch ) return (int8_t)i;
 
-    DBG_ERROR("GetDmaChannelIdx: Illegal DMA-Channel %p for DMA%d\n", ch, DmaInstanceIdx+1);  
+    DBG_ERROR("GetDmaChannelIdx: Illegal DMA-Channel @0x%p for DMA%d\n", ch );  
     return -1;
 
     
-}
-/*******************************************************************************************************
- * Return the DMA instance for a given DMA Channel
- * NULL is returned in case of illegal DMA channel
- ******************************************************************************************************/
-static DMA_TypeDef *GetDmaInstance(DMA_Stream_TypeDef *ch )
-{
-
-    if ( ch >= DMA1_Stream0 && ch <= DMA1_Stream7 )     return DMA1;
-    if ( ch >= DMA2_Stream0 && ch <= DMA2_Stream7 )     return DMA2;
-    DBG_ERROR("GetDmaInstance: Illegal DMA-Stream %p\n", ch);  
-    return NULL;
 }
 
 /*******************************************************************************************************
@@ -83,17 +116,11 @@ static DMA_TypeDef *GetDmaInstance(DMA_Stream_TypeDef *ch )
  ******************************************************************************************************/
 IRQn_Type HW_DMA_GetChannelIrqNum(DMA_Stream_TypeDef *channel)
 {
-    /* get and check associated DMA instance */
-    DMA_TypeDef *dma    = GetDmaInstance(channel);
-    if ( !dma ) return DMA_ILLEGAL_CHANNEL;
-
-    uint8_t DmaInstanceIdx = dma == DMA1 ? 0 : 1;
-
-    /* get and check the Channel index ( 0 .. 6 ) */
-    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel, DmaInstanceIdx);
+    /* Get the channel index */
+    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel);
     if ( DmaChannelIdx < 0 ) return DMA_ILLEGAL_CHANNEL;
 
-    return AllChannelIrqNums[DmaInstanceIdx][DmaChannelIdx];
+    return AllChannelIrqNums[DmaChannelIdx];
     
 }
 
@@ -109,9 +136,8 @@ IRQn_Type HW_DMA_GetChannelIrqNum(DMA_Stream_TypeDef *channel)
  ******************************************************************************************************/
 static DMA_Stream_TypeDef *GetFreeDmaChannel(void)
 {
-    for ( uint32_t i = 0; i < DMA_INSTANCES; i++ ) 
-        for ( uint32_t j = 0; j < DMA_CHANNELS; j++ ) 
-            if ( !bDmaChUsed[i][j] ) return AllChannels[i][j];
+    for ( uint32_t i = 0; i < MAX_DMA_CHANNELS; i++ ) 
+        if ( !bDmaChUsed[i]) return AllChannels[i];
     
     DBG_ERROR("HW_DMA_GetFreeDmaChannel: No more free DMA channel\n");
     return NULL;
@@ -158,7 +184,7 @@ static void HW_DMA_SetDmaChClock ( DMA_Stream_TypeDef *channel)
  *    DMA handle is returned in case of success,
  *    NULL in case of channel already in use
  ******************************************************************************************************/
-DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata )
+DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata)
 {
     DMA_Stream_TypeDef *channel = dmadata->dmaChannel;
     
@@ -167,25 +193,22 @@ DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata )
         channel = GetFreeDmaChannel();
         if (!channel) return NULL;
     }
-
-    /* get and check associated DMA instance */
-    DMA_TypeDef *dma    = GetDmaInstance(channel);
-    if ( !dma ) return NULL;
-    uint8_t DmaInstanceIdx = dma == DMA1 ? 0 : 1;
-    
-    /* get and check the Channel index ( 0 .. 6 ) */
-    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel, DmaInstanceIdx);
+        
+    /* get and check the Channel index */
+    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel);
     if ( DmaChannelIdx < 0 ) return NULL;
 
     /* check for channel being available */
-    if ( bDmaChUsed[DmaInstanceIdx][DmaChannelIdx] ) {
-        DBG_ERROR("RegisterDMAChannel: DMA%d Channel %d already in use\n", DmaInstanceIdx+1, DmaChannelIdx+1);  
+    if ( bDmaChUsed[DmaChannelIdx] ) {
+        DBG_ERROR("RegisterDMAChannel: DMA Channel %d already in use\n", DmaChannelIdx);  
         return NULL;
     }
 
-    /* register Channel and mark as used */
-    handles[DmaInstanceIdx][DmaChannelIdx]      = dmadata->dmaHandle;
-    bDmaChUsed[DmaInstanceIdx][DmaChannelIdx]   = true;
+    /* register Channel*/ 
+    handles[DmaChannelIdx]  = dmadata->dmaHandle;
+
+    /* mark as used in any case */
+    bDmaChUsed[DmaChannelIdx]   = true;
 
     /* store the assigned channel in handle data */
     dmadata->dmaHandle->Instance = channel;
@@ -195,6 +218,8 @@ DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata )
     
     return dmadata->dmaHandle;
 }
+
+
 
 
 /******************************************************************************
@@ -236,65 +261,89 @@ void HW_DMA_SetAndEnableChannelIrq(DMA_Stream_TypeDef *channel, uint8_t prio, ui
  *****************************************************************************/
 void HW_DMA_HandleDeInit(DMA_HandleTypeDef *hdma)
 {
+    /* disable DMA channel interrupt */
     DMA_Stream_TypeDef *channel = hdma->Instance;
     IRQn_Type irq = HW_DMA_GetChannelIrqNum(channel);
     HAL_NVIC_DisableIRQ(irq);
     HAL_DMA_DeInit(hdma);
 
-    /* get and check associated DMA instance */
-    DMA_TypeDef *dma    = GetDmaInstance(channel);
-    uint8_t DmaInstanceIdx = dma == DMA1 ? 0 : 1;
+    /* unregister Channel and mark as unused */
     
     /* get and check the Channel index ( 0 .. 6 ) */
-    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel, DmaInstanceIdx);
+    int8_t DmaChannelIdx  = GetDmaChannelIdx(channel);
 
     /* unregister Channel and mark as unused */
-    handles[DmaInstanceIdx][DmaChannelIdx]      = NULL;
-    bDmaChUsed[DmaInstanceIdx][DmaChannelIdx]   = false;
+    handles[DmaChannelIdx]      = NULL;
+    bDmaChUsed[DmaChannelIdx]   = false;
 }
 
 /*******************************************************************************************************
- * @brief  Generate the DMA IRQ handlers for DMA1 and 2 and channel 0 .. 7 by Macro
- * @param  None
- * @retval None
+ * @brief  Generate the DMA IRQ handlers for all DMA channel by macro
+ * @param  dev     - 1                      for DMA1, 2 for DMA2
+ * @param  channel - 0..7                   for DMAx_Channel<channel>
+ * @param  idx     - 0..MAX_DMA_CHANNELS-1  corresponding index in handles[] array
+ *
  ******************************************************************************************************/
-#define DMA_IRQ(dev, channel)               \
+#define DMA_IRQ(dev, channel,idx)                                  \
 void DMA##dev##_Stream##channel##_IRQHandler(void)                 \
 {                                                                  \
   ProfilerPush(JOB_IRQ_DMA);                                       \
   /* find the assigned handle, if any */                           \
-  DMA_HandleTypeDef *handle = handles[dev-1][channel];             \
+  DMA_HandleTypeDef *handle = handles[idx];                        \
   if ( !handle) {                                                  \
-    DBG_ERROR("DMA %d, Stream %d: No handler!\n", dev, channel);  \
+    DBG_ERROR("DMA %d, Stream %d: No handler!\n", dev, channel);   \
     return;                                                        \
   }                                                                \
   HAL_DMA_IRQHandler(handle);                                      \
   ProfilerPop();                                                   \
 }
 
-DMA_IRQ(1, 0)
-DMA_IRQ(1, 1)
-DMA_IRQ(1, 2)
-DMA_IRQ(1, 3)
-//DMA_IRQ(1, 4)
-DMA_IRQ(1, 5)
-DMA_IRQ(1, 6)
-DMA_IRQ(1, 7)
+#if defined(CORE_CM7)
+    #if defined(DUAL_CORE)
+        DMA_IRQ(1, 0, 0)
+        DMA_IRQ(1, 1, 1)
+        DMA_IRQ(1, 2, 2)
+        DMA_IRQ(1, 3, 3)
+        DMA_IRQ(1, 4, 4)
+        DMA_IRQ(1, 5, 5)
+        DMA_IRQ(1, 6, 6)
+        DMA_IRQ(1, 7, 7)
+    #else 
+        DMA_IRQ(1, 0, 0)
+        DMA_IRQ(1, 1, 1)
+        DMA_IRQ(1, 2, 2)
+        DMA_IRQ(1, 3, 3)
+        DMA_IRQ(1, 4, 4)
+        DMA_IRQ(1, 5, 5)
+        DMA_IRQ(1, 6, 6)
+        DMA_IRQ(1, 7, 7)
+        DMA_IRQ(2, 0, 8)
+        DMA_IRQ(2, 1, 9)
+        DMA_IRQ(2, 2, 10)
+        DMA_IRQ(2, 3, 11)
+        DMA_IRQ(2, 4, 12)
+        DMA_IRQ(2, 5, 13)
+        DMA_IRQ(2, 6, 14)
+        DMA_IRQ(2, 7, 15)
+    #endif
 
-DMA_IRQ(2, 0)
-DMA_IRQ(2, 1)
-DMA_IRQ(2, 2)
-DMA_IRQ(2, 3)
-DMA_IRQ(2, 4)
-DMA_IRQ(2, 5)
-DMA_IRQ(2, 6)
-DMA_IRQ(2, 7)
+#elif defined(CORE_CM4)
+    DMA_IRQ(2, 0, 0)
+    DMA_IRQ(2, 1, 1)
+    DMA_IRQ(2, 2, 2)
+    DMA_IRQ(2, 3, 3)
+    DMA_IRQ(2, 4, 4)
+    DMA_IRQ(2, 5, 5)
+    DMA_IRQ(2, 6, 6)
+    DMA_IRQ(2, 7, 7)
+#endif
 
+#if 0 
 void DMA1_Stream4_IRQHandler(void) 
 {
   ProfilerPush(JOB_IRQ_DMA);
   /* find the assigned handle, if any */
-  DMA_HandleTypeDef *handle = handles[0][4];
+  DMA_HandleTypeDef *handle = handles[4];
   if ( !handle) {
     DBG_ERROR("DMA %d, Stream %d: No handler!\n", 1, 4);
     return;
@@ -302,7 +351,7 @@ void DMA1_Stream4_IRQHandler(void)
   HAL_DMA_IRQHandler(handle);
   ProfilerPop();
 }
-
+#endif
 
 /**
   * @}

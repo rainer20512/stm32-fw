@@ -95,27 +95,6 @@ typedef struct {                      /* CM7 -> CM4: One persistent setting item
     const char *help;                 /* ptr to help text in CM7 Flash area         */  
 } MSgSettingItemT;
 
-/* To distinct different types of DMA streams / BDMA channels */
-#define MSGTYPE6_IS_DMA                 1
-#define MSGTYPE6_IS_BDMA                2
-
-/* Either register or unregister an DMA channel */
-#define MSGTYPE6_MODE_REG               1
-#define MSGTYPE6_MODE_UNREG             0
-
-
-typedef struct {
-    union {
-        const HW_DmaType *dmaDesc;      /* Actual DMA description a channel is requested for, used on register    */
-        DMA_HandleTypeDef *hdma;        /* DMA handle for unregistration, unused on registration                  */
-    };
-    uint8_t    dmaGroup;                /* 1 for DMA, 2 for BDMA, see above                     */
-    uint8_t    opMode;                  /* register or unregister, see above                    */
-    void *responseChannel;              /* response: the assigned channel / Stream              */
-    void *responseHandle;               /* response from CM7: != 0 on success, NULL for failure */
-
-} MsgRegisterDmaT;
-
 /*
  * Direct message buffer: consists of constant ID, msg type identifier,
  * sub identifiert für that id (if needed) and a
@@ -131,7 +110,6 @@ typedef struct {
     MsqQueryPinT       msg2;            /* Used for message type 2 */
     MsgTaskItemU       msg3;
     MSgSettingItemT    msg4;            /* Used for Message Type 4 aund 5 */
-    MsgRegisterDmaT    msg6;            /* Used for DMA channel registration */
   }; 
 } AMPDctBuf_t;
 
@@ -164,10 +142,6 @@ typedef struct {
     MSgSettingItemT     *MSGD_WaitForGetSettingsLine(void);
     void                MSGD_SetSettingsLine(uint8_t idx, uint8_t newval);
     bool                MSGD_WaitForSetSettingsLine(void);
-    void                MSGD_DoRemoteDmaRegistration(const HW_DmaType* dmadata, uint8_t dmaGroup);
-    DMA_HandleTypeDef   *MSGD_WaitForRemoteDmaRegistration(void);
-    void                MSGD_DoRemoteDmaUnRegistration(DMA_HandleTypeDef *hdma, uint8_t dmaGroup);
-    DMA_HandleTypeDef   *MSGD_WaitForRemoteDmaRegisterOp(void);
 #endif
 
 
