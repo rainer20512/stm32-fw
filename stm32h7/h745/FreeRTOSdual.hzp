@@ -94,109 +94,109 @@
     <folder Name="Drivers">
       <folder Name="BSP">
         <folder Name="STM32H745I_Nucleo">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
         </folder>
       </folder>
       <folder Name="CMSIS">
         <file file_name="../common_h7/Src/system_stm32h7xx.c" />
       </folder>
       <folder Name="STM32H7xx_HAL_Driver">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">
       <folder Name="FreeRTOS">
         <folder Name="CMSIS-RTOS">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
         </folder>
         <folder Name="portable">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
             <configuration Name="Common" build_exclude_from_build="Yes" />
           </file>
         </folder>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
       </folder>
       <folder Name="LwIP">
         <folder Name="Api">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/api_lib.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/api_msg.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/err.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netbuf.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netdb.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/netifapi.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/sockets.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/api/tcpip.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/api_lib.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/api_msg.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/err.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/netbuf.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/netdb.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/netifapi.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/sockets.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/api/tcpip.c" />
         </folder>
         <folder Name="apps">
-          <folder Name="httpd">
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/apps/httpd/fs.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/apps/httpd/httpd.c" />
+          <folder Name="http">
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/apps/http/fs.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/apps/http/httpd.c" />
           </folder>
         </folder>
         <folder Name="Core">
           <folder Name="IPv4">
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/autoip.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/dhcp.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/etharp.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/icmp.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/igmp.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c" />
-            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_frag.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/autoip.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/dhcp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/etharp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/icmp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/igmp.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_addr.c" />
+            <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ipv4/ip4_frag.c" />
           </folder>
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/def.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/dns.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/inet_chksum.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/init.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/ip.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/mem.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/memp.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/netif.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/pbuf.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/raw.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/stats.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/sys.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp_in.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/tcp_out.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/timeouts.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/core/udp.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/def.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/dns.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/inet_chksum.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/init.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/ip.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/mem.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/memp.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/netif.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/pbuf.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/raw.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/stats.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/sys.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/tcp.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/tcp_in.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/tcp_out.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/timeouts.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/core/udp.c" />
         </folder>
         <folder Name="Netif">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/netif/ethernet.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system/OS/sys_arch.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/netif/ethernet.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/system/OS/sys_arch.c" />
         </folder>
         <configuration
           Name="Common"
-          c_user_include_directories="../common_h7/lwip;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/src/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/LwIP/system" />
+          c_user_include_directories="../common_h7/lwip;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/src/include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/LwIP/system" />
         <folder Name="config">
           <file file_name="../common_h7/lwip/ethernetif.h" />
           <file file_name="../common_h7/lwip/lwipopts.h" />
@@ -459,51 +459,51 @@
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
       </folder>
       <folder Name="STM32H7xx_HAL_Driver">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_exti.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_dma_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_gpio.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_hsem.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_i2c_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pwr_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_tim_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_mdma.c" />
       </folder>
     </folder>
     <folder Name="Middlewares">
       <folder Name="FreeRTOS">
         <folder Name="CMSIS-RTOS">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.c" />
         </folder>
         <folder Name="portable">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/port.c" />
+          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portasm.s">
             <configuration Name="Common" build_exclude_from_build="Yes" />
           </file>
         </folder>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/croutine.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/event_groups.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/list.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/queue.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/stream_buffer.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/tasks.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/timers.c" />
       </folder>
     </folder>
     <folder Name="common_h7">
@@ -665,7 +665,7 @@
   <configuration
     Name="Common"
     c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;USE_STM32H7XX_NUCLEO_144_MB1363;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
-    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.7.0/Utilities/CPU"
-    environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.7.0"
+    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/CPU"
+    environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.9.0"
     gcc_enable_all_warnings="Yes" />
 </solution>

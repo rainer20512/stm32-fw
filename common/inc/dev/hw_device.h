@@ -62,6 +62,15 @@ typedef enum {
 } HW_PinOutInitial;
 
 /******************************************************************************
+ * To encode different types of DMA streams/channels
+ *****************************************************************************/
+typedef enum {
+    HW_DMA_STREAM       = 0,        
+    HW_BDMA_CHANNEL     = 1,
+} HW_DmaInstance;
+
+
+/******************************************************************************
  * describe an interrupt for Hardware Devices
  *****************************************************************************/
 typedef struct {
@@ -160,9 +169,10 @@ typedef struct HWINIT {
 typedef struct {
     DMA_HandleTypeDef   *dmaHandle;     //!< DMA handle to use at runtime
 #if defined(STM32L4_FAMILY)
-    DMA_Channel_TypeDef *dmaChannel;     //!< Associated DMA channel / Stream
+    DMA_Channel_TypeDef *dmaChannel;    //!< Associated DMA channel / Stream
 #elif defined(STM32H7_FAMILY)
-    DMA_Stream_TypeDef  *dmaChannel;     //!< Associated DMA channel / Stream
+    void   *dmaStream;                  //!< Associated DMA_Stream or BDMA_Channel
+    HW_DmaInstance      dmaInstance;    //!< distinct different types of DMA streams/channels
 #else
     #error "No setup for DMA Channel or Stream"
 #endif

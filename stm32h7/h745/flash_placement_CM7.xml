@@ -44,6 +44,8 @@
     <ProgramSection alignment="4" load="Yes" name=".rodata2" />
     <ProgramSection alignment="4" load="Yes" runin=".data2_run" name=".data2" />
   </MemorySegment>
-  <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
+  <MemorySegment name="$(RAM_NAME:SRAM4CM7);RAM4CM7">
+    <!-- Uncached Memory for use for BDMA /-->
+    <ProgramSection alignment="32" load="No" name=".bdmamem" />
   </MemorySegment>
 </Root>

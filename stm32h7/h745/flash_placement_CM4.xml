@@ -27,8 +27,9 @@
     <ProgramSection alignment="8" size="__STACKSIZE__" load="No" name=".stack" />
     <ProgramSection alignment="8" size="__STACKSIZE_PROCESS__" load="No" name=".stack_process" />
   </MemorySegment>
-  <!-- Use SRAM4 as common RAM /-->
-  <MemorySegment name="$(RAM_NAME:SRAM4);RAM4">
+  <!-- Use SRAM4 as BDMA mem /-->
+  <MemorySegment name="$(RAM_NAME:SRAM4CM4);RAM4CM4">
+    <ProgramSection alignment="32" load="No" name=".bdmamem" />
   </MemorySegment>
   <MemorySegment name="$(RAM_NAME:SRAM3);RAM3">
     <ProgramSection alignment="4" load="No" name=".devicemem" />

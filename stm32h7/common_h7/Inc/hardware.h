@@ -21,13 +21,22 @@
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR( ( (DMA_Stream_TypeDef *)hdma->Instance)->CR, DMA_SxCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
 
-#if defined(CORE_CM7)
-    #define DMAMEM                      __attribute((section(".dmamem")))
-    #define IPCMEM                      __attribute((section(".ipcmem")))
-    #define AXISMEM                     __attribute((section(".axismem")))    
+#if defined(CORE_CM7) || defined(CORE_CM4)
+/**** 003 **** 
+ * Whenever BDMA is used ( here: for LPUART1 ), the DMA memory has to reside
+ * in SRAM4. 
+ */    #if defined(CORE_CM7)
+        #define DMAMEM                      __attribute((section(".dmamem")))
+        #define IPCMEM                      __attribute((section(".ipcmem")))
+        #define AXISMEM                     __attribute((section(".axismem")))    
+    #endif
+    #define BDMAMEM                         __attribute((section(".bdmamem")))
 #else
     #define DMAMEM                          
+    #define BDMAMEM
 #endif
+
+
 
 /* --- Type specific setup for ADC ------------------------------------------*/
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC3_BASE )

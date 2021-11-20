@@ -45,6 +45,7 @@
 
 /* external variables --------------------------------------------------------*/
 extern uint32_t __SRAMUNCACHED_segment_start__;
+extern uint32_t __SRAM4CM7_segment_start__;
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/ 
@@ -667,7 +668,7 @@ typedef struct {
     uint32_t regionSize;
 } MPURegionT;
 
-#define MAX_MPU_REGIONS     1                       /* Number of defined MPU regions */
+#define MAX_MPU_REGIONS     2                       /* Number of defined MPU regions */
 static MPURegionT mpuRegions[MAX_MPU_REGIONS]; 
 
 /******************************************************************************
@@ -677,6 +678,9 @@ static void MPU_Setup(void)
 {
     mpuRegions[0].baseAddress = (uint32_t)&__SRAMUNCACHED_segment_start__;
     mpuRegions[0].regionSize  = MPU_REGION_SIZE_16KB;
+    /**** 003 ****/
+    mpuRegions[1].baseAddress = (uint32_t)&__SRAM4CM7_segment_start__;
+    mpuRegions[1].regionSize  = MPU_REGION_SIZE_32KB;
 }
 
 

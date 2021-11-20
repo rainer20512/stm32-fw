@@ -57,4 +57,11 @@ Within the sources, the changes are marked as **** <num> ****
     - Redo adaptions of 001 and 002 in tasks.c and FreeRTOSConfig.h
     - minor changes in STM's USB-Device-Library
 
+003 BDMA needs memory in D3 domain ( SRAM4 ). To achieve this,
+    64k SRAM memory is divided into two 32k sections SRAM4CM4 and SRAM4CM7
+    
+    Whenever BDMA is used, the DMA memory has to reside in SRAM4.
+    Moreover, when used by CM7, this memory has to be uncached, too.
+
+
 

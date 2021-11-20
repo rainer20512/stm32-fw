@@ -44,8 +44,17 @@ static uint8_t bOngoingTransfer = 0;    /* indicates an ongoing transfer, if != 
 static uint8_t bExpandCrToCrlf = 0;     /* expand LF to CRLF */
 static uint8_t bDelayedFlush = 0;       /* Keep in mind an delayed flush */
 
-static DMAMEM uint8_t outbuf[OUTBUF_SIZE];
-static DMAMEM uint8_t inbuf[INBUF_SIZE];
+/**** 003 **** 
+ * Whenever BDMA is used ( here: for LPUART1 ), the DMA memory hasto reside
+ * in SRAM4. 
+ */
+#ifdef USE_LPUART1_DEBUG
+    static BDMAMEM uint8_t outbuf[OUTBUF_SIZE];
+    static BDMAMEM uint8_t inbuf[INBUF_SIZE];
+#else
+    static DMAMEM uint8_t outbuf[OUTBUF_SIZE];
+    static DMAMEM uint8_t inbuf[INBUF_SIZE];
+#endif
 static CircBuffT o;
 static LinBuffT i; 
 

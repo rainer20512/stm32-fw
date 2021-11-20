@@ -131,7 +131,8 @@ static void DBG_dump_sram_areas(void)
   DO_DUMP_RAMAREA("SRAM1",__SRAM1_segment);
   DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
   DO_DUMP_RAMAREA("SRAM3",__SRAM3_segment);
-  DO_DUMP_RAMAREA("SRAM4",__SRAM4_segment);
+  DO_DUMP_RAMAREA("SRAM4CM7",__SRAM4CM4_segment);
+  DO_DUMP_RAMAREA("SRAM4CM4",__SRAM4CM7_segment);
   DEBUG_PUTC('\n');
 }
 #elif defined(STM32H742xx) || defined(STM32H743xx)

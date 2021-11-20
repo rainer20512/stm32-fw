@@ -23,7 +23,8 @@
   <MemorySegment start="0x40010000" name="APB2" size="0x17800" />
   <MemorySegment start="0x40000000" name="APB1" size="0xD400" />
   <MemorySegment start="0x38800000" name="BackupSRAM" size="0x1000" />
-  <MemorySegment start="0x38000000" name="SRAM4" size="0x10000" />
+  <MemorySegment start="0x38000000" name="SRAM4CM7" size="0x8000" />
+  <MemorySegment start="0x38008000" name="SRAM4CM4" size="0x8000" />
   <MemorySegment start="0x30040000" name="SRAMUNCACHED" size="0x4000" />
   <MemorySegment start="0x30044000" name="SRAM3" size="0x4000" />
   <MemorySegment start="0x30020000" name="SRAM2" size="0x20000" />
@@ -38,4 +39,5 @@
   <!-- RHB The second 16k may be used by CM4                                        /--->
   <!-- RHB use 128kB of SRAM1 as RAM -->
   <!-- RHB CM4 uses the second MB of flash -->
+  <!-- RHB use 32k of SRAM4 both for CM7 and CM4 for BDMA purposes /-->
 </Root>

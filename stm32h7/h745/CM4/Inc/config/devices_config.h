@@ -219,7 +219,7 @@
     #define COM4_USE_TX_DMA
     // #define COM4_USE_RX_DMA
     #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
-    #define USE_UART4_DEBUG
+    //#define USE_UART4_DEBUG
 
 
     // #define USE_UART5  
@@ -227,11 +227,11 @@
     #define COM5_USE_RX_DMA
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
-    //#define USE_LPUART1
+    #define USE_LPUART1
     #define COM9_USE_TX_DMA
     //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
-    #define USE_LPUART1_ALTN2
+    //#define USE_LPUART1_ALTN2
     #define USE_LPUART1_DEBUG
 
     #define USE_SPI1
