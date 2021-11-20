@@ -13,6 +13,8 @@
 #ifndef __MSG_DIRECT_H__
 #define __MSG_DIRECT_H__
 
+#include "dev/hw_device.h"                          /* for HW_DmaType */
+
 /* Constant Identifier of direct message buffer */
 #define DIRECTMSG_ID                            0x4443544D
 
@@ -37,6 +39,7 @@
 #define MSGTYPE_TASKLIST_CM7                    3   /* Get a line by line tasklist for CM4 from CM7           */
 #define MSGTYPE_SETTINGS_GET_CM7                4   /* Get one persistent settings element for CM4 from CM7   */
 #define MSGTYPE_SETTINGS_SET_CM7                5   /* Set one persistent settings element of CM7 from CM4    */
+#define MSGTYPE_REGISTER_DMA_CHANNEL            6   /* Register a CM4 DMA channel on CM7 core                 */ 
 
 /* Messages from CM7 to CM4                                                                                   */
 #define MSGTYPE_CLOCKCHANGE_CM4              1025   /* Perform neccessary actions after Clk frq change on CM4 */
@@ -53,6 +56,8 @@ typedef struct {
     void *dev;                        /* CM4->CM7: HW-Device address */
     int32_t response;                 /* CM7->CM4: >= 0 ok, -1 error for type 1, 0 = false, != 0 = true for type 2*/
 } MsgRegisterDeviceT;
+
+
 
 /*
  * Transfer type 2: Assignment/deassignment ir query of cm4 device pin on cm7 core. cm7 core acts as master,
@@ -90,6 +95,27 @@ typedef struct {                      /* CM7 -> CM4: One persistent setting item
     const char *help;                 /* ptr to help text in CM7 Flash area         */  
 } MSgSettingItemT;
 
+/* To distinct different types of DMA streams / BDMA channels */
+#define MSGTYPE6_IS_DMA                 1
+#define MSGTYPE6_IS_BDMA                2
+
+/* Either register or unregister an DMA channel */
+#define MSGTYPE6_MODE_REG               1
+#define MSGTYPE6_MODE_UNREG             0
+
+
+typedef struct {
+    union {
+        const HW_DmaType *dmaDesc;      /* Actual DMA description a channel is requested for, used on register    */
+        DMA_HandleTypeDef *hdma;        /* DMA handle for unregistration, unused on registration                  */
+    };
+    uint8_t    dmaGroup;                /* 1 for DMA, 2 for BDMA, see above                     */
+    uint8_t    opMode;                  /* register or unregister, see above                    */
+    void *responseChannel;              /* response: the assigned channel / Stream              */
+    void *responseHandle;               /* response from CM7: != 0 on success, NULL for failure */
+
+} MsgRegisterDmaT;
+
 /*
  * Direct message buffer: consists of constant ID, msg type identifier,
  * sub identifiert für that id (if needed) and a
@@ -105,6 +131,7 @@ typedef struct {
     MsqQueryPinT       msg2;            /* Used for message type 2 */
     MsgTaskItemU       msg3;
     MSgSettingItemT    msg4;            /* Used for Message Type 4 aund 5 */
+    MsgRegisterDmaT    msg6;            /* Used for DMA channel registration */
   }; 
 } AMPDctBuf_t;
 
@@ -123,18 +150,24 @@ typedef struct {
 #if defined ( CORE_CM4 )
     typedef AMPDctBuf_t *       AMPDctBufPtr_t;
     extern  AMPDctBufPtr_t      AMP_DctBuf_Ptr;
-    void    CM4_handle_remote_direct(void);
-    void    CM4_handle_remote(uint32_t arg);
-    void    MSGD_DoRemoteRegistration(void *dev);
-    int32_t MSGD_WaitForRemoteRegistration(void);
-    void    MSGD_DoRemotePinAssignment ( uint32_t operation, uint32_t dev_idx, GPIO_TypeDef *gpio, uint16_t pin );
-    bool    MSGD_WaitForRemotePinAssignment(void);
-    void    MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
-    char*   MSGD_WaitForTasklistLine(void);
-    void    MSGD_GetSettingsLine(bool bInitCall);
-    MSgSettingItemT *MSGD_WaitForGetSettingsLine(void);
-    void MSGD_SetSettingsLine(uint8_t idx, uint8_t newval);
-    bool MSGD_WaitForSetSettingsLine(void);
+
+    void                CM4_handle_remote_direct(void);
+    void                CM4_handle_remote(uint32_t arg);
+
+    void                MSGD_DoRemoteRegistration(void *dev);
+    int32_t             MSGD_WaitForRemoteRegistration(void);
+    void                MSGD_DoRemotePinAssignment ( uint32_t operation, uint32_t dev_idx, GPIO_TypeDef *gpio, uint16_t pin );
+    bool                MSGD_WaitForRemotePinAssignment(void);
+    void                MSGD_GetTasklistLine(bool bInitCall, const char *prefixstr);
+    char*               MSGD_WaitForTasklistLine(void);
+    void                MSGD_GetSettingsLine(bool bInitCall);
+    MSgSettingItemT     *MSGD_WaitForGetSettingsLine(void);
+    void                MSGD_SetSettingsLine(uint8_t idx, uint8_t newval);
+    bool                MSGD_WaitForSetSettingsLine(void);
+    void                MSGD_DoRemoteDmaRegistration(const HW_DmaType* dmadata, uint8_t dmaGroup);
+    DMA_HandleTypeDef   *MSGD_WaitForRemoteDmaRegistration(void);
+    void                MSGD_DoRemoteDmaUnRegistration(DMA_HandleTypeDef *hdma, uint8_t dmaGroup);
+    DMA_HandleTypeDef   *MSGD_WaitForRemoteDmaRegisterOp(void);
 #endif
 
 

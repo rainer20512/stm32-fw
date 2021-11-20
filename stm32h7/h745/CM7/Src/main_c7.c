@@ -125,6 +125,7 @@ void PB_CB ( uint16_t u, uint16_t pinvalue, void * arg )
 int main(void)
 {
 
+
     int32_t timeout;
 
     /* 
@@ -139,16 +140,6 @@ int main(void)
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
-
-    /* Wait until CPU2 boots and enters stop mode */
-    timeout = 0xFFFFFF;
-    while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
-    if ( timeout < 0 )
-    {
-        Error_Handler_XX(-1, __FILE__, __LINE__);
-    }
-
-
 
 
     /* 
@@ -169,6 +160,13 @@ int main(void)
     /* Init variables and structures for device handling */
     DevicesInit();
 
+    /* Wait until CPU2 boots and enters in stop mode or timeout*/
+    timeout = 0xFFFFFF;
+    while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
+    if ( timeout < 0 )
+    {
+        Error_Handler_XX(-1, __FILE__, __LINE__);
+    }
 
 
     /* STM32H7xx HAL library initialization:

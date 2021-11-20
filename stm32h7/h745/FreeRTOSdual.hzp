@@ -67,7 +67,7 @@
         <folder Name="system">
           <file file_name="CM4/Src/system/devices_cm4.c" />
           <file file_name="CM4/Src/system/clockconfig_cm4.c" />
-          <file file_name="../common_h7/Src/system/dma_handler.c" />
+          <file file_name="CM4/Src/system/dma_handler_cm4.c" />
         </folder>
         <file file_name="CM4/Src/msg_direct_c4.c" />
         <file file_name="CM4/Src/version.c" />
@@ -327,6 +327,7 @@
         <file file_name="../doc/Howto.txt" />
         <file file_name="../doc/NumeratedChanges.txt" />
         <file file_name="../doc/Changes.txt" />
+        <file file_name="../doc/Clues.txt" />
       </folder>
     </folder>
   </project>
@@ -422,6 +423,7 @@
           <file file_name="CM7/Src/system/clockconfig.c" />
           <file file_name="../common_h7/Src/system/error.c" />
           <file file_name="CM7/Src/system/devices_c7.c" />
+          <file file_name="CM7/Src/system/dma_handler_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
         <file file_name="CM7/Src/msg_direct_c7.c" />
@@ -439,6 +441,7 @@
           <file file_name="CM7/Inc/system/profiling.h" />
           <file file_name="CM7/Inc/system/clockconfig.h" />
           <file file_name="CM7/Inc/system/ram_preset.inc" />
+          <file file_name="CM7/Inc/system/dma_handler.h" />
         </folder>
         <file file_name="CM7/Inc/debug.h" />
         <file file_name="CM7/Inc/error.h" />
@@ -511,7 +514,6 @@
         <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
           <file file_name="../common_h7/Src/system/hw_util.c" />
-          <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
         <file file_name="../common_h7/Src/ipc.c" />
@@ -520,7 +522,6 @@
         <file file_name="../common_h7/Inc/hardware.h" />
         <folder Name="system">
           <file file_name="../common_h7/Inc/system/hw_util.h" />
-          <file file_name="../common_h7/Inc/system/dma_handler.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />

@@ -96,7 +96,10 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
 l   */
 int main(void)
 {
+
     BaseType_t x;
+    BSP_LED_Init(LED1);
+    LedToggle(250, 2);  
     AMPCtrl_t *ref;
 
     /* Activate wakeup from CM7 */
@@ -109,8 +112,6 @@ int main(void)
     HAL_PWREx_ClearPendingEvent();
     HAL_PWREx_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFE, PWR_D2_DOMAIN);
 
-    BSP_LED_Init(LED1);
-    LedToggle(250, 2);  
 
     /* STM32H7xx HAL library initialization:
         - Systick timer is configured by default as source of time base, but user 
@@ -125,6 +126,7 @@ int main(void)
     /* initialize the ipc communication */
     Ipc_CM4_Init(INIT_FULLY);
 
+
     #if USE_BASICTIMER > 0
         /* 
          * Start microsecond counter , must be done before Profiler is initialized 
@@ -132,7 +134,6 @@ int main(void)
          */
         BASTMR_EarlyInit();
     #endif
-
 
 
     HAL_Init();

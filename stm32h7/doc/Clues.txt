@@ -27,6 +27,11 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Das Einbinden von ram_preset.inc in STM32_Startup.s muss dann _nach_ dem
      Aufruf von SystemInit erfolgen!
 
+     Nach dem Nullen von SRAM1, 2, 3 den Takt wieder abschalten. Das muss getan werden,
+     damit in einer Multi-Core Umgebung der CM7 core erkennt, dass CM4 angehalten hat.
+     Dann ( und nur dann, wenn _kein_ weiterer D2-Teilnehmer aktiv ist ) wird das D2CKRDY-bit
+     in RCC->CR rückgestetzt. 
+
 003: Die ST-Link-Firmware nicht auf Version > 35 flashen.
      mit Version > 35 wird STM32H742 von Rowley Crossworks nicht mehr als solcher erkannt  
 

@@ -23,11 +23,12 @@
 #include "system/dma_handler.h"
 
 
-
 #define DMA_INSTANCES       2
 #define DMA_CHANNELS        8
 #define BDMA_INSTANCES      1
 #define BDMA_CHANNELS       8
+
+
 /* Array of all DMA Streams */
 static DMA_Stream_TypeDef* AllChannels[DMA_INSTANCES][DMA_CHANNELS] =
 {
@@ -152,11 +153,12 @@ static void HW_DMA_SetDmaChClock ( DMA_Stream_TypeDef *channel)
  *                     unused DMA channel will be allocated.
  *    dmadata [out] -  dmadata->dmaHandle->Instance will receive the ( manually or auotmatically ) assigned
  *                     DMA channel on successful returns
+ *    dma_user [in] -  one of DMA_UserEnumT ( Either CM7 or CM4 )
  * @retval 
  *    DMA handle is returned in case of success,
  *    NULL in case of channel already in use
  ******************************************************************************************************/
-DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel(const HW_DmaType* dmadata )
+DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata )
 {
     DMA_Stream_TypeDef *channel = dmadata->dmaChannel;
     
@@ -193,6 +195,7 @@ DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel(const HW_DmaType* dmadata )
     
     return dmadata->dmaHandle;
 }
+
 
 /******************************************************************************
  * Init an HAL DMA handle to the given parameters. This initialization is

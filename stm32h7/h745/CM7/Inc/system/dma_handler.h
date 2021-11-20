@@ -28,7 +28,7 @@ typedef enum {
 IRQn_Type         HW_DMA_GetChannelIrqNum           (DMA_Stream_TypeDef *channel);
 DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel        (const HW_DmaType* dmadata );
 DMA_HandleTypeDef *HW_DMA_RegisterDMAChannelRemote  (const HW_DmaType* dmadata );
-void              HW_DMA_UnregisterDMAChannel       (DMA_HandleTypeDef *hdma);
+
 void              HW_DMA_HandleInit                 (DMA_HandleTypeDef *hdma, const HW_DmaType *dma, void *parent );
 void              HW_DMA_HandleDeInit               (DMA_HandleTypeDef *hdma);
 void              HW_DMA_SetAndEnableChannelIrq     (DMA_Stream_TypeDef *channel, uint8_t prio, uint8_t subprio);

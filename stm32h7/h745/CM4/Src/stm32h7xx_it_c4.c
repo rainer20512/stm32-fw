@@ -200,6 +200,8 @@ void DebugMon_Handler(void)
 
     ProfilerPop();
   }
+
+/**** 004 ****
   #if defined(COM1_USE_TX_DMA) || defined(COM1_USE_RX_DMA) 
 
     #if defined(COM1_USE_TX_DMA)
@@ -219,6 +221,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(USART2) && defined(USE_USART2)
@@ -231,6 +234,8 @@ void DebugMon_Handler(void)
     UsartIRQHandler(&HandleCOM2);
     ProfilerPop();
   }
+
+/**** 004 ****
   #if defined(COM2_USE_TX_DMA) || defined(COM2_USE_RX_DMA) 
 
     #if defined(COM2_USE_TX_DMA)
@@ -250,6 +255,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 
@@ -264,6 +270,8 @@ void DebugMon_Handler(void)
     UsartIRQHandler(&HandleCOM3);
     ProfilerPop();
   }
+
+/**** 004 ****
   #if defined(COM3_USE_TX_DMA) || defined(COM3_USE_RX_DMA) 
 
     #if defined(COM3_USE_TX_DMA)
@@ -283,6 +291,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(UART4) && defined(USE_UART4)
@@ -295,6 +304,8 @@ void DebugMon_Handler(void)
         UsartIRQHandler(&HandleCOM4);
         ProfilerPop();
     }
+
+/**** 004 ****
   #if defined(COM4_USE_TX_DMA) || defined(COM4_USE_RX_DMA) 
 
     #if defined(COM4_USE_TX_DMA)
@@ -314,6 +325,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(UART5) && defined(USE_UART5)
@@ -326,6 +338,8 @@ void DebugMon_Handler(void)
         UsartIRQHandler(&HandleCOM5);
         ProfilerPop();
     }
+
+/**** 004 ****
   #if defined(COM5_USE_TX_DMA) || defined(COM5_USE_RX_DMA) 
 
     #if defined(COM5_USE_TX_DMA)
@@ -345,6 +359,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 #if defined(LPUART1) && defined(USE_LPUART1)
@@ -357,6 +372,8 @@ void DebugMon_Handler(void)
         UsartIRQHandler(&HandleCOM9);
         ProfilerPop();
     }
+
+/**** 004 ****
   #if defined(COM9_USE_TX_DMA) || defined(COM9_USE_RX_DMA) 
     #if defined(COM9_USE_TX_DMA)
         void COM9_DMA_TX_IRQHandler(void) 
@@ -375,6 +392,7 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
+*/
 #endif
 
 /******************************************************************************
@@ -393,6 +411,7 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #ifdef SPI1_USE_DMA
         void SPI1_DMA_RX_IRQHandler(void)
         {
@@ -407,7 +426,8 @@ void DebugMon_Handler(void)
             HAL_DMA_IRQHandler(SPI1Handle.data->hw.myHalHandle.hdmatx);
             ProfilerPop();
         }
-        #endif
+    #endif
+*/
 #endif
 
 #if defined(SPI2) && defined(USE_SPI2)
@@ -423,6 +443,7 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #ifdef SPI2_USE_DMA
         void SPI2_DMA_RX_IRQHandler(void)
         {
@@ -437,7 +458,8 @@ void DebugMon_Handler(void)
             HAL_DMA_IRQHandler(SPI2Handle.hSpi.hdmatx);
             ProfilerPop();
         }
-        #endif
+    #endif
+*/
 #endif
 
 #if defined(SPI3) && defined(USE_SPI3)
@@ -453,6 +475,7 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #ifdef SPI3_USE_DMA
         void SPI3_DMA_RX_IRQHandler(void)
         {
@@ -467,7 +490,8 @@ void DebugMon_Handler(void)
             HAL_DMA_IRQHandler(SPI3Handle.hSpi.hdmatx);
             ProfilerPop();
         }
-        #endif
+    #endif
+*/
 #endif
 
 /******************************************************************************
@@ -495,6 +519,7 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #ifdef I2C1_USE_DMA
         void I2C1_DMA_RX_IRQHandler(void)
         {
@@ -511,7 +536,8 @@ void DebugMon_Handler(void)
             HAL_DMA_IRQHandler(I2C1Handle.hI2c.hdmatx);
             ProfilerPop();
         }
-        #endif
+    #endif
+*/
 #endif
 
 /******************************************************************************
@@ -530,6 +556,7 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #ifdef ADC3_USE_DMA
         #if !defined(ADC3_DMA_IRQHandler)
             #error "DMA-IRQ handler not defined for ADC3"
@@ -541,6 +568,7 @@ void DebugMon_Handler(void)
             ProfilerPop();
         }
     #endif
+*/
 #endif
 
 /******************************************************************************
@@ -596,11 +624,13 @@ void DebugMon_Handler(void)
         }
     #endif
 
+/**** 004 ****
     #if defined(QSPI1_USE_DMA)
         void QSPI1_DMA_IRQHandler ( void ) 
         {
         }
     #endif
+*/
 #endif
 
 /******************************************************************************
