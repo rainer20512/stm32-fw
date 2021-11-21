@@ -28,6 +28,7 @@
 #include "system/hw_util.h"
 #include "cmdline.h"
 #include "dev/devices.h"
+#include "version.h"
 
 #if USE_DS18X20  > 0
     #include "onewire.h"
@@ -1091,6 +1092,9 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
 //            printf("Debuglevel=%d\n", debuglevel);
             break;
 #endif
+        case 1:
+            Dump_VersionInfo();
+            break;
         default:
             DEBUG_PUTS("MainMenu: command not implemented");
             return false;
@@ -1112,6 +1116,7 @@ static const CommandSetT cmdBasic[] = {
 #if DEBUG_FEATURES > 0 
   { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
+  { "Version",         ctype_fn,  .exec.fn = MainMenu,        VOID(1),  "Program Version"  },
 #endif
 #if USE_I2C > 0
   { "I2C"    ,         ctype_sub, .exec.sub = &mdlI2C,         0,       "I2C submenu" },

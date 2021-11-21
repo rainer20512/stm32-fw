@@ -26,18 +26,17 @@ extern "C" {
     #define MCU "STM32H743xx"
 #elif defined(STM32H745xx) || defined(STM32H747xx)
     #if defined(STM32H745xx) 
-        #define MTYPE "STM32H745xx"
+        #define MCU "STM32H745xx"
     #else
-        #define MTYPE "STM32H747xx"
+        #define MCU "STM32H747xx"
     #endif
 
     #if defined(CORE_CM4)
-        #define MCORE "Core M4"
+        #define MCORE "Core CM4"
     #else
-        #define MCORE "Core M7"
+        #define MCORE "Core CM7"
     #endif
 
-    #define MCU MTYPE " " MCORE    
 #else
     #define MCU "Unknown"
 #endif
@@ -59,17 +58,23 @@ extern "C" {
 
 #define VERSION_NUMBER  "V" STR(MAJOR_VERSION) "." STR(MINOR_VERSION)
 
-#define MCU_TYPE "for " MCU " family" 
+#if defined(MCORE)
+    #define MCU_TYPE "for " MCU " family " MCORE
+#else  
+    #define MCU_TYPE "for " MCU " family" 
+#endif
 
 #define BOARD_STRING "on board " BOARD
 
-#define VERSION_STRING2  __DATE__ " " __TIME__ 
+#define VERSION_STRING1  APP_NAME " " VERSION_NUMBER " " MCU_TYPE " " BOARD_STRING
 
-#define VERSION_STRING1  APP_NAME " " VERSION_NUMBER 
+#define VERSION_STRING2  "Built " __DATE__ " " __TIME__ 
 
-#define VERSION_STRING   VERSION_STRING1 " " MCU_TYPE " " BOARD_STRING "\nBuilt " VERSION_STRING2 
+#define VERSION_STRING   VERSION_STRING1 "\r\n" VERSION_STRING2 
 
 extern const char VersionString[];
+void Dump_VersionInfo(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -47,6 +47,8 @@
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
+#define USE_BDMA                    0
+
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -163,5 +165,29 @@
  */
 
 #include "error.h"
+/*
+ ********************************************************************************
+ * Build the config-string for version.h buildinfo
+ ********************************************************************************
+ */
+
+
+#if BUILD_CONFIG_STR > 0
+    #define PPCAT_NXE(A, B)   A " = " #B "\r\n"
+    #define PPCAT_E(A)     PPCAT_NXE(#A,A)
+
+    #define CONFIG_STRING  \
+    PPCAT_E(USE_ONEWIRE)    \
+    PPCAT_E(USE_DS18X20)    \
+    PPCAT_E(USE_EEPROM_EMUL)      \
+    PPCAT_E(USE_QENCODER)  \
+    PPCAT_E(USE_SECONDTIMER)  \
+    PPCAT_E(USE_PWMTIMER)  \
+    PPCAT_E(USE_BASICTIMER)  \
+    PPCAT_E(USE_QSPI)  \
+    PPCAT_E(USE_BASICTIMER_FOR_TICKS)  \
+    PPCAT_E(USE_BDMA)  \
+
+#endif
 
 #endif /* __CONFIG_H */

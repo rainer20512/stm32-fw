@@ -98,6 +98,7 @@ static void pinMode(TM1637PinT pin, uint32_t mode )
 }
 
 
+#if 0
 static uint32_t getUs(void) 
 {
     uint32_t usTicks = HAL_RCC_GetSysClockFreq() / 1000000;
@@ -111,7 +112,7 @@ static uint32_t getUs(void)
     return (ms * 1000) + (usTicks * 1000 - cycle_cnt) / usTicks;
 }
 
-#if 0
+
 static void delayUs(uint16_t micros) 
 {
     uint32_t start = getUs();
@@ -328,7 +329,7 @@ static void displayAll(void)
 }
 
 
-//******************************************
+/******************************************
 static void displayOne(uint8_t BitAddr,uint8_t digit,uint8_t dp)
 {
     uint8_t SegData = code(digit, dp);
@@ -343,7 +344,7 @@ static void displayOne(uint8_t BitAddr,uint8_t digit,uint8_t dp)
     writeByte(Cmd_DispCtrl);//
     stop();           //
 }
-
+*/
 // Displays 6 dashes are error marker
 void displayError()
 {

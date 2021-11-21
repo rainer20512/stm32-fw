@@ -31,7 +31,9 @@
 #include "dev/i2c_dev.h"
 //#include "system/status.h"
 #include "system/hw_util.h"
+#include "system/mpu.h"
 #include "cmdline.h"
+#include "version.h"
 //#include "sensors/thp_sensor.h"
 //#include "eeprom.h"
 #include "dev/devices.h"
@@ -343,6 +345,9 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
         DeviceDeInitByIdx(idx);
       }
       break;
+    case 6:
+      MPU_Dump();
+      break;
     default:
       DEBUG_PUTS("RFM_Menu: command not implemented");
   } /* end switch */
@@ -362,6 +367,8 @@ static const CommandSetT cmdDevices[] = {
   { "NVIC",      ctype_fn, {Devices_Menu},    VOID(2), "Show NVIC settings" },
   { "GPIO",      ctype_fn, {Dump_GPIO},       VOID(0), "Show GPIO settings"  },
   { "Devices",   ctype_fn, {Devices_Menu},    VOID(3), "Dump Devices"  },
+  { "MPU Regns.",ctype_fn, {Devices_Menu},    VOID(6), "Show MPU regions"  },
+
   { "Dev Init",  ctype_fn, {Devices_Menu},    VOID(4), "DeInit Device i"  },
   { "Dev DeInit",ctype_fn, {Devices_Menu},    VOID(5), "ReInit Device i"  },
   { "Toggle 8x", ctype_fn, {Toggle_GPIO},     VOID(0), "Toggle GPIO pin 8x"  },
@@ -1833,6 +1840,9 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
 //            printf("Debuglevel=%d\n", debuglevel);
             break;
 #endif
+        case 1:
+            Dump_VersionInfo();
+            break;
         default:
             DEBUG_PUTS("MainMenu: command not implemented");
             return false;
@@ -1854,6 +1864,7 @@ static const CommandSetT cmdBasic[] = {
 #if DEBUG_FEATURES > 0 
   { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
+  { "Version",         ctype_fn,  .exec.fn = MainMenu,        VOID(1),  "Program Version"  },
 #endif
 #if USE_I2C > 0
   { "I2C"    ,         ctype_sub, .exec.sub = &mdlI2C,         0,       "I2C submenu" },

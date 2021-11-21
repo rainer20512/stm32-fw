@@ -33,6 +33,7 @@
 #include "ipc.h"
 #include "system/hw_util.h"
 #include "system/clockconfig.h"
+#include "system/mpu.h"
 #include "eeprom.h"
 #include "dev/devices.h"
 #include "task/minitask.h"
@@ -68,8 +69,6 @@ uint32_t gflags;
 /* Private function prototypes -----------------------------------------------*/
 static void CPU_CACHE_Enable(void);
 static void MPU_Setup(void);
-static void MPU_Config(void);
-static void MPU_Dump(void);
 
 
 /* Forward declarations for external initialization functions -----------------*/
@@ -148,7 +147,6 @@ int main(void)
      * Define SRAM3 as not cacheable and not bufferable ( used as DMA buffers & IPC mem )
      */
     MPU_Setup();
-    MPU_Config();
 
     /* Enable the D- and I- Cache for M7  */
     CPU_CACHE_Enable();
@@ -662,6 +660,34 @@ static void CPU_CACHE_Enable(void)
   SCB_EnableDCache();
 }
 
+#define PWROF2(a)               ( (a & (a-1)) == 0 ) 
+#define DEFINE_EXTERNALS(a)     \
+                                extern uint32_t __##a##_segment_start__; \
+                                extern uint32_t __##a##_segment_size__; \
+
+/******************************************************************************
+ * define MPU regions and enable them
+ *  - all flash as RO memory ( to detect faulty flash writes )
+ *  - DMA buffers as uncached
+ *  - LWIP heap as uncached
+ *  - ETH DMA descriptors as device memory
+ *****************************************************************************/
+static void MPU_Setup(void)
+{
+   DEFINE_EXTERNALS(SRAMUNCACHED); 
+   DEFINE_EXTERNALS(SRAM4CM7); 
+
+   uint32_t flashSize = *(uint16_t*)FLASHSIZE_BASE * 1024;
+
+    MPU_AddRegion ( FLASH_BANK1_BASE,                          MPUTPYE_FLASH_NOWRITE,        flashSize,                                0 );
+    MPU_AddRegion ( (uint32_t)&__SRAMUNCACHED_segment_start__, MPUTYPE_RAM_NONCACHEABLE,     (uint32_t)&__SRAMUNCACHED_segment_size__, 1 );
+    MPU_AddRegion ( (uint32_t)&__SRAM4CM7_segment_start__,     MPUTYPE_RAM_NONCACHEABLE,     (uint32_t)&__SRAM4CM7_segment_size__,     2 );
+
+    MPU_EnableAllRegions();
+    MPU_Dump();
+
+}
+#if 0
 /* Definition of non cached memory areas */
 typedef struct {
     uint32_t baseAddress;
@@ -744,7 +770,7 @@ static void MPU_Dump(void)
   }
 }
 
-
+#endif
 
 /**
   * @}

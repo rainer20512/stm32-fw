@@ -17,6 +17,7 @@
 #include "debug.h"
 #include "system/hw_util.h"
 #include "dev/devices.h"
+#include "dev/hw_device.h"
 #if DEBUG_FEATURES > 0
 
 #include <string.h>
@@ -239,7 +240,7 @@ void DBG_dump_toggle_pin(char portletter, uint8_t portnum, bool bToggleOnce)
 
          // restore GPIO status
          *gp = save;
-     GpioDeInitHW(UNREGISTERED_DEVICE, gp, &init);
+     GpioDeInitHW(UNREGISTERED_DEVICE, gp, pin_bitmap);
      }
      // Switch portclock off again, if it was off before
      if (!gp_clck_ena ) HW_SetHWClock(gp, false);
@@ -622,8 +623,8 @@ const char * const user_nvic_name[150]= { /* fill in the array size to be sure, 
       "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
       "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
       "MDIOS",          "JPEG",           "MDMA",           "DSI(WKUP)",      "SDMMC2",         "HSEM0",          "HSEM1",          "ADC3",
-      "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
-      "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
+      "DMAMUX_OVR",     "BDMA_Ch#0",      "BDMA_Ch#1",      "BDMA_Ch#2",      "BDMA_Ch#3",      "BDMA_Ch#4",      "BDMA_Ch#5",      "BDMA_Ch#6",       
+      "BDMA_Ch#7",      "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
       "CRS",            "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
     };
 #elif defined(STM32H742xx) || defined(STM32H743xx)
@@ -645,8 +646,8 @@ const char * const user_nvic_name[150]= { /* fill in the array size to be sure, 
       "HRTIM1_TIMA",    "HRTIM1_TIMB",    "HRTIM1_TIMC",    "HRTIM1_TIMD",    "HRTIM1_TIME",    "HRTIM1_FAULT",   "DFSDM1_FILT0",   "DFSDM1_FILT1",   
       "DFSDM1_FILT2",   "DFSDM1_FILT3",   "SAI3",           "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
       "MDIOS",          "JPEG",           "MDMA",           "n/c",            "SDMMC2",         "HSEM0",          "n/c",            "ADC3",
-      "DMAMUX_OVR",     "BDMA_CH0",       "BDMA_CH1",       "BDMA_CH2",       "BDMA_CH3",       "BDMA_CH4",       "BDMA_CH5",       "BDMA_CH6",       
-      "BDMA_CH7",       "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
+      "DMAMUX_OVR",     "BDMA_Ch#0",      "BDMA_Ch#1",      "BDMA_Ch#2",      "BDMA_Ch#3",      "BDMA_Ch#4",      "BDMA_Ch#5",      "BDMA_Ch#6",       
+      "BDMA_Ch#7",      "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
       "CRS",            "RAMECC",         "SAI4",           "n/c",            "n/c",            "WKUP"
     };
 #else

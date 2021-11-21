@@ -48,7 +48,7 @@ static uint8_t bDelayedFlush = 0;       /* Keep in mind an delayed flush */
  * Whenever BDMA is used ( here: for LPUART1 ), the DMA memory hasto reside
  * in SRAM4. 
  */
-#ifdef USE_LPUART1_DEBUG
+#if defined(USE_LPUART1) && defined(USE_LPUART1_DEBUG)
     static BDMAMEM uint8_t outbuf[OUTBUF_SIZE];
     static BDMAMEM uint8_t inbuf[INBUF_SIZE];
 #else

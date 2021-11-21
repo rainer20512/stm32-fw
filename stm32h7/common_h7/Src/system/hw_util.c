@@ -468,6 +468,7 @@ static const char *Get_DeviceName ( uint16_t devID )
 #endif
 char Get_RevisionName( uint16_t devID, uint16_t revID)
 {
+    UNUSED(devID);
     char work;
     switch (revID) {
         case 0x1001 : work = 'Z'; break;

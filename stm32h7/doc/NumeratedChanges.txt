@@ -63,5 +63,9 @@ Within the sources, the changes are marked as **** <num> ****
     Whenever BDMA is used, the DMA memory has to reside in SRAM4.
     Moreover, when used by CM7, this memory has to be uncached, too.
 
+    The additional code to use BDMA can be disabled by setting 
+    USE_BDMA to 0 in config-file.
+
+
 
 

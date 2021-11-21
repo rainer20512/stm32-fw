@@ -66,7 +66,9 @@ typedef enum {
  *****************************************************************************/
 typedef enum {
     HW_DMA_STREAM       = 0,        
+#if USE_BDMA > 0
     HW_BDMA_CHANNEL     = 1,
+#endif
 } HW_DmaInstance;
 
 
@@ -203,6 +205,7 @@ typedef struct HWDTS {
 } HW_DeviceType;
 
 bool GpioInitHW             ( uint32_t devIdx, GPIO_TypeDef *gpio, GPIO_InitTypeDef *Init );
+void GpioDeInitHW           ( uint32_t devIdx, GPIO_TypeDef *gpio, uint16_t pin );
 
 bool GpioAFInitOneWithPreset( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init, HW_PinOutInitial preset );
 bool GpioAFInitOne          ( uint32_t devIdx, const HW_Gpio_AF_Type *gpio, GPIO_InitTypeDef *Init );

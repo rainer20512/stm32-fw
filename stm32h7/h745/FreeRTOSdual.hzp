@@ -69,7 +69,6 @@
           <file file_name="CM4/Src/system/clockconfig_cm4.c" />
         </folder>
         <file file_name="CM4/Src/msg_direct_c4.c" />
-        <file file_name="CM4/Src/version.c" />
       </folder>
       <folder Name="inc">
         <folder Name="system">
@@ -82,7 +81,6 @@
         <file file_name="CM4/Inc/eeprom.h" />
         <file file_name="CM4/Inc/global_flags.h" />
         <file file_name="../common_h7/Inc/config/can_config.h" />
-        <file file_name="CM4/Inc/version.h" />
       </folder>
       <folder Name="config">
         <file file_name="CM4/Inc/config/config.h" />
@@ -309,6 +307,7 @@
           <file file_name="../common_h7/Inc/config/uart_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/msg_direct.h" />
+        <file file_name="../common_h7/Inc/version.h" />
       </folder>
       <folder Name="src">
         <folder Name="task">
@@ -321,6 +320,7 @@
           <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="../common_h7/Src/ipc.c" />
+        <file file_name="../common_h7/Src/version.c" />
       </folder>
       <folder Name="Doc">
         <file file_name="../doc/ErrorCodes.txt" />
@@ -513,15 +513,18 @@
         <folder Name="system">
           <file file_name="../common_h7/Src/system/hw_util.c" />
           <file file_name="../common_h7/Src/system/dma_handler.c" />
+          <file file_name="../common_h7/Src/system/mpu.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
         <file file_name="../common_h7/Src/ipc.c" />
+        <file file_name="../common_h7/Src/version.c" />
       </folder>
       <folder Name="inc">
         <file file_name="../common_h7/Inc/hardware.h" />
         <folder Name="system">
           <file file_name="../common_h7/Inc/system/hw_util.h" />
           <file file_name="../common_h7/Inc/system/dma_handler.h" />
+          <file file_name="../common_h7/Inc/system/mpu.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />
@@ -541,6 +544,7 @@
           <file file_name="../common_h7/Inc/config/eth_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/msg_direct.h" />
+        <file file_name="../common_h7/Inc/version.h" />
       </folder>
       <folder Name="task">
         <file file_name="../common_h7/Src/task/minitask.c" />

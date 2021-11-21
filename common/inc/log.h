@@ -177,7 +177,7 @@
     #define DBGU_PALAVER(...)
 #endif
 
-/* ------------------------------ Log console only ----------------------------------------*/
+/* ------------------------------ Log FATFS only ----------------------------------------*/
 #define FLOG_ALWAYS(...)     _LOG(LOGLEVEL_ALWAYS,  LOGTS_NONE, LOGDEST_FATFS, __VA_ARGS__ )
 #define FLOGT_ALWAYS(...)    _LOG(LOGLEVEL_ALWAYS,  LOGTS_T,    LOGDEST_FATFS, __VA_ARGS__ )
 #define FLOGU_ALWAYS(...)    _LOG(LOGLEVEL_ALWAYS,  LOGTS_U,    LOGDEST_FATFS, __VA_ARGS__ )

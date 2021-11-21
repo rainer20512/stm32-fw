@@ -130,7 +130,6 @@ void MPU_EnableAllRegions(void)
 {
     MPU_Region_InitTypeDef Init;
     MPURegionT *ptr;
-    uint32_t flashsize;
 
     /* Any regions at all? */
     if ( mpuRegionsUsed == 0 ) return;

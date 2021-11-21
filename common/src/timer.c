@@ -757,6 +757,7 @@ static int8_t SecTimerReUseAbs( int8_t id, uint32_t secs, uint32_t bPeriodic, Ti
     return id; 
 }
 
+#if 0
 /*********************************************************************************
   * @brief  Allocate a new timer and start this timer ( w absolute subsecond value )
   * @param  second    - absolute second value in the range [ 0 .. UINT32_MAX ]
@@ -780,8 +781,7 @@ static int8_t SecTimerSetAbs ( uint32_t secs, uint32_t bPeriodic, TimerCBT myCB,
     }
     return SecTimerReUseAbs(id, secs, bPeriodic, myCB, arg );
 }
-
-
+#endif
 
 /*********************************************************************************
  * @brief  Reuse/Re-Set a previous Allocated timer and restart this timer

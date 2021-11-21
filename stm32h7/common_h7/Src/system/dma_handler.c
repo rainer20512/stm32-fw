@@ -50,19 +50,21 @@
         /* Array of "is in use"-flags for all available DMA channels */
         uint8_t             bDmaStreamUsed  [MAX_DMA_STREAMS] = {0 };
 
-        /* Array of all BDMA channels for core CM7 */
-        static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
-          { BDMA_Channel0, BDMA_Channel1, BDMA_Channel2, BDMA_Channel3 };
+        #if USE_BDMA > 0
+            /* Array of all BDMA channels for core CM7 */
+            static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
+              { BDMA_Channel0, BDMA_Channel1, BDMA_Channel2, BDMA_Channel3 };
 
-        /* Array of all corresponding BDMA channel interrupt numbers */
-        static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
-          { BDMA_Channel0_IRQn, BDMA_Channel1_IRQn, BDMA_Channel2_IRQn, BDMA_Channel3_IRQn };
+            /* Array of all corresponding BDMA channel interrupt numbers */
+            static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
+              { BDMA_Channel0_IRQn, BDMA_Channel1_IRQn, BDMA_Channel2_IRQn, BDMA_Channel3_IRQn };
 
-        /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
-        DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
+            /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+            DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
 
-        /* Array of "is in use"-flags for all available DMA channels */
-        uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+            /* Array of "is in use"-flags for all available DMA channels */
+            uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+        #endif /* USE_BDMA */
 
     #else
         /* CM7 single core */
@@ -85,20 +87,22 @@
         /* Array of "is in use"-flags for all available DMA channels */
         uint8_t             bDmaStreamUsed  [MAX_DMA_STREAMS] = {0 };
 
-        /* Array of all BDMA channels for core CM7 */
-        static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
-          { BDMA_Channel0, BDMA_Channel1, BDMA_Channel2, BDMA_Channel3, BDMA_Channel4, BDMA_Channel5, BDMA_Channel6, BDMA_Channel7 };
+        #if USE_BDMA > 0
+            /* Array of all BDMA channels for core CM7 */
+            static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
+              { BDMA_Channel0, BDMA_Channel1, BDMA_Channel2, BDMA_Channel3, BDMA_Channel4, BDMA_Channel5, BDMA_Channel6, BDMA_Channel7 };
 
-        /* Array of all corresponding BDMA channel interrupt numbers */
-        static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
-          { BDMA_Channel0_IRQn, BDMA_Channel1_IRQn, BDMA_Channel2_IRQn, BDMA_Channel3_IRQn, BDMA_Channel4_IRQn, BDMA_Channel5_IRQn, BDMA_Channel6_IRQn, BDMA_Channel7_IRQn };
+            /* Array of all corresponding BDMA channel interrupt numbers */
+            static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
+              { BDMA_Channel0_IRQn, BDMA_Channel1_IRQn, BDMA_Channel2_IRQn, BDMA_Channel3_IRQn, BDMA_Channel4_IRQn, BDMA_Channel5_IRQn, BDMA_Channel6_IRQn, BDMA_Channel7_IRQn };
 
 
-        /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
-        DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
+            /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+            DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
 
-        /* Array of "is in use"-flags for all available DMA channels */
-        uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+            /* Array of "is in use"-flags for all available DMA channels */
+            uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+       #endif /* USE_BDMA */
     #endif
 
 #elif defined(DUAL_CORE) && defined(CORE_CM4)
@@ -119,19 +123,21 @@
     /* Array of "is in use"-flags for all available DMA channels */
     uint8_t             bDmaStreamUsed  [MAX_DMA_STREAMS] = {0 };
 
-    /* Array of all BDMA channels for core CM4 */
-    static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
-      { BDMA_Channel4, BDMA_Channel5, BDMA_Channel6, BDMA_Channel7 };
+    #if USE_BDMA > 0
+        /* Array of all BDMA channels for core CM4 */
+        static BDMA_Channel_TypeDef* AllBdmaChannels[MAX_BDMA_CHANNELS] =
+          { BDMA_Channel4, BDMA_Channel5, BDMA_Channel6, BDMA_Channel7 };
 
-    /* Array of all corresponding DMA stream interrupt numbers */
-    static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
-      { BDMA_Channel4_IRQn, BDMA_Channel5_IRQn, BDMA_Channel6_IRQn, BDMA_Channel7_IRQn };
+        /* Array of all corresponding DMA stream interrupt numbers */
+        static IRQn_Type AllBdmaChannelIrqNums[MAX_BDMA_CHANNELS] =
+          { BDMA_Channel4_IRQn, BDMA_Channel5_IRQn, BDMA_Channel6_IRQn, BDMA_Channel7_IRQn };
 
-    /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
-    DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
+        /* Array of DMA handles for all DMA channels, initialzed with NULL, set to any handle when used */
+        DMA_HandleTypeDef   *bHandles    [MAX_BDMA_CHANNELS] = {0 };
 
-    /* Array of "is in use"-flags for all available DMA channels */
-    uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+        /* Array of "is in use"-flags for all available DMA channels */
+        uint8_t             bBdmaChUsed  [MAX_BDMA_CHANNELS] = {0 };
+    #endif /* USE_BDMA */
 #else
     #error "No DMA handler for unknown core"
 #endif
@@ -182,53 +188,6 @@ static DMA_Stream_TypeDef *GetFreeDmaStream(void)
     return NULL;
 }
 
-
-/*******************************************************************************************************
- * Return the BDMA channel index for a given BDMA Channel
- * -1 is returned in case of illegalB DMA channel
- ******************************************************************************************************/
-static int8_t GetBdmaChannelIdx(BDMA_Channel_TypeDef *ch )
-{
-    for ( uint32_t i = 0; i < MAX_BDMA_CHANNELS; i++ )
-        if ( AllBdmaChannels[i] == ch ) return (int8_t)i;
-
-    DBG_ERROR("GetBdmaChannelIdx: Illegal BDMA-Channel @0x%p for DMA%d\n", ch );  
-    return -1;
-}
-
-/*******************************************************************************************************
- * Return the BDMA channel IRQ number for a given BDMA channel
- * DMA_ILLEGAL_CHANNEL is returned in case of illegal BDMA channel
- ******************************************************************************************************/
-IRQn_Type HW_DMA_GetBdmaChannelIrqNum(BDMA_Channel_TypeDef *channel)
-{
-    /* Get the channel index */
-    int8_t BdmaChannelIdx  = GetBdmaChannelIdx(channel);
-    if ( BdmaChannelIdx < 0 ) return DMA_ILLEGAL_CHANNEL;
-
-    return AllBdmaChannelIrqNums[BdmaChannelIdx];
-}
-
-/*******************************************************************************************************
- * Find the next free BDMA channel in case the statically specified channel is NULL
- * @param 
- *    none      
- * @retval 
- *    the first unused BDMA channel, if any unused channel is left
- *    NULL in case of all BDMA channels already in use
- * @note 
- *    if a free channel is found, it will NOT be allocated automatically ( by setting the used-bit )
- ******************************************************************************************************/
-static BDMA_Channel_TypeDef *GetFreeBdmaChannel(void)
-{
-    for ( uint32_t i = 0; i < MAX_BDMA_CHANNELS; i++ ) 
-        if ( !bBdmaChUsed[i]) return AllBdmaChannels[i];
-    
-    DBG_ERROR("GetFreeBdmaChannel: No more free BDMA channeld\n");
-    return NULL;
-}
-
-
 /*******************************************************************************************************
  * Enable the DMA hardware clock for a given BDMA channel or DMA stream 
  * and enable the DMAMUX clock, if implemented
@@ -255,7 +214,6 @@ static void HW_DMA_SetDmaChClock ( void *channel)
             HW_SetHWClock(DMA2, 1 );
         }
     #endif
-
 }
 
 /*******************************************************************************************************
@@ -313,6 +271,52 @@ static DMA_HandleTypeDef *HW_DMA_RegisterDMAStream (const HW_DmaType* dmadata)
     return dmadata->dmaHandle;
 }
 
+#if USE_BDMA > 0
+    /*******************************************************************************************************
+     * Return the BDMA channel index for a given BDMA Channel
+     * -1 is returned in case of illegalB DMA channel
+     ******************************************************************************************************/
+    static int8_t GetBdmaChannelIdx(BDMA_Channel_TypeDef *ch )
+    {
+        for ( uint32_t i = 0; i < MAX_BDMA_CHANNELS; i++ )
+            if ( AllBdmaChannels[i] == ch ) return (int8_t)i;
+
+        DBG_ERROR("GetBdmaChannelIdx: Illegal BDMA-Channel @0x%p for DMA%d\n", ch );  
+        return -1;
+    }
+
+    /*******************************************************************************************************
+     * Return the BDMA channel IRQ number for a given BDMA channel
+     * DMA_ILLEGAL_CHANNEL is returned in case of illegal BDMA channel
+     ******************************************************************************************************/
+    IRQn_Type HW_DMA_GetBdmaChannelIrqNum(BDMA_Channel_TypeDef *channel)
+    {
+        /* Get the channel index */
+        int8_t BdmaChannelIdx  = GetBdmaChannelIdx(channel);
+        if ( BdmaChannelIdx < 0 ) return DMA_ILLEGAL_CHANNEL;
+
+        return AllBdmaChannelIrqNums[BdmaChannelIdx];
+    }
+
+    /*******************************************************************************************************
+     * Find the next free BDMA channel in case the statically specified channel is NULL
+     * @param 
+     *    none      
+     * @retval 
+     *    the first unused BDMA channel, if any unused channel is left
+     *    NULL in case of all BDMA channels already in use
+     * @note 
+     *    if a free channel is found, it will NOT be allocated automatically ( by setting the used-bit )
+     ******************************************************************************************************/
+    static BDMA_Channel_TypeDef *GetFreeBdmaChannel(void)
+    {
+        for ( uint32_t i = 0; i < MAX_BDMA_CHANNELS; i++ ) 
+            if ( !bBdmaChUsed[i]) return AllBdmaChannels[i];
+    
+        DBG_ERROR("GetFreeBdmaChannel: No more free BDMA channeld\n");
+        return NULL;
+    }
+
 /*******************************************************************************************************
  * register one BDMA channel for the BDMA channel specified in dmadata                                 
  * @param 
@@ -368,6 +372,8 @@ static DMA_HandleTypeDef *HW_DMA_RegisterBDMAChannel (const HW_DmaType* dmadata)
     return dmadata->dmaHandle;
 }
 
+#endif /* USE_BDMA */
+
 
 /*******************************************************************************************************
  * register one DMA stream or BDMA channel for the DMA specified in dmadata                                 
@@ -391,9 +397,11 @@ DMA_HandleTypeDef *HW_DMA_RegisterDMAChannel (const HW_DmaType* dmadata)
         case HW_DMA_STREAM:
             ret = HW_DMA_RegisterDMAStream (dmadata);
             break;
-        case HW_BDMA_CHANNEL:
-            ret = HW_DMA_RegisterBDMAChannel (dmadata);
-            break;
+        #if USE_BDMA > 0
+            case HW_BDMA_CHANNEL:
+                ret = HW_DMA_RegisterBDMAChannel (dmadata);
+                break;
+        #endif
         default:
             DBG_ERROR("RegisterDMAChannel: Unknown DMA Instance %d\n", dmadata->dmaInstance);  
             ret = NULL;
@@ -436,7 +444,11 @@ void HW_DMA_SetAndEnableChannelIrq(void *channel, uint8_t prio, uint8_t subprio)
     IRQn_Type irq;
 
     if ( IS_BDMA_CHANNEL_INSTANCE(channel) ) {
-        irq = HW_DMA_GetBdmaChannelIrqNum(channel);
+        #if USE_BDMA > 0
+            irq = HW_DMA_GetBdmaChannelIrqNum(channel);
+        #else
+            DBG_ERROR("HW_DMA_SetAndEnableChannelIrq: Not configured for BDMA!");
+        #endif /* USE_BMDA */
     } else if ( IS_DMA_STREAM_INSTANCE(channel) ) {
         irq = HW_DMA_GetStreamIrqNum(channel);
     } else {
@@ -459,13 +471,17 @@ void HW_DMA_HandleDeInit(DMA_HandleTypeDef *hdma)
 
     /* disable DMA channel interrupt */
    if ( IS_BDMA_CHANNEL_INSTANCE(channel) ) {
-        irq = HW_DMA_GetBdmaChannelIrqNum(channel);
-        /* get and check the Channel index ( 0 .. 6 ) */
-        int8_t BdmaChannelIdx  = GetBdmaChannelIdx(channel);
+        #if USE_BDMA > 0
+            irq = HW_DMA_GetBdmaChannelIrqNum(channel);
+            /* get and check the Channel index ( 0 .. 6 ) */
+            int8_t BdmaChannelIdx  = GetBdmaChannelIdx(channel);
 
-        /* unregister Channel and mark as unused */
-        bHandles[BdmaChannelIdx]      = NULL;
-        bBdmaChUsed[BdmaChannelIdx]   = false;
+            /* unregister Channel and mark as unused */
+            bHandles[BdmaChannelIdx]      = NULL;
+            bBdmaChUsed[BdmaChannelIdx]   = false;
+        #else
+            DBG_ERROR("HW_DMA_HandleDeInit: Not configured for BDMA!");
+        #endif /* USE_BMDA */
     } else if ( IS_DMA_STREAM_INSTANCE(channel) ) {
         irq = HW_DMA_GetStreamIrqNum(channel);
         /* get and check the Channel index ( 0 .. 6 ) */
@@ -505,19 +521,23 @@ void DMA##dev##_Stream##channel##_IRQHandler(void)                 \
   ProfilerPop();                                                   \
 }
 
-#define BDMA_IRQ(channel,idx)                                      \
-void BDMA_Channel##channel##_IRQHandler(void)                      \
-{                                                                  \
-  ProfilerPush(JOB_IRQ_DMA);                                       \
-  /* find the assigned handle, if any */                           \
-  DMA_HandleTypeDef *handle = bHandles[idx];                       \
-  if ( !handle) {                                                  \
-    DBG_ERROR("BDMA Stream %d: No handler!\n", channel);           \
-    return;                                                        \
-  }                                                                \
-  HAL_DMA_IRQHandler(handle);                                      \
-  ProfilerPop();                                                   \
-}
+#if USE_BDMA > 0
+    #define BDMA_IRQ(channel,idx)                                      \
+    void BDMA_Channel##channel##_IRQHandler(void)                      \
+    {                                                                  \
+      ProfilerPush(JOB_IRQ_DMA);                                       \
+      /* find the assigned handle, if any */                           \
+      DMA_HandleTypeDef *handle = bHandles[idx];                       \
+      if ( !handle) {                                                  \
+        DBG_ERROR("BDMA Stream %d: No handler!\n", channel);           \
+        return;                                                        \
+      }                                                                \
+      HAL_DMA_IRQHandler(handle);                                      \
+      ProfilerPop();                                                   \
+    }
+#else
+    #define BDMA_IRQ(channel,idx)
+#endif /* USE_BDMA */
 
 #if defined(CORE_CM7)
     #if defined(DUAL_CORE)
@@ -569,25 +589,16 @@ void BDMA_Channel##channel##_IRQHandler(void)                      \
     DMA_IRQ(2, 5, 5)
     DMA_IRQ(2, 6, 6)
     DMA_IRQ(2, 7, 7)
-   // BDMA_IRQ(4, 0)
+    BDMA_IRQ(4, 0)
     BDMA_IRQ(5, 1)
     BDMA_IRQ(6, 2)
     BDMA_IRQ(7, 3)
 #endif
-void BDMA_Channel4_IRQHandler(void)
-{
-  ProfilerPush(JOB_IRQ_DMA);
-  /* find the assigned handle, if any */
-  DMA_HandleTypeDef *handle = bHandles[0];
-  if ( !handle) {
-    DBG_ERROR("BDMA Stream %d: No handler!\n", channel);
-    return;
-  } 
-  HAL_DMA_IRQHandler(handle);
-  ProfilerPop();
-}
 
 #if 0 
+
+/* For debug and test purposes */
+
 void DMA1_Stream4_IRQHandler(void) 
 {
   ProfilerPush(JOB_IRQ_DMA);
@@ -597,6 +608,19 @@ void DMA1_Stream4_IRQHandler(void)
     DBG_ERROR("DMA %d, Stream %d: No handler!\n", 1, 4);
     return;
   }
+  HAL_DMA_IRQHandler(handle);
+  ProfilerPop();
+}
+
+void BDMA_Channel4_IRQHandler(void)
+{
+  ProfilerPush(JOB_IRQ_DMA);
+  /* find the assigned handle, if any */
+  DMA_HandleTypeDef *handle = bHandles[0];
+  if ( !handle) {
+    DBG_ERROR("BDMA Stream %d: No handler!\n", channel);
+    return;
+  } 
   HAL_DMA_IRQHandler(handle);
   ProfilerPop();
 }
