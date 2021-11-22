@@ -10,9 +10,7 @@ extern "C" {
 #endif
 
 #include "config/config.h"
-
-#define MAJOR_VERSION   1
-#define MINOR_VERSION   01
+#include <stddef.h>
 
 #if defined(UNIVERSAL) 
     #define APP_NAME "Universal"
@@ -73,7 +71,10 @@ extern "C" {
 #define VERSION_STRING   VERSION_STRING1 "\r\n" VERSION_STRING2 
 
 extern const char VersionString[];
-void Dump_VersionInfo(void);
+void        Dump_VersionInfo(void);
+uint32_t    GetConfigNumLines(void);
+char        *GetConfigLine(char *retbuf, size_t maxlen, uint32_t idx, bool bAppendCrlf);
+
 
 #ifdef __cplusplus
 }

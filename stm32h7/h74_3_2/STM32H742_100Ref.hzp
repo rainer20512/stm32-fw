@@ -96,7 +96,6 @@
           <file file_name="CM7/Src/system/devices_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
-        <file file_name="CM7/Src/version.c" />
       </folder>
       <folder Name="config">
         <file file_name="CM7/Inc/stm32h7xx_hal_conf.h" />
@@ -114,7 +113,6 @@
         </folder>
         <file file_name="CM7/Inc/debug.h" />
         <file file_name="CM7/Inc/error.h" />
-        <file file_name="CM7/Inc/version.h" />
       </folder>
       <folder Name="eeprom_emul">
         <folder Name="core">
@@ -325,6 +323,7 @@
           <file file_name="../common_h7/Src/system/dma_handler.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
+        <file file_name="../common_h7/Src/version.c" />
       </folder>
       <folder Name="inc">
         <file file_name="../common_h7/Inc/hardware.h" />
@@ -351,6 +350,7 @@
           <file file_name="../common_h7/Inc/config/fmc_config.h" />
           <file file_name="../common_h7/Inc/config/usb_config.h" />
         </folder>
+        <file file_name="../common_h7/Inc/version.h" />
       </folder>
       <folder Name="task">
         <file file_name="../common_h7/Src/task/minitask.c" />

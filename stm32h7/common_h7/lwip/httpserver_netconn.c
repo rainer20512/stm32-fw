@@ -213,7 +213,9 @@ static cc BODY_POSTFIX[] =                                                      
 "</span></small></body></html>"
 ;
 
-static cc PRE[] = "<pre>";
+static cc PRE[]  = "<pre>";
+static cc NPRE[] = "</pre>";
+
 
 /******************************************************************************
  * transfer a static header, which is common to all pages via "conn"
@@ -602,8 +604,15 @@ void HtmlTaskList(struct netconn *conn, void *arg)
 
     /* Task List */
     netconn_write(conn, "<pre>", 5, NETCONN_COPY);
-    TaskSetListStartStop(LISTMODE_HEADER, LISTMODE_BODY);
-
+    
+    /*
+     * On dual core systems, no footer after first task list 
+     */
+    #if defined(DUAL_CORE)
+        TaskSetListStartStop(LISTMODE_HEADER, LISTMODE_BODY);
+    #else
+        TaskSetListStartStop(LISTMODE_HEADER, LISTMODE_FOOTER);
+    #endif
     /* local tasks */
     i = ACTIONID_INIT;
     while ( i = TaskIterateList ( i, line, 80, prefix ), i >= 0 ) {
@@ -708,6 +717,7 @@ static void HtmlOneHexSetting(struct netconn *conn, const char *label, const cha
 
 const char ethif_header[]   ="<p><b>Eth interface statistic</b></p>";
 const char build_header[]   ="<p><b>Build Information</b></p>";
+const char config_header[]  ="<p><b>Config Information</b></p>";
 const char form_prefix[]    ="<form onSubmit=\"before_submit()\"><table>\n";
 const char form_postfix[]   ="</table>\n<br><input type=\"submit\" value=\"Submit\"></form>";
 
@@ -960,25 +970,27 @@ void HtmlBuildInfo( struct netconn *conn, void *arg)
 {
     UNUSED(arg);
 
-    /* remote settings */
-    netconn_write(conn, build_header, strlen(build_header), NETCONN_NOCOPY );
-
-    portCHAR line[MAXLEN];
+    portCHAR line[MAXLEN+1];
     uint32_t linecount;
     char *ret;
+
+    /* remote settings */
+    netconn_write(conn, build_header, strlen(build_header), NETCONN_NOCOPY );
 
     netconn_write(conn, PRE, strlen(PRE), NETCONN_NOCOPY);
     netconn_write(conn, VersionString, strlen(VersionString), NETCONN_NOCOPY);
     netconn_write(conn, "\n\n", 2, NETCONN_NOCOPY);
+    netconn_write(conn, NPRE, strlen(NPRE), NETCONN_NOCOPY);
 
-    /* Task List */
+    /* Config Items */
+    netconn_write(conn, config_header, strlen(config_header), NETCONN_NOCOPY );
+    netconn_write(conn, PRE, strlen(PRE), NETCONN_NOCOPY);
 
-    linecount = ETHSTAT_GetLineCount();
+    linecount = GetConfigNumLines();
     for ( uint32_t i=0; i < linecount; i++ ) {
-        ret = ETHSTAT_GetLine(line, MAXLEN, i );
+        ret = GetConfigLine(line, MAXLEN, i, true );
         if ( ret ) netconn_write(conn, line, strlen(line), NETCONN_COPY);
     }
-    
 }
 
 #if 0

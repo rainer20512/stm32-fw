@@ -2291,7 +2291,7 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
             break;
 #endif
         case 3:
-            puts(VersionString);
+            Dump_VersionInfo();
             break;
         default:
             DEBUG_PUTS("MainMenu: command not implemented");

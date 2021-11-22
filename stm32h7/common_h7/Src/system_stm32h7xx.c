@@ -195,9 +195,10 @@ void SystemInit (void)
     *((__IO uint32_t*)0x51008108) = 0x000000001U;
   }
 
-  /* Wait for D2 becoming ready */
-  while ( !(RCC->CR & RCC_CR_D2CKRDY) );
-
+  #if defined(STM32H745xx) || defined(STM32H747xx)
+      /* Wait for D2 becoming ready on dual core devices */
+      while ( !(RCC->CR & RCC_CR_D2CKRDY) );
+  #endif  
   /* 
    * Enable SRAM 1,2, and SRAM3, if available 
    * **** 002 in clues.txt RHB added ****

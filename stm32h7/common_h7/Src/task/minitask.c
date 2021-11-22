@@ -322,7 +322,7 @@ void TaskFormatFooter( char* buffer, size_t buflen, const char *prefixstr, uint3
             snprintf(buffer ,buflen, "%s-------------------------------------------------------------------------", prefixstr);
             break;
         case 1:
-            snprintf(buffer ,buflen, "%sA: Running, B : Blocked, R : Ready, D : Deleted, S : Suspended, I : Invalid", prefixstr);
+            snprintf(buffer ,buflen, "%sA: Active, B : Blocked, R : Ready, D : Deleted, S : Suspended, I : Invalid", prefixstr);
             break;
         default:
             *buffer='\0';
