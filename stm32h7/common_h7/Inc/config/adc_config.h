@@ -41,7 +41,7 @@
     /* Definition ADC2 NVIC */
     #define ADC2_IRQ                             { ADC2_2_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC2_IRQHandler                      ADC2_2_IRQHandler
-    #define ADC2_RX_DMA                          DMA1_Channel2, DMA_REQUEST_0, DMA1_Channel2_IRQn
+    #define ADC2_RX_DMA                          DMA1_Channel2, HW_DMA_STREAM, DMA_REQUEST_ADC2, , DMA_PRIORITY_LOW 
     #define ADC2_DMA_IRQHandler                  DMA1_Channel2_IRQHandler
 #endif
 
@@ -54,7 +54,7 @@
     /* Definition ADC3 NVIC */
     #define ADC3_IRQ                             { ADC_IRQn, ADC_IRQ_PRIO, 0 }
     #define ADC3_IRQHandler                      ADC_IRQHandler
-    #define ADC3_RX_DMA                          NULL, DMA_REQUEST_ADC3, DMA_PRIORITY_LOW
+    #define ADC3_RX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_ADC3, DMA_PRIORITY_LOW
 //    #define ADC3_DMA_IRQHandler                  DMA1_Stream6_IRQHandler
                                                     
 #endif

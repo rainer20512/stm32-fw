@@ -70,13 +70,13 @@
 
   #ifdef COM1_USE_TX_DMA
     /* Definition for USART1 TX DMA */
-    #define COM1_TX_DMA                    NULL, DMA_REQUEST_USART1_TX, DMA_PRIORITY_MEDIUM 
+    #define COM1_TX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_USART1_TX, DMA_PRIORITY_MEDIUM 
 //    #define COM1_DMA_TX_IRQHandler         DMA1_Stream5_IRQHandler
   #endif
 
   #ifdef COM1_USE_RX_DMA
     /* Definition for USART1 RX DMA */
-    #define COM1_RX_DMA                   NULL, DMA_REQUEST_USART1_RX, DMA_PRIORITY_LOW
+    #define COM1_RX_DMA                   NULL, HW_DMA_STREAM, DMA_REQUEST_USART1_RX, DMA_PRIORITY_LOW
 //    #define COM1_DMA_RX_IRQHandler         DMA1_Stream7_IRQHandler
   #endif
 #endif // COM1 
@@ -275,12 +275,12 @@
 
   #ifdef COM6_USE_TX_DMA
     /* Definition for USART3 TX DMA */
-    #define COM6_TX_DMA                    NULL, DMA_REQUEST_USART6_TX, DMA_PRIORITY_MEDIUM 
+    #define COM6_TX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_USART6_TX, DMA_PRIORITY_MEDIUM 
 //    #define COM6_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
   #endif
   #ifdef COM6_USE_RX_DMA
     /* Definition for USART3 RX DMA */
-    #define COM6_RX_DMA                    NULL, DMA_REQUEST_USART6_RX, DMA_PRIORITY_LOW
+    #define COM6_RX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_USART6_RX, DMA_PRIORITY_LOW
 //    #define COM6_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
   #endif
 

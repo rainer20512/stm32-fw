@@ -73,7 +73,8 @@
 
   #ifdef QSPI1_USE_DMA
     /* Definition for USART1 TX DMA */
-    #define QSPI1_DMA                      NULL, DMA_REQUEST_3, DMA_PRIORITY_VERY_HIGH 
+    /* NO QSPI DMA in STM32H7 */
+    //#define QSPI1_DMA                      NULL, HW_DMA_STREAM, DMA_REQUEST_, DMA_PRIORITY_VERY_HIGH 
 //    #define QSPI1_DMA_IRQHandler           DMA2_Stream7_IRQHandler
 //    #define QSPI1_DMA                      DMA1_Channel5, DMA_REQUEST_5, DMA1_Channel5_IRQn, DMA_PRIORITY_VERY_HIGH 
 //    #define QSPI1_DMA_IRQHandler           DMA1_Channel5_IRQHandler

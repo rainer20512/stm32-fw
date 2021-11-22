@@ -59,8 +59,8 @@
     /* Definition for SPIx's NVIC */
     #define SPI1_HW_IRQ                          { SPI1_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI1_IRQHandler                      SPI1_IRQHandler
-    #define SPI1_TX_DMA                          NULL, DMA_REQUEST_SPI1_TX, DMA_PRIORITY_MEDIUM
-    #define SPI1_RX_DMA                          NULL, DMA_REQUEST_SPI1_RX, DMA_PRIORITY_MEDIUM
+    #define SPI1_TX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI1_TX, DMA_PRIORITY_MEDIUM
+    #define SPI1_RX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI1_RX, DMA_PRIORITY_MEDIUM
 /**** 004 ****
     #define SPI1_DMA_TX_IRQHandler               DMA1_Stream3_IRQHandler
     #define SPI1_DMA_RX_IRQHandler               DMA1_Stream2_IRQHandler
@@ -96,8 +96,8 @@
     #define SPI2_HW_IRQ                          { SPI2_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI2_IRQHandler                      SPI2_IRQHandler
     /* Definition for SPIDEV2's DMA */
-    #define SPI2_TX_DMA                          NULL, DMA_REQUEST_SPI2_TX, DMA_PRIORITY_MEDIUM
-    #define SPI2_RX_DMA                          NULL, DMA_REQUEST_SPI2_RX, DMA_PRIORITY_MEDIUM
+    #define SPI2_TX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI2_TX, DMA_PRIORITY_MEDIUM
+    #define SPI2_RX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI2_RX, DMA_PRIORITY_MEDIUM
 /**** 004 ****
     #define SPI2_DMA_TX_IRQHandler               DMA1_Stream5_IRQHandler
     #define SPI2_DMA_RX_IRQHandler               DMA1_Stream4_IRQHandler
@@ -133,8 +133,8 @@
     #define SPI3_IRQ                             { SPI3_IRQn, SPI_IRQ_PRIO, 0 }
     #define SPI3_IRQHandler                      SPI3_IRQHandler
     /* Definition for SPIDEV3's DMA */
-    #define SPI3_TX_DMA                          NULL, DMA_REQUEST_SPI3_TX, DMA_PRIORITY_MEDIUM
-    #define SPI3_RX_DMA                          NULL, DMA_REQUEST_SPI3_RX, DMA_PRIORITY_MEDIUM
+    #define SPI3_TX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI3_TX, DMA_PRIORITY_MEDIUM
+    #define SPI3_RX_DMA                          NULL, HW_DMA_STREAM, DMA_REQUEST_SPI3_RX, DMA_PRIORITY_MEDIUM
 /**** 004 ****
     #define SPI3_DMA_TX_IRQHandler               DMA2_Stream2_IRQHandler
     #define SPI3_DMA_RX_IRQHandler               DMA2_Stream1_IRQHandler
