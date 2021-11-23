@@ -152,7 +152,7 @@ static void     start(void);                //send start bits
 static void     stop(void);                 //send stop bits
 static void     bitDelay();
 static void     displayAll(void);
-static void     displayOne(uint8_t BitAddr,uint8_t DispData,uint8_t DispPointData);
+//static void     displayOne(uint8_t BitAddr,uint8_t DispData,uint8_t DispPointData);
 static uint8_t  code(uint8_t,uint8_t);
 
 

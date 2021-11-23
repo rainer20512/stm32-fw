@@ -51,6 +51,7 @@ void assert_failed(char *file, uint32_t line)
 { 
   /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  debug_printf("Assert failed in %s Line %d\n", file, line);  
 
   /* Infinite loop */
   while (1)

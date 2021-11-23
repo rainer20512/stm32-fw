@@ -383,7 +383,7 @@ void ethernet_link_thread( void const * argument )
 uint8_t ENC_Test(void)
 {
     /* Get Linkstate */
-    int32_t PHYLinkState = ENC_GetLinkState(&enc28j60);
+    ENC_GetLinkState(&enc28j60);
     return enc28j60.LinkStatus;
 }
 

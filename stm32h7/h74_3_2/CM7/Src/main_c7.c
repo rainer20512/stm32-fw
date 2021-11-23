@@ -67,6 +67,7 @@ void HW_InitJtagDebug(void);
 void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
+void LwIP_Start(void);
 
 #define TESTSIZE    16384
 #if USE_FMC > 0 

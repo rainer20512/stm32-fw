@@ -108,7 +108,7 @@ static const uint8_t defaultRMode = MT25Q_RW_STR_QUADIO;    // 1-4-4 STR
 static const uint8_t defaultWMode = MT25Q_RW_STR_QUAD;
 
 /*
-#
+*/
                                                       
 /* Private function prototypes ---------------------------------------------------------*/
 static uint8_t  MT25Q_GetStatus               (QSPI_HandleTypeDef *hqspi);

@@ -154,7 +154,7 @@ void LogFile_CRLF(void)
 {
     CircBuff_Put(&o, '\r');
     CircBuff_Put(&o, '\n');
-    TaskNotify(TASK_LOG);
+    TaskNotify(TASK_LOGFILE);
 }
 
 

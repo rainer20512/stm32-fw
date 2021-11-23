@@ -37,7 +37,7 @@
 #endif
 
 /* Enable/Disable different logging destinations */
-#define LOGTO_FATFS         0  
+#define LOGTO_FATFS         1  
 #define LOGTO_CONSOLE       1   
 
 

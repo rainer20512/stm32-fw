@@ -49,7 +49,7 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
     JOB_TASK_XSPI,
 #endif
 #if LOGTO_FATFS > 0
-    JOB_TASK_LOG,
+    JOB_TASK_LOGFILE,
 #endif
     JOB_ADC,
     JOB_SLEEP,

@@ -46,7 +46,7 @@
 #define TASK_REMOTE_CM7       10
 #define TASK_REMOTE_CM4       11
 #define TASK_SERIN            12
-#define TASK_XXX              13
+#define TASK_LOGFILE          13
 #define TASK_ZZZ              14
 #define TASK_YYY              15
 

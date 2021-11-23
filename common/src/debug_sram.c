@@ -46,10 +46,16 @@
  *************************************************************
  */
 
+/* switch off warning regarding missing return statement */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreturn-type"
 static uint32_t get_sp ( void )
+
 {
    asm ("mov r3,sp;" );
 }
+/* re-enable warning */
+#pragma GCC diagnostic pop
 
 /*****************************************************************************
  * @brief get the number of used ram bytes in the specified RAM area

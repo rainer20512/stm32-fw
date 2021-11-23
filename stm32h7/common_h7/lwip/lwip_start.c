@@ -61,6 +61,9 @@ static void Netif_Config(void)
   */
 static void StartThread(void const * argument)
 {
+  /* avoid "unused argument" warning */
+  (void)(argument);
+   
   /* Create tcp_ip stack thread */
   tcpip_init(NULL, NULL);
 

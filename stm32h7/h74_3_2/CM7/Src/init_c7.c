@@ -248,19 +248,19 @@ void Init_DefineTasks(void)
   TaskRegisterTask(NULL,          task_handle_out,  TASK_LOG,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  
 #endif
 #if USE_THPSENSOR > 0
-  TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,      JOB_TASK_MAIN,     "THP sensor task");
+  TaskRegisterTask(task_init_thp, task_handle_thp, TASK_THP,         JOB_TASK_MAIN,     "THP sensor task");
 #endif
 #if USE_DISPLAY > 0
-  TaskRegisterTask(task_init_lcd, task_handle_lcd, TASK_LCD,      JOB_TASK_LCD,      "LCD task");
+  TaskRegisterTask(task_init_lcd, task_handle_lcd, TASK_LCD,         JOB_TASK_LCD,      "LCD task");
 #endif
 #if USE_DS18X20 > 0
-  TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
+  TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,         JOB_TASK_ONEWIRE,  "OneWire task");
 #endif
 #if USE_DS18X20 > 0
     AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");
 #endif
 #if LOGTO_FATFS > 0
   static StackType_t logStack[LOG_STACK_SIZE];
-  TaskRegisterTask(NULL,          task_handle_log, TASK_LOG,     JOB_TASK_LOG,     logStack, LOG_STACK_SIZE, "LOG task");
+  TaskRegisterTask(NULL,          task_handle_log, TASK_LOGFILE,     JOB_TASK_LOGFILE,     logStack, LOG_STACK_SIZE, "LOG task");
 #endif
 }

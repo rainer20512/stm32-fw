@@ -190,7 +190,7 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
     #if defined(USE_EXTMEM_QSPI)
         uint32_t byte_addr = blk_addr * QSpi1Handle.geometry.EraseSectorSize;
         uint32_t byte_size = blk_len  * QSpi1Handle.geometry.EraseSectorSize;
-        ret = ! QSpi_ReadWait(&QSpi1Handle, buf, byte_addr, byte_size);
+        ret = ! XSpi_ReadWait(&QSpi1Handle, buf, byte_addr, byte_size);
     #else
         if (BSP_SD_IsDetected(0) != SD_NOT_PRESENT)
         {
@@ -232,13 +232,13 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
     #if defined(USE_EXTMEM_QSPI)
         uint32_t byte_addr = blk_addr * QSpi1Handle.geometry.EraseSectorSize;
         uint32_t byte_size = blk_len  * QSpi1Handle.geometry.EraseSectorSize;
-        if ( ! QSpi_EraseSectorWait(&QSpi1Handle, byte_addr,  blk_len ) ) {
+        if ( ! XSpi_EraseSectorWait(&QSpi1Handle, byte_addr,  blk_len ) ) {
             #if DEBUG_MODE > 0 && DEBUG_USB > 0
                 LOG_ERROR("Erase %d sectors beginning with sector %d failed", blk_len, blk_addr);
             #endif
             return ret;
         }
-        if ( !QSpi_WriteWait(&QSpi1Handle, buf, byte_addr, byte_size) ) {
+        if ( !XSpi_WriteWait(&QSpi1Handle, buf, byte_addr, byte_size) ) {
             #if DEBUG_MODE > 0 && DEBUG_USB > 0
                 DBGU_ERROR("Write %d sectors beginning with sector %d failed", blk_len, blk_addr);
             #endif
