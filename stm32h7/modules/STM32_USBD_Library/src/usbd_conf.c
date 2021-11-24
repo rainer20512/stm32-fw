@@ -182,7 +182,7 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef * hpcd)
   */
 USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
 {
-#ifdef USE_USB_FS
+#ifdef USE_USB_FS > 0
   /* Set LL Driver parameters */
   hpcd.Instance = USB2_OTG_FS;
   hpcd.Init.dev_endpoints = 8;

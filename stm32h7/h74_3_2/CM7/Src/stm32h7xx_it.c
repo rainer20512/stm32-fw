@@ -765,10 +765,10 @@ void DebugMon_Handler(void)
 
 #if USE_USB > 0
     extern PCD_HandleTypeDef hpcd;
-    #ifdef USE_USB_FS
-    void OTG_FS_IRQHandler(void)
+    #ifdef USE_USB_FS > 0
+        void OTG_FS_IRQHandler(void)
     #else
-    void OTG_HS_IRQHandler(void)
+        void OTG_HS_IRQHandler(void)
     #endif
     {
       HAL_PCD_IRQHandler(&hpcd);

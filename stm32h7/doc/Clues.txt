@@ -21,8 +21,10 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
         RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
       #endif
 
-      /* Wait for D2 becoming ready */
-      while ( !(RCC->CR & RCC_CR_D2CKRDY) );
+      #if defined(STM32H745xx) || defined(STM32H747xx)
+          /* Wait for D2 becoming ready on dual core devices */
+          while ( !(RCC->CR & RCC_CR_D2CKRDY) );
+      #endif  
 
      Das Einbinden von ram_preset.inc in STM32_Startup.s muss dann _nach_ dem
      Aufruf von SystemInit erfolgen!

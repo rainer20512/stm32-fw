@@ -14,7 +14,13 @@
 #if USE_USB > 0 
 
 #if DEBUG_MODE > 0
-    #define DEBUG_USB               
+    /* Enforce DEBUG_USB > 0      */
+    #if !defined ( DEBUG_USB )
+        #define DEBUG_USB       1
+    #elif DEBUG_USB < 1
+        #undef DEBUG_USB
+        #define DEBUG_USB       1
+    #endif
 #endif
 
 #include "error.h"
