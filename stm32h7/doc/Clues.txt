@@ -34,6 +34,10 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Dann ( und nur dann, wenn _kein_ weiterer D2-Teilnehmer aktiv ist ) wird das D2CKRDY-bit
      in RCC->CR rückgestetzt. 
 
-003: Die ST-Link-Firmware nicht auf Version > 35 flashen.
+003: Die ST-Link/V2-Firmware nicht auf Version > 35 flashen.
      mit Version > 35 wird STM32H742 von Rowley Crossworks nicht mehr als solcher erkannt  
+
+     Gleiches gilt für ST-Link/V3: Firmware nicht über Version V3J4M2 flashen
+     mit höherer Version wird STM32H743 von Rowley Crossworks nicht mehr als solcher erkannt  
+    
 

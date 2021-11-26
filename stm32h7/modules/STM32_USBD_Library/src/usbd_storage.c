@@ -17,10 +17,15 @@
   ******************************************************************************
   */
 
-#define USE_EXTMEM_QSPI
+#undef USE_EXTMEM_QSPI
 
 /* Includes ------------------------------------------------------------------ */
 #include "config/config.h"
+
+#if USE_USB_SMC > 0 
+
+#undef USE_EXTMEM_QSPI
+
 #if DEBUG_MODE > 0 && DEBUG_USB > 0
     #include "log.h"
 #endif
@@ -125,7 +130,7 @@ int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t * block_num,
             ret = 0;
         }
     #endif
-  DBGU_VERBOSE("StorageCapacity: %d blocks of size %d", *block_num +1, *block_size);
+  DBGU_VERBOSE("StorageCapacity: %d blocks of size %d, ret=%d", *block_num +1, *block_size, ret);
   return ret;
 }
 
@@ -190,7 +195,7 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
     #if defined(USE_EXTMEM_QSPI)
         uint32_t byte_addr = blk_addr * QSpi1Handle.geometry.EraseSectorSize;
         uint32_t byte_size = blk_len  * QSpi1Handle.geometry.EraseSectorSize;
-        ret = ! XSpi_ReadWait(&QSpi1Handle, buf, byte_addr, byte_size);
+        ret = XSpi_ReadWait(&QSpi1Handle, buf, byte_addr, byte_size) ? 0 : -1;
     #else
         if (BSP_SD_IsDetected(0) != SD_NOT_PRESENT)
         {
@@ -204,6 +209,9 @@ int8_t STORAGE_Read(uint8_t lun, uint8_t * buf, uint32_t blk_addr,
             ret = 0;
         }
     #endif
+    if ( ret != 0 ) {
+            DBGU_ERROR("StorageRead error");
+    }
 
   return ret;
 }
@@ -272,5 +280,4 @@ int8_t STORAGE_GetMaxLun(void)
   return (STORAGE_LUN_NBR - 1);
 }
 
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif /* USE_USB_MSC */

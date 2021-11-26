@@ -131,6 +131,10 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   stacked_lr = ((unsigned long) hardfault_args[5]);
   stacked_pc = ((unsigned long) hardfault_args[6]);
   stacked_psr = ((unsigned long) hardfault_args[7]);
+ 
+  debug_printf("Priv.lvl  = %s\n", __get_CONTROL() & CONTROL_nPRIV_Msk ? "Unpriv." : "Privileged");
+  debug_printf("Stack     = %s\n", __get_CONTROL() & CONTROL_SPSEL_Msk ? "Process" : "Main");
+  debug_printf("FP contxt = %s\n", __get_CONTROL() & CONTROL_FPCA_Msk  ? "Active"  : "Inactive");
   debug_printf ("\n\n[Hard fault handler - all numbers in hex]\n");
   debug_printf ("R0       = %08x\n", stacked_r0);
   debug_printf ("R1       = %08x\n", stacked_r1);
@@ -140,12 +144,30 @@ void hard_fault_handler_c (unsigned int * hardfault_args)
   debug_printf ("LR [R14] = %08x  subroutine call return address\n", stacked_lr);
   debug_printf ("PC [R15] = %08x  program counter\n", stacked_pc);
   debug_printf ("PSR      = %08x\n", stacked_psr);
-  debug_printf ("BFAR     = %08x\n", (*((volatile unsigned long *)(0xE000ED38))));
-  uint32_t cfsr =                    (*((volatile unsigned long *)(0xE000ED28)));
+
+  uint32_t cfsr = SCB->CFSR;
   debug_printf ("CFSR     = %08x\n", cfsr);
-  debug_printf ("   MMFSR = %02x\n", cfsr&0xFF);
-  debug_printf ("    BFSR = %02x\n", (cfsr>>8)&0xFF);
-  debug_printf ("    UFSR = %04x\n", (uint16_t)(cfsr>>16));
+  if ( cfsr & SCB_CFSR_DIVBYZERO_Msk ) debug_printf("   Div. by zero\n");
+  if ( cfsr & SCB_CFSR_UNALIGNED_Msk ) debug_printf("   Unaligned\n");
+  if ( cfsr & SCB_CFSR_NOCP_Msk )      debug_printf("   No coprocessor\n");
+  if ( cfsr & SCB_CFSR_INVPC_Msk )     debug_printf("   Invalid PC load\n");
+  if ( cfsr & SCB_CFSR_INVSTATE_Msk )  debug_printf("   invalid state of EPSR, PSR=%08x\n", stacked_psr);
+  if ( cfsr & SCB_CFSR_UNDEFINSTR_Msk )debug_printf("   Undef. Instruction\n");
+ 
+  if ( cfsr & SCB_CFSR_BFARVALID_Msk ) debug_printf("   Bus Fault BFAR=%08x\n",SCB->BFAR);
+  if ( cfsr & SCB_CFSR_LSPERR_Msk )    debug_printf("   FP lazy state pres.\n");
+  if ( cfsr & SCB_CFSR_STKERR_Msk )    debug_printf("   BF on exception stacking\n");
+  if ( cfsr & SCB_CFSR_UNSTKERR_Msk )  debug_printf("   BF on exception unstacking\n");
+  if ( cfsr & SCB_CFSR_IMPRECISERR_Msk)debug_printf("   Imprecise Data bus error\n");
+  if ( cfsr & SCB_CFSR_PRECISERR_Msk ) debug_printf("   Precise Data bus error\n");
+  if ( cfsr & SCB_CFSR_IBUSERR_Msk )   debug_printf("   Instr. bus error\n");
+
+  if ( cfsr & SCB_CFSR_MMARVALID_Msk ) debug_printf("   MemMgr flt MMAR=%08x\n",SCB->MMFAR);
+  if ( cfsr & SCB_CFSR_MSTKERR_Msk )   debug_printf("   MemMgr flt on exception stacking\n");
+  if ( cfsr & SCB_CFSR_MUNSTKERR_Msk ) debug_printf("   MemMgr flt on exception unstacking\n");
+  if ( cfsr & SCB_CFSR_DACCVIOL_Msk )  debug_printf("   Data access violation\n");
+  if ( cfsr & SCB_CFSR_IACCVIOL_Msk )  debug_printf("   Instr. access violation\n");
+
   debug_printf ("HFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED2C))));
   debug_printf ("DFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED30))));
   debug_printf ("AFSR     = %08x\n", (*((volatile unsigned long *)(0xE000ED3C))));

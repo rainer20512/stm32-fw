@@ -21,8 +21,8 @@
  ********************************************************************************
  */ 
 
-#define STM32H742REF
-//#define STM32H743EVAL2
+//#define STM32H742REF
+#define STM32H743EVAL2
 
 /*
  ********************************************************************************
@@ -47,21 +47,23 @@
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             1
+#define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
-#define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
-#define USE_USB                     1   
-#define USE_USB_FS                  1
+#define USE_USB                     0   
+#define USE_USB_FS                  0
+#define USE_USB_MSC                 0
 #define USE_FMC_SRAM                0
 #define USE_FMC_SDRAM               0
 #define USE_FMC_NOR                 0
-#define USE_ETH                     1
-#define USE_FATFS                   1
-#define USE_BDMA                    1
+#define USE_ETH                     0
+#define USE_LWIP                    0 
+#define USE_FATFS                   0
+#define USE_BDMA                    0
 
 /* Choose one in case of USE_ETH == 1 
  * 
@@ -73,10 +75,10 @@
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
 #define USE_ETY_PHY_LAN8742         0
-#define USE_ETH_PHY_ENC28J60        1
+#define USE_ETH_PHY_ENC28J60        0
 
 /* Choose one in case of USE_QSPI == 1  */
-#define USE_XSPI_MX25               1
+#define USE_XSPI_MX25               0
 #define USE_XSPI_MT25Q              0
 
 
@@ -186,6 +188,14 @@
     #error "Must use QSPI for FATFS"
 #endif
 
+/*
+ * USE_ETH requires USE_LWIP
+ */
+#if USE_ETH > 0 && USE_LWIP == 0
+    #error "Must use LwIP when using ETH"
+#endif
+
+
 #define HSE_VALUE HW_HSE_FREQUENCY
 
 /* Can we use an HSE Clock ? */
@@ -264,26 +274,28 @@
     MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,9)
     MK_CONFIGSTR(USE_USB,10)
     MK_CONFIGSTR(USE_USB_FS,11)
-    MK_CONFIGSTR(USE_FMC_SRAM,12)
-    MK_CONFIGSTR(USE_FMC_SDRAM,13)
-    MK_CONFIGSTR(USE_FMC_NOR,14)
-    MK_CONFIGSTR(USE_ETH,15)
-    MK_CONFIGSTR(USE_FATFS,16)
-    MK_CONFIGSTR(USE_BDMA,17)
+    MK_CONFIGSTR(USE_USB_MSC,12)
+    MK_CONFIGSTR(USE_FMC_SRAM,13)
+    MK_CONFIGSTR(USE_FMC_SDRAM,14)
+    MK_CONFIGSTR(USE_FMC_NOR,15)
+    MK_CONFIGSTR(USE_ETH,16)
+    MK_CONFIGSTR(USE_LWIP,17)
+    MK_CONFIGSTR(USE_FATFS,18)
+    MK_CONFIGSTR(USE_BDMA,19)
 
-    #define MAX_CONFIGSTR   17
+    #define MAX_CONFIGSTR   19
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
-            ConfigStr17 // , ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr17, ConfigStr18, ConfigStr19, //ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
-            ConfigVal17 // , ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
+            ConfigVal17, ConfigVal18, ConfigVal19, //ConfigVal20, ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
         };
 
 #if 0

@@ -1,3 +1,5 @@
+#if USE_LWIP > 0
+
 #include "cmsis_os.h"
 
 #include "ip_addr.h"
@@ -86,3 +88,4 @@ void LwIP_Start ( void )
   osThreadDef(Start, StartThread, osPriorityNormal, 0, configMINIMAL_STACK_SIZE * 4);
   osThreadCreate (osThread(Start), NULL);
 }
+#endif /* USE_LWIP > 0 */

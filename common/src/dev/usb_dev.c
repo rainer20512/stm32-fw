@@ -31,7 +31,8 @@
 #include "config/usb_config.h"
 #include "debug_helper.h"
 
-#include "usbd_cdc.h"
+//#include "usbd_cdc.h"
+#include "usbd_msc.h"
 #include "usbd_desc.h"
 
 
@@ -181,8 +182,8 @@ bool USBD_CanStop(const HW_DeviceType *self)
     return false;
 }
 
-extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
-//extern USBD_StorageTypeDef USBD_DISK_fops;
+//extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
+extern USBD_StorageTypeDef USBD_DISK_fops;
 
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Can Device initialization: Reset handle, init GPIO pins and interrupts,
@@ -219,7 +220,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
 #endif
 
-
+#if 0
     /* Init Device Library */
     USBD_Init(hUsbd, &VCP_Desc, 0);
 
@@ -231,8 +232,8 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     /* Start Device Process */
     USBD_Start(hUsbd);
-
-#if 0 
+#endif
+ 
   /* Init Device Library */
   USBD_Init(hUsbd, &MSC_Desc, 0);
 
@@ -244,7 +245,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
   /* Start Device Process */
   USBD_Start(hUsbd);
-#endif
+
 
     return true;
 }

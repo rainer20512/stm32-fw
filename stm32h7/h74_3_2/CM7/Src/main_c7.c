@@ -226,7 +226,9 @@ int main(void)
 
     Init_DefineTasks();
 
+#if USE_LWIP > 0
     LwIP_Start();
+#endif
 
     STATUS(6);
 
