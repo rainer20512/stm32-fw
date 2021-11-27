@@ -60,8 +60,12 @@
 /* Private constants ---------------------------------------------------------*/
 
 /* Configuration of eeprom emulation in QSPI flash, can be custom */
-#if defined(STM32H747xx) || defined (STM32H745xx) || defined (STM32H742xx) || defined(STM32H743xx)
+#if defined(STM32H742REF) 
+    /* STM32H742REF has an 8MByte qspi flash on PCB */
     #define START_PAGE_ADDRESS      0x7F8000   /*!< Last 8 sectors of 4kiByte size each = 0x7f8000 .. 0x7fffff */
+#elif defined(STM32H743EVAL2) 
+    /* STM32H743EVAL2 has two 64MByte qspi flash on board, we use only one of these */
+    #define START_PAGE_ADDRESS      0x3ff8000   /*!< Last 8 sectors of 4kiByte size each = 0x3ff8000 .. 0x3ffffff */
 #else
     #error "No Start Page for EEPROM emulation set!"
 #endif

@@ -10,9 +10,7 @@ extern "C" {
 #endif
 
 #include "config/config.h"
-
-#define MAJOR_VERSION   1
-#define MINOR_VERSION   04
+#include <stddef.h>
 
 #if defined(NOEXTENSION) 
     #define APP_NAME "NoExtension"
@@ -36,6 +34,25 @@ extern "C" {
     #define MCU "Unknown"
 #endif
 
+#if defined(BL475IOT)
+    #define BOARD   "BL475IOT"
+#elif defined(DRAGONFLY476)
+    #define BOARD   "Dragonfly476"
+#elif defined(STM32L476NUCLEO)
+    #define BOARD   "STM32L476 Nucleo"
+#elif defined(STM32L4R9DISCOVERY)
+    #define BOARD   "STM32L4R9 Discovery"
+#elif defined(STM32L4S9ZXXREF)
+    #define BOARD   "STM32L4S9ZXX Reference"
+#elif defined(STM32L476EVAL)
+    #define BOARD   "STM32L476 Eval"
+#elif defined(STM32L476BAREMETAL)
+    #define BOARD   "STM32L476 bare metal"
+#else
+    #define BOARD   "Unknown Board"
+#endif
+
+
 /*-----------------------------------------------------------------------------
  * Don't change below
  *-----------------------------------------------------------------------------
@@ -44,11 +61,20 @@ extern "C" {
 #define VERSION_NUMBER  "V" STR(MAJOR_VERSION) "." STR(MINOR_VERSION)
 
 #define MCU_TYPE "for " MCU " family" 
-#define VERSION_STRING2  __DATE__ " " __TIME__ 
 
-#define VERSION_STRING1  APP_NAME " " VERSION_NUMBER 
+#define BOARD_STRING "on board " BOARD
 
-#define VERSION_STRING   VERSION_STRING1 " " MCU_TYPE " Built " VERSION_STRING2
+#define VERSION_STRING1  APP_NAME " " VERSION_NUMBER " " MCU_TYPE " " BOARD_STRING
+
+#define VERSION_STRING2  "Built " __DATE__ " " __TIME__ 
+
+#define VERSION_STRING   VERSION_STRING1 "\r\n" VERSION_STRING2 
+
+extern const char VersionString[];
+void        Dump_VersionInfo(void);
+uint32_t    GetConfigNumLines(void);
+char        *GetConfigLine(char *retbuf, size_t maxlen, uint32_t idx, bool bAppendCrlf);
+
 
 #ifdef __cplusplus
 }

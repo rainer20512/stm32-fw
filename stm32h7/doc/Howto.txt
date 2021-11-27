@@ -71,6 +71,29 @@
         So, CM7's ram_preset.inc has to preset all SRAM except SRAM1, while CM4's ram_preset.inc has to preset only SRAM1. 
         The specific ram_preset.inc can be found in the core-specific inc/system-folder.
 
+        Addendum: RAM-preset is now done by a C-function call. Function is located in RamPreset.c and calles from reset_handler in STM32_Startup.s :
+
+        reset_handler:
+
+        #ifndef __NO_SYSTEM_INIT
+          ldr r0, =__RAM_segment_end__
+          mov sp, r0
+          bl SystemInit
+        #endif
+
+        // RHB chgd: Preset all RAM with an uniform pattern
+
+        #ifdef DO_RAM_PRESET
+          ldr r0, =__RAM_segment_end__
+          mov sp, r0
+          bl RamPreset
+        #endif
+
+        // RHB End of insertion
+
+        Because stack is overwritten by RamPreset, too, the RamPreset-C-routine must not do any further calls. 
+        The return address when calling to RamPreset is stored in lr and therefore is safe against stack overwriting
+
     5. Implement an us-Delay function by accessing the cycle-counter of the ARM core:
         volatile unsigned int *DWT_CYCCNT     = (volatile unsigned int *)0xE0001004; //address of the register
         volatile unsigned int *DWT_CONTROL    = (volatile unsigned int *)0xE0001000; //address of the register

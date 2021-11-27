@@ -34,6 +34,10 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Dann ( und nur dann, wenn _kein_ weiterer D2-Teilnehmer aktiv ist ) wird das D2CKRDY-bit
      in RCC->CR rückgestetzt. 
 
+002. Nachtrag: Initialisierung aller RAM-Bereiche incl. Einschalten von Clocks für D2-SRAMS
+     wird jetzt in C-File RamPreser.c gemacht. Der Aufruf von RamPerset erfolgt dann statt 
+     Einbinden von ram_preset.inc in STM32_Startup.s
+
 003: Die ST-Link/V2-Firmware nicht auf Version > 35 flashen.
      mit Version > 35 wird STM32H742 von Rowley Crossworks nicht mehr als solcher erkannt  
 

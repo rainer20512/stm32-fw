@@ -199,25 +199,6 @@ void SystemInit (void)
       /* Wait for D2 becoming ready on dual core devices */
       while ( !(RCC->CR & RCC_CR_D2CKRDY) );
   #endif  
-  /* 
-   * Enable SRAM 1,2, and SRAM3, if available 
-   * **** 002 in clues.txt RHB added ****
-   */
-  #if defined(STM32H742xx)
-    RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
-  #else
-    RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
-  #endif
-
-   /**** 002 ****
-    * Disable all previously enabled Domain-2-elements again.
-    * This is neccessary to recognize in a multi-core environment, that the CM4 core in D2 
-    * has stopped by evaluating RCC->CR D2CKRDY bit
-    */
-
-   RCC->AHB2ENR = 0;
-
-  /* End of insertion */
 
 #endif /* CORE_CM7*/
 

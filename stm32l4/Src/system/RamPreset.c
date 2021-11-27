@@ -8,7 +8,7 @@
  * Only one call is allowed, the return adress for this call is stored in lr. 
  * And this call is the call to RamPreset!
  *
- * This is the STM32H7-family implementation
+ * This ist the STM32L4-family implementation
  * 
  ******************************************************************************
  */
@@ -46,34 +46,13 @@ void RamPreset(void)
     register uint32_t preset = RAM_PRESET_VALUE;
     register uint32_t *RamPtr;
     register uint32_t *RamEnd;
-    /* 
-     * Enable SRAM 1,2, and SRAM3, if available 
-     * **** 002 in clues.txt RHB added ****
-     */
-    #if defined(STM32H742xx)
-        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
-    #else
-        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
-    #endif
 
-    PRESET_RAMAREA(__SRAM1);
+    PRESET_RAMAREA(__RAM);
     PRESET_RAMAREA(__SRAM2);
 
-    #if !defined(STM32H742xx)
+    #if defined(STM32L4PLUS)
         PRESET_RAMAREA(__SRAM3);
     #endif
-    PRESET_RAMAREA(__SRAM4);
-    PRESET_RAMAREA(__AXISRAM);
-    PRESET_RAMAREA(__DTCM);
-
-
-   /**** 002 ****
-    * Disable all previously enabled Domain-2-elements again.
-    * This is neccessary to recognize in a multi-core environment, that the CM4 core in D2 
-    * has stopped by evaluating RCC->CR D2CKRDY bit
-    */
-
-   RCC->AHB2ENR = 0;
 
 }
 

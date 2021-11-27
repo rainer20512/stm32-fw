@@ -18,7 +18,13 @@
 
 #define DMA_IS_LINEAR(hdma)             HAL_IS_BIT_CLR(hdma->Instance->CCR, DMA_CCR_CIRC)
 #define DMA_GET_RXSIZE(hdma)            (hdma->Instance->CNDTR)
-#define DMAMEM                  
+
+/*
+ * There are no special considerations for DMA or BDMA memory on L4-family, because
+ * they don't have D-cache or an MPU
+ */
+#define DMAMEM  
+#define BDMAMEM                
 
 /* --- Type specific setup for ADC ------------------------------------------*/
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC1_BASE )

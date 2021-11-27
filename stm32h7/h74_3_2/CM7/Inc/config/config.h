@@ -47,12 +47,12 @@
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             0
+#define USE_EEPROM_EMUL             1
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
-#define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_USB                     0   
 #define USE_USB_FS                  0
@@ -79,7 +79,7 @@
 
 /* Choose one in case of USE_QSPI == 1  */
 #define USE_XSPI_MX25               0
-#define USE_XSPI_MT25Q              0
+#define USE_XSPI_MT25Q              1
 
 
 #define GENERAL_BAUDRATE    500000

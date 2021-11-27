@@ -110,7 +110,6 @@
         <folder Name="system">
           <file file_name="CM7/Inc/system/profiling.h" />
           <file file_name="CM7/Inc/system/clockconfig.h" />
-          <file file_name="CM7/Inc/system/ram_preset.inc" />
         </folder>
         <file file_name="CM7/Inc/debug.h" />
         <file file_name="CM7/Inc/error.h" />

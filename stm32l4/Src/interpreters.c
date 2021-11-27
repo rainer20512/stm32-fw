@@ -35,6 +35,7 @@
 #include "eeprom.h"
 #include "dev/devices.h"
 #include "system/tm1637.h"
+#include "version.h"
 
 #if USE_DS18X20  > 0
     #include "onewire.h"
@@ -2506,6 +2507,9 @@ static bool MainMenu(char *cmdline, size_t len, const void * arg )
             printf("FatFS   Debuglevel=%d\n", fatfs_debuglevel);
             break;
 #endif
+        case 1:
+            Dump_VersionInfo();
+            break;
         default:
             DEBUG_PUTS("MainMenu: command not implemented");
             return false;
@@ -2526,12 +2530,12 @@ static const CommandSetT cmdBasic[] = {
   { "UID",             ctype_fn,  .exec.fn = HW_DumpID,       VOID(0),  "Print Hardware UID"  },
 #if USE_RFM12 > 0 || USE_RFM69 > 0
   { "D-cmd",           ctype_fn,  .exec.fn = RFM_Menu,        VOID(3),  "Show system status"  },
-  { "Version",         ctype_fn,  .exec.fn = RFM_Menu,        VOID(6),  "Show system status"  },
 #endif
 #if DEBUG_FEATURES > 0
   { "Clock&Pwr",       ctype_sub, .exec.sub = &mdlClkCfg,      0,       "Clock & Power Config submenu" },
   { "Devices",         ctype_sub, .exec.sub = &mdlDevices,     0,       "Peripheral devices submenu" },
 #endif
+  { "Version",         ctype_fn,  .exec.fn = MainMenu,        VOID(1),  "Show version info"  },
 #if USE_RFM12 > 0 || USE_RFM69 > 0
   { "RFM"    ,         ctype_sub, .exec.sub = &mdlRFM,         0,       "RFM submenu" },
 #endif

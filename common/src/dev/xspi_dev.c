@@ -1575,13 +1575,13 @@ const HW_DeviceType HW_OSPI2 = {
 ///////////////////////////////////////////////////////////////////////////////
 // Interrupt routines QUADSPI /////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-#if USE_QSPI > 0 && defined(QSPI_USE_IRQ)
+#if USE_QSPI > 0 && defined(QSPI1_USE_IRQ)
     /**
       * @brief  Command completed callbacks.
       * @param  hxspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_CmdCpltCallback(QSPI1_HandleTypeDef *hxspi)
+    void HAL_QSPI_CmdCpltCallback(QSPI_HandleTypeDef *hxspi)
     {
         UNUSED(hxspi);
         LOGU_VERBOSE("CmdCplt Callback");
@@ -1593,12 +1593,12 @@ const HW_DeviceType HW_OSPI2 = {
       * @param  hxspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_RxCpltCallback(QSPI1_HandleTypeDef *hxspi)
+    void HAL_QSPI_RxCpltCallback(QSPI_HandleTypeDef *hxspi)
     {
       UNUSED(hxspi);
       LOGU_VERBOSE("RxCplt Callback");
-      XSpi1Handle.bAsyncBusy = false;  
-      if ( XSpi1Handle.XSpi_RdDoneCB ) XSpi1Handle.XSpi_RdDoneCB(&XSpi1Handle);
+      QSpi1Handle.bAsyncBusy = false;  
+      if ( QSpi1Handle.XSpi_RdDoneCB ) QSpi1Handle.XSpi_RdDoneCB(&QSpi1Handle);
     }
 
     /**
@@ -1606,7 +1606,7 @@ const HW_DeviceType HW_OSPI2 = {
       * @param  hxspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_TxCpltCallback(QSPI1_HandleTypeDef *hxspi)
+    void HAL_QSPI_TxCpltCallback(QSPI_HandleTypeDef *hxspi)
     {
         UNUSED(hxspi);
         LOGU_VERBOSE("TxCplt Callback");
@@ -1618,14 +1618,14 @@ const HW_DeviceType HW_OSPI2 = {
       * @param  hxspi: QSPI handle
       * @retval None
       */
-    void HAL_QSPI_StatusMatchCallback(QSPI1_HandleTypeDef *hxspi)
+    void HAL_QSPI_StatusMatchCallback(QSPI_HandleTypeDef *hxspi)
     {
         UNUSED(hxspi);
         LOGU_VERBOSE("StatusMatch Callback");
         TaskNotify(TASK_XSPI);
     }
 
-    void HAL_QSPI_ErrorCallback(QSPI1_HandleTypeDef *hxspi)
+    void HAL_QSPI_ErrorCallback(QSPI_HandleTypeDef *hxspi)
     {
       UNUSED(hxspi);
       LOGU_VERBOSE("ERROR CALLBACK");

@@ -1396,13 +1396,14 @@ ADD_SUBMODULE(Test);
 
       switch((uint32_t)arg) {
         case 0:
-            printf("Flash Size= ...... %d kByte\n", QSpi1Handle.geometry.FlashSize/1024);
+            printf("Flash Size       = %d kByte\n", QSpi1Handle.geometry.FlashSize/1024);
+            printf("Address range    = 0x%08x..0x%08x\n",0,QSpi1Handle.geometry.FlashSize-1);
             printf("Erase sector size= %d Byte\n", QSpi1Handle.geometry.EraseSectorSize);
-            printf("   sector count= . %d\n", QSpi1Handle.geometry.EraseSectorsNumber);
-            printf("Write page size= . %d Byte\n", QSpi1Handle.geometry.ProgPageSize);
-            printf("   page count= ... %d\n", QSpi1Handle.geometry.ProgPagesNumber);
-            printf("pages per sector=  %d\n", QSpi1Handle.geometry.EraseSectorSize/QSpi1Handle.geometry.ProgPageSize);   
-            printf("Qspi Clock= ...... %d kHz\n", QSpi1Handle.clkspeed / 1000 );
+            printf("   sector count  = %d\n", QSpi1Handle.geometry.EraseSectorsNumber);
+            printf("Write page size  = %d Byte\n", QSpi1Handle.geometry.ProgPageSize);
+            printf("   page count    = %d\n", QSpi1Handle.geometry.ProgPagesNumber);
+            printf("pages per sector = %d\n", QSpi1Handle.geometry.EraseSectorSize/QSpi1Handle.geometry.ProgPageSize);   
+            printf("Qspi Clock       = %d kHz\n", QSpi1Handle.clkspeed / 1000 );
             break;
         case 1:
             if ( CMD_argc() < 1 ) {
@@ -1417,7 +1418,7 @@ ADD_SUBMODULE(Test);
             } else {
                 cnt = 0;
             }
-            addr =  QSpi1Handle.geometry.ProgPageSize * num;
+            addr =  QSpi1Handle.geometry.EraseSectorSize * num;
             printf("Erase sector (%d Bytes) with page %d (startaddr=0x%08x)", 
                     QSpi1Handle.geometry.EraseSectorSize, num, addr );
             ret = XSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
@@ -1445,8 +1446,18 @@ ADD_SUBMODULE(Test);
                 for ( j  = 0; j < QSpi1Handle.geometry.ProgPageSize; j++ )
                     PageBuffer[j]=i+j;
                 printf("Write page %d (startaddr=0x%08x) - ", num+i, addr );
-                ret = XSpi_WriteWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize );
+                #if defined(QSPI1_USE_IRQ)
+                    ret = XSpi_WriteIT (&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize );
+                #else
+                    ret = XSpi_WriteWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize );
+                #endif
                 printf ( "%s\n", ret ? "ok": "fail");
+                #if defined(QSPI1_USE_IRQ)
+                    DEBUG_PUTS("Waiting for Async write to be done");
+                    uint32_t start = HAL_GetTick();
+                    while ( QSpi1Handle.bAsyncBusy );
+                    DEBUG_PRINTF("Wait terminated after %d ticks\n", HAL_GetTick() - start);
+                #endif
                 addr += QSpi1Handle.geometry.ProgPageSize;
             }
             break;

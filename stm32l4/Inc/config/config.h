@@ -39,6 +39,15 @@
 // #define ENVIRONMENTAL
 // #define TX18LISTENER        
 
+
+/*
+ ********************************************************************************
+ * Code Versioning
+ ********************************************************************************
+ */ 
+#define MAJOR_VERSION   1
+#define MINOR_VERSION   04
+
 /*
  ********************************************************************************
  * Application tayloring
@@ -217,6 +226,9 @@
     #define STM32H7_FAMILY
 #elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
     #define STM32L4_FAMILY
+    #if defined(STM32L4Sxxx) || defined(STM32L4Rxxx)
+        #define STM32L4PLUS
+    #endif
 #else
     #error "Unkonwn MCU family!"
 #endif
@@ -256,5 +268,86 @@
  */
 
 #include "error.h"
+
+/*
+ ********************************************************************************
+ * Build the config-string for version.h buildinfo
+ ********************************************************************************
+ */
+
+
+#define USE_RFM12           0
+#define USE_RFM69           1           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_BMP085          0
+#define USE_BME280          1
+#define USE_CCS811          0
+#define USE_EPAPER          0
+#define USE_ONEWIRE         1
+#define USE_DS18X20         1
+#define USE_EEPROM_EMUL     1
+#define USE_QENCODER        0
+
+#define USE_DISPLAY         0
+#define USE_DOGM132         0
+#define USE_SECONDTIMER     1
+#define USE_PWMTIMER        0
+#define USE_BASICTIMER      1
+#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_OSPI            1            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_CAN             0
+#define USE_USB             0  
+#define USE_FMC_SRAM        0
+
+#define USE_FMC_NOR         0
+
+
+#if BUILD_CONFIG_STR > 0
+    #define PPCAT_NXE(A, B)   A " = " #B "\r\n"
+    #define PPCAT_E(A)     PPCAT_NXE(#A,A)
+
+#define MK_CONFIGSTR(a,i) \
+    const char ConfigStr##i[] = #a; \
+    const uint8_t ConfigVal##i = a; 
+
+    MK_CONFIGSTR(USE_RFM12,1)
+    MK_CONFIGSTR(USE_RFM69,2)
+    MK_CONFIGSTR(USE_BMP085,3)
+    MK_CONFIGSTR(USE_BME280,4)
+    MK_CONFIGSTR(USE_CCS811,5)
+    MK_CONFIGSTR(USE_EPAPER,6)
+    MK_CONFIGSTR(USE_ONEWIRE,7)
+    MK_CONFIGSTR(USE_DS18X20,8)
+    MK_CONFIGSTR(USE_EEPROM_EMUL,9)
+    MK_CONFIGSTR(USE_QENCODER,10)
+
+    MK_CONFIGSTR(USE_DISPLAY,11)
+    MK_CONFIGSTR(USE_DOGM132,12)
+    MK_CONFIGSTR(USE_SECONDTIMER,13)
+    MK_CONFIGSTR(USE_PWMTIMER,14)
+    MK_CONFIGSTR(USE_BASICTIMER,15)
+    MK_CONFIGSTR(USE_QSPI,16)
+    MK_CONFIGSTR(USE_OSPI,17)
+    MK_CONFIGSTR(USE_CAN,18)
+    MK_CONFIGSTR(USE_USB,19)
+    MK_CONFIGSTR(USE_FMC_SRAM,20)
+
+    MK_CONFIGSTR(USE_FMC_NOR,21)
+
+    #define MAX_CONFIGSTR   21
+
+    const char *ConfigStrings[MAX_CONFIGSTR] = 
+        {
+            ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
+            ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
+            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, //ConfigStr22, ConfigStr23, ConfigStr24,
+        };
+    const uint8_t ConfigValues[MAX_CONFIGSTR] = 
+        {
+            ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
+            ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
+            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, //ConfigVal22, ConfigVal23, ConfigVal24,
+        };
+
+#endif
 
 #endif /* __CONFIG_H */

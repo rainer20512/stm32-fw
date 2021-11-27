@@ -222,6 +222,7 @@
         </folder>
         <file file_name="../common/src/cmdline.c" />
         <file file_name="Src/usbd_task.c" />
+        <file file_name="Src/version.c" />
       </folder>
     </folder>
     <folder Name="System Files">
@@ -230,8 +231,8 @@
       <file file_name="$(TargetsDir)/STM32/STM32_startup.s" />
       <file file_name="stm32l476rg_MemoryMap.xml" />
       <file file_name="stm32l496rg_MemoryMap.xml" />
-      <file file_name="Inc/system/ram_preset.inc" />
       <file file_name="stm32l4s9zi_MemoryMap.xml" />
+      <file file_name="Src/system/RamPreset.c" />
     </folder>
     <folder Name="Doc">
       <file file_name="$(ProjectDir)/Doc/readme.txt" />

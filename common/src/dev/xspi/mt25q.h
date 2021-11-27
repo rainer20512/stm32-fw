@@ -178,6 +178,7 @@ typedef enum
 #define DEEP_POWER_DOWN_CMD                  0xB9
 #define EXIT_POWER_DOWN_CMD                  0xAB
 
+#define DS_RECOVERY_TIME_US                  30            /*!< min recovery time from deep sleep */
 /** 
   * @brief  MX25R6435F Registers  
   */ 
