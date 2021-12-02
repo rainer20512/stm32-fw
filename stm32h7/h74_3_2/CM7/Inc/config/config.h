@@ -57,8 +57,8 @@
 #define USE_USB                     0   
 #define USE_USB_FS                  0
 #define USE_USB_MSC                 0
-#define USE_FMC_SRAM                0
-#define USE_FMC_SDRAM               0
+#define USE_FMC_SRAM                1
+#define USE_FMC_SDRAM               1
 #define USE_FMC_NOR                 0
 #define USE_ETH                     0
 #define USE_LWIP                    0 
