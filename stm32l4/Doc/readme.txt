@@ -4,59 +4,90 @@ Modify ...\Rowley Associates Limited\CrossWorks for ARM\v4\packages\targets\STM3
 
 reset_handler:
 
-// RHB chgd: Preset all RAM with an uniform pattern
-#ifdef DO_RAM_PRESET
-  #include "system/ram_preset.inc"
-#endif
-// end of inserted code
-
 #ifndef __NO_SYSTEM_INIT
   ldr r0, =__RAM_segment_end__
   mov sp, r0
   bl SystemInit
 #endif
 
-Under system/ram_preset.inc a code snippet must be provided, that will do the ram preset for the target processor
+// RHB chgd: Preset all RAM with an uniform pattern
+
+#ifdef DO_RAM_PRESET
+  ldr r0, =__RAM_segment_end__
+  mov sp, r0
+  bl RamPreset
+#endif
+
+// RHB End of insertion
+
+#ifdef VECTORS_IN_RAM
+  ..
+  ..
+
+
+Under system/ram_preset.c a code snippet must be provided, that will do the ram preset for the target processor
 for STM32L4xx eg this could be
 
 8x-----------------------------------------------------------------------------
 /******************************************************************************
- * code for a RAM preset. this code is included by STM32_Startup.s, so no
- * section or global definitions are neccessary
+ * Preset all RAM with an uniform preset pattern to measure the dynamic ram
+ * usage.
  * 
- * This file : RAM  preset for STM32L4xx
- *   - Preset RAM  and SRAM2 
+ * Note: DO NOT USE functions calls except to RamPreset, because the stack
+ * will be overwritten, too
  *
- * Store this file under on dir, that is contained in the include search path
- * with the subpath/name "system/ram_preset.s"
+ * Only one call is allowed, the return adress for this call is stored in lr. 
+ * And this call is the call to RamPreset! In normal cases, this call is done
+ * from the startup code only, no need to do that from user code.
+ * 
+ * This ist the STM32L4-family implementation
  * 
  ******************************************************************************
  */
+ #include "config/config.h"
 
-  movw r2, RAM_PRESET_VALUE & 0xFFFF
-  movt r2, RAM_PRESET_VALUE >> 16
+#ifdef DO_RAM_PRESET
 
-  ldr r0, =__SRAM2_segment_start__
-  ldr r1, =__SRAM2_segment_end__
-r00:
-  cmp r0, r1
-  beq r01
-  str r2, [r0]
-  adds r0, r0, #4
-  b r00
+#if defined(STM32H7_FAMILY)
+    #include "stm32h7xx.h"
+#elif defined(STM32L4_FAMILY)
+    #include "stm32l4xx.h"
+#else
+    #error "Unkonwn MCU family"
+#endif
 
-r01:
-  ldr r0, =__non_init_start__
-  ldr r1, =__RAM_segment_end__
+/* 
+ * Execute the RAM fill by macro. Do not use function calls,
+ * because the stack will be overwritten, too.
+ */
 
-r02:
-  cmp r0, r1
-  beq r03
-  str r2, [r0]
-  adds r0, r0, #4
-  b r02
+#define PRESET_RAMAREA(seg) \
+  extern uint32_t seg##_segment_start__; \
+  extern uint32_t seg##_segment_end__;   \
+  RamPtr = &(seg##_segment_start__);     \
+    RamEnd = &(seg##_segment_end__);     \
+    while ( RamPtr < RamEnd ) {          \
+        *RamPtr = preset;                \
+        RamPtr++;                        \
+    }                                    \
 
-r03:
+
+void RamPreset(void)
+{
+    register uint32_t preset = RAM_PRESET_VALUE;
+    register uint32_t *RamPtr;
+    register uint32_t *RamEnd;
+
+    PRESET_RAMAREA(__RAM);
+    PRESET_RAMAREA(__SRAM2);
+
+    #if defined(STM32L4PLUS)
+        PRESET_RAMAREA(__SRAM3);
+    #endif
+
+}
+
+#endif /* DO_RAM_PRESET */
 --------------------------------------------------------------------------x8
 
 002: Anderen Target-Prozessor auswählen

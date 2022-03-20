@@ -251,7 +251,6 @@ void CheckForSleep(void)
 }
 
 
-
 int main(void)
 {
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */

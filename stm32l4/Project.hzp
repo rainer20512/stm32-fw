@@ -40,7 +40,7 @@
       target_trace_initialize_script="EnableTrace(&quot;$(TraceInterfaceType)&quot;)" />
     <configuration
       Name="Flash"
-      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32L4P_2M_Loader_rpc.elf)"
+      arm_target_flash_loader_file_path="$(LOADER:$(TargetsDir)/STM32/Release/STM32L4P_Loader_rpc.elf)"
       arm_target_loader_can_erase_all="Yes"
       arm_target_loader_can_lock_all="No"
       arm_target_loader_can_lock_range="No"

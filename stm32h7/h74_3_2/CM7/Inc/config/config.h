@@ -64,6 +64,8 @@
 #define USE_LWIP                    0 
 #define USE_FATFS                   0
 #define USE_BDMA                    0
+#define USE_LTDC                    1
+
 
 /* Choose one in case of USE_ETH == 1 
  * 
@@ -282,20 +284,21 @@
     MK_CONFIGSTR(USE_LWIP,17)
     MK_CONFIGSTR(USE_FATFS,18)
     MK_CONFIGSTR(USE_BDMA,19)
+    MK_CONFIGSTR(USE_LTDC,20)
 
-    #define MAX_CONFIGSTR   19
+    #define MAX_CONFIGSTR   20
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
-            ConfigStr17, ConfigStr18, ConfigStr19, //ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, //ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
-            ConfigVal17, ConfigVal18, ConfigVal19, //ConfigVal20, ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
+            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, //ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
         };
 
 #if 0

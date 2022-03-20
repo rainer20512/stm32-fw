@@ -6,10 +6,12 @@
  * will be overwritten, too
  *
  * Only one call is allowed, the return adress for this call is stored in lr. 
- * And this call is the call to RamPreset!
- *
+ * And this call is the call to RamPreset! In normal cases, this call is done
+ * from the startup code only, no need to do that from user code.
+ * 
  * This ist the STM32L4-family implementation
  * 
+ *001*
  ******************************************************************************
  */
  #include "config/config.h"
@@ -38,7 +40,6 @@
         *RamPtr = preset;                \
         RamPtr++;                        \
     }                                    \
-
 
 
 void RamPreset(void)

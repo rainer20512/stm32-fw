@@ -692,6 +692,7 @@
       #define OSPI2_USE_IRQ
       #define OSPI2_USE_DMA
       #define OSPI2_MODE_QUAD
+      #define OSPI2_HAS_DS_MODE
       #undef  OSPI2_USE_DQS
     #endif
 

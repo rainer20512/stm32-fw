@@ -349,6 +349,7 @@
           <file file_name="../common_h7/Inc/config/eth_config.h" />
           <file file_name="../common_h7/Inc/config/fmc_config.h" />
           <file file_name="../common_h7/Inc/config/usb_config.h" />
+          <file file_name="../common_h7/Inc/config/ltdc_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/version.h" />
       </folder>
@@ -382,6 +383,7 @@
           <file file_name="../../common/src/dev/fmc_dev.c" />
           <file file_name="../../common/src/dev/usb_dev.c" />
           <file file_name="../../common/src/dev/xspi_dev.c" />
+          <file file_name="../../common/src/dev/ltdc_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -426,6 +428,7 @@
             <file file_name="../../common/inc/dev/xspi/xspi_specific.h" />
           </folder>
           <file file_name="../../common/inc/dev/xspi_dev.h" />
+          <file file_name="../../common/inc/dev/ltdc_dev.h" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />

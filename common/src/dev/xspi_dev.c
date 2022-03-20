@@ -1296,7 +1296,6 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
         }
     };
 
-
     static const XSpi_AdditionalDataType additional_qspi1 = {
         .myXSpiHandle       = &QSpi1Handle,
         .default_speed      = QSPI1_CLKSPEED,                 
@@ -1393,7 +1392,7 @@ const HW_DeviceType HW_QSPI1 = {
         .myXSpiHandle       = &OSpi1Handle,
         .default_speed      = OSPI1_CLKSPEED,                 
         .myDsInfo           =
-            #if definedOSPI1_HAS_DS_MODE)
+            #if defined(OSPI1_HAS_DS_MODE)
                 &ds_ospi1,
             #else
                 NULL,

@@ -611,7 +611,9 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
 #if defined(STM32L476xx) || defined(STM32L496xx)
   DBG_dump_onoffvalue  ("SWPMI1 Clock", reg2, RCC_APB1ENR2_SWPMI1EN);  
 #endif
+#if defined(STM32L4Sxxx) 
   DBG_dump_onoffvalue  ("I2C4 Clock",   reg2, RCC_APB1ENR2_I2C4EN);  
+#endif
   DBG_dump_onoffvalue  ("LPUART1 Clock", reg2, RCC_APB1ENR2_LPUART1EN);  
 } 
 
