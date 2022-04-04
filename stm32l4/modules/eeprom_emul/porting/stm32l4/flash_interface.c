@@ -140,10 +140,14 @@ EE_Status PageErase_IT(uint32_t Page, uint16_t NbPages)
   * @param  Address Address of the FLASH Memory
   * @retval Bank_Number The bank of a given address
   */
+
 static uint32_t GetBankNumber(uint32_t Address)
 {
   uint32_t bank = 0U;
-
+#if !defined(SYSCFG_MEMRMP_FB_MODE)
+      UNUSED(Address);
+      bank = FLASH_BANK_1;
+#else
   if (READ_BIT(SYSCFG->MEMRMP, SYSCFG_MEMRMP_FB_MODE) == 0U)
   {
     /* No Bank swap */
@@ -168,7 +172,7 @@ static uint32_t GetBankNumber(uint32_t Address)
       bank = FLASH_BANK_1;
     }
   }
-
+#endif
   return bank;
 }
 

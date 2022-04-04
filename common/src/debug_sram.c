@@ -109,7 +109,7 @@ static void DBG_dump_sram_area( const char *text, uint32_t start, uint32_t end )
   DBG_setIndentAbs(oldIndent);
 }
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L43xx) || defined(STM32L476xx) || defined(STM32L496xx)
 static void DBG_dump_sram_areas(void)
 {
   DBG_setPadLen(6);

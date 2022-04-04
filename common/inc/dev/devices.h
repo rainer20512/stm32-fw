@@ -28,7 +28,7 @@
  * Otherwise, when a DMA MUX is present, these channels/requests are assigned
  * by the handcrafted DMA-Request manager **** 004 ****
  ******************************************************************************/
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L43xx) || defined(STM32L476xx) || defined(STM32L496xx)
     #define HAS_NO_DMAMUX   1
 #else
     #define HAS_NO_DMAMUX   0    

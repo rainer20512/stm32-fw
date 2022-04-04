@@ -221,12 +221,13 @@ static void TmrHandleInit (TimerHandleT *hnd, const HW_DeviceType *self)
   *****************************************************************************/
 static uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
 {
+    const TIM_TypeDef *iter;
     uint32_t i;
-    for ( i=0; i < sizeof(apb1_timers)/sizeof(TIM_TypeDef *); i++ ) {
-        if ( tim == apb1_timers[i] ) return GetAPB1TimerFrequency();
+    for ( i=0; iter=apb1_timers[i], iter; i++ ) {
+        if ( tim == iter ) return GetAPB1TimerFrequency();
     }
-    for ( i=0; i < sizeof(apb2_timers)/sizeof(TIM_TypeDef*); i++ ) {
-        if ( tim == apb2_timers[i] ) return GetAPB2TimerFrequency();
+    for ( i=0; iter=apb2_timers[i], iter; i++ ) {
+        if ( tim == iter ) return GetAPB2TimerFrequency();
     }
 
     return 0;

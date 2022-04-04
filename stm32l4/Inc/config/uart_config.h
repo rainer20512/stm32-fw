@@ -137,9 +137,15 @@
     #define COM3_TX                        { GPIO_PIN_10, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
     #define COM3_RX                        { GPIO_PIN_11, GPIOB, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
   #elif defined(USE_USART3_ALTN2)
-    /* PC3/PC4 with AF7 */
-    #define COM3_TX                        { GPIO_PIN_3, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
-    #define COM3_RX                        { GPIO_PIN_4, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
+    #if defined(STM32L43xx)
+        /* PC4/PC5 with AF7 */
+        #define COM3_TX                        { GPIO_PIN_4, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+        #define COM3_RX                        { GPIO_PIN_5,     GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
+    #else
+        /* PC3/PC4 with AF7 */
+        #define COM3_TX                        { GPIO_PIN_3, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
+        #define COM3_RX                        { GPIO_PIN_4, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Rx" }
+    #endif
   #elif defined(USE_USART3_ALTN3)
     /* PC10/PC11 with AF7 */
     #define COM3_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF7_USART3, GPIO_PULLUP, "USART3_Tx" }
@@ -274,6 +280,10 @@
     /* PC1/PC0 with AF8 */
     #define COM9_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
     #define COM9_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
+  #elif defined(STM32L43xx) && defined(USE_LPUART1_ALTN3)
+    /* PA2/PA3 with AF8 */
+    #define COM9_TX                        { GPIO_PIN_2, GPIOA, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
+    #define COM9_RX                        { GPIO_PIN_3, GPIOA, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
   #else
     /* Default TX:PG7 RX:G8 with AF8  */
     #define COM9_TX                        { GPIO_PIN_7, GPIOG, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }

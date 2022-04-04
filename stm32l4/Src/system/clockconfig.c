@@ -140,7 +140,7 @@ void ClockReconfigureAfterStop(void)
 #endif
 
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L43xx) || defined(STM32L476xx) || defined(STM32L496xx)
     /*
      *******************************************************************************
      Flash wait states in dependency of Vcore and HCLK for STM32L4 devices

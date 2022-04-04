@@ -86,12 +86,20 @@ static void DBG_dump_pwr_cr1(void)
 static void DBG_dump_pwr_cr2(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_bitvalue("VddUSB on", PWR->CR2, PWR_CR2_USV);
-  DBG_dump_bitvalue("VddIO2 on", PWR->CR2, PWR_CR2_IOSV);
+  #if defined(PWR_CR2_USV)
+    DBG_dump_bitvalue("VddUSB on", PWR->CR2, PWR_CR2_USV);
+  #endif
+  #if defined(PWR_CR2_IOSV)
+    DBG_dump_bitvalue("VddIO2 on", PWR->CR2, PWR_CR2_IOSV);
+  #endif
   DBG_dump_bitvalue("VddA  2.20V monitor", PWR->CR2, PWR_CR2_PVME4);
   DBG_dump_bitvalue("VddA  1.62V monitor", PWR->CR2, PWR_CR2_PVME3);
-  DBG_dump_bitvalue("VddIO2 0.9V monitor", PWR->CR2, PWR_CR2_PVME2);
-  DBG_dump_bitvalue("VddUSB 1.2V monitor", PWR->CR2, PWR_CR2_PVME1);
+  #if defined(PWR_CR2_PVME2)
+    DBG_dump_bitvalue("VddIO2 0.9V monitor", PWR->CR2, PWR_CR2_PVME2);
+  #endif
+  #if defined(PWR_CR2_PVME1)
+      DBG_dump_bitvalue("VddUSB 1.2V monitor", PWR->CR2, PWR_CR2_PVME1);
+  #endif
   DBG_dump_textvalue("Pwr voltage detect lvl", DBG_get_pwr_cr2_pls_txt(( PWR->CR2 & PWR_CR2_PLS_Msk  ) >> PWR_CR2_PLS_Pos) );
   DBG_dump_bitvalue("Voltage detect enable", PWR->CR2, PWR_CR2_PVDE);
 }
@@ -140,8 +148,12 @@ static void DBG_dump_pwr_sr2(void)
   DBG_setPadLen(24);
   if ( PWR->CR2 & PWR_CR2_PVME4 )   DBG_dump_bitvalue("VddA < 2.20V", PWR->SR2, PWR_SR2_PVMO4);
   if ( PWR->CR2 & PWR_CR2_PVME3 )   DBG_dump_bitvalue("VddA < 1.62V", PWR->SR2, PWR_SR2_PVMO3);
-  if ( PWR->CR2 & PWR_CR2_PVME2 )   DBG_dump_bitvalue("VddIO2 < 0.9V", PWR->SR2, PWR_SR2_PVMO2);
-  if ( PWR->CR2 & PWR_CR2_PVME1 )   DBG_dump_bitvalue("VddUSB < 1.2V", PWR->SR2, PWR_SR2_PVMO1);
+  #if defined(PWR_CR2_PVME2)
+      if ( PWR->CR2 & PWR_CR2_PVME2 )   DBG_dump_bitvalue("VddIO2 < 0.9V", PWR->SR2, PWR_SR2_PVMO2);
+  #endif
+  #if defined(PWR_CR2_PVME1)
+      if ( PWR->CR2 & PWR_CR2_PVME1 )   DBG_dump_bitvalue("VddUSB < 1.2V", PWR->SR2, PWR_SR2_PVMO1);
+  #endif
   if ( PWR->CR2 & PWR_CR2_PVDE )    DBG_dump_bitvalue("Vdd < Threshold", PWR->SR2, PWR_SR2_PVDO);
   DBG_dump_bitvalue("Vcore reg. in transit", PWR->SR2, PWR_SR2_VOSF);
   DBG_dump_bitvalue("Vcore reg. LP mode", PWR->SR2, PWR_SR2_REGLPF);
@@ -227,8 +239,10 @@ static const char* DBG_get_msirange_text ( uint32_t sel, uint32_t msirgsel )
 static void DBG_dump_rcc_cr(void)
 {
   DBG_setPadLen(22);
-  DBG_dump_bitvalue("PLL_SAI2 on", RCC->CR, RCC_CR_PLLSAI2ON );
-  if ( READ_BIT(RCC->CR, RCC_CR_PLLSAI2ON) ) DBG_dump_bitvalue("PLL_SAI2 ready", RCC->CR, RCC_CR_PLLSAI2RDY );
+  #if defined(RCC_CR_PLLSAI2ON)
+      DBG_dump_bitvalue("PLL_SAI2 on", RCC->CR, RCC_CR_PLLSAI2ON );
+      if ( READ_BIT(RCC->CR, RCC_CR_PLLSAI2ON) ) DBG_dump_bitvalue("PLL_SAI2 ready", RCC->CR, RCC_CR_PLLSAI2RDY );
+  #endif  
   DBG_dump_bitvalue("PLL_SAI1 on", RCC->CR, RCC_CR_PLLSAI1ON );
   if ( READ_BIT(RCC->CR, RCC_CR_PLLSAI1ON) ) DBG_dump_bitvalue("PLL_SAI1 ready", RCC->CR, RCC_CR_PLLSAI1RDY );
 
@@ -472,13 +486,15 @@ void DBG_dump_clocksetting(void)
       DBG_setIndentRel(-2);
   }
 
-  if ( RCC->CR & RCC_CR_PLLSAI2ON) {
-      DBG_printf_indent("RCC: PLLSAI2 configuration register\n" );
-      DBG_setIndentRel(+2);
-      DBG_dump_rcc_pllcfgr( RCC->PLLSAI2CFGR );
-      DBG_setIndentRel(-2);
-  }
-
+  #if defined(RCC_CR_PLLSAI2ON)
+      if ( RCC->CR & RCC_CR_PLLSAI2ON) {
+          DBG_printf_indent("RCC: PLLSAI2 configuration register\n" );
+          DBG_setIndentRel(+2);
+          DBG_dump_rcc_pllcfgr( RCC->PLLSAI2CFGR );
+          DBG_setIndentRel(-2);
+      }
+  #endif
+    
   /******** System Clocks *****************/
   DBG_printf_indent("Resulting System Clocks\n" );
   DBG_setIndentRel(+2);
@@ -544,7 +560,9 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
 #endif  
 
   DBG_dump_onoffvalue  ("ADC Clock",  reg2, RCC_AHB2ENR_ADCEN);  
-  DBG_dump_onoffvalue  ("OTGFS Clock",  reg2, RCC_AHB2ENR_OTGFSEN);  
+  #if defined(RCC_AHB2ENR_OTGFSEN)
+      DBG_dump_onoffvalue  ("OTGFS Clock",  reg2, RCC_AHB2ENR_OTGFSEN);  
+  #endif  
   if ( bSleepRegisters)  {
     DBG_dump_onoffvalue  ("SRAM2 Clock", reg2, RCC_AHB2SMENR_SRAM2SMEN);  
     #if defined( RCC_AHB2SMENR_SRAM3SMEN)
@@ -552,8 +570,12 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
     #endif
   }
   DBG_dump_onoffvalue  ("GPIOH Clock",  reg2, RCC_AHB2ENR_GPIOHEN);  
-  DBG_dump_onoffvalue  ("GPIOG Clock",  reg2, RCC_AHB2ENR_GPIOGEN);  
-  DBG_dump_onoffvalue  ("GPIOF Clock",  reg2, RCC_AHB2ENR_GPIOFEN);  
+  #if defined (GPIOG) 
+    DBG_dump_onoffvalue  ("GPIOG Clock",  reg2, RCC_AHB2ENR_GPIOGEN);  
+  #endif
+  #if defined (GPIOF) 
+    DBG_dump_onoffvalue  ("GPIOF Clock",  reg2, RCC_AHB2ENR_GPIOFEN);  
+  #endif
   DBG_dump_onoffvalue  ("GPIOE Clock",  reg2, RCC_AHB2ENR_GPIOEEN);  
   DBG_dump_onoffvalue  ("GPIOD Clock",  reg2, RCC_AHB2ENR_GPIODEN);  
   DBG_dump_onoffvalue  ("GPIOC Clock",  reg2, RCC_AHB2ENR_GPIOCEN);  
@@ -571,7 +593,9 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
   #if defined(OCTOSPI2)
     DBG_dump_onoffvalue  ("OSPI2 Clock",  reg3, RCC_AHB3ENR_OSPI2EN);  
   #endif
-  DBG_dump_onoffvalue  ("FMC Clock",  reg3, RCC_AHB3ENR_FMCEN);  
+  #if defined(RCC_AHB3ENR_FMCEN)
+    DBG_dump_onoffvalue  ("FMC Clock",  reg3, RCC_AHB3ENR_FMCEN);  
+  #endif
 
 
 }
@@ -590,8 +614,12 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
   DBG_dump_onoffvalue  ("I2C3 Clock", reg1, RCC_APB1ENR1_I2C3EN);  
   DBG_dump_onoffvalue  ("I2C2 Clock", reg1, RCC_APB1ENR1_I2C2EN);  
   DBG_dump_onoffvalue  ("I2C1 Clock", reg1, RCC_APB1ENR1_I2C1EN);  
-  DBG_dump_onoffvalue  ("UART5 Clock", reg1, RCC_APB1ENR1_UART5EN);  
-  DBG_dump_onoffvalue  ("UART4 Clock", reg1, RCC_APB1ENR1_UART4EN);  
+  #if defined(UART5)
+    DBG_dump_onoffvalue  ("UART5 Clock", reg1, RCC_APB1ENR1_UART5EN);  
+  #endif
+  #if defined(UART4)
+      DBG_dump_onoffvalue  ("UART4 Clock", reg1, RCC_APB1ENR1_UART4EN);  
+  #endif
   DBG_dump_onoffvalue  ("USART3 Clock", reg1, RCC_APB1ENR1_USART3EN);  
   DBG_dump_onoffvalue  ("USART2 Clock", reg1, RCC_APB1ENR1_USART2EN);  
   DBG_dump_onoffvalue  ("SPI3 Clock", reg1, RCC_APB1ENR1_SPI3EN);  
@@ -602,9 +630,15 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
 #endif
   DBG_dump_onoffvalue  ("TIM7 Clock", reg1, RCC_APB1ENR1_TIM7EN);  
   DBG_dump_onoffvalue  ("TIM6 Clock", reg1, RCC_APB1ENR1_TIM6EN);  
-  DBG_dump_onoffvalue  ("TIM5 Clock", reg1, RCC_APB1ENR1_TIM5EN);  
-  DBG_dump_onoffvalue  ("TIM4 Clock", reg1, RCC_APB1ENR1_TIM4EN);  
-  DBG_dump_onoffvalue  ("TIM3 Clock", reg1, RCC_APB1ENR1_TIM3EN);  
+  #if defined(TIM5)
+    DBG_dump_onoffvalue  ("TIM5 Clock", reg1, RCC_APB1ENR1_TIM5EN);  
+  #endif
+  #if defined(TIM4)
+    DBG_dump_onoffvalue  ("TIM4 Clock", reg1, RCC_APB1ENR1_TIM4EN);  
+  #endif
+  #if defined(TIM3)
+    DBG_dump_onoffvalue  ("TIM3 Clock", reg1, RCC_APB1ENR1_TIM3EN);  
+  #endif
   DBG_dump_onoffvalue  ("TIM2 Clock", reg1, RCC_APB1ENR1_TIM2EN);  
 
   DBG_dump_onoffvalue  ("LPTIM2 Clock", reg2, RCC_APB1ENR2_LPTIM2EN);  
@@ -625,14 +659,22 @@ void DBG_dump_rcc_apb2enr(uint32_t reg, uint32_t bSleepRegisters )
   DBG_dump_onoffvalue  ("DSI Clock", reg, RCC_APB2ENR_DSIEN);  
   DBG_dump_onoffvalue  ("LTDC Clock", reg, RCC_APB2ENR_LTDCEN);  
 #endif
-  DBG_dump_onoffvalue  ("DFSDM1 Clock", reg, RCC_APB2ENR_DFSDM1EN);  
-  DBG_dump_onoffvalue  ("SAI2 Clock", reg, RCC_APB2ENR_SAI2EN);  
+  #if defined(RCC_APB2ENR_DFSDM1EN)  
+    DBG_dump_onoffvalue  ("DFSDM1 Clock", reg, RCC_APB2ENR_DFSDM1EN);  
+  #endif
+  #if defined(RCC_APB2ENR_SAI2EN)
+    DBG_dump_onoffvalue  ("SAI2 Clock", reg, RCC_APB2ENR_SAI2EN);
+  #endif
   DBG_dump_onoffvalue  ("SAI1 Clock", reg, RCC_APB2ENR_SAI1EN);  
-  DBG_dump_onoffvalue  ("TIM17 Clock", reg, RCC_APB2ENR_TIM17EN);  
+  #if defined (RCC_APB2ENR_TIM17EN)
+    DBG_dump_onoffvalue  ("TIM17 Clock", reg, RCC_APB2ENR_TIM17EN);  
+  #endif
   DBG_dump_onoffvalue  ("TIM16 Clock", reg, RCC_APB2ENR_TIM16EN);  
   DBG_dump_onoffvalue  ("TIM15 Clock", reg, RCC_APB2ENR_TIM15EN);  
   DBG_dump_onoffvalue  ("USART1 Clock", reg, RCC_APB2ENR_USART1EN);  
-  DBG_dump_onoffvalue  ("TIM8 Clock", reg, RCC_APB2ENR_TIM8EN);  
+  #if defined(RCC_APB2ENR_TIM8EN)
+    DBG_dump_onoffvalue  ("TIM8 Clock", reg, RCC_APB2ENR_TIM8EN);  
+  #endif
   DBG_dump_onoffvalue  ("SPI1 Clock", reg, RCC_APB2ENR_SPI1EN);  
   DBG_dump_onoffvalue  ("TIM1 Clock", reg, RCC_APB2ENR_TIM1EN);  
 #if defined(STM32L476xx) || defined(STM32L496xx)
@@ -745,21 +787,30 @@ static const char* DBG_get_rcc_ccipr_saiclk_txt(uint32_t sel)
     return "Illegal";
 }
 
-
-
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L43xx) || defined(STM32L476xx) || defined(STM32L496xx)
 static void DBG_dump_peripheralclock_specific(void)
 {
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN ) )
-    DBG_dump_textvalue("DFSDM1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_DFSDM1SEL) ? "SYSCLK" : "APB2CLK" );    
-  if ( READ_BIT(RCC->APB1ENR2,RCC_APB1ENR2_SWPMI1EN ) )
-    DBG_dump_textvalue("SWPMI1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_SWPMI1SEL) ? "HSI16" : "APB1CLK" );    
-
+  #if defined(RCC_APB2ENR_DFSDM1EN)
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_DFSDM1EN ) )
+        DBG_dump_textvalue("DFSDM1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_DFSDM1SEL) ? "SYSCLK" : "APB2CLK" );    
+  #endif
+  #if defined(RCC_APB1ENR2_SWPMI1EN)
+      if ( READ_BIT(RCC->APB1ENR2,RCC_APB1ENR2_SWPMI1EN ) )
+        DBG_dump_textvalue("SWPMI1 Clk Source", READ_BIT(RCC->CCIPR , RCC_CCIPR_SWPMI1SEL) ? "HSI16" : "APB1CLK" );    
+  #endif
+    
   /* CLK48 used by sdmmc, usb and rng */
-  if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
-    DBG_dump_textvalue("CLK48 Source", DBG_get_rcc_ccipr_clk48_txt((RCC->CCIPR & RCC_CCIPR_CLK48SEL_Msk) >> RCC_CCIPR_CLK48SEL_Pos) );    
-  if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
-    DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI2SEL_Msk) >> RCC_CCIPR_SAI2SEL_Pos) );    
+  #if defined(STM32L43xx)
+    if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
+  #else
+    if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_SDMMC1EN) || READ_BIT(RCC->AHB2ENR, RCC_AHB2ENR_OTGFSEN) || READ_BIT(RCC->APB2ENR,RCC_AHB2ENR_RNGEN) ) 
+  #endif
+        DBG_dump_textvalue("CLK48 Source", DBG_get_rcc_ccipr_clk48_txt((RCC->CCIPR & RCC_CCIPR_CLK48SEL_Msk) >> RCC_CCIPR_CLK48SEL_Pos) );    
+  
+  #if defined(RCC_APB2ENR_SAI2EN)
+      if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
+        DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI2SEL_Msk) >> RCC_CCIPR_SAI2SEL_Pos) );    
+  #endif
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )
     DBG_dump_textvalue("SAI1 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI1SEL_Msk) >> RCC_CCIPR_SAI1SEL_Pos) );    
 }
@@ -836,10 +887,14 @@ void DBG_dump_peripheralclockconfig(void)
        DBG_dump_textvalue("I2C1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_I2C1SEL_Msk) >> RCC_CCIPR_I2C1SEL_Pos,0,0) ); 
   if ( READ_BIT(RCC->APB1ENR2, RCC_APB1ENR2_LPUART1EN ) )
        DBG_dump_textvalue("LPUART1 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_LPUART1SEL_Msk) >> RCC_CCIPR_LPUART1SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART5EN ) )
-       DBG_dump_textvalue("UART5 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART5SEL_Msk) >> RCC_CCIPR_UART5SEL_Pos,1,0) ); 
-  if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART4EN ) )
-       DBG_dump_textvalue("UART4 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART4SEL_Msk) >> RCC_CCIPR_UART4SEL_Pos,1,0) ); 
+  #if defined(RCC_APB1ENR1_UART5EN)
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART5EN ) )
+           DBG_dump_textvalue("UART5 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART5SEL_Msk) >> RCC_CCIPR_UART5SEL_Pos,1,0) ); 
+  #endif
+  #if defined(RCC_APB1ENR1_UART4EN)
+      if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_UART4EN ) )
+           DBG_dump_textvalue("UART4 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_UART4SEL_Msk) >> RCC_CCIPR_UART4SEL_Pos,1,0) ); 
+  #endif  
   if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART3EN ) )
        DBG_dump_textvalue("USART3 Clk source", DBG_get_perip_clksrc_txt((RCC->CCIPR & RCC_CCIPR_USART3SEL_Msk) >> RCC_CCIPR_USART3SEL_Pos,1,0) ); 
   if ( READ_BIT(RCC->APB1ENR1, RCC_APB1ENR1_USART2EN ) )

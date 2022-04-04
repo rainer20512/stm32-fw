@@ -16,9 +16,15 @@
     #include "debug_helper.h"
 #endif
 
-const TIM_TypeDef* apb1_timers[6]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7  };   /* Timers clocked by APB1 */
-const TIM_TypeDef* apb2_timers[5]={TIM1, TIM8,       TIM15, TIM16, TIM17 };   /* Timers clocked by APB2 */
-
+#if defined(STM32L43xx)
+    const TIM_TypeDef* apb1_timers[]={TIM2, TIM6,  TIM7, NULL  };   /* Timers clocked by APB1 */
+    const TIM_TypeDef* apb2_timers[]={TIM1, TIM15, TIM16, NULL };   /* Timers clocked by APB2 */
+#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+    const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7,  NULL };   /* Timers clocked by APB1 */
+    const TIM_TypeDef* apb2_timers[]={TIM1, TIM8,       TIM15, TIM16, TIM17, NULL };   /* Timers clocked by APB2 */
+#else
+    #error "No timer-to-bus-assignment for selected HW type"
+#endif
 /****************************************************************************** 
  * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 
            from             HCLK, the timer input frequency is twice the 

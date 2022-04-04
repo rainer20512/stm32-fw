@@ -96,7 +96,7 @@ typedef enum {
   CLK_PLL_VRNG1_120MHZ = 25, /* 120 MHz, HSE/HSI16, n/a      5           */
 } CLK_CONFIG_T;
 
-#if defined(STM32L476xx) || defined(STM32L496xx)
+#if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L43xx)
     #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,}
 #elif defined(STM32L4Sxxx)
     #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,100, 120}

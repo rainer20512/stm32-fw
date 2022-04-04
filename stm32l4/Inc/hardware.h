@@ -30,15 +30,15 @@
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC1_BASE )
 #if defined(STM32L476xx) || defined(STM32L496xx)
     #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE || inst == (void *)ADC3_BASE )
-#elif defined(STM32L4S9xx)
+#elif defined(STM32L4S9xx) || defined(STM32L43xx)
     #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE )
 #else
     #error "No Definition for ADC_HAS_CHIPTEMP"
 #endif
 
 /* --- Type specific setup for Timers ---------------------------------------*/
-extern const TIM_TypeDef* apb1_timers[6];    /* Timers connected to APB1 */
-extern const TIM_TypeDef* apb2_timers[5];    /* Timers connected to APB2 */
+extern const TIM_TypeDef* apb1_timers[];    /* Timers connected to APB1 */
+extern const TIM_TypeDef* apb2_timers[];    /* Timers connected to APB2 */
 uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
 uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
 void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */
