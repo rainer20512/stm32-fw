@@ -39,6 +39,8 @@
 /* --- Type specific setup for Timers ---------------------------------------*/
 extern const TIM_TypeDef* apb1_timers[];    /* Timers connected to APB1 */
 extern const TIM_TypeDef* apb2_timers[];    /* Timers connected to APB2 */
+extern const TIM_TypeDef* bit32_timers[];   /* list of 32bit timers     */
+
 uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
 uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
 void     TimerWatchdogReset     (uint16_t waitms);        /* Force reset by watchdog timeout             */

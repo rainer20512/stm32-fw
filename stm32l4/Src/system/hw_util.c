@@ -412,7 +412,10 @@ void HW_InitJtagDebug(void)
 static const char *Get_DeviceName ( uint16_t devID )
 {
     switch(devID) {
+        case 0x435: return "STM32L43xx/STM32L44xx";
         case 0x461: return "STM32L496xx/4A6xx";
+        case 0x462: return "STM32L45xx/STM32L46xx";
+        case 0x464: return "STM32L41xx/STM32L42xx";
         case 0x415: return "STM32L475xx/476xx/486xx";
         case 0x470: return "STM32L4Rxxx/STM32L4Sxxx";
         case 0x471: return "STM32L4P5xx/STM32L4Q5xx";
@@ -422,7 +425,25 @@ static const char *Get_DeviceName ( uint16_t devID )
 
 static const char *Get_PackageName( uint16_t package )
 {
-    #if defined(STM32L476xx) || defined(STM32L496xx)
+
+    #if defined(STM32L43xx) || defined(STM32L44xx) 
+        switch(package&0b11111) {
+            case 0b00000: return "LQFP64";
+            case 0b00001: return "WLCSP64";
+            case 0b00010: return "LQFP100";
+            case 0b00101: return "WLCSP36";
+            case 0b01000: return "UFQFPN32";
+            case 0b01001: return "LQFP32";
+            case 0b01010: return "UFQFPN48";
+            case 0b01011: return "LQFP48";
+            case 0b01100: return "WLCSP49";
+            case 0b01101: return "UFBGA64";
+            case 0b01110: return "UFBGA100";
+            case 0b01111: return "WLCSP36 w ext. SMPS";
+            case 0b10110: return "LQFP64 w ext. SMPS";
+            default: return "Unknown Package";
+        }
+    #elif defined(STM32L476xx) || defined(STM32L496xx)
         switch(package&0b11111) {
             case 0b00000: return "LQFP64";
             case 0b00010: return "LQFP100";
@@ -473,6 +494,16 @@ char Get_RevisionName( uint16_t devID, uint16_t revID)
                 case 0x1001 : work = 'Z'; break;
                 case 0x1003 : work = 'Y'; break;
                 case 0x100f : work = 'W'; break;
+                default: return '?';
+            }
+            break;
+        case 0x435:
+        case 0x462:
+        case 0x464:
+            switch (revID) {
+                case 0x1000 : work = 'A'; break;
+                case 0x1001 : work = 'Z'; break;
+                case 0x2001 : work = 'Y'; break;
                 default: return '?';
             }
             break;

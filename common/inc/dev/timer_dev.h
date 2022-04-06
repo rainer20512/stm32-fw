@@ -31,18 +31,24 @@ typedef struct TimerHandleType {
     int32_t             reference_cnt;        /* counter for active references of BaseTimer */
     uint32_t            bTicksEnabled;        /* If Bastimer is also tick generator, this flag may inhibit tick generation */
     uint8_t             use_chX[4];           /* flag for "ChannelX is used"       */
+    uint8_t             bIs32bit;             /* true, if timer is 32bit wide */
 } TimerHandleT;
 
 /* Public typedef ---------------------------------------------------------------*/
 
 #if defined(TIM1) && defined(USE_TIM1)
     extern const HW_DeviceType  HW_TIM1;
-    extern TimerHandleT           TIM11Handle;
+    extern TimerHandleT         TIM11Handle;
+#endif
+
+#if defined(TIM2) && defined(USE_TIM2)
+    extern const HW_DeviceType  HW_TIM2;
+    extern TimerHandleT         TIM12Handle;
 #endif
 
 #if defined(TIM3) && defined(USE_TIM3)
     extern const HW_DeviceType  HW_TIM3;
-    extern TimerHandleT           TIM13Handle;
+    extern TimerHandleT         TIM13Handle;
 #endif
 
 /* Base Timers -----------------------------------------------------------------*/
@@ -70,6 +76,9 @@ bool TMR_InitPWMCh          (const HW_DeviceType *self, uint32_t ch, bool invert
 void TMR_StartPWMChPromille (const HW_DeviceType *self, uint32_t ch, uint32_t promille);
 void TMR_StartPWMChS256     (const HW_DeviceType *self, uint32_t ch, uint32_t s256 );
 void TMR_StopPWMCh          (const HW_DeviceType *self, uint32_t ch);
+
+void PeriphTimer_Start(const HW_DeviceType *dev, void *arg);
+void PeriphTimer_Stop(const HW_DeviceType *dev, void *arg);
 
 #ifdef __cplusplus
 }

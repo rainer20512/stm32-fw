@@ -17,11 +17,13 @@
 #endif
 
 #if defined(STM32L43xx)
-    const TIM_TypeDef* apb1_timers[]={TIM2, TIM6,  TIM7, NULL  };   /* Timers clocked by APB1 */
-    const TIM_TypeDef* apb2_timers[]={TIM1, TIM15, TIM16, NULL };   /* Timers clocked by APB2 */
+    const TIM_TypeDef* apb1_timers[]  ={TIM2, TIM6,  TIM7, NULL  };   /* Timers clocked by APB1 */
+    const TIM_TypeDef* apb2_timers[]  ={TIM1, TIM15, TIM16, NULL };   /* Timers clocked by APB2 */
+    const TIM_TypeDef* bit32_timers[] ={TIM2, NULL };                 /* 32-bit timers */  
 #elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
-    const TIM_TypeDef* apb1_timers[]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7,  NULL };   /* Timers clocked by APB1 */
-    const TIM_TypeDef* apb2_timers[]={TIM1, TIM8,       TIM15, TIM16, TIM17, NULL };   /* Timers clocked by APB2 */
+    const TIM_TypeDef* apb1_timers[]  ={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7,  NULL };   /* Timers clocked by APB1 */
+    const TIM_TypeDef* apb2_timers[]  ={TIM1, TIM8,       TIM15, TIM16, TIM17, NULL };   /* Timers clocked by APB2 */
+    const TIM_TypeDef* bit32_timers[] ={TIM2, TIM5, NULL };                 /* 32-bit timers */  
 #else
     #error "No timer-to-bus-assignment for selected HW type"
 #endif

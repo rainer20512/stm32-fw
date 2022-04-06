@@ -24,9 +24,9 @@
 //#define DRAGONFLY476
 //#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
-#define STM32L4S9ZXXREF
+//#define STM32L4S9ZXXREF
 //#define STM32L476EVAL
-//#define STM32L476BAREMETAL
+#define STM32L476BAREMETAL
 
 
 /*
@@ -74,6 +74,7 @@
 #define USE_USB             0  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
+#define USE_PERIPHTIMER     1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate

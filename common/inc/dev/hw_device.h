@@ -37,11 +37,12 @@ typedef struct  HWDTS HW_DeviceType;
 #define     HW_DEVICE_QENC        8
 #define     HW_DEVICE_PWMTIMER    9
 #define     HW_DEVICE_BASETIMER   10
-#define     HW_DEVICE_XSPI        11
-#define     HW_DEVICE_CAN         12
-#define     HW_DEVICE_ETH         13
-#define     HW_DEVICE_USBD        14
-#define     HW_DEVICE_FMC         15
+#define     HW_DEVICE_PERIPHTIMER 11
+#define     HW_DEVICE_XSPI        12
+#define     HW_DEVICE_CAN         13
+#define     HW_DEVICE_ETH         14
+#define     HW_DEVICE_USBD        15
+#define     HW_DEVICE_FMC         16
 
 
 /******************************************************************************

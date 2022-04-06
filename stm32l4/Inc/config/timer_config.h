@@ -140,6 +140,16 @@
     #define TIM6_IRQHandler                     TIM6_DAC_IRQHandler 
 #endif /* TIM7 */
 
+/******************************************************************************************/
+/* Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer   */
+/* Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer   */
+/* Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer   */
+/* Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer Peripheral Timer   */
+/******************************************************************************************/
+#if defined(USE_TIM2) && defined(TIM2)
+    #define TIM2_IRQ                            { TIM2_IRQn, BASETIM_IRQ_PRIO, 0 }
+    #define TIM2_IRQHandler                     TIM2_IRQHandler 
+#endif /* TIM7 */
 
 /* ----- End of Fixed part, change below  -------------------------------------------- */
 

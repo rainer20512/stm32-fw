@@ -689,6 +689,21 @@ void SysTick_Handler(void)
     }
 #endif
 
+#if defined(USE_TIM2) && defined(TIM2)
+    void TIM2_IRQHandler(void) {
+        if ( TIM2->SR & TIM_SR_UIF ) {
+            /* Clear flag by writing 0 at that bit position */
+            TIM2->SR = ~TIM_SR_UIF;
+            DEBUG_PUTS("TIM2 UIF");
+        }
+        if ( TIM2->SR & TIM_SR_TIF ) {
+            /* Clear flag by writing 0 at that bit position */
+            TIM2->SR = ~TIM_SR_TIF;
+            DEBUG_PUTS("TIM2 TIF");
+        }
+    }
+#endif
+
 #if USE_QSPI > 0 
 
     #if defined(QSPI1_USE_IRQ)

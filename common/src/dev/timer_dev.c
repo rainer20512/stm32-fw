@@ -13,7 +13,7 @@
 
 #include "config/config.h"
 
-#if USE_PWMTIMER > 0 || USE_BASICTIMER > 0
+#if USE_PWMTIMER > 0 || USE_BASICTIMER > 0 || USE_PERIPH_TIMER > 0
 
 #include "hardware.h"
 #include "error.h"
@@ -27,7 +27,7 @@
 #include "debug_helper.h"
 
 /*******************************************************************************************
- * Additional data that will be stored to I2C type hardware devices
+ * Additional data that will be stored to timer type hardware devices
  ******************************************************************************************/
 
 static uint32_t idxToTimCh[6] = 
@@ -37,12 +37,18 @@ static uint32_t idxToTimCh[6] =
 
 typedef struct {
     TimerHandleT    *myTmrHandle;   /* My associated Spi-handle */
-    uint32_t        base_frq; /* Timer Base Frequency */
+    uint32_t        base_frq;       /* Timer Base Frequency */
+    uint8_t         bIs32bit;       /* true, if Timer is a 32-bit timer */    
 } TMR_AdditionalDataType;
 
 static TMR_AdditionalDataType * TMR_GetAdditionalData(const HW_DeviceType *self)
 {
     return (TMR_AdditionalDataType *)(self->devData);
+}
+
+TimerHandleT * TMR_GetHandleFromDev(const HW_DeviceType *self)
+{
+    return TMR_GetAdditionalData(self)->myTmrHandle;
 }
 
 
@@ -233,6 +239,21 @@ static uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
     return 0;
 }
 
+/****************************************************************************** 
+ * Return true, if a timer is a 32-bit timer
+ * Does not work for LPTIM timers
+  *****************************************************************************/
+static bool TmrIs32Bit(TIM_TypeDef *tim )
+{
+    const TIM_TypeDef *iter;
+    uint32_t i;
+    for ( i=0; iter=bit32_timers[i], iter; i++ ) {
+        if ( tim == iter ) return true;
+    }
+
+    return false;
+}
+
 /******************************************************************************
  * Set the timers prescaler to achieve the desired base frequency
  * false is reported, if sysclk frq is too low to achieve this or
@@ -279,6 +300,9 @@ bool TMR_Init(const HW_DeviceType *self)
     /* Set base frequency */
     myHnd->Instance = htim;
 
+    /* Determine, if timer is a 32 bit type */
+    adt->myTmrHandle->bIs32bit  = TmrIs32Bit(htim);
+
 #if USE_PWMTIMER > 0
     if ( self->devType == HW_DEVICE_PWMTIMER ) {
         SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, false);
@@ -291,8 +315,8 @@ bool TMR_Init(const HW_DeviceType *self)
     }
 #endif
 #if USE_BASICTIMER > 0
-    bool ret;
     if ( self->devType == HW_DEVICE_BASETIMER ) {
+        bool ret;
         /* Initialize TIMx peripheral as follows:
             + Period             = 65536 or 1000, depends from USE_BASTIMER_FOR_TICKS
             + Prescaler          = calculated dynamically to give 1 MHz timer input frequency
@@ -315,8 +339,81 @@ bool TMR_Init(const HW_DeviceType *self)
         return ret;
     }
 #endif
+#if USE_PERIPHTIMER > 0
+    if ( self->devType == HW_DEVICE_PERIPHTIMER ) {
+        /* Initialize TIMx peripheral as follows:
+            + Period             = 50000 or 500000 ie 20 or 2Hz, depending from timer bit
+            + Prescaler          = calculated dynamically to give 1 MHz timer input frequency
+            + ClockDivision      = 1
+            + Counter direction  = Up
+        */
+        if ( adt->myTmrHandle->bIs32bit)
+            myHnd->Init.Period            = 500000;
+        else
+            myHnd->Init.Period            = 50000;
+
+        if (!SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
+
+        /* Init Timer */
+        htim->PSC = myHnd->Init.Prescaler;      // Set prescaler
+	htim->EGR = TIM_EGR_UG;                 // load prescaler
+        htim->CR1 = 0;                          // upcount
+	htim->CR2 = TIM_CR2_MMS_1;              // master mode 010: update
+	htim->ARR = myHnd->Init.Period-1;       // set period
+	htim->SR = 0;                           // clear update status caused by TIM_EGR_UG
+
+        /* Enable all configured interrupts */
+        if (self->devIrqList) HW_SetAllIRQs(self->devIrqList, true);
+        
+        return true;
+   }
+#endif
     return false;
 }
+
+/******************************************************************************
+ * Actions to be taken after initialization of peripheral timer
+ *****************************************************************************/
+void PeriphTimer_Start(const HW_DeviceType *dev, void *arg)
+{
+    UNUSED(arg);
+    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(dev);
+    TIM_TypeDef *htim = (TIM_TypeDef*)dev->devBase;
+
+    /* Increment reference count */
+    myTmrHandle->reference_cnt++;
+
+    /* Enable Update and trigger interrupts */
+    htim->DIER = TIM_DIER_UIE | TIM_DIER_TIE;
+
+    /* Start_timer */
+    htim->CR1 |= TIM_CR1_CEN;
+
+}
+
+/******************************************************************************
+ * Deinitialization of peripheral timer
+ *****************************************************************************/
+void PeriphTimer_Stop(const HW_DeviceType *dev, void *arg)
+{
+    UNUSED(arg);
+    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(dev);
+    TIM_TypeDef *htim = (TIM_TypeDef*)dev->devBase;
+
+    /* Stop_timer */
+    htim->CR1 &= ~TIM_CR1_CEN;
+
+    /* Disable all interrupts and interrupt flags */
+    htim->DIER = 0;
+    htim->SR   = 0;
+
+    /* Decrement reference count */
+    myTmrHandle->reference_cnt--;
+
+
+
+}
+
 
 /******************************************************************************
  * DeInitialization of timer device
@@ -485,7 +582,7 @@ void TMR_StopPWMCh(const HW_DeviceType *self, uint32_t ch)
  *****************************************************************************/
 bool TMR_AllowStop(const HW_DeviceType *self)
 {
-    if ( self->devType == HW_DEVICE_BASETIMER ) {
+    if ( self->devType == HW_DEVICE_BASETIMER || self->devType == HW_DEVICE_PERIPHTIMER ) {
         const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
         return adt->myTmrHandle->reference_cnt == 0;
     } else
@@ -620,6 +717,53 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
         .OnWakeUp       = NULL,
     };
 #endif /* TIM1 */
+
+#if defined(USE_TIM2) && defined(TIM2)
+    TimerHandleT         TIM2Handle;
+
+    static const HW_GpioList_AF gpio_tim2 = {
+        /* CH1 .. CH4 must be specified, will only be initialized when used */
+        .gpio = {{NULL}},
+/*
+        {
+             TIM2_CH1,
+             TIM2_CH2,
+             TIM2_CH3,
+             TIM2_CH4,
+        },
+*/
+        .num = 0, 
+        // .num = 4, 
+    };
+
+    static const TMR_AdditionalDataType additional_tim2 = {
+        .myTmrHandle = &TIM2Handle,
+        .base_frq   = 1000000,
+    };
+
+    static const HW_IrqList irq_tim2 = {
+        .num = 1,
+        .irq = { TIM2_IRQ },
+    };
+
+    const HW_DeviceType HW_TIM2 = {
+        .devName        = "TIM2",
+        .devBase        = TIM2,
+        .devGpioAF      = &gpio_tim2,
+        .devGpioIO      = NULL,
+        .devType        = HW_DEVICE_PERIPHTIMER,
+        .devData        = &additional_tim2,
+        .devIrqList     = &irq_tim2,
+        .devDmaTx       = NULL,
+        .devDmaRx       = NULL,
+        .Init           = TMR_Init,
+        .DeInit         = TMR_DeInit,
+        .OnFrqChange    = TMR_OnFrqChange,
+        .AllowStop      = TMR_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif /* TIM2 */
 
 #if defined(USE_TIM3) && defined(TIM3)
     TimerHandleT         TIM3Handle;

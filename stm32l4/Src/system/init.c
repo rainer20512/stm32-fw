@@ -187,6 +187,16 @@ void Init_OtherDevices(void)
             DEBUG_PRINTF("Failed to init CAN device %s\n", HW_CAN1.devName );
       }
   #endif
+  #if USE_PERIPHTIMER > 0
+      dev_idx = AddDevice(&PERIPH_TIMER, PeriphTimer_Start,PeriphTimer_Stop);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to add peripheral timer device %s\n", PERIPH_TIMER.devName );
+      } else {
+        /* Init peripheral timer */
+        if ( !DeviceInitByIdx(dev_idx, NULL ) ) 
+            DEBUG_PRINTF("Failed to init peripheral timer device %s\n", PERIPH_TIMER.devName );
+      }
+  #endif
   #if defined(USB_OTG_FS) && USE_USB > 0 
       void USBD_PostInit( const HW_DeviceType *self, void *args);
       dev_idx = AddDevice(&HW_USBDFS, NULL, NULL);
