@@ -121,7 +121,25 @@ void DBG_dump_number_and_text (const char *text, uint32_t num, uint32_t numlen, 
   DBG_strpadright(text, myDesiredLen, '.');
   DEBUG_PRINTF(fmt, num, text2 );
 }
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x80 ? '1' : '0'), \
+  (byte & 0x40 ? '1' : '0'), \
+  (byte & 0x20 ? '1' : '0'), \
+  (byte & 0x10 ? '1' : '0'), \
+  (byte & 0x08 ? '1' : '0'), \
+  (byte & 0x04 ? '1' : '0'), \
+  (byte & 0x02 ? '1' : '0'), \
+  (byte & 0x01 ? '1' : '0') 
 
+void DBG_dump_uint32_binary (const char *text, uint32_t num )
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN"\n",
+                BYTE_TO_BINARY(num>>24),BYTE_TO_BINARY(num>>16),BYTE_TO_BINARY(num>>8),BYTE_TO_BINARY(num) );
+}
+  
 void DBG_dump_uint32_hex (const char *text, uint32_t num )
 {
   DBG_do_indent();
@@ -198,6 +216,13 @@ void DBG_dump_setresetvalue(const char *text, uint32_t regval, uint32_t bitval )
   DBG_do_indent();
   DBG_strpadright(text, myDesiredLen, '.');
   DEBUG_PRINTF(" %s\n", regval & bitval ? "Set" : "Reset");
+}
+
+void DBG_dump_endisvalue(const char *text, uint32_t regval, uint32_t bitval ) 
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(" %sabled\n", regval & bitval ? "En" : "Dis");
 }
 
 /*

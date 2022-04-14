@@ -78,6 +78,7 @@ void DBG_dump_bitvalue2(const char *text1, const char *text2, uint32_t regval, u
 void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval); 
 void DBG_dump_onoffvalue2(const char *text, uint32_t regval, uint32_t bitval, const char *append); 
 void DBG_dump_setresetvalue(const char *text, uint32_t regval, uint32_t bitval );
+void DBG_dump_endisvalue(const char *text, uint32_t regval, uint32_t bitval ); 
 void DBG_dump_po2 (const char *text, uint32_t exp );
 
 void CRLF(void);

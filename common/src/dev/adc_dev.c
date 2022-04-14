@@ -46,6 +46,8 @@
     #error "No setup for ADC sample times"
 #endif
 
+#define ADC_DEFAULT_OVRSAMPLE       4           /* Default will be 16x Oversampling / 4 bits right shift */
+
 /* My defines -------------------------------------------------------------------*/
 /* Size of requierd DMA buffer for max 8 DMA channels, MUST reside in noncached area! */
 #define ADC_DMABUF_SIZE         17
@@ -85,17 +87,6 @@ static bool Adc_AssertInitialized(const HW_DeviceType *self)
     return adt->myAdcHandle->bInitialized;
 }
 
-/******************************************************************************
- * Check for driver being initialized 
- *****************************************************************************/
-static bool Adc_AssertRefint(const HW_DeviceType *self)
-{
-    bool ret = ADC_HAS_REFINT(self->devBase);
-    #if DEBUG_MODE > 0 && DEBUG_ADC > 0
-        if (!ret ) DEBUG_PRINTF("Error: %s has no Refint capability\n", self->devName);
-    #endif
-    return ret;
-}
 
 /******************************************************************************
  * Check for driver being initialized 
@@ -108,45 +99,75 @@ static bool Adc_AssertChiptemp(const HW_DeviceType *self)
     #endif
     return ret;
 }
-
+static const uint32_t ovrsampleCode[9] = { 0, 
+    ADC_OVERSAMPLING_RATIO_2,  ADC_OVERSAMPLING_RATIO_4,  ADC_OVERSAMPLING_RATIO_8,   ADC_OVERSAMPLING_RATIO_16,
+    ADC_OVERSAMPLING_RATIO_32, ADC_OVERSAMPLING_RATIO_64, ADC_OVERSAMPLING_RATIO_128, ADC_OVERSAMPLING_RATIO_256 };
+static const uint32_t rshiftCode[9] = { ADC_RIGHTBITSHIFT_NONE,
+    ADC_RIGHTBITSHIFT_1, ADC_RIGHTBITSHIFT_2, ADC_RIGHTBITSHIFT_3, ADC_RIGHTBITSHIFT_4, 
+    ADC_RIGHTBITSHIFT_5, ADC_RIGHTBITSHIFT_6, ADC_RIGHTBITSHIFT_7, ADC_RIGHTBITSHIFT_8 };
 
 /******************************************************************************
- * Setup the ADC_InitTypeDef structure for 
- * - 12 bit resolution, 16x oversampling, right aligned result, 
- * - ADC start by software, number of sequencer channels as specified,
- * - EOC at end of sequence,
- * 0 on failure 
+ * Setup Oversampling according to nOvrSample
+ *  - nOvrSample must be in the range 0 .. 8, which means 0 .. 256 x oversampling,
+ 
+ *  - RightBitShift is alway set accordingly
+ *  - No Reset on Injected conversions
+ *  - All samples to be done in one step
  *****************************************************************************/
-static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
+static void Adc_SetupOvrSampling ( ADC_InitTypeDef *Init, uint8_t nOvrSample  )
 {
-    ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
-    ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
-    ADC_InitTypeDef *Init       = &hAdc->Init;
     ADC_OversamplingTypeDef *o  = &Init->Oversampling;
 
+    if ( nOvrSample > 8 ) nOvrSample = 8;
+    o->OversamplingStopReset    = ADC_REGOVERSAMPLING_CONTINUED_MODE;   /* Preserve Oversampling buffer during injected conversions */
+    o->TriggeredMode            = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;     /* All samples done in one step */
+    o->Ratio                    = ovrsampleCode[nOvrSample];            /* OvrSampling and Rshift according to nOvrSample */
+    o->RightBitShift            = rshiftCode[nOvrSample];
+    Init->OversamplingMode      = nOvrSample ? ENABLE : DISABLE;        /* enable/disable oversampling, according to nOvrsample */
+}
 
-    /* 
-     * Do the neccessary ADC settings. Theses settings are done only once and are kept 
-     * in Init-Struct as long as the variable is in scope.
-     */
-    Init->Resolution            = ADC_RESOLUTION_12B;               /* 12-bit resolution for converted data */
-    Init->OversamplingMode      = ENABLE;                           /* enable oversampling */
-    #if defined(STM32L4_FAMILY)
-        Init->ClockPrescaler        = ADC_CLOCK_SYNC_PCLK_DIV1;         /* Synchronous clock mode, input ADC clock divided by 2*/
-        Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
-        Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
-        o->Ratio                    = ADC_OVERSAMPLING_RATIO_16;        /* 16x oversampling */
-        o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
-    #elif defined(STM32H7_FAMILY)
-        Init->ClockPrescaler        = ADC_CLOCK_ASYNC_DIV16;         /* Peripheral clock of 64 MHz divied by 16*/
-        o->Ratio                    = 16;                               /* 16x oversampling */
-        o->RightBitShift            = ADC_RIGHTBITSHIFT_4;              /* shift result, so we have again a 12bit result after oversampling */
+/******************************************************************************
+ * Setup the Init-parameters, that will never be altered
+ * which is:
+ * - Right data alignment ( which is due to possible oversampling )
+ * - No wait during low power modes
+ * - No continuous conversion
+ * - Enable data overrun mode
+ *****************************************************************************/
+static void Adc_SetupStdParams( ADC_InitTypeDef *Init )
+{
+    Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
+    Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
+    Init->LowPowerAutoWait      = DISABLE;                       /* Auto-delayed conversion feature disabled */
+    Init->ContinuousConvMode    = DISABLE;                       /* Continuous mode disabled (one shot conversion) */
+    Init->DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because continuous mode is disabled */
+    Init->NbrOfDiscConversion   = 1;                             /* Parameter discarded because sequencer is disabled */
+    Init->Overrun               = ADC_OVR_DATA_OVERWRITTEN;      /* DR register is overwritten with the last conversion result in case of overrun */
+}
+
+/******************************************************************************
+ * fill the ADC_InitTypeDef structure with the "variable" values
+ * which are:
+ * - resolution: One of  ADC_RESOLUTION_xyB
+ * - prescaler:  One of the ADC_CLOCK_(A)SYNC_yyyyyy constants
+ * - trigger source: One of ADC group regular trigger source
+ * - external start/stop function: In case of external triggers: A function
+ *       to start/stop the external trigger source ( Timer, eg )
+ * - number of channels used in one conversion cycle
+ *****************************************************************************/
+static void Adc_SetupVariableParams ( const HW_DeviceType *self, uint32_t adcResolution, uint32_t adcPrescaler, 
+                                        uint32_t extTriggerSrc, ExtStartStopFn startstopFn, uint8_t nrofChannels )
+{
+    ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
+    ADC_InitTypeDef *Init       = &adt->myAdcHandle->hAdc.Init;
+
+    Init->Resolution            = adcResolution;
+    Init->ClockPrescaler        = adcPrescaler;
+    #if defined(STM32H7_FAMILY)
         if ( nrofChannels < 2 ) 
             Init->ConversionDataManagement = ADC_CONVERSIONDATA_DR  ;       /* ADC Data register of inly one channel */
         else
             Init->ConversionDataManagement = ADC_CONVERSIONDATA_DMA_ONESHOT;/* ADC DMA for only one sequence */
-    #else
-        #error "NO ADC setup for selected STM32 type"
     #endif
     if ( nrofChannels < 2 ) {
         Init->ScanConvMode          = DISABLE;                   /* Sequencer disabled, only one channel */
@@ -157,18 +178,58 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
         Init->EOCSelection          = ADC_EOC_SEQ_CONV;          /* EOC flag picked-up to indicate end of whole sequence */
         adt->myAdcHandle->bSequence = true;                      /* remember that we configured a sequence */ 
    }
-    Init->LowPowerAutoWait      = DISABLE;                       /* Auto-delayed conversion feature disabled */
-    Init->ContinuousConvMode    = DISABLE;                       /* Continuous mode disabled (one shot conversion) */
     Init->NbrOfConversion       = nrofChannels;                  /* As passed */
-    Init->DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because continuous mode is disabled */
-    Init->NbrOfDiscConversion   = 1;                             /* Parameter discarded because sequencer is disabled */
-    Init->ExternalTrigConv      = ADC_SOFTWARE_START;            /* Software start to trig the 1st conversion manually, without external event */
-    Init->ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE; /* Parameter discarded because software trigger chosen */
-    Init->Overrun               = ADC_OVR_DATA_OVERWRITTEN;      /* DR register is overwritten with the last conversion result in case of overrun */
+    Init->ExternalTrigConv      = extTriggerSrc;      
+    if ( extTriggerSrc == ADC_SOFTWARE_START ) {
+        Init->ExternalTrigConvEdge     = ADC_EXTERNALTRIGCONVEDGE_NONE;   /* Parameter discarded because software trigger chosen */
+        adt->myAdcHandle->ExtStartStop = NULL;                            /* No external trigger start function                  */
+    } else {
+        Init->ExternalTrigConvEdge     = ADC_EXTERNALTRIGCONVEDGE_RISING; /* Parameter discarded because software trigger chosen */
+        adt->myAdcHandle->ExtStartStop = startstopFn;                     /* external trigger start function as passed           */
+    }
+}
 
-    o->OversamplingStopReset    = ADC_REGOVERSAMPLING_CONTINUED_MODE;   /* Preserve Oversampling buffer during injected conversions */
-    o->TriggeredMode            = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;     /* All samples done in one step */
+/******************************************************************************
+ * Setup the ADC_InitTypeDef structure for 
+ * - 12 bit resolution, 16x oversampling, right aligned result, 
+ * - ADC start by software, number of sequencer channels as specified,
+ * - EOC at end of sequence,
+ * 0 on failure 
+ *****************************************************************************/
+bool ADC_SetupStd(const HW_DeviceType *self, uint8_t nrofChannels )
+{
+    ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
+    ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
+    ADC_InitTypeDef *Init       = &hAdc->Init;
 
+
+    /* 
+     * Do the neccessary ADC settings. Theses settings are done only once and are kept 
+     * in Init-Struct as long as the variable is in scope.
+     */
+
+    /* Setup Oversampling */
+    Adc_SetupOvrSampling(Init, PeriphTimer_StartStop);
+
+    /*Set the standard (unchanged) init parameters */
+    Adc_SetupStdParams(Init);
+
+    /* Setup all the variable parameters with commonly used values */
+    Adc_SetupVariableParams( 
+        self, 
+        ADC_RESOLUTION_12B,               /* 12-bit resolution for converted data */
+    #if defined(STM32L4_FAMILY)
+        ADC_CLOCK_SYNC_PCLK_DIV1,         /* Synchronous clock mode, input ADC clock = SYSCLK */
+    #elif defined(STM32H7_FAMILY)
+        ADC_CLOCK_ASYNC_DIV16,            /* Peripheral clock of 64 MHz divied by 16*/
+    #else
+        #error "NO ADC setup for selected STM32 type"
+    #endif
+        ADC_SOFTWARE_START,               /* Manual start by software */  
+        NULL,                             /* No Startup function */
+        nrofChannels                     /* As passed */
+    );
+    
     /* Initialize ADC peripheral according to the passed parameters */
     if (HAL_ADC_Init(hAdc) != HAL_OK) {
         #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
@@ -179,6 +240,42 @@ static bool Adc_SetupInit(const HW_DeviceType *self, uint8_t nrofChannels )
 
     return true;
 }
+
+/******************************************************************************
+ * Setup the ADC_InitTypeDef structure with a relevant parameters set indiviually 
+ *****************************************************************************/
+bool ADC_SetupSpecial ( const HW_DeviceType *self, uint32_t adcResolution, uint32_t adcPrescaler, 
+                                        uint32_t extTriggerSrc, ExtStartStopFn startstopFn, uint8_t nrofChannels, uint8_t nOvrSample )
+{
+    ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
+    ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
+    ADC_InitTypeDef *Init       = &hAdc->Init;
+
+
+    /* 
+     * Do the neccessary ADC settings. Theses settings are done only once and are kept 
+     * in Init-Struct as long as the variable is in scope.
+     */
+    /* Setup Oversampling */
+    Adc_SetupOvrSampling(Init, nOvrSample);
+
+    /*Set the standard (unchanged) init parameters */
+    Adc_SetupStdParams(Init);
+
+    /* Setup all the variable parameters */
+    Adc_SetupVariableParams( self, adcResolution,adcPrescaler, extTriggerSrc, startstopFn, nrofChannels );
+    
+    /* Initialize ADC peripheral according to the passed parameters */
+    if (HAL_ADC_Init(hAdc) != HAL_OK) {
+        #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+            DEBUG_PRINTF("Init of %s failed\n", self->devName);
+        #endif
+        return false;
+    } 
+
+    return true;
+}
+
 /******************************************************************************
  * Return the Rank bitmask for Rank idx
  * 0 on failure 
@@ -259,6 +356,8 @@ static void AdcDmaChannelInit(AdcHandleT *myAdc, const HW_DmaType *dma )
   hdma->Init.MemDataAlignment    = DMA_MDATAALIGN_HALFWORD;
   
   hdma->Init.Direction           = DMA_PERIPH_TO_MEMORY;  
+  /* Overwrite mode to circular mode */
+  hdma->Init.Mode               = DMA_CIRCULAR;
   
   myAdc->hAdc.DMA_Handle     = dma->dmaHandle;
 
@@ -309,7 +408,10 @@ void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
         DEBUG_PRINTF("%d>",ProfilerGetMicrosecond());
     #endif
 
-    HAL_ADC_Stop_DMA(hadc);
+    /* If measurement was started manually, disable ADC manually after measurement */
+    if ( hadc->Init.ExternalTrigConv == ADC_SOFTWARE_START )
+        HAL_ADC_Stop_DMA(hadc);
+    
     AdcHandleT *myHandle = Adc_GetMyHandleFromHalHandle(hadc);
     if (!myHandle ) return;
 
@@ -388,7 +490,7 @@ bool ADC_Calibrate(const HW_DeviceType *self)
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
 
     /* Setup for one channel, mandatory before conversion */
-    Adc_SetupInit(self, 1);
+    ADC_SetupStd(self, 1);
 
     /* Wait for ADC voltage sources to stablize */
     HAL_Delay(LL_ADC_DELAY_INTERNAL_REGUL_STAB_US);
@@ -431,7 +533,7 @@ uint32_t ADC_MeasureChannel ( const HW_DeviceType *self, uint32_t channel_idx )
     }
 
     /* Check for single channel being initialized */
-    if ( adt->myAdcHandle->bSequence ) Adc_SetupInit(self, 1);
+    if ( adt->myAdcHandle->bSequence ) ADC_SetupStd(self, 1);
 
     gpio           = &gpioadclist->gpio[channel_idx];
     c.OffsetNumber = ADC_OFFSET_NONE;                           /* No offset subtraction */ 
@@ -464,23 +566,25 @@ static bool Adc_MeasureVdda (const HW_DeviceType *self)
     /* make sure that the handle is initialized */
     if (!Adc_AssertInitialized(self) ) return false;
 
-    /* make sure that the ADXC has a REFINT channel */
-    if (!Adc_AssertRefint(self) ) return false;
+    /* make sure that the selected ADC has a REFINT channel */
+    if ( !ADC_HAS_REFINT(self->devBase) ) {
+        #if DEBUG_MODE > 0 && DEBUG_ADC > 0
+            DEBUG_PRINTF("Error: %s has no Refint capability\n", self->devName);
+        #endif
+        return false;
+    }
 
     ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
     ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
     uint32_t raw;
 
-    /* Vrefint can be measured via specific only */
-    if ( !ADC_HAS_REFINT(self->devBase) ) return false;
-
     /* Check for single channel being initialized */
-    if ( adt->myAdcHandle->bSequence ) Adc_SetupInit(self, 1);
+    if ( adt->myAdcHandle->bSequence ) ADC_SetupStd(self, 1);
 
     ADC_ChannelConfTypeDef c;  
     Adc_SetupVrefintChannel(&c,1);
 
-    /* Configure channel */
+    /* Configure channel, will also set ADC_CCR_VREFEN */
     if (HAL_ADC_ConfigChannel(hAdc, &c) != HAL_OK) {
         #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
             DEBUG_PUTS("Failed to configure Vrefint-Channel");
@@ -532,7 +636,7 @@ bool ADC_MeasureChipTemp (const HW_DeviceType *self)
     uint32_t raw;
 
     /* Check for single channel being initialized */
-    if ( adt->myAdcHandle->bSequence ) Adc_SetupInit(self, 1);
+    if ( adt->myAdcHandle->bSequence ) ADC_SetupStd(self, 1);
     
     ADC_ChannelConfTypeDef c;  
     c.Channel      = ADC_CHANNEL_TEMPSENSOR;      /* Internal TempSensor ch. ( valid for certain channels ) */
@@ -568,9 +672,13 @@ bool ADC_MeasureChipTemp (const HW_DeviceType *self)
 }
 
 /******************************************************************************
- * Put all defined channels for tha ADC in one big channel group
+ * Setup the ADC to convert all defined channels in one group
+ * - if ADC has a RefInt channel, Vrefint is inserted as first channel
+ * - ADC_SetupStd or ADC_SetupSpecial MUST HAVE been called before
+ * - DMA MUST have been configured
+ *
  *****************************************************************************/
-void ADC_SetupGroup (const HW_DeviceType *self)
+void ADC_SetupGroup (const HW_DeviceType *self, uint32_t bStandard)
 {
     /* make sure that the handle is initialized */
     if (!Adc_AssertInitialized(self) ) return;
@@ -596,8 +704,25 @@ void ADC_SetupGroup (const HW_DeviceType *self)
 
     /* if Instance has Refint channel, it is always inserted as the first channel */
     if ( ADC_HAS_REFINT(hAdc->Instance) ) nrofch++;
-    Adc_SetupInit(self, nrofch);
-
+    if ( bStandard) {
+        ADC_SetupStd(self, nrofch);
+    } else {
+       ADC_SetupSpecial ( 
+         self, 
+         ADC_RESOLUTION_12B, 
+    #if defined(STM32L4_FAMILY)
+        ADC_CLOCK_SYNC_PCLK_DIV1,         /* Synchronous clock mode, input ADC clock = SYSCLK */
+    #elif defined(STM32H7_FAMILY)
+        ADC_CLOCK_ASYNC_DIV16,            /* Peripheral clock of 64 MHz divied by 16*/
+    #else
+        #error "NO ADC setup for selected STM32 type"
+    #endif
+        ADC_EXTERNALTRIG_T2_TRGO,        /* Start by TRGO of TIM2 */  
+        PeriphTimer_StartStop,            /* Start/Stop of TIM2 */
+        nrofch,
+        ADC_DEFAULT_OVRSAMPLE
+     );
+    }
     /* if Instance has Refint channel, it is always inserted as the first channel */
     if ( ADC_HAS_REFINT(hAdc->Instance) ) {
         Adc_SetupVrefintChannel(&c, rank);
@@ -631,6 +756,18 @@ void ADC_SetupGroup (const HW_DeviceType *self)
         }
         i++;
     }
+
+    if ( hAdc->Init.ExternalTrigConv != ADC_SOFTWARE_START ) {
+        /* 
+         * When ADC is not started by software, then start it now, which then
+         * is an arming. The real start is done by the external trigger
+         */
+        if (HAL_ADC_Start_DMA(hAdc, (uint32_t *)adt->myAdcHandle->dmabuf, GET_SEQ_LEN(hAdc) ) != HAL_OK) {
+            #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+                DEBUG_PUTS("Measuring Via DMA failed");
+            #endif
+        }
+    }
 }
 
 bool ADC_MeasureGroup(const HW_DeviceType *self)
@@ -653,14 +790,22 @@ bool ADC_MeasureGroup(const HW_DeviceType *self)
     #if DEBUG_MODE > 0 && DEBUG_ADC > 0 && DEBUG_PROFILING > 0 
         DEBUG_PRINTF(">%d",ProfilerGetMicrosecond());
     #endif
-    uint32_t length = GET_SEQ_LEN(hAdc);
-    /* Start conversion  */
-    if (HAL_ADC_Start_DMA(hAdc, (uint32_t *)adt->myAdcHandle->dmabuf, length ) != HAL_OK) {
-        #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
-            DEBUG_PUTS("Measuring Via DMA failed");
-        #endif
-        return false;
-    }
+
+    if ( hAdc->Init.ExternalTrigConv == ADC_SOFTWARE_START ) {
+        /* Start conversion manually */
+        uint32_t length = GET_SEQ_LEN(hAdc);
+        /* Start conversion  */
+        if (HAL_ADC_Start_DMA(hAdc, (uint32_t *)adt->myAdcHandle->dmabuf, length ) != HAL_OK) {
+            #if DEBUG_MODE > 0 && DEBUG_ADC > 0 
+                DEBUG_PUTS("Measuring Via DMA failed");
+            #endif
+            return false;
+        }
+     } else {
+        /* Start the trigger generator */
+        assert ( adt->myAdcHandle->ExtStartStop );
+        adt->myAdcHandle->ExtStartStop(true);
+     }
 
     return true;
 
@@ -684,7 +829,83 @@ static void ADC_ClockInit (const HW_DeviceType *self, bool bIsInit)
 
 }
 
+void Adc_Dump_CR( uint32_t cr )
+{
+    int oldpadlen = DBG_setPadLen ( 12 );
+    DBG_dump_uint32_binary("CR=", cr);
+    DBG_setIndentRel(+2);
+    DBG_dump_setresetvalue("ADCAL", cr, ADC_CR_ADCAL_Msk );
+    DBG_dump_setresetvalue("ADCALDIF", cr, ADC_CR_ADCALDIF_Msk );
+    DBG_dump_setresetvalue("DEEPPWD", cr, ADC_CR_DEEPPWD_Msk );
+    DBG_dump_setresetvalue("ADVREGEN", cr, ADC_CR_ADVREGEN_Msk );
+    DBG_dump_setresetvalue("JADSTP", cr, ADC_CR_JADSTP_Msk );
+    DBG_dump_setresetvalue("ADSTP", cr, ADC_CR_ADSTP_Msk );
+    DBG_dump_setresetvalue("JADSTART", cr, ADC_CR_JADSTART_Msk );
+    DBG_dump_setresetvalue("ADSTART", cr, ADC_CR_ADSTART_Msk );
+    DBG_dump_setresetvalue("ADDIS", cr, ADC_CR_ADDIS_Msk );
+    DBG_dump_setresetvalue("ADEN", cr, ADC_CR_ADEN_Msk );
+    DBG_setPadLen ( oldpadlen );
+    DBG_setIndentRel(-2);
+}
 
+const char * const exten_txt[]={"Disabled", "Rising Edge", "Falling Edge", "Both edges" };
+static const char* adc_cfgr_get_exten_txt(uint32_t sel)
+{
+  if ( sel < sizeof(exten_txt)/sizeof(char *) ) 
+    return exten_txt[sel];
+  else
+    return "Illegal";
+}
+
+const char * const res_txt[]={"12bit", "10bit", "8bit", "6bit" };
+static const char* adc_cfgr_get_res_txt(uint32_t sel)
+{
+  if ( sel < sizeof(res_txt)/sizeof(char *) ) 
+    return res_txt[sel];
+  else
+    return "Illegal";
+}
+
+
+void Adc_Dump_CFGR( uint32_t cfgr )
+{
+    int oldpadlen = DBG_setPadLen ( 25 );
+    DBG_dump_uint32_binary("CFGR=", cfgr);
+    DBG_setIndentRel(+2);
+    DBG_dump_endisvalue("Injected Queue", ~cfgr, ADC_CFGR_JQDIS_Msk );
+    DBG_dump_endisvalue("Auto injected group conv.", cfgr, ADC_CFGR_JAUTO );
+    DBG_dump_endisvalue("AWD on inj. channels", cfgr, ADC_CFGR_JAWD1EN_Msk );
+    DBG_dump_endisvalue("AWD in reg. channels", cfgr, ADC_CFGR_AWD1EN_Msk );
+    if ( cfgr & ( ADC_CFGR_JAWD1EN_Msk |  ADC_CFGR_AWD1EN_Msk ) ) {
+        DBG_dump_bitvalue("AWD on single channel", cfgr, ADC_CFGR_AWD1SGL_Msk );
+        if ( cfgr & ADC_CFGR_AWD1SGL_Msk ) DBG_dump_number("AWD monitored channel", (cfgr & ADC_CFGR_AWD1CH_Msk) >> ADC_CFGR_AWD1CH_Pos );
+    }
+    DBG_dump_number("JQSR queue mode", ( cfgr & ADC_CFGR_JQM_Msk) >> ADC_CFGR_JQM_Pos );
+    DBG_dump_endisvalue("discont. mode on inj. ch", cfgr, ADC_CFGR_JDISCEN_Msk );
+    DBG_dump_endisvalue("discont. mode on reg. ch", cfgr, ADC_CFGR_DISCEN_Msk );
+    if (cfgr & ( ADC_CFGR_JDISCEN_Msk | ADC_CFGR_DISCEN_Msk) ) DBG_dump_number("discont. mode ch cnt", ( cfgr &ADC_CFGR_DISCNUM_Msk ) >> ADC_CFGR_DISCNUM_Pos );
+    DBG_dump_onoffvalue("Delayed conversion", cfgr, ADC_CFGR_AUTDLY_Msk );
+    DBG_dump_endisvalue("Continuous conversion", cfgr, ADC_CFGR_CONT_Msk );
+    DBG_dump_endisvalue("Overrun mode", cfgr, ADC_CFGR_OVRMOD_Msk );
+    DBG_dump_textvalue("External trigger mode", adc_cfgr_get_exten_txt((cfgr &ADC_CFGR_EXTEN_Msk )>>ADC_CFGR_EXTEN_Pos ));
+    if ( (cfgr &ADC_CFGR_EXTEN_Msk )>>ADC_CFGR_EXTEN_Pos ) DBG_dump_number("Trigger event #", (cfgr &ADC_CFGR_EXTSEL_Msk )>>ADC_CFGR_EXTSEL_Pos );
+    DBG_dump_endisvalue("Right alignment", ~cfgr, ADC_CFGR_ALIGN_Msk );
+    DBG_dump_textvalue("Resolution", adc_cfgr_get_res_txt((cfgr &ADC_CFGR_RES_Msk )>>ADC_CFGR_RES_Pos ));
+    DBG_setPadLen ( oldpadlen );
+    DBG_setIndentRel(-2);
+}
+
+void ADC_ShowStatus ( const HW_DeviceType *self )
+{
+    ADC_AdditionalDataType *adt = ADC_GetAdditionalData(self);
+    ADC_HandleTypeDef *hAdc     = &adt->myAdcHandle->hAdc;
+    ADC_TypeDef *adc            = hAdc->Instance;
+   
+    DEBUG_PRINTF("Debug of %s\n", self->devName);
+    DBG_setIndentRel(+2);
+    Adc_Dump_CR( adc->CR );
+    Adc_Dump_CFGR( adc->CFGR );
+}
 
 
 bool ADC_Init(const HW_DeviceType *self)
@@ -711,7 +932,7 @@ bool ADC_Init(const HW_DeviceType *self)
         return false;
     }
 
-    if ( !Adc_SetupInit(self, 1 ) ) return false;
+    if ( !ADC_SetupStd(self, 1) ) return false;
 
     /* 
      * Do the mandatory calibration, or in case of ADC1
@@ -738,7 +959,7 @@ bool ADC_Init(const HW_DeviceType *self)
       // Take the first interrupt to copy prio and subprio to dma channel interrupts
       const HW_IrqType *irq = self->devIrqList->irq;
 
-      /*make sure, that also interrupts are configured, MA won't work without */
+      /*make sure, that also interrupts are configured, DMA won't work without */
       if ( self->devIrqList->num == 0 ) {
          #if DEBUG_MODE > 0 && DEBUG_ADC > 0
              DEBUG_PRINTF("Init of %s: Use of DMA requires interrupts \n", self->devName);
@@ -797,8 +1018,9 @@ static void Adc_Handle(AdcHandleT *myHandle)
     /* reset "conversion doen" flag, to prevent another processing */
     myHandle->bSequenceDone = false;
 
+    ADC_ShowStatus(&HW_ADC1);
     for ( uint32_t i = 0; i<myHandle->seqLen; i++ )
-        printf("%d ", myHandle->seqResultPtr[i]);
+        printf("Ch %d:Raw %d is %dmV\n", i, myHandle->seqResultPtr[i], __HAL_ADC_CALC_DATA_TO_VOLTAGE(myHandle->vdda,myHandle->seqResultPtr[i], myHandle->hAdc.Init.Resolution) );
     puts("");
 }
 
@@ -817,7 +1039,7 @@ void ADC_MeasureVdda ( void *arg )
  *****************************************************************************/
 void task_init_adc(void)
 {
-    AtSecond ( 56, ADC_MeasureVdda, (void *)&USER_ADC, "Measure Vdda");
+    // AtSecond ( 56, ADC_MeasureVdda, (void *)&USER_ADC, "Measure Vdda");
 }
 
 /******************************************************************************
@@ -847,12 +1069,12 @@ void task_handle_adc(uint32_t arg)
     static const HW_DmaType dmarx_adc1 = { &hdma_adc1_rx, ADC1_RX_DMA };
 
     static const HW_GpioList_ADC gpio_adc = {
-        .num  = 2,
+        .num  = 4,
         .gpio = { 
             ADC1CH_REFINT,
             ADC1CH_TEMPSENSOR,
-/* example ADC123_CH_3, */
-/* example ADC123_CH_4, */
+/* example*/ ADC123_CH_3,
+/* example*/ ADC123_CH_4, 
         }
     };
 

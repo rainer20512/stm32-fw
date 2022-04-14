@@ -570,7 +570,7 @@ void Start_OOK_Receiver(uint32_t do_measure)
     SetFlagBit(gflags, GFLAG_OOK_BIT);
 
     /* Start OOK receiver */
-    BASTMR_Aquire(&BASTIM_HANDLE);
+    TMR_Aquire(&BASTIM_HANDLE);
     RFM_OOK_init();
     RFM_OOK_on();
     LCD_DisplayStatus(LCD_STATUS_RADIO);
@@ -584,7 +584,7 @@ void Stop_OOK_Receiver(void)
     /* Stop watch may be still running in case of timeout without reception, so stop it now */
     if ( RTC_StopWatch_InUse() ) RTC_StopWatch_Stop();
     
-    BASTMR_Release(&BASTIM_HANDLE);
+    TMR_Release(&BASTIM_HANDLE);
     RFM_OOK_off();
 
     // Receiver is deactivated

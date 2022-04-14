@@ -1283,9 +1283,16 @@ ADD_SUBMODULE(Test);
             ADC_MeasureChannel(&HW_ADC1, ch);
             break;
         case 4:
-            puts("Measure group"); 
-            ADC_SetupGroup(&HW_ADC1);
+            puts("Measure group manually"); 
+            ADC_SetupGroup(&HW_ADC1, true);
             ADC_MeasureGroup(&HW_ADC1);
+            ADC_ShowStatus(&HW_ADC1);
+            break;
+        case 8:
+            puts("Measure group auto"); 
+            ADC_SetupGroup(&HW_ADC1, false);
+            ADC_MeasureGroup(&HW_ADC1);
+            ADC_ShowStatus(&HW_ADC1);
             break;
         case 5:
             ADC_DisableRefintCh(&HW_ADC1);
@@ -1294,6 +1301,15 @@ ADD_SUBMODULE(Test);
         case 6:
             ADC_DisableAllInternalCh(&HW_ADC1);
             puts("Refint channel disabled"); 
+            break;
+        case 7:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: 'Peripheral 1/0\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            ch = CMD_to_number ( word, wordlen );
+            PeriphTimer_StartStop(ch!=0);
             break;
         default:
           DEBUG_PUTS("Test_Menu: command not implemented");
@@ -1313,9 +1329,11 @@ ADD_SUBMODULE(Test);
         { "Measure Vdda",           ctype_fn, .exec.fn = ADC_Menu,VOID(1), "Measure Vdda w/o Calibration" },
         { "Measure Temp",           ctype_fn, .exec.fn = ADC_Menu,VOID(2), "Measure Chip temperature" },
         { "Measure channel",        ctype_fn, .exec.fn = ADC_Menu,VOID(3), "Measure channel <n>" },
-        { "Measure group",          ctype_fn, .exec.fn = ADC_Menu,VOID(4), "Measure whole sequence" },
+        { "Measure group manually", ctype_fn, .exec.fn = ADC_Menu,VOID(4), "Measure whole sequence once manually" },
+        { "Measure group auto",     ctype_fn, .exec.fn = ADC_Menu,VOID(8), "Measure whole sequence automatically repeated" },
         { "Refint disable",         ctype_fn, .exec.fn = ADC_Menu,VOID(5), "Disable Refint ADC channel" },
         { "All int. Ch. Disable",   ctype_fn, .exec.fn = ADC_Menu,VOID(6), "Disable all internal ADC channels" },
+        { "Periph Timer Start/Stop",ctype_fn, .exec.fn = ADC_Menu,VOID(7), "Start/Stop the perpheral timer" },
     };
     ADD_SUBMODULE(ADC);
 #endif

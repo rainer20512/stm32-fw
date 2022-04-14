@@ -19,6 +19,8 @@
 #ifdef __cplusplus
  extern "C" {
 #endif
+/* Function to start/stop the controlling ressource in case of using an external ADC trigger soure */
+typedef void (*ExtStartStopFn) ( uint32_t );
 
 /* Public typedef -----------------------------------------------------------------------*/
 typedef struct AdcHandleType {
@@ -33,6 +35,7 @@ typedef struct AdcHandleType {
         uint8_t bSequenceDone;            /* flag for "sequence is converted fully"      */
         uint8_t seqLen;                   /* length of converted sequence (in words)     */
         uint16_t *seqResultPtr;           /* Ptr to array of converted values            */
+        ExtStartStopFn ExtStartStop;      /* Fn to Start/Stop the external trigger       */
  } AdcHandleT; 
 /* Note: the dmabuf MUST be placed reside in an noncached ram area! */
 
@@ -42,7 +45,9 @@ void     ADC_MeasureVdda         (void *arg);
 bool     ADC_MeasureChipTemp     (const HW_DeviceType *self);
 uint32_t ADC_MeasureChannel      ( const HW_DeviceType *self, uint32_t channel_idx );
 
-void     ADC_SetupGroup          (const HW_DeviceType *self);
+void     ADC_ShowStatus          ( const HW_DeviceType *self );
+
+void     ADC_SetupGroup          (const HW_DeviceType *self, uint32_t bStandard);
 bool     ADC_MeasureGroup        (const HW_DeviceType *self);
 
 void     ADC_DisableRefintCh     (const HW_DeviceType *self);

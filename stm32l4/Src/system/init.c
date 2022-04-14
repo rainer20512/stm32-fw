@@ -188,7 +188,7 @@ void Init_OtherDevices(void)
       }
   #endif
   #if USE_PERIPHTIMER > 0
-      dev_idx = AddDevice(&PERIPH_TIMER, PeriphTimer_Start,PeriphTimer_Stop);
+      dev_idx = AddDevice(&PERIPH_TIMER, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PRINTF("Failed to add peripheral timer device %s\n", PERIPH_TIMER.devName );
       } else {

@@ -61,13 +61,17 @@ typedef struct TimerHandleType {
     extern TimerHandleT         TIM7Handle;
 #endif
 
+/* Public functions for all types of Timers ------------------------------------*/
+void        TMR_Aquire              (TimerHandleT *hnd);
+void        TMR_Release             (TimerHandleT *hnd);
+void        TMR_Start               (const HW_DeviceType *dev, bool bIntEnable);
+void        TMR_Stop                (const HW_DeviceType *dev);
+
 /* Public functions for BasicTimers --------------------------------------------*/
 void        BASTMR_IrqHandler       ( volatile uint32_t *CntHigh, TIM_TypeDef *htim);
 uint32_t    BASTMR_GetMicrosecond   (TimerHandleT *hnd);
 uint16_t    BASTMR_GetRawValue      (TimerHandleT *hnd);
 void        BASTMR_EarlyInit        (void);
-void        BASTMR_Aquire           (TimerHandleT *hnd);
-void        BASTMR_Release          (TimerHandleT *hnd);
 void        BASTMR_DelayUs          (uint32_t delta_us );
 
 /* Public functions for PWM Timers ---------------------------------------------*/
@@ -77,8 +81,7 @@ void TMR_StartPWMChPromille (const HW_DeviceType *self, uint32_t ch, uint32_t pr
 void TMR_StartPWMChS256     (const HW_DeviceType *self, uint32_t ch, uint32_t s256 );
 void TMR_StopPWMCh          (const HW_DeviceType *self, uint32_t ch);
 
-void PeriphTimer_Start(const HW_DeviceType *dev, void *arg);
-void PeriphTimer_Stop(const HW_DeviceType *dev, void *arg);
+void PeriphTimer_StartStop(uint32_t bStart);
 
 #ifdef __cplusplus
 }

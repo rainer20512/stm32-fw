@@ -38,7 +38,6 @@ static uint32_t idxToTimCh[6] =
 typedef struct {
     TimerHandleT    *myTmrHandle;   /* My associated Spi-handle */
     uint32_t        base_frq;       /* Timer Base Frequency */
-    uint8_t         bIs32bit;       /* true, if Timer is a 32-bit timer */    
 } TMR_AdditionalDataType;
 
 static TMR_AdditionalDataType * TMR_GetAdditionalData(const HW_DeviceType *self)
@@ -62,6 +61,55 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
     /* Check, if any of the enable bits in CCER are set */
     return htim->CCER & ( TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E | TIM_CCER_CC5E | TIM_CCER_CC6E );
 }     
+
+/**********************************************************************************
+ * Aquire a timer instance
+ *********************************************************************************/
+void TMR_Aquire(TimerHandleT *timhandle)
+{
+    timhandle->reference_cnt++;
+}
+
+/**********************************************************************************
+ * Release a timer instance
+ *********************************************************************************/
+void TMR_Release(TimerHandleT *timhandle)
+{
+    if ( --(timhandle->reference_cnt) < 0 ) log_error("BASTMR Semaphore Release w/o Aquire");
+}
+
+/******************************************************************************
+ * Start a timer
+ *****************************************************************************/
+void TMR_Start(const HW_DeviceType *dev, bool bIntEnable)
+{
+    TIM_TypeDef *htim         = (TIM_TypeDef*)dev->devBase;
+
+    /* Enable Update interrupt, if requested */
+    if ( bIntEnable) {
+        htim->SR   = 0;
+        htim->DIER = TIM_DIER_UIE;
+    }
+
+    /* Start_timer */
+    htim->CR1 |= TIM_CR1_CEN;
+}
+
+/******************************************************************************
+ * Stop a timer
+ *****************************************************************************/
+void TMR_Stop(const HW_DeviceType *dev)
+{
+    TIM_TypeDef *htim = (TIM_TypeDef*)dev->devBase;
+
+    /* Stop_timer */
+    htim->CR1 &= ~TIM_CR1_CEN;
+
+    /* Disable all interrupts and pending interrupt flags */
+    htim->DIER = 0;
+    htim->SR   = 0;
+}
+
 
 #if USE_BASICTIMER > 0 
 
@@ -168,21 +216,6 @@ static bool IsAnyChnActive( const HW_DeviceType *self)
       DeviceInitByIdx(dev_idx, NULL);
     }
 
-    /**********************************************************************************
-     * Aquire the basic timer instance
-     *********************************************************************************/
-    void BASTMR_Aquire(TimerHandleT *timhandle)
-    {
-        timhandle->reference_cnt++;
-    }
-
-    /**********************************************************************************
-     * Release the basic timer instance
-     *********************************************************************************/
-    void BASTMR_Release(TimerHandleT *timhandle)
-    {
-        if ( --(timhandle->reference_cnt) < 0 ) log_error("BASTMR Semaphore Release w/o Aquire");
-    }
 #endif /* #if USE_BASICTIMER > 0 */
 
 /******************************************************************************
@@ -239,20 +272,6 @@ static uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
     return 0;
 }
 
-/****************************************************************************** 
- * Return true, if a timer is a 32-bit timer
- * Does not work for LPTIM timers
-  *****************************************************************************/
-static bool TmrIs32Bit(TIM_TypeDef *tim )
-{
-    const TIM_TypeDef *iter;
-    uint32_t i;
-    for ( i=0; iter=bit32_timers[i], iter; i++ ) {
-        if ( tim == iter ) return true;
-    }
-
-    return false;
-}
 
 /******************************************************************************
  * Set the timers prescaler to achieve the desired base frequency
@@ -300,9 +319,6 @@ bool TMR_Init(const HW_DeviceType *self)
     /* Set base frequency */
     myHnd->Instance = htim;
 
-    /* Determine, if timer is a 32 bit type */
-    adt->myTmrHandle->bIs32bit  = TmrIs32Bit(htim);
-
 #if USE_PWMTIMER > 0
     if ( self->devType == HW_DEVICE_PWMTIMER ) {
         SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, false);
@@ -314,43 +330,25 @@ bool TMR_Init(const HW_DeviceType *self)
         return HAL_TIM_PWM_Init(myHnd) == HAL_OK;
     }
 #endif
-#if USE_BASICTIMER > 0
-    if ( self->devType == HW_DEVICE_BASETIMER ) {
-        bool ret;
-        /* Initialize TIMx peripheral as follows:
-            + Period             = 65536 or 1000, depends from USE_BASTIMER_FOR_TICKS
-            + Prescaler          = calculated dynamically to give 1 MHz timer input frequency
-            + ClockDivision      = 1
-            + Counter direction  = Up
-        */
-        myHnd->Init.Period            = BASTIMER_UPPER;
-        if (!SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
-        myHnd->Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
-        myHnd->Init.CounterMode       = TIM_COUNTERMODE_UP;
-        myHnd->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
 
-        /* Init Timer */
-        ret = HAL_TIM_Base_Init(myHnd) == HAL_OK;
-        if (ret && self->devIrqList) {
-            HW_SetAllIRQs(self->devIrqList, true);
-            ret = HAL_TIM_Base_Start_IT(myHnd) == HAL_OK;
+#if USE_PERIPHTIMER > 0 || USE_BASICTIMER > 0
+    if ( self->devType == HW_DEVICE_BASETIMER || self->devType == HW_DEVICE_PERIPHTIMER ) {
+        /* Initialize TIMx peripheral as follows:
+            + Period of basetimer     =65536 or 1000, depends from USE_BASTIMER_FOR_TICKS
+            + Period of periph. timer = 50000 or 500000 ie 20 or 2Hz, depending from timer bitwidth
+            + Prescaler               = calculated dynamically to give 1 MHz timer input frequency
+            + ClockDivision           = 1
+            + Counter direction       = Up
+        */
+        if ( self->devType == HW_DEVICE_BASETIMER ) {
+            myHnd->Init.Period            = BASTIMER_UPPER;
+        } else {
+            /* peripheral timer */
+            if ( IS_TIM_32B_COUNTER_INSTANCE(htim) )
+                myHnd->Init.Period            = 1000000-1;
+            else
+                myHnd->Init.Period            = 50000-1;
         }
-
-        return ret;
-    }
-#endif
-#if USE_PERIPHTIMER > 0
-    if ( self->devType == HW_DEVICE_PERIPHTIMER ) {
-        /* Initialize TIMx peripheral as follows:
-            + Period             = 50000 or 500000 ie 20 or 2Hz, depending from timer bit
-            + Prescaler          = calculated dynamically to give 1 MHz timer input frequency
-            + ClockDivision      = 1
-            + Counter direction  = Up
-        */
-        if ( adt->myTmrHandle->bIs32bit)
-            myHnd->Init.Period            = 500000;
-        else
-            myHnd->Init.Period            = 50000;
 
         if (!SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
 
@@ -359,59 +357,19 @@ bool TMR_Init(const HW_DeviceType *self)
 	htim->EGR = TIM_EGR_UG;                 // load prescaler
         htim->CR1 = 0;                          // upcount
 	htim->CR2 = TIM_CR2_MMS_1;              // master mode 010: update
-	htim->ARR = myHnd->Init.Period-1;       // set period
+	htim->ARR = myHnd->Init.Period;         // set period
 	htim->SR = 0;                           // clear update status caused by TIM_EGR_UG
 
         /* Enable all configured interrupts */
         if (self->devIrqList) HW_SetAllIRQs(self->devIrqList, true);
         
+        /* Basictimer will be started immediately */
+        if ( self->devType == HW_DEVICE_BASETIMER ) TMR_Start(self, true);
+
         return true;
    }
 #endif
     return false;
-}
-
-/******************************************************************************
- * Actions to be taken after initialization of peripheral timer
- *****************************************************************************/
-void PeriphTimer_Start(const HW_DeviceType *dev, void *arg)
-{
-    UNUSED(arg);
-    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(dev);
-    TIM_TypeDef *htim = (TIM_TypeDef*)dev->devBase;
-
-    /* Increment reference count */
-    myTmrHandle->reference_cnt++;
-
-    /* Enable Update and trigger interrupts */
-    htim->DIER = TIM_DIER_UIE | TIM_DIER_TIE;
-
-    /* Start_timer */
-    htim->CR1 |= TIM_CR1_CEN;
-
-}
-
-/******************************************************************************
- * Deinitialization of peripheral timer
- *****************************************************************************/
-void PeriphTimer_Stop(const HW_DeviceType *dev, void *arg)
-{
-    UNUSED(arg);
-    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(dev);
-    TIM_TypeDef *htim = (TIM_TypeDef*)dev->devBase;
-
-    /* Stop_timer */
-    htim->CR1 &= ~TIM_CR1_CEN;
-
-    /* Disable all interrupts and interrupt flags */
-    htim->DIER = 0;
-    htim->SR   = 0;
-
-    /* Decrement reference count */
-    myTmrHandle->reference_cnt--;
-
-
-
 }
 
 
@@ -849,6 +807,23 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
         BASTIM_HANDLE.bTicksEnabled = true;
     }
 #endif /* USE_BASICTIMER_FOR_TICK > 0 */
+
+/******************************************************************************
+ * Start/Stop for peripheral timer
+ *****************************************************************************/
+void PeriphTimer_StartStop(uint32_t bStart)
+{
+    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(&PERIPH_TIMER);
+
+    if ( bStart ) {
+        TMR_Start(&PERIPH_TIMER, true);
+        /* Set reference count to 1 ( a timer can be only started once ) */
+        myTmrHandle->reference_cnt = 1;
+    } else {
+        TMR_Stop(&PERIPH_TIMER);
+        myTmrHandle->reference_cnt = 0;
+    }
+}
 
 #endif /* USE_PWMTIMER > 0 || USE_BASICTIMER > 0 */
 /**
