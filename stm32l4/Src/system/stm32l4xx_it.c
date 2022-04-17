@@ -694,12 +694,12 @@ void SysTick_Handler(void)
         if ( TIM2->SR & TIM_SR_UIF ) {
             /* Clear flag by writing 0 at that bit position */
             TIM2->SR = ~TIM_SR_UIF;
-            DEBUG_PUTS("TIM2 UIF");
+            DEBUG_PRINTF("T2 ");
         }
         if ( TIM2->SR & TIM_SR_TIF ) {
             /* Clear flag by writing 0 at that bit position */
             TIM2->SR = ~TIM_SR_TIF;
-            DEBUG_PUTS("TIM2 TIF");
+            DEBUG_PUTS("T2 TIF");
         }
     }
 #endif

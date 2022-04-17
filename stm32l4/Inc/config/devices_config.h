@@ -356,12 +356,12 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    // #define USE_USART2
+    #define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     //#define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    //#define USE_USART2_DEBUG
+    #define USE_USART2_DEBUG
 
     // #define USE_USART3
     #define COM3_USE_TX_DMA
@@ -376,12 +376,12 @@
     #define COM5_USE_RX_DMA
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
-    #define USE_LPUART1
+    //#define USE_LPUART1
     #define COM9_USE_TX_DMA
     //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
-    #define USE_LPUART1_DEBUG
+    //#define USE_LPUART1_DEBUG
  
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ

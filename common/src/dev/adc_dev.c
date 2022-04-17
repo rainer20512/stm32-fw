@@ -409,8 +409,14 @@ void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc)
     #endif
 
     /* If measurement was started manually, disable ADC manually after measurement */
-    if ( hadc->Init.ExternalTrigConv == ADC_SOFTWARE_START )
+    if ( hadc->Init.ExternalTrigConv == ADC_SOFTWARE_START ) {
         HAL_ADC_Stop_DMA(hadc);
+    } else {
+        /* Reset end of conversion and end of sequence flag */
+        hadc->Instance->ISR = ADC_ISR_EOC | ADC_ISR_EOS;
+        /* And restart conversion */
+        hadc->Instance->CR |= ADC_CR_ADSTART;
+    }
     
     AdcHandleT *myHandle = Adc_GetMyHandleFromHalHandle(hadc);
     if (!myHandle ) return;
@@ -905,6 +911,7 @@ void ADC_ShowStatus ( const HW_DeviceType *self )
     DBG_setIndentRel(+2);
     Adc_Dump_CR( adc->CR );
     Adc_Dump_CFGR( adc->CFGR );
+    DBG_setIndentRel(-2);
 }
 
 

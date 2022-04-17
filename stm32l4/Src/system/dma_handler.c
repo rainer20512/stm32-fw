@@ -259,7 +259,7 @@ void DMA##dev##_Channel##channel##_IRQHandler(void)                 \
   ProfilerPop();                                                   \
 }
 
-DMA_IRQ(1, 1)
+// DMA_IRQ(1, 1)
 DMA_IRQ(1, 2)
 DMA_IRQ(1, 3)
 DMA_IRQ(1, 4)
@@ -275,6 +275,23 @@ DMA_IRQ(2, 5)
 DMA_IRQ(2, 6)
 DMA_IRQ(2, 7)
 
+/* 
+ * for debug purposes
+ */
+#define dev     1
+#define channel 1
+void DMA1_Channel1_IRQHandler(void)                 
+{
+  ProfilerPush(JOB_IRQ_DMA);
+  /* find the assigned handle, if any */
+  DMA_HandleTypeDef *handle = handles[dev-1][channel-1];
+  if ( !handle) {
+    DBG_ERROR("DMA %d, Channel %d: No handler!\n", dev, channel);
+    return;
+  }
+  HAL_DMA_IRQHandler(handle);
+  ProfilerPop();
+}
 
 /**
   * @}

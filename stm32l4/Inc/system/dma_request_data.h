@@ -47,14 +47,14 @@
     #define DMA_DATA_USART1_RX          DMA_REQUEST_2, DMA1_Channel5 
 //    #define DMA_DATA_USART1_RX          DMA_REQUEST_2, DMA2_Channel6 
 //    #define DMA_DATA_USART1_TX          DMA_REQUEST_2, DMA2_Channel7 
-    #define DMA_DATA_USART2_TX          DMA_REQUEST_2, DMA1_Channel6 
-    #define DMA_DATA_USART2_RX          DMA_REQUEST_2, DMA1_Channel7 
+    #define DMA_DATA_USART2_TX          DMA_REQUEST_2, DMA1_Channel7 
+    #define DMA_DATA_USART2_RX          DMA_REQUEST_2, DMA1_Channel6 
     #define DMA_DATA_USART3_TX          DMA_REQUEST_2, DMA1_Channel2 
     #define DMA_DATA_USART3_RX          DMA_REQUEST_2, DMA1_Channel3 
     #define DMA_DATA_UART4_TX           DMA_REQUEST_2, DMA2_Channel3 
     #define DMA_DATA_UART4_RX           DMA_REQUEST_2, DMA2_Channel5 
     #define DMA_DATA_UART5_TX           DMA_REQUEST_2, DMA2_Channel1 
-    #define DMA_DATA_UART5_RX           DMA_REQUEST_2, DMA2_Channel1 
+    #define DMA_DATA_UART5_RX           DMA_REQUEST_2, DMA2_Channel2 
     #define DMA_DATA_LPUART1_TX         DMA_REQUEST_4, DMA2_Channel6 
     #define DMA_DATA_LPUART1_RX         DMA_REQUEST_4, DMA2_Channel7 
 
