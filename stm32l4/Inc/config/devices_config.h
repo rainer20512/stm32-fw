@@ -229,34 +229,6 @@
     #define USE_SPI3_BAUDRATE        400000
     #define USE_SPI3_MASTER
 
-#if 0
-    /* User I2C is I2C1 with PG14=SCL, PG13=SDA                                  */
-    #define USE_I2C1
-    #undef  USE_I2CDEV1_ALTN1
-    #define  USE_I2CDEV1_ALTN2
-    #define I2C1_CLKSOURCE           I2cClock_HSI
-    #define I2C1_SPEED               I2c_StandardMode
-    #define I2C1_USE_IRQ
-    #define I2C1_USE_DMA
-    #define USER_I2C1
-
-    /* I2C2 with PB11=SCL, PB10=SDA                                  */
-    #define USE_I2C2
-    #undef  USE_I2CDEV2_ALTN1
-    #undef  USE_I2CDEV2_ALTN2
-    #define I2C2_CLKSOURCE           I2cClock_HSI
-    #define I2C2_SPEED               I2c_StandardMode
-    #define I2C2_USE_IRQ
-    #define I2C2_USE_DMA
-    #define USER_I2C2
-
-    // #define USE_I2C2
-    #define I2C2_CLKSOURCE           I2cClock_HSI
-    #define I2C2_SPEED               I2c_StandardMode
-    #define I2C2_USE_IRQ
-    #define I2C2_USE_DMA
-#endif
-
     #define USE_ADC1
     #define ADC1_USE_IRQ
     #define ADC1_USE_DMA 
@@ -356,12 +328,12 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    #define USE_USART2
+    //#define USE_USART2
     #define USE_USART2_ALTN1
     #define COM2_USE_TX_DMA
     //#define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
-    #define USE_USART2_DEBUG
+    //#define USE_USART2_DEBUG
 
     // #define USE_USART3
     #define COM3_USE_TX_DMA
@@ -376,12 +348,12 @@
     #define COM5_USE_RX_DMA
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
-    //#define USE_LPUART1
+    #define USE_LPUART1
     #define COM9_USE_TX_DMA
     //#define COM9_USE_RX_DMA
     #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
     #define USE_LPUART1_ALTN2
-    //#define USE_LPUART1_DEBUG
+    #define USE_LPUART1_DEBUG
  
     // #define USE_SPI1
     #define SPIDEV1_USE_IRQ
@@ -595,6 +567,29 @@
     #endif
 
     #define DEFAULT_STOP_MODE                2
+
+#elif defined(STM32L4P5BAREMETAL)
+
+    #define USE_LPUART1
+    #if defined(USE_LPUART1)
+        #define COM9_USE_TX_DMA
+        //#define COM9_USE_RX_DMA
+        #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
+        // PC0, PC1
+        #define USE_LPUART1_ALTN3
+        #define USE_LPUART1_DEBUG
+    #endif 
+
+    #if USE_PERIPHTIMER > 0
+      #define PERIPH_TIMER      HW_TIM2
+      #define USE_TIM2
+      #define USE_TIM2_ALTN1
+    #endif   
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM1
+    #define RTCTIMER_IRQn           LPTIM1_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
 #elif defined(STM32L4S9ZXXREF)
 

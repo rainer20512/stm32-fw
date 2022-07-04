@@ -117,7 +117,7 @@ static void DBG_dump_sram_areas(void)
   DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
   DEBUG_PUTC('\n');
 }
-#elif defined(STM32L4Sxxx)
+#elif defined(STM32L4PLUS)
 static void DBG_dump_sram_areas(void)
 {
   DBG_setPadLen(6);

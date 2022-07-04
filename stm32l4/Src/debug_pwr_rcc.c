@@ -611,6 +611,7 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
   DBG_dump_onoffvalue  ("DAC1 Clock", reg1, RCC_APB1ENR1_DAC1EN);  
   DBG_dump_onoffvalue  ("PWR Clock", reg1, RCC_APB1ENR1_PWREN);  
   DBG_dump_onoffvalue  ("CAN1 Clock", reg1, RCC_APB1ENR1_CAN1EN);  
+  DBG_dump_onoffvalue  ("CRS Clock", reg1, RCC_APB1ENR1_CRSEN);  
   DBG_dump_onoffvalue  ("I2C3 Clock", reg1, RCC_APB1ENR1_I2C3EN);  
   DBG_dump_onoffvalue  ("I2C2 Clock", reg1, RCC_APB1ENR1_I2C2EN);  
   DBG_dump_onoffvalue  ("I2C1 Clock", reg1, RCC_APB1ENR1_I2C1EN);  
@@ -627,6 +628,9 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
   DBG_dump_onoffvalue  ("WWDG Clock", reg1, RCC_APB1ENR1_WWDGEN);  
 #if defined(STM32L476xx) || defined(STM32L496xx)
   DBG_dump_onoffvalue  ("LCD Clock", reg1, RCC_APB1ENR1_LCDEN);  
+#endif
+#if defined(STM32L4PLUS)
+  DBG_dump_onoffvalue  ("RTC APB Clock", reg1, RCC_APB1ENR1_RTCAPBEN);  
 #endif
   DBG_dump_onoffvalue  ("TIM7 Clock", reg1, RCC_APB1ENR1_TIM7EN);  
   DBG_dump_onoffvalue  ("TIM6 Clock", reg1, RCC_APB1ENR1_TIM6EN);  
@@ -645,8 +649,10 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
 #if defined(STM32L476xx) || defined(STM32L496xx)
   DBG_dump_onoffvalue  ("SWPMI1 Clock", reg2, RCC_APB1ENR2_SWPMI1EN);  
 #endif
-#if defined(STM32L4Sxxx) 
-  DBG_dump_onoffvalue  ("I2C4 Clock",   reg2, RCC_APB1ENR2_I2C4EN);  
+#if defined(STM32L4PLUS)
+    #if defined(RCC_APB1ENR2_I2C4EN) 
+      DBG_dump_onoffvalue  ("I2C4 Clock",   reg2, RCC_APB1ENR2_I2C4EN);  
+    #endif
 #endif
   DBG_dump_onoffvalue  ("LPUART1 Clock", reg2, RCC_APB1ENR2_LPUART1EN);  
 } 
@@ -814,7 +820,7 @@ static void DBG_dump_peripheralclock_specific(void)
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )
     DBG_dump_textvalue("SAI1 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI1SEL_Msk) >> RCC_CCIPR_SAI1SEL_Pos) );    
 }
-#elif defined(STM32L4Sxxx)
+#elif defined(STM32L4PLUS)
 const char *ospiclk_txt[]={"HCLK","MSI","PLL-Q"};
 static const char* DBG_get_rcc_ccipr_ospiclk_txt(uint32_t sel)
 {
@@ -846,10 +852,12 @@ static void DBG_dump_peripheralclock_specific(void)
           DBG_dump_textvalue("SDMMC Clk Source", READ_BIT(RCC->CCIPR2 , RCC_CCIPR2_SDMMCSEL) ? "PLL-P" : "CLK48" );    
       }
   }
-  if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_DSIEN) ) {
-      DBG_dump_textvalue("DSI Clk Source", READ_BIT(RCC->CCIPR2 , RCC_CCIPR2_DSISEL) ? "PLL-DSI" : "DSI-PHY" );    
-  }
-
+  #if defined(RCC_APB2ENR_DSIEN)
+      if ( READ_BIT(RCC->APB2ENR,RCC_APB2ENR_DSIEN) ) {
+          DBG_dump_textvalue("DSI Clk Source", READ_BIT(RCC->CCIPR2 , RCC_CCIPR2_DSISEL) ? "PLL-DSI" : "DSI-PHY" );    
+      }
+  #endif
+    
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI2EN ) )
     DBG_dump_textvalue("SAI2 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR2 & RCC_CCIPR2_SAI2SEL_Msk) >> RCC_CCIPR2_SAI2SEL_Pos) );    
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )

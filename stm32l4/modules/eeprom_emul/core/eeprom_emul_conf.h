@@ -68,8 +68,10 @@
         #else    
             #define START_PAGE_ADDRESS      0x080FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
         #endif
-    #elif defined(STM32L4R9DISCOVERY) || defined( STM32L4S9ZXXREF)
+    #elif defined(STM32L4R9DISCOVERY) || defined( STM32L4S9ZXXREF) 
         #define START_PAGE_ADDRESS      0x081FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
+    #elif defined( STM32L4P5BAREMETAL)
+        #define START_PAGE_ADDRESS      0x080FC000U /*!< Start address of the 1st page in flash, for EEPROM emulation */
     #else
         #error "No Start Page for EEPROM emulation set!"
     #endif

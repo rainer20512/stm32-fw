@@ -35,6 +35,22 @@
 
   #define IO_NUM                            3
 
+#elif defined(STM32L4P5BAREMETAL)
+  // LEDs  
+  #define IO_00                             { GPIO_PIN_15, GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,    GPIO_NO_IRQ, "Led1 ye" }
+  #define IO_01                             { GPIO_PIN_8 , GPIOD, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,    GPIO_NO_IRQ, "Led0 gn" }
+  #define USERLEDNUM                        2
+  #define USERLEDS                          { 0, 1} 
+  // Input Line
+  #define IO_04_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_04                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_RISING_FALLING, GPIO_SPEED_FREQ_HIGH, GPIO_PULLUP, HW_IO_NORMAL,   HW_INPUT,         IO_04_IRQ, "Blue PushBtn" }
+
+/* Example entry for additional IO-Pins
+  #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "GpioOutput" }
+*/
+
+  #define IO_NUM                            3
+
 #elif defined(STM32L4S9ZXXREF)
   // LEDs  
   #define IO_00                             { GPIO_PIN_15, GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,    GPIO_NO_IRQ, "Led1 ye" }

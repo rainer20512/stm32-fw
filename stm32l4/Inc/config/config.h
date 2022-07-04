@@ -22,9 +22,10 @@
  */ 
 //#define BL475IOT   
 //#define DRAGONFLY476
-#define STM32L476NUCLEO
+//#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
 //#define STM32L4S9ZXXREF
+#define STM32L4P5BAREMETAL
 //#define STM32L476EVAL
 //#define STM32L476BAREMETAL
 
@@ -74,7 +75,7 @@
 #define USE_USB             0  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
-#define USE_PERIPHTIMER     1
+#define USE_PERIPHTIMER     0
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -225,9 +226,9 @@
  *****************************************************************************/
 #if  defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     #define STM32H7_FAMILY
-#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx) || defined(STM32L43xx)
+#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx) || defined(STM32L43xx) || defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
     #define STM32L4_FAMILY
-    #if defined(STM32L4Sxxx) || defined(STM32L4Rxxx)
+    #if defined(STM32L4Sxxx) || defined(STM32L4Rxxx) || defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
         #define STM32L4PLUS
     #endif
 #else

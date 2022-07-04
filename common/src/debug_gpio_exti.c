@@ -347,12 +347,12 @@ const char exti_gpio_name[] = "GPIO";
           "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "???",          "PVM3 wkup",    "PVM4 wkup",    "???",
           "???",
         };
-    #elif defined(STM32L4Sxxx)
+    #elif defined(STM32L4PLUS)
         const char * const exti_line_name[]= { 
         /* insert pattern ( max length is 12 ) 
           "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
           "PVD",          "OTG FS wkup",  "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",
-          "I2C2 wkup",    "I231 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   "LPUART1 wkup",
+          "I2C2 wkup",    "I2C3 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   "LPUART1 wkup",
           "LPTIM1   ",    "LPTIM2   ",    "Reserved   ",  "PVM1 wkup",    "PVM2 wkup",    "PVM3 wkup",    "PVM4 wkup",    "Reserved",
           "I2C4 wkup",
         };
@@ -612,7 +612,26 @@ const char * const user_nvic_name[]= {
       "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "CAN2_TX",        "CAN2_RX0", 
       "CAN1_RX1",       "CAN1_SCE",       "DMA2D",
     };
-#elif defined(STM32L4Sxxx)
+
+#elif defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
+const char * const user_nvic_name[]= { 
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_CH1",       "DMA1_CH2",       "DMA1_CH3",       "DMA1_CH4",       "DMA1_CH5",
+      "DMA1_CH6",       "DMA1_CH7",       "ADC1/ADC2",      "CAN1_TX",        "CAN1_RX0",       "CAN1_RX1",       "CAN1_SCE",       "EXTI9_5",  
+      "TIM1_BRK/TIM15", "TIM1_UP/TIM16",  "TIM1_TRG/TIM17", "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV", 
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm/SSRU", "Reserved",       "TIM8_BRK",       "TIM8_UP",        "TIM8_TRG_COM",   "TIM8_CC",        "SDMMC2", 
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_CH1",       "DMA2_CH2",       "DMA2_CH3",       "DMA2_CH4",       "DMA2_CH5",       "DFSDM1_FLT0",    "DFSDM1_FLT1",    "Reserved",
+      "COMP",           "LPTIM1",         "LPTIM2",         "OTG_FS",         "DMA2_CH6",       "DMA2_CH7",       "LPUART1",        "OCTOSPI1", 
+      "I2C3_EV",        "I2C3_ER",        "SAI1",           "SAI2",           "OCTOSPI2",       "TSC",            "Reserved",        "AES", 
+      "RNG",            "FPU",            "HASH/CRS",       "I2C4_ER",        "I2C4_EV",        "DCMI_PSSI",      "PKA",             "Reserved", 
+      "Reserved",       "Reserved",       "DMA2D",          "LCD-TFT",        "LCD-TFT_ER",     "Reserved",       "DMAMUX_OVR", 
+    };
+
+
+#elif defined(STM32L4Rxxx) || defined(STM32L4Sxxx)
 const char * const user_nvic_name[]= { 
     /*.                 .                 .                 .                 .                 .                 .                 . */
       "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
@@ -628,6 +647,7 @@ const char * const user_nvic_name[]= {
       "RNG",            "FPU",            "HASH/CRS",       "I2C4_EV",        "I2C4_ER",        "DCMI",           "Reserved",       "Reserved", 
       "Reserved",       "Reserved",       "DMA2D",          "LCD-TFT",        "LCD-TFT_ER",     "GFXMMU",         "DMAMUX_OVR", 
     };
+
 #elif defined(STM32H747xx) || defined(STM32H745xx)
 const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
     /*.                 .                 .                 .                 .                 .                 .                 . */

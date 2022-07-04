@@ -350,6 +350,7 @@
           <file file_name="../common_h7/Inc/config/fmc_config.h" />
           <file file_name="../common_h7/Inc/config/usb_config.h" />
           <file file_name="../common_h7/Inc/config/ltdc_config.h" />
+          <file file_name="../common_h7/Inc/config/sdmmc_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/version.h" />
       </folder>

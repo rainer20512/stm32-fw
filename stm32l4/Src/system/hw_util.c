@@ -468,6 +468,27 @@ static const char *Get_PackageName( uint16_t package )
             case 0b10101: return "LQFP144 with DSI";
             default: return "Unknown Package";
         }
+    #elif defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
+        switch(package&0b11111) {
+            case 0b00000: return "LQFP64";
+            case 0b00010: return "LQFP100";
+            case 0b00011: return "UFBGA132";
+            case 0b00100: return "LQFP144";
+            case 0b01010: return "UFQFPN48";
+            case 0b01011: return "LQFP48";
+            case 0b10000: return "UFBGA169";
+            case 0b10001: return "WLCSP100";
+
+            case 0b10111: return "UFQFPN48 SMPS";
+            case 0b11000: return "LQFP48 SMPS";
+            case 0b11001: return "UFBGA132 SMPS";
+            case 0b11010: return "LQFP100 SMPS";
+            case 0b11011: return "WLCSP100 SMPS";
+            case 0b11100: return "LQFP144 SMPS";
+            case 0b11101: return "UFBGA169 SMPS";
+            case 0b11110: return "LQFP64 SMPS";
+            default: return "Unknown Package";
+        }
     #endif
 }
 
@@ -487,13 +508,18 @@ char Get_RevisionName( uint16_t devID, uint16_t revID)
             /* On 496/4A6 devices the revision numbers are revision letters */
             if ( devID == 0x461 )  work = work - '1'+'A';
             break;
-        case 0x470:
-        case 0x471:
+        case 0x470: // STM32L4Rxxx, STM23L4Sxxx
             switch (revID) {
                 case 0x1000 : work = 'A'; break;
                 case 0x1001 : work = 'Z'; break;
                 case 0x1003 : work = 'Y'; break;
                 case 0x100f : work = 'W'; break;
+                default: return '?';
+            }
+            break;
+        case 0x471: // STM32L4Pxxx, STM23L4Qxxx
+            switch (revID) {
+                case 0x1001 : work = 'Z'; break;
                 default: return '?';
             }
             break;

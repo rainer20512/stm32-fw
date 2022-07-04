@@ -30,6 +30,8 @@ extern "C" {
     #define MCU "STM32L496xx"
 #elif defined(STM32L4Sxxx)
     #define MCU "STM32L4Sxxx"
+#elif defined(STM32L4Pxxx)
+    #define MCU "STM32L4Pxxx"
 #else
     #define MCU "Unknown"
 #endif
@@ -44,6 +46,8 @@ extern "C" {
     #define BOARD   "STM32L4R9 Discovery"
 #elif defined(STM32L4S9ZXXREF)
     #define BOARD   "STM32L4S9ZXX Reference"
+#elif defined(STM32L4P5BAREMETAL)
+    #define BOARD   "STM32L4P5 bare metal"
 #elif defined(STM32L476EVAL)
     #define BOARD   "STM32L476 Eval"
 #elif defined(STM32L476BAREMETAL)

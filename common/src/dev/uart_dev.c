@@ -36,7 +36,7 @@
  **** 003 **** 
  * Remap new bit names in L4+ series to old ones of L4 series
  */
-#if defined(STM32L4Sxxx)
+#if defined(STM32L4PLUS)
     #define USART_CR1_RXNEIE    USART_CR1_RXNEIE_RXFNEIE
     #define USART_CR1_TXEIE     USART_CR1_TXEIE_TXFNFIE
     #define USART_ISR_RXNE      USART_ISR_RXNE_RXFNE

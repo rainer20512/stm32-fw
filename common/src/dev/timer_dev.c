@@ -808,22 +808,24 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     }
 #endif /* USE_BASICTIMER_FOR_TICK > 0 */
 
-/******************************************************************************
- * Start/Stop for peripheral timer
- *****************************************************************************/
-void PeriphTimer_StartStop(uint32_t bStart)
-{
-    TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(&PERIPH_TIMER);
+#if USE_PERIPHTIMER > 0
+    /******************************************************************************
+     * Start/Stop for peripheral timer
+     *****************************************************************************/
+    void PeriphTimer_StartStop(uint32_t bStart)
+    {
+        TimerHandleT* myTmrHandle = TMR_GetHandleFromDev(&PERIPH_TIMER);
 
-    if ( bStart ) {
-        TMR_Start(&PERIPH_TIMER, true);
-        /* Set reference count to 1 ( a timer can be only started once ) */
-        myTmrHandle->reference_cnt = 1;
-    } else {
-        TMR_Stop(&PERIPH_TIMER);
-        myTmrHandle->reference_cnt = 0;
+        if ( bStart ) {
+            TMR_Start(&PERIPH_TIMER, true);
+            /* Set reference count to 1 ( a timer can be only started once ) */
+            myTmrHandle->reference_cnt = 1;
+        } else {
+            TMR_Stop(&PERIPH_TIMER);
+            myTmrHandle->reference_cnt = 0;
+        }
     }
-}
+#endif /* USE_PERIPHTIMER > 0 */ 
 
 #endif /* USE_PWMTIMER > 0 || USE_BASICTIMER > 0 */
 /**

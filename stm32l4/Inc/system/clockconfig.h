@@ -98,7 +98,7 @@ typedef enum {
 
 #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L43xx)
     #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,}
-#elif defined(STM32L4Sxxx)
+#elif defined(STM32L4Pxxx) || defined(STM32L4Qxxx) || defined(STM32L4Rxxx) || defined(STM32L4Sxxx) 
     #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,100, 120}
 #else
     #error "No clock configuration table for selected MCU"

@@ -280,7 +280,7 @@
     /* PC1/PC0 with AF8 */
     #define COM9_TX                        { GPIO_PIN_1, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
     #define COM9_RX                        { GPIO_PIN_0, GPIOC, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }
-  #elif defined(STM32L43xx) && defined(USE_LPUART1_ALTN3)
+  #elif ( defined(STM32L43xx) || defined(STM32L4P5xx) ) && defined(USE_LPUART1_ALTN3)
     /* PA2/PA3 with AF8 */
     #define COM9_TX                        { GPIO_PIN_2, GPIOA, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Tx" }
     #define COM9_RX                        { GPIO_PIN_3, GPIOA, GPIO_AF8_LPUART1, GPIO_PULLUP, "LPUART1_Rx" }

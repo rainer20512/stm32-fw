@@ -159,7 +159,7 @@ void ClockReconfigureAfterStop(void)
 static const uint8_t hclk_range_1[]  = {16,                32,                 48,                 64,                 80, };
 static const uint8_t hclk_range_2[]  = { 6,                12,                 18,                 26, };
 static const uint32_t flash_latency[] = {FLASH_LATENCY_0,   FLASH_LATENCY_1,    FLASH_LATENCY_2,    FLASH_LATENCY_3,    FLASH_LATENCY_4, };
-#elif defined(STM32L4Sxxx)
+#elif defined(STM32L4PLUS)
     /*
      *******************************************************************************
      Flash wait states in dependency of Vcore and HCLK for STM32L4+ devices
@@ -238,7 +238,7 @@ static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint8_t mhz )
 #endif
 
 
-#if defined(STM32L4S9xx)
+#if defined(STM32L4PLUS)
     /*
      *************************************************************************************************
      * @brief  Set the Vcore voltage to Vrange1, Vrange2 or VRange1 Boost

@@ -1115,7 +1115,7 @@ ADD_SUBMODULE(Test);
             break;
         case 4:
             puts("Measure group"); 
-            ADC_SetupGroup(&HW_ADC3);
+            ADC_SetupGroup(&HW_ADC3, true);
             ADC_MeasureGroup(&HW_ADC3);
             break;
         case 5:
