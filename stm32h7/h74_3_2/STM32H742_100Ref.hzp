@@ -351,6 +351,7 @@
           <file file_name="../common_h7/Inc/config/usb_config.h" />
           <file file_name="../common_h7/Inc/config/ltdc_config.h" />
           <file file_name="../common_h7/Inc/config/sdmmc_config.h" />
+          <file file_name="../common_h7/Inc/config/pll_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/version.h" />
       </folder>
@@ -385,6 +386,7 @@
           <file file_name="../../common/src/dev/usb_dev.c" />
           <file file_name="../../common/src/dev/xspi_dev.c" />
           <file file_name="../../common/src/dev/ltdc_dev.c" />
+          <file file_name="../../common/src/dev/sdmmc_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -392,6 +394,7 @@
           <file file_name="../../common/src/system/tm1637.c" />
           <file file_name="../../common/src/system/timer_handler.c" />
           <file file_name="../../common/src/system/profiling.c" />
+          <file file_name="../../common/src/system/pll.c" />
         </folder>
         <file file_name="../../common/src/rtc.c" />
         <file file_name="../../common/src/timer.c" />
@@ -430,12 +433,14 @@
           </folder>
           <file file_name="../../common/inc/dev/xspi_dev.h" />
           <file file_name="../../common/inc/dev/ltdc_dev.h" />
+          <file file_name="../../common/inc/dev/sdmmc_dev.h" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />
           <file file_name="../../common/inc/system/exti_handler.h" />
           <file file_name="../../common/inc/system/tm1637.h" />
           <file file_name="../../common/inc/system/timer_handler.h" />
+          <file file_name="../../common/inc/system/pll.h" />
         </folder>
         <file file_name="../../common/inc/rtc.h" />
         <file file_name="../../common/inc/timer.h" />

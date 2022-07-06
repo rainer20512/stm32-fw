@@ -1,3 +1,5 @@
+#include "config/config.h"
+
 #if USE_LWIP > 0
 
 #include "cmsis_os.h"

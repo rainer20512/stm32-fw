@@ -427,7 +427,7 @@
         #define USE_QENC1_PBTN1
     #endif
 
-  #define USE_ADC3
+  // #define USE_ADC3
   #define ADC3_USE_IRQ
   #define ADC3_USE_DMA 
   #define USER_ADC      HW_ADC3

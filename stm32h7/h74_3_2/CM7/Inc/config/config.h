@@ -50,7 +50,7 @@
 #define USE_EEPROM_EMUL             1
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
-#define USE_PWMTIMER                1
+#define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
 #define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
@@ -64,8 +64,8 @@
 #define USE_LWIP                    1 
 #define USE_FATFS                   0
 #define USE_BDMA                    0
-#define USE_LTDC                    1
-#define USE_SDMMC1                  1
+#define USE_LTDC                    0
+#define USE_SDMMC1                  0
 
 
 /* Choose one in case of USE_ETH == 1 
@@ -221,8 +221,11 @@
  *****************************************************************************/
 #if  defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
     #define STM32H7_FAMILY
-#elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx)
+#elif defined(STM32L476xx) || defined(STM32L496xx) 
     #define STM32L4_FAMILY
+#elif defined(STM32L4Pxxx) || defined(STM32L4Qxxx) || defined(STM32L4Sxxx) || defined(STM32L4Rxxx)
+    #define STM32L4_FAMILY
+    #define STM32L4PLUS_FAMILY
 #else
     #error "Unkonwn MCU family!"
 #endif

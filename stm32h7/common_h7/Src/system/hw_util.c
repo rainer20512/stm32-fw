@@ -260,7 +260,7 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #endif
 /* SDMMC ------------------------------------------------------------------------------------------------------------------ */
 #if defined(SDMMC1) && defined(USE_SDMMC1) 
-   { SDMMC1, &RCC->AHB3ENR, RCC_AHB3ENR_SDMMC1EN_Poss, &RCC->AHB3RSTR, RCC_AHB3RSTR_SDMMC1RST_Pos, COMBINE('M', 1) },
+   { SDMMC1, &RCC->AHB3ENR, RCC_AHB3ENR_SDMMC1EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_SDMMC1RST_Pos, COMBINE('M', 1) },
 #endif
 #if defined(SDMMC2) && defined(USE_SDMMC2) 
    { SDMMC2, &RCC->AHB2ENR, RCC_AHB2ENR_SDMMC2EN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_SDMMC2RST_Pos, COMBINE('M', 2) },

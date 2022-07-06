@@ -39,6 +39,7 @@
 #include "hardware.h"
 #include "dev/devices.h"
 #include "eeprom.h"
+#include "system/pll.h"
 #include "system/clockconfig.h"
 #include "system/timer_handler.h"
 
@@ -499,41 +500,6 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
 
 
 
-/******************************************************************************
- * configure PLL 
- * @param RCC_OscInitStruct - to be filled with PLL parameters
- * @param pll_khz - desired SYSCLK ( must be below 480 MHz )
- * @param pll_inp_khz - actual PLL input frequency
- *****************************************************************************/
-static void ConfigurePLL (RCC_OscInitTypeDef *RCC_OscInitStruct, uint32_t pll_khz, uint32_t pll_inp_khz )
-{
-  uint32_t pll_khz_behind_m;
-  /* calculate M so that the frq after M is always 2MHz, or - in case of HSE not a multiple of 2 - 5Mhz */
-  if ( pll_inp_khz / 5000 * 5000 == pll_inp_khz ) {
-    pll_khz_behind_m = 5000;
-  } else {
-    pll_khz_behind_m = 2000;
-  }
-    
-  RCC_OscInitStruct->PLL.PLLM = pll_inp_khz / pll_khz_behind_m;
-
-  /* Minimum frq after N stage is 150MHz, so if sysclk is less or equal 25 MHZ, set P to 6, */
-  /* if less or equal 75000 set to 4. The default for P is 2 in all other cases             */
-  uint32_t p = ( pll_khz <= 25000 ? 6 : pll_khz <= 75000 ? 4 : 2 );
-
-  RCC_OscInitStruct->PLL.PLLN = pll_khz / pll_khz_behind_m * p;
-  RCC_OscInitStruct->PLL.PLLFRACN = 0;
-  RCC_OscInitStruct->PLL.PLLP = p;
-  /* USe some default values for R and Q */
-  RCC_OscInitStruct->PLL.PLLR = p;
-  RCC_OscInitStruct->PLL.PLLQ = p*2;
-
-  /* If SYSCLK <= 200 MHZ, select VCO medium */
-  RCC_OscInitStruct->PLL.PLLVCOSEL = ( pll_khz <= 200000 ? RCC_PLL1VCOMEDIUM : RCC_PLL1VCOWIDE);
-  /* 2 MHz Input is either Range 0 or Range 1 */
-  RCC_OscInitStruct->PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
-  RCC_OscInitStruct->PLL.PLLState = RCC_PLL_ON;
-}
 
 /*
  * The initialization part that has to be restored after wakeup from stop 
@@ -658,7 +624,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
         pll_inp_khz = PLL_HSI_BASE_FRQ_KHZ;
   }
 
-  ConfigurePLL(&RCC_OscInitStruct, pll_khz, pll_inp_khz);
+  PLL_Configure_SYSCLK(&RCC_OscInitStruct, pll_khz, pll_inp_khz);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   
   DoClockTransition(pll_khz,&RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency,vosrange, -4);

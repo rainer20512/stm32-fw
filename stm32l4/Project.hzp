@@ -84,6 +84,7 @@
           <file file_name="Inc/config/usb_config.h" />
           <file file_name="Inc/config/fmc_config.h" />
           <file file_name="Inc/config/ospi_config.h" />
+          <file file_name="Inc/config/pll_config.h" />
         </folder>
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
@@ -359,6 +360,7 @@
           <file file_name="../common/src/system/profiling.c" />
           <file file_name="../common/src/system/tm1637.c" />
           <file file_name="../common/src/system/timer_handler.c" />
+          <file file_name="../common/src/system/pll.c" />
         </folder>
         <file file_name="../common/src/timer.c" />
         <file file_name="../common/src/eeprom.c" />

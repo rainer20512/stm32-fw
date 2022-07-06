@@ -54,6 +54,8 @@
 // DEBUG_QENC in qencoder.h
 // DEBUG_ADC in adc_dev.c
 // DEBUG_CAN in can_dev.c
+// DEBUG_FMC in fmc_dev.c
+// DEBUG_SDMMC in sdmmc_dev.c
 #define DEBUG_QSPI          1  
 #define DEBUG_PROFILING     1
 #define DEBUG_PERIODIC      1

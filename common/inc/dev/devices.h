@@ -62,6 +62,9 @@
 #if USE_FMC > 0
     #include "dev/fmc_dev.h"
 #endif
+#if USE_SDMMC > 0
+    #include "dev/sdmmc_dev.h"
+#endif
 
 
 /* Exported types ------------------------------------------------------------*/

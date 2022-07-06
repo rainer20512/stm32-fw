@@ -1,88 +1,67 @@
 /*
  ******************************************************************************
- * @file    ltdc_dev.c
+ * @file    sdmmc_dev.c
  * @author  Rainer
- * @brief   LTDC hardware wrapped into HW_Device
+ * @brief  SDMMC hardware wrapped into HW_Device
  *
  *****************************************************************************/
 
-/** @addtogroup LTDC
+/** @addtogroup SDMMC
   * @{
    
 */
 #include "config/config.h"
 
-#if USE_LTDC > 0 
+#if USE_SDMMC > 0 
 
 /* Debug ------------------------------------------------------------------------*/
-#define DEBUG_LTDC          1
+#define DSBUG_SDMMC          1
 
 #include "config/devices_config.h"
-#include "config/ltdc_config.h"
-#include "dev/ltdc_dev.h"
+#include "config/sdmmc_config.h"
+#include "dev/sdmmc_dev.h"
 #include "system/hw_util.h"
 
 #include "error.h"
+#include "task/minitask.h"
 
 #include "debug_helper.h"
 
 
 /* Private typedef --------------------------------------------------------------*/
 
+typedef struct {
+    SdmmcHandleT              *mySdmmcHandle;            /* my associated handle */
+} Sdmmc_AdditionalDataType;
+
 /* Private or driver functions ------------------------------------------------------*/
-static  FmcHandleT * Fmc_GetMyHandle(const HW_DeviceType *self)
+static  SdmmcHandleT * Sdmmc_GetMyHandle(const HW_DeviceType *self)
 {
-    return ((Fmc_AdditionalDataType *)(self->devData))->myFmcHandle;
+    return ((Sdmmc_AdditionalDataType *)(self->devData))->mySdmmcHandle;
 }
 
 
-/******************************************************************************
- * Add/enable the IO lines required by the current FMC bank with respect to the
- * io lines enabled so far
- *****************************************************************************/
-static void FmcAddIOLines(FmcDataT *curr)
-{
-    uint32_t         i;
-    uint32_t         delta;
-    GPIO_InitTypeDef Init;
-    uint32_t         devIdx;
-
-    Init.Mode  = GPIO_MODE_AF_PP;
-    Init.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    devIdx     = (uint32_t)GetDevIdx(&HW_FMC);
-
-    /* Enable all data lines, that are not enabled so far */
-    delta = curr->fmcDataBits & ~FmcHandle.allDataBits;
-    for ( i = 0 ; i < FMC_D_MAX; i++ ) if ( delta & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[i]), &Init );
-    FmcHandle.allDataBits |= delta;
-
-    /* Enable all address lines, that are not enabled so far */
-    delta = curr->fmcAddrBits & ~FmcHandle.allAddrBits;
-    for ( i = 0 ; i < FMC_A_MAX; i++ ) if ( delta & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[FMC_D_MAX+i]), &Init );
-    FmcHandle.allAddrBits |= delta;
-
-    /* Enable all control lines, that are not enabled so far */
-    delta = curr->fmcCtlBits & ~FmcHandle.allCtlBits;
-    for ( i = 0 ; i < FMC_CTL_MAX; i++ ) if ( delta & ( 1 << i ) )
-        GpioAFInitOne (devIdx, &(HW_FMC.devGpioAF->gpio[FMC_D_MAX+FMC_A_MAX+i]), &Init );
-    FmcHandle.allCtlBits |= delta;
-}
 
 /******************************************************************************
- * Clear the entire LtdcHandleT structure
+ * Clear the entire CanHandleT structure
  *****************************************************************************/
-static void LtdcResetMyHandle ( LtdcHandleT *handle ) 
+static void SdmmcResetMyHandle ( SdmmcHandleT *handle ) 
 {
-    memset(handle, 0, sizeof(LtdcHandleT) );
+    memset(handle, 0, sizeof(SdmmcHandleT) );
 }
 
 
 /**************************************************************************************
- * LTDC pixel clock is hardwired to PLL3 R output                                     *
+ * Some Devices support different clock sources for FSMC. On configurable FMC Clock   *
+ * sources, we assume that FMC Clock source is HCLK. In any case make sure, that      *   
+ * Fmc_SetClockSource and Fmc_GetClockSpeed() will match                              *
  *************************************************************************************/
-    static bool Ltdc_SetClockSource(const void *hw)
+#if defined(STM32L4_FAMILY)
+    /* STM32L4xx has no clock mux for FMC device */
+    #define Fmc_SetClockSource(a)           (true)
+    #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
+#elif defined(STM32H7_FAMILY)
+    static bool Sdmmc_SetClockSource(const void *hw)
     {
       UNUSED(hw);
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -91,17 +70,16 @@ static void LtdcResetMyHandle ( LtdcHandleT *handle )
       /* FMC timing constants, will call Fmc_GetClockSpeed() to determine */
       /* the current clock speed                                          */
 
-      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_LTDC
-      PeriphClkInit.l
+      PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_SDMMC; 
+      PeriphClkInit.FmcClockSelection    = RCC_SDMMCCLKSOURCE_PLL;
 
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-        DEBUG_PUTS("failed to set CLK source for FSMC");
+        DEBUG_PUTS("failed to set CLK source for SDMMC");
         return false;
       }
 
       return true;
     }
-#if defined(STM32H7_FAMILY)
     #define Fmc_GetClockSpeed()             HAL_RCC_GetHCLKFreq()
 #else 
     #error "No FMC clock assignment defined"
@@ -824,7 +802,7 @@ bool Fmc_ChngSdramTiming( uint32_t fmc_idx, Fmc_SdramTimingDataT *sdram_data )
 ///////////////////////////////////////////////////////////////////////////////
 void Fmc_DeInit(const HW_DeviceType *self)
 {
-    FmcHandleT *myFmc = Fmc_GetMyHandle(self);
+    SdmmcHandleT *myFmc = Fmc_GetMyHandle(self);
 
     /* DeInit GPIO */
     GpioAFDeInitAll(GetDevIdx(&HW_FMC),self->devGpioAF);
@@ -874,7 +852,7 @@ void Fmc_DeInit(const HW_DeviceType *self)
  *************************************************************************************/
 bool Fmc_Init(const HW_DeviceType *self)
 {
-    FmcHandleT              *myFmcHandle = Fmc_GetMyHandle(self);
+    SdmmcHandleT              *myFmcHandle = Fmc_GetMyHandle(self);
     const Fmc_ExtMemDataT   *extmemData;
     bool                    ret;
     uint32_t                i;
@@ -913,7 +891,7 @@ bool Fmc_OnFrqChange(const HW_DeviceType *self)
     FMC_NORSRAM_TimingTypeDef SRAM_Timing;
     const Fmc_ExtMemDataT *extmemData;
 
-    FmcHandleT *myFmcHandle = Fmc_GetMyHandle(self);
+    SdmmcHandleT *myFmcHandle = Fmc_GetMyHandle(self);
     for ( uint32_t i = 0; i < FMC_MAX_BLOCKS; i++ ) if ( myFmcHandle->fmcData[i].fmcIsUsed ) {    
         extmemData = Fmc_GetMyExtMemData(self, i);
         switch(extmemData->fmcType ) {
@@ -1001,7 +979,7 @@ bool Fmc_OnWakeup( const HW_DeviceType *self)
 // Global Variables  /////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 #if defined(FMC_Bank1_R) && USE_FMC > 0 
-    FmcHandleT  FmcHandle;
+    SdmmcHandleT  FmcHandle;
 
     #if defined( FMC_USE_IRQ )
     const HW_IrqList irq_fmc = {
