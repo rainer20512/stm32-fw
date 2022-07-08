@@ -459,6 +459,7 @@ static const char* DBG_get_rcc_pllcfgr_pllsrc_txt(uint32_t sel )
 }
 static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
 {
+    uint32_t enableFlags;
     switch ( pllnum ) {
         case 1:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
@@ -470,6 +471,7 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
             pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL1RGE) >> RCC_PLLCFGR_PLL1RGE_Pos);
             pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL1VCOSEL) >> RCC_PLLCFGR_PLL1VCOSEL_Pos);
             pll->PLLFRACN = (uint32_t)(((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1) >> RCC_PLL1FRACR_FRACN1_Pos));
+            enableFlags = (uint32_t)((RCC->PLLCFGR  >> RCC_PLLCFGR_DIVP1EN_Pos) &0b111); 
            break;
         case 2:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
@@ -481,6 +483,7 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
             pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL2RGE) >> RCC_PLLCFGR_PLL2RGE_Pos);
             pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL2VCOSEL) >> RCC_PLLCFGR_PLL2VCOSEL_Pos);
             pll->PLLFRACN = (uint32_t)(((RCC->PLL2FRACR & RCC_PLL2FRACR_FRACN2) >> RCC_PLL2FRACR_FRACN2_Pos));
+            enableFlags = (uint32_t)((RCC->PLLCFGR  >> RCC_PLLCFGR_DIVP2EN_Pos) &0b111); 
            break;
         case 3:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
@@ -492,6 +495,7 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
             pll->PLLRGE =(uint32_t)((RCC->PLLCFGR  & RCC_PLLCFGR_PLL3RGE) >> RCC_PLLCFGR_PLL3RGE_Pos);
             pll->PLLVCOSEL = (uint32_t)((RCC->PLLCFGR & RCC_PLLCFGR_PLL3VCOSEL) >> RCC_PLLCFGR_PLL3VCOSEL_Pos);
             pll->PLLFRACN = (uint32_t)(((RCC->PLL3FRACR & RCC_PLL3FRACR_FRACN3) >> RCC_PLL3FRACR_FRACN3_Pos));
+            enableFlags = (uint32_t)((RCC->PLLCFGR  >> RCC_PLLCFGR_DIVP3EN_Pos) &0b111); 
            break;
         default:
             DBG_printf_indent("Missing decoder for PLL %d\n",pllnum);
@@ -500,14 +504,14 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
 
     DBG_printf_indent("PLL%d configuration\n", pllnum );
     DBG_dump_textvalue("PLL source", DBG_get_rcc_pllcfgr_pllsrc_txt( pll->PLLSource >> RCC_PLLCKSELR_PLLSRC_Pos ) );  
-    DBG_dump_number("PLLM", pll->PLLM );  
-    DBG_dump_number("PLLN", pll->PLLN );  
-    DBG_dump_number("PLLR", pll->PLLR );  
-    DBG_dump_number("PLLQ", pll->PLLQ );  
-    DBG_dump_number("PLLP", pll->PLLP );  
-    DBG_dump_number("PLLRGE", pll->PLLRGE );
-    DBG_dump_number("PLLVCOSEL", pll->PLLVCOSEL );
-    DBG_dump_number("PLLFRACN", pll->PLLFRACN ); 
+    DBG_dump_number_and_text("PLLM", pll->PLLM, 3, pll->PLLM > 0 ?  "" : "Disabled" );  
+    DBG_dump_number_and_text("PLLN", pll->PLLN, 3, "");  
+    DBG_dump_number_and_text("PLLR", pll->PLLR, 3, ( enableFlags & 0b100 ) != 0 ? "" : "Disabled" );  
+    DBG_dump_number_and_text("PLLQ", pll->PLLQ, 3, ( enableFlags & 0b010 ) != 0 ? "" : "Disabled" );    
+    DBG_dump_number_and_text("PLLP", pll->PLLP, 3, ( enableFlags & 0b001 ) != 0 ? "" : "Disabled" );   
+    DBG_dump_number_and_text("PLLRGE", pll->PLLRGE, 3, "" );
+    DBG_dump_number_and_text("PLLVCOSEL", pll->PLLVCOSEL, 3, "" );
+    DBG_dump_number_and_text("PLLFRACN", pll->PLLFRACN, 3, "" ); 
     return true;
 } 
 

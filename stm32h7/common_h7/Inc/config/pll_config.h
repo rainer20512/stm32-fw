@@ -19,8 +19,13 @@
 #define MAX_LINENUM     3     /* maximum number of lines per PLL ( 3 in most cases )        */
 #define MAX_PLLNUM      3     /* maximum number of PLLs supported */
 
-/* Array of "On"-Flags in RCC->CR register */
-#define PLLON_FLAGS     { RCC_CR_PLL1ON, RCC_CR_PLL2ON, RCC_CR_PLL3ON, }
+/* 
+ * Array of "On"- and "Ready"-Flags in RCC->CR register 
+ * RCC constant, that defines PLL as SYSCLK source
+ */
+#define PLLON_FLAGS     { RCC_CR_PLL1ON,  RCC_CR_PLL2ON,  RCC_CR_PLL3ON, }
+#define PLLRDY_FLAGS    { RCC_CR_PLL1RDY, RCC_CR_PLL2RDY, RCC_CR_PLL1RDY, }
+#define RCC_SYSPLL_MASK RCC_CFGR_SWS_PLL1
 
 #define SYSCLK_PLL      SYS_PLL1   /* which PLL will generate the PLL SYSCLK ?                   */
 #define SYSCLK_PLL_LINE PLL_LINE_P /* Which line in this PLL will generate the SYSCLK            */

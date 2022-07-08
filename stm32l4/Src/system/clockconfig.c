@@ -40,6 +40,8 @@
 #include "stm32l4xx_hal.h"
 #include "dev/devices.h"
 #include "eeprom.h"
+#include "system/pll.h"
+#include "config/pll_config.h"
 #include "system/clockconfig.h"
 #include "system/timer_handler.h"
 
@@ -50,7 +52,6 @@
 #if DEBUG_PROFILING > 0
     #include "system/profiling.h"
 #endif
-
 
 /* set the Output frq. of the PLL's M-stage to a fixed value when PLL is used */
 /* This is not mandatory, but alleviates other setup                          */
@@ -159,7 +160,7 @@ void ClockReconfigureAfterStop(void)
 static const uint8_t hclk_range_1[]  = {16,                32,                 48,                 64,                 80, };
 static const uint8_t hclk_range_2[]  = { 6,                12,                 18,                 26, };
 static const uint32_t flash_latency[] = {FLASH_LATENCY_0,   FLASH_LATENCY_1,    FLASH_LATENCY_2,    FLASH_LATENCY_3,    FLASH_LATENCY_4, };
-#elif defined(STM32L4PLUS)
+#elif defined(STM32L4PLUS_FAMILY)
     /*
      *******************************************************************************
      Flash wait states in dependency of Vcore and HCLK for STM32L4+ devices
@@ -238,7 +239,7 @@ static uint32_t SystemClock_GetFlashLatency( uint8_t vrange, uint8_t mhz )
 #endif
 
 
-#if defined(STM32L4PLUS)
+#if defined(STM32L4PLUS_FAMILY)
     /*
      *************************************************************************************************
      * @brief  Set the Vcore voltage to Vrange1, Vrange2 or VRange1 Boost
@@ -661,19 +662,22 @@ static void SystemClock_HSI_16MHz(bool bSwitchOffMSI, uint8_t vrange)
 /******************************************************************************
  * configure PLL on HSI16 bas to xxmhz Mhz and switch on PLL
  *****************************************************************************/
-static void SwitchOnPLL ( uint32_t xxmhz )
+static bool SwitchOnPLL ( uint32_t xxmhz )
 {
+  bool success;
   uint32_t pllsrc;
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+
 
   /* 
    * if PLL is already selected as system clock source, 
    * it must be disabled before reconfiguration 
    */
   if (  __HAL_RCC_GET_SYSCLK_SOURCE() == RCC_CFGR_SWS_PLL ) {
-    /* if so, select HSI as temporary system clock source       */
+    /* if so, select HSI as temporary system clock source and stop PLL in order to reconfigure it */
     /* Vrange and Wait states have been set by caller */
     SC_SwitchOnHSI16(1);
+    Pll_Stop(SYSCLK_PLL);
   }
 
   #if USE_USB > 0
@@ -699,45 +703,39 @@ static void SwitchOnPLL ( uint32_t xxmhz )
       #define PLL_INP_FRQ 16000000
   #endif
 
-  /* 
-   * PLLN is computed so, that the output after M-Divider is at 8MHz.
-   * Check, whether this can be achieved
-   */
-  #define PLL_DIVM          (PLL_INP_FRQ/PLL_BASE_FRQ) 
-  #if PLL_DIVM * PLL_BASE_FRQ != PLL_INP_FRQ
-    #error "PLLM is not an integer value - cannot set PLLM"
-  #endif  
-  /* Enable  PLL */
-
-  RCC_OscInitStruct.PLL.PLLSource = pllsrc;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;   
-  RCC_OscInitStruct.PLL.PLLM = PLL_DIVM;
-  RCC_OscInitStruct.PLL.PLLN = xxmhz / 2 ;
-  RCC_OscInitStruct.PLL.PLLR = 4;
-  RCC_OscInitStruct.PLL.PLLP = 17;
-  RCC_OscInitStruct.PLL.PLLQ = 8;
-   
-   if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK)
-  {
+  /* Start PLL input clock, do not set PLL at this time */
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLL_NONE;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK) {
     /* Initialization Error */
     while(1); 
   }
 
-  #if USE_USB > 0
-    /* PLLSAI1 Q output to 48 MHz */
-    RCC->PLLSAI1CFGR = 
-        24 << RCC_PLLSAI1CFGR_PLLSAI1N_Pos |       /* PLLSAI1N = 24          */
-      0b01 << RCC_PLLSAI1CFGR_PLLSAI1Q_Pos |       /* PLLSAI1Q = 4           */
-      0b11 << RCC_PLLSAI1CFGR_PLLSAI1R_Pos |       /* PLLSAI1R = 8,  unused  */
-         1 << RCC_PLLSAI1CFGR_PLLSAI1P_Pos |       /* PLLSAI1P = 17, unused  */
-         1 << RCC_PLLSAI1CFGR_PLLSAI1QEN_Pos ;     /* Enable Q output        */
-    
-    /* Switch PLLSAI1 on and wait for ready */
-    SET_BIT(RCC->CR, RCC_CR_PLLSAI1ON_Msk );
-    while ( (RCC->CR & RCC_CR_PLLSAI1RDY_Msk ) == 0 );
+  /* now handle the setup of the PLL and start it */
+  RCC_OscInitStruct.PLL.PLLSource = pllsrc;
+  RCC_OscInitStruct.PLL.PLLState  = RCC_PLL_ON;
 
-    SC_SetUsbClockSource(RCC_USBCLKSOURCE_PLLSAI1);
+  success = PLL_Configure_SYSCLK(&RCC_OscInitStruct, xxmhz*1000, PLL_INP_FRQ/1000) == PLL_CONFIG_OK;
+  if ( !success ) Error_Handler_XX(-20, __FILE__, __LINE__);
+    
+  success = Pll_Set( & RCC_OscInitStruct.PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
+  if ( !success ) Error_Handler_XX(-21, __FILE__, __LINE__);
+  if ( success ) success = Pll_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
+    
+  #if USE_USB > 0
+    RCC_PLLInitTypeDef PLL={0};
+    /* PLLSAI1 Q output to 48 MHz */
+    bool success_usb = PLL_Configure(&PLL, USB_PLL, USB_PLL_LINE, 48000) == PLL_CONFIG_OK;
+    if ( !success ) Error_Handler_XX(-25, __FILE__, __LINE__);
+
+    success_usb = Pll_Set( &PLL, USB_PLL) == PLL_CONFIG_OK;
+    if ( !success_usb ) Error_Handler_XX(-26, __FILE__, __LINE__);
+    if ( success_usb ) success_usb = Pll_Start(USB_PLL) == PLL_CONFIG_OK;
+
+    if ( success_usb ) SC_SetUsbClockSource(RCC_USBCLKSOURCE_PLLSAI1);
+    success &= success_usb;
   #endif
+
+  return success;
 }
 
 /*
@@ -748,7 +746,11 @@ static void SystemClock_PLL_xxMHz_Vrange1_restore (uint32_t xxmhz, bool bSwitchO
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
  
   uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz );
-  SwitchOnPLL(xxmhz);
+
+  /* Restart all previously enabled PLLs */
+  Pll_Restart();
+
+  /* Set system clock source to PLL */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, flash_latency );
@@ -757,7 +759,7 @@ static void SystemClock_PLL_xxMHz_Vrange1_restore (uint32_t xxmhz, bool bSwitchO
     SwitchOffMSI();
   }
 }
-#if defined ( STM32L4Sxxx )
+#if defined ( STM32L4PLUS_FAMILY )
     /*
      * Switch system Clock to PLL is somewhat complicated on L4+ devices:
      *

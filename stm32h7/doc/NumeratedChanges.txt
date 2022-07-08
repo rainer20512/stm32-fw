@@ -66,6 +66,7 @@ Within the sources, the changes are marked as **** <num> ****
     The additional code to use BDMA can be disabled by setting 
     USE_BDMA to 0 in config-file.
 
-
+005 Unify the PLL programming / handling for all three PLLs in ppl.c, pll.h and pll_config.h
+    ToDo: Restart PLLs after STOP when SYSCLK source is not a PLL
 
 

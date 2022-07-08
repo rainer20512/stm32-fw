@@ -40,6 +40,7 @@
 #include "dev/devices.h"
 #include "eeprom.h"
 #include "system/pll.h"
+#include "config/pll_config.h"
 #include "system/clockconfig.h"
 #include "system/timer_handler.h"
 
@@ -194,6 +195,36 @@ static uint32_t SetPredividers( RCC_ClkInitTypeDef *ClkInit, uint32_t sysclk_khz
 
 
 /**********************************************************************************
+ * Setup the selected SYSCLK provider, which is one OF HSI, HSE or PLL
+ * HSI and HSE are handled by HAL Layer, PLL is handeled by hancrafted code
+ *
+ * In case of PLL, the PLL Clock provider, which can be HSI or HSE has to be
+ * started by HAL _before_ PLL is activated
+ * @returns != 0 on success
+ **********************************************************************************/
+static uint32_t SetupSysClkProvider ( RCC_OscInitTypeDef *o, RCC_ClkInitTypeDef *clk )
+{
+    bool success;
+    /* 
+     * Configure SYSCLK provider first. That can be HSI, HSE or PLL
+     * If SYSCLK Is provided by PLL, the start is no longer done by
+     * HAL Layer, but by handcrafted code in pll.c
+     */
+    /* Set PLL state to none to prevent HAL from configuring/starting PLL again */
+    
+    success = HAL_RCC_OscConfig(o) == HAL_OK;
+    
+    /* now handle the setup of the PLL and start it */
+    if ( success && clk->SYSCLKSource == RCC_SYSCLKSOURCE_PLLCLK ) { 
+      o->PLL.PLLState = RCC_PLL_ON;
+      success = Pll_Set( &o->PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
+      if ( success ) success = Pll_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
+    }
+    
+    return success;
+}
+
+/**********************************************************************************
  * Do a clock frequency transition. Depending from rising or lowering the clock frq,
  * the steps hasve to be done in different order
  * - Switching On the desired oscillator/PLL is done first
@@ -210,10 +241,10 @@ static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_C
 
     int32_t from, to, step;
 
-    /* Configure oscillator first */
-    if (HAL_RCC_OscConfig(o)!= HAL_OK)
-        Error_Handler_XX(err_code, __FILE__, __LINE__); 
-
+    /* Configure new SYSCLK provider first. */
+    if (!SetupSysClkProvider(o, clk)) Error_Handler_XX(err_code, __FILE__, __LINE__); 
+  
+    /* Then do the transition */
     if ( old_khz < new_khz ) {
         from = 1; to = 3; step = 1;
     } else {
@@ -317,13 +348,9 @@ static void SwitchOffHSI(RCC_OscInitTypeDef *osc)
 /******************************************************************************
  * Switch PLL  off
  *****************************************************************************/
-static void SwitchOffPLL(RCC_OscInitTypeDef *osc)
+static void SwitchOffSysClkPll(void)
 {
-    memset(osc, 0, sizeof(RCC_OscInitTypeDef));
-    
-    osc->PLL.PLLState   = RCC_PLL_OFF;
-    if (HAL_RCC_OscConfig(osc)!= HAL_OK)
-    {
+    if ( Pll_Stop(SYSCLK_PLL) != PLL_CONFIG_OK ) {
         Error_Handler_XX(-4, __FILE__, __LINE__ );
     }
 }
@@ -381,7 +408,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
     DoClockTransition ( hsi_khz, &RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -6);
   
     /* Switch off PLL in any case */
-    SwitchOffPLL(&RCC_OscInitStruct);
+    SwitchOffSysClkPll();
 
    /* Select HSI as WakeUp clock */
     CLEAR_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK_Msk);
@@ -475,7 +502,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
       }
 
       /* Switch off PLL in any case */
-      SwitchOffPLL(&osc);
+      SwitchOffSysClkPll();
 
       /* LSE has to be restored after stop */
       bClockSettingVolatile = true;         
@@ -579,6 +606,9 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
      RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
      if ( HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK ) Error_Handler_XX(-6, __FILE__, __LINE__); 
      
+     /* Stop PLL */
+     Pll_Stop(SYSCLK_PLL);
+
      /* clear Osc and Clk init structures after use */
      memset(&RCC_OscInitStruct,0, sizeof(RCC_OscInitTypeDef));
      memset(&RCC_ClkInitStruct,0, sizeof(RCC_ClkInitTypeDef));

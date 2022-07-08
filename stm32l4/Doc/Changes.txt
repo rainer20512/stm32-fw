@@ -20,3 +20,6 @@ where <nnn> is the threeed igit number from below
 004 Unify the handling of assigning DMA channels/requests: in case of no DMA Multiplexer is implemented, the
     assignment is fixed, in case of DMA MUX present, a handcrafted DMA Manager will assign Channels one by one
     When no DMA Multiplexer is present, the preprocesser symbol HAS_NO_DMAMUX is set to 1.
+
+005 Unify the PLL programming / handling for all three PLLs in ppl.c, pll.h and pll_config.h
+    ToDo: Restart PLLs after STOP when SYSCLK source is not a PLL

@@ -347,7 +347,7 @@ const char exti_gpio_name[] = "GPIO";
           "LPTIM1   ",    "LPTIM2   ",    "SWPMI1 wkup",  "PVM1 wkup",    "???",          "PVM3 wkup",    "PVM4 wkup",    "???",
           "???",
         };
-    #elif defined(STM32L4PLUS)
+    #elif defined(STM32L4PLUS_FAMILY)
         const char * const exti_line_name[]= { 
         /* insert pattern ( max length is 12 ) 
           "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */

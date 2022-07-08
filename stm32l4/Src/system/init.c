@@ -34,6 +34,10 @@
     #include "dev/adc_dev.h"
 #endif
 
+#if USE_USB > 0
+    #include "dev/usb_dev.h"
+#endif
+
 
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx

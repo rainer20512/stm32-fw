@@ -30,7 +30,7 @@
 #define ADC_HAS_REFINT(inst)            ( inst == (void *)ADC1_BASE )
 #if defined(STM32L476xx) || defined(STM32L496xx)
     #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE || inst == (void *)ADC3_BASE )
-#elif defined(STM32L4Pxxx) || defined(STM32L4Sxxx) || defined(STM32L43xx)
+#elif defined(STM32L4PLUS_FAMILY) || defined(STM32L43xx)
     #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC1_BASE )
 #else
     #error "No Definition for ADC_HAS_CHIPTEMP"

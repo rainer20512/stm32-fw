@@ -31,6 +31,9 @@
 #define PLL_LINE_Q       (1 << 1)
 #define PLL_LINE_R       (1 << 2)
 
+/* magic value, that indicates "this line is unused" */
+#define PLL_LINE_UNUSED  0xFFFFFFFF
+
 
 /* PLL config return values */
 #define PLL_CONFIG_OK               0             /* success */
@@ -40,10 +43,17 @@
 #define PLL_CONFIG_VIOLATION_PQR    (-4)          /* Violation of P,Q or R output frequency restriction */
 #define PLL_CONFIG_INUSE            (-5)          /* PLL to configure is in use                         */
 #define PLL_CONFIG_PARAM_ERROR      (-6)          /* invalid Parameter                                  */
+#define PLL_CONFIG_NOTSET           (-7)          /* queried parameter is not set                       */
+#define PLL_CONFIG_TIMEOUT          (-8)          /* timeout when polling for certain events            */
 
-
-int32_t PLL_Configure (RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_line, uint32_t pll_out_khz, uint32_t pll_inp_khz );
-int32_t PLL_Configure_SYSCLK (RCC_OscInitTypeDef*, uint32_t pll_out_khz, uint32_t pll_inp_khz );
+uint32_t Pll_InUse( uint32_t pllnum );
+int32_t  Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum );
+int32_t  Pll_Start(uint32_t pllnum );
+int32_t  Pll_Stop(uint32_t pllnum );
+void     Pll_Restart(void);
+uint32_t Pll_SetClockSource( uint32_t clocksource, uint32_t srcclk_khz);
+int32_t  PLL_Configure (RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_line, uint32_t pll_out_khz );
+int32_t  PLL_Configure_SYSCLK (RCC_OscInitTypeDef*, uint32_t pll_out_khz, uint32_t pll_inp_khz );
 
 
 #ifdef __cplusplus

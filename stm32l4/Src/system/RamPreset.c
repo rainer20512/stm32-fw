@@ -51,7 +51,7 @@ void RamPreset(void)
     PRESET_RAMAREA(__RAM);
     PRESET_RAMAREA(__SRAM2);
 
-    #if defined(STM32L4PLUS)
+    #if defined(STM32L4PLUS_FAMILY)
         PRESET_RAMAREA(__SRAM3);
     #endif
 

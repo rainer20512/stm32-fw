@@ -229,7 +229,7 @@
 #elif defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L4Sxxx) || defined(STM32L43xx) || defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
     #define STM32L4_FAMILY
     #if defined(STM32L4Sxxx) || defined(STM32L4Rxxx) || defined(STM32L4Pxxx) || defined(STM32L4Qxxx)
-        #define STM32L4PLUS
+        #define STM32L4PLUS_FAMILY
     #endif
 #else
     #error "Unkonwn MCU family!"

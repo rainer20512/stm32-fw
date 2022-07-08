@@ -45,7 +45,7 @@ static const char* DBG_get_pwr_cr1_vos_txt(void)
 {
   uint32_t sel = ( PWR->CR1 & PWR_CR1_VOS_Msk  ) >> PWR_CR1_VOS_Pos;
 
-#if defined(STM32L4Sxxx)
+#if defined(STM32L4PLUS_FAMILY)
     /* Check for boost mode*/
     if ( sel == 1 && ( PWR->CR5 & PWR_CR5_R1MODE ) == 0 ) sel = 3;
 #endif
@@ -123,7 +123,7 @@ static void DBG_dump_pwr_cr4(void)
   DBG_dump_uint32_hex("PWR->CR4 raw", PWR->CR4);
 }
 
-#if defined ( STM32L4Sxxx )
+#if defined ( STM32L4PLUS_FAMILY )
     static void DBG_dump_pwr_cr5(void)
     {
       DBG_setPadLen(24);
@@ -186,7 +186,7 @@ void DBG_dump_powersetting(void)
   DBG_dump_pwr_cr4();
   DBG_setIndentRel(-2);
 
-#if defined ( STM32L4Sxxx )
+#if defined (STM32L4PLUS_FAMILY )
   DBG_printf_indent("PWR: Power Control Register 5 \n" );
   DBG_setIndentRel(+2);
   DBG_dump_pwr_cr5();
@@ -526,8 +526,10 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
   DBG_dump_uint32_hex(bSleepRegisters ? "AHB2SMENR raw " : "AHB2ENR raw ", reg2 );  
   DBG_dump_uint32_hex(bSleepRegisters ? "AHB3SMENR raw " : "AHB3ENR raw ", reg3 );  
 
-#if defined(STM32L4Sxxx)
-  DBG_dump_onoffvalue  ("GFXMMU Clock",reg1, RCC_AHB1ENR_GFXMMUEN);  
+#if defined(STM32L4PLUS_FAMILY)
+  #if defined(RCC_AHB1ENR_GFXMMUEN)
+    DBG_dump_onoffvalue  ("GFXMMU Clock",reg1, RCC_AHB1ENR_GFXMMUEN);  
+  #endif
   DBG_dump_onoffvalue  ("DMA2D Clock", reg1, RCC_AHB1ENR_DMA2DEN);  
 #endif
   DBG_dump_onoffvalue  ("TSC Clock",   reg1, RCC_AHB1ENR_TSCEN);  
@@ -540,9 +542,9 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
   DBG_dump_onoffvalue  ("DMA2 Clock",  reg1, RCC_AHB1ENR_DMA2EN);  
   DBG_dump_onoffvalue  ("DMA1 Clock",  reg1, RCC_AHB1ENR_DMA1EN);  
 
-#if defined(STM32L4Sxxx)
+#if defined(STM32L4PLUS_FAMILY)
   DBG_dump_onoffvalue  ("SDMMC1 Clock",  reg2, RCC_AHB2ENR_SDMMC1EN);  
-//  DBG_dump_onoffvalue  ("SDMMC2 Clock",  reg2, RCC_AHB2ENR_SDMMC2EN);  
+  DBG_dump_onoffvalue  ("SDMMC2 Clock",  reg2, RCC_AHB2ENR_SDMMC2EN);  
   DBG_dump_onoffvalue  ("OSPIMgr Clock", reg2, RCC_AHB2ENR_OSPIMEN);  
 #endif
   DBG_dump_onoffvalue  ("RNG Clock",  reg2, RCC_AHB2ENR_RNGEN);  
@@ -629,7 +631,7 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
 #if defined(STM32L476xx) || defined(STM32L496xx)
   DBG_dump_onoffvalue  ("LCD Clock", reg1, RCC_APB1ENR1_LCDEN);  
 #endif
-#if defined(STM32L4PLUS)
+#if defined(STM32L4PLUS_FAMILY)
   DBG_dump_onoffvalue  ("RTC APB Clock", reg1, RCC_APB1ENR1_RTCAPBEN);  
 #endif
   DBG_dump_onoffvalue  ("TIM7 Clock", reg1, RCC_APB1ENR1_TIM7EN);  
@@ -649,7 +651,7 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
 #if defined(STM32L476xx) || defined(STM32L496xx)
   DBG_dump_onoffvalue  ("SWPMI1 Clock", reg2, RCC_APB1ENR2_SWPMI1EN);  
 #endif
-#if defined(STM32L4PLUS)
+#if defined(STM32L4PLUS_FAMILY)
     #if defined(RCC_APB1ENR2_I2C4EN) 
       DBG_dump_onoffvalue  ("I2C4 Clock",   reg2, RCC_APB1ENR2_I2C4EN);  
     #endif
@@ -661,8 +663,10 @@ void DBG_dump_rcc_apb2enr(uint32_t reg, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "APB2SMENR raw" : "APB2ENR raw",reg );  
-#if defined(STM32L4Sxxx)
-  DBG_dump_onoffvalue  ("DSI Clock", reg, RCC_APB2ENR_DSIEN);  
+#if defined(STM32L4PLUS_FAMILY)
+  #if defined(RCC_APB2ENR_DSIEN)
+    DBG_dump_onoffvalue  ("DSI Clock", reg, RCC_APB2ENR_DSIEN);  
+  #endif
   DBG_dump_onoffvalue  ("LTDC Clock", reg, RCC_APB2ENR_LTDCEN);  
 #endif
   #if defined(RCC_APB2ENR_DFSDM1EN)  
@@ -820,7 +824,7 @@ static void DBG_dump_peripheralclock_specific(void)
   if ( READ_BIT(RCC->APB2ENR, RCC_APB2ENR_SAI1EN ) )
     DBG_dump_textvalue("SAI1 Clk Source", DBG_get_rcc_ccipr_saiclk_txt((RCC->CCIPR & RCC_CCIPR_SAI1SEL_Msk) >> RCC_CCIPR_SAI1SEL_Pos) );    
 }
-#elif defined(STM32L4PLUS)
+#elif defined(STM32L4PLUS_FAMILY)
 const char *ospiclk_txt[]={"HCLK","MSI","PLL-Q"};
 static const char* DBG_get_rcc_ccipr_ospiclk_txt(uint32_t sel)
 {
