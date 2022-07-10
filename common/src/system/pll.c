@@ -447,7 +447,7 @@ static uint32_t Pll_GetActiveLines( uint32_t pllnum )
         case SYS_PLL2:
             return getactive(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN, RCC_PLLSAI1CFGR_PLLSAI1QEN, RCC_PLLSAI1CFGR_PLLSAI1REN );
         case SYS_PLL3:
-            #if defined(STM32L4_FAMILY)
+            #if defined(STM32L4PLUS_FAMILY)
                 /* STM32L4 family has no Q line in PLLSAI2 */
                 return getactive(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2PEN, RCC_PLLSAI2CFGR_PLLSAI2QEN, RCC_PLLSAI2CFGR_PLLSAI2REN );
             #else
@@ -493,7 +493,7 @@ int32_t Pll_GetM(uint32_t pllnum )
 #elif defined(STM32L4_FAMILY)
     /* STM32L4 family has only one M stage for all PLLs */
     UNUSED(pllnum);
-    return maskout(RCC->CFGR, RCC_PLLCFGR_PLLM_Msk, RCC_PLLCFGR_PLLM_Pos);
+    return maskout(RCC->CFGR, RCC_PLLCFGR_PLLM_Msk, RCC_PLLCFGR_PLLM_Pos)+1;
 #else
     #error "No Implemetation of ""Pll_GetM"""
 #endif
@@ -696,6 +696,7 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
 #elif defined(STM32L4_FAMILY) || defined(STM32L4PLUS_FAMILY)
     /* 
      * write M divisor, N Multiplier, P,Q or R divisors and enable P,Q or R line if these are set 
+     * NB: on STM32L4 all PLLs share one M-Divider stage PLLSAI2 has no Q-Line
      */
     switch(pllnum) {
         case SYS_PLL1:
@@ -715,7 +716,9 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
             }
             break;
         case SYS_PLL2:
-            MASKIN(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1M_Msk,      PLL->PLLM-1, RCC_PLLSAI1CFGR_PLLSAI1M_Pos);
+            #if defined(STM32L4PLUS_FAMILY)
+                MASKIN(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1M_Msk,      PLL->PLLM-1, RCC_PLLSAI1CFGR_PLLSAI1M_Pos);
+            #endif
             MASKIN(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N_Msk,      PLL->PLLN,   RCC_PLLSAI1CFGR_PLLSAI1N_Pos);
             if ( PLL->PLLP != PLL_LINE_UNUSED ) {
                 MASKIN(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1P_Msk,  PLL->PLLP,   RCC_PLLSAI1CFGR_PLLSAI1P_Pos);
@@ -731,16 +734,20 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
             }
             break;
         case SYS_PLL3:
-            MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2M_Msk,      PLL->PLLM-1, RCC_PLLSAI2CFGR_PLLSAI2M_Pos);
+            #if defined(STM32L4PLUS_FAMILY)
+                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2M_Msk,      PLL->PLLM-1, RCC_PLLSAI2CFGR_PLLSAI2M_Pos);
+            #endif
             MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2N_Msk,      PLL->PLLN,   RCC_PLLSAI2CFGR_PLLSAI2N_Pos);
             if ( PLL->PLLP != PLL_LINE_UNUSED ) {
                 MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2P_Msk,  PLL->PLLP,   RCC_PLLSAI2CFGR_PLLSAI2P_Pos);
                 SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2PEN);
             }
-            if ( PLL->PLLQ != PLL_LINE_UNUSED ) {
-                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2Q_Msk,  PLL->PLLQ/2-1, RCC_PLLSAI2CFGR_PLLSAI2Q_Pos);
-                SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2QEN);
-            }
+            #if defined(STM32L4PLUS_FAMILY)
+                if ( PLL->PLLQ != PLL_LINE_UNUSED ) {
+                    MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2Q_Msk,  PLL->PLLQ/2-1, RCC_PLLSAI2CFGR_PLLSAI2Q_Pos);
+                    SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2QEN);
+                }
+            #endif
             if ( PLL->PLLR != PLL_LINE_UNUSED ) {
                 MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2R_Msk,  PLL->PLLR/2-1, RCC_PLLSAI2CFGR_PLLSAI2R_Pos);
                 SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2REN);
@@ -772,13 +779,20 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
  *****************************************************************************/
 static int32_t Pll_SetupMN ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_out_khz, uint32_t pll_inp_khz )
 {
-  uint32_t pll_khz_behind_m;    /* PLL frq behind the M stage */
+  uint32_t pll_khz_behind_m;    /* PLL frq behind the M stage (VCO) */
+  uint32_t pll_delta_m;         /* increments for VCO to reach the minimum frq */
 
   /* calculate M so that the frq after M is always 2MHz, or - in case of HSE not a multiple of 2 - 5Mhz */
   if ( pll_inp_khz / PLLM_ODD * PLLM_ODD == pll_inp_khz ) {
-    pll_khz_behind_m = PLLM_ODD;
+    pll_khz_behind_m = pll_delta_m = PLLM_ODD;
   } else {
-    pll_khz_behind_m = PLLM_EVEN;
+    pll_khz_behind_m = pll_delta_m = PLLM_EVEN;
+  }
+
+  /* if we have a minimum value restriction fot this stage, increment until above that minimum */
+  if ( pll_restriction[pllnum].m_min > 0 ) {
+    while ( pll_khz_behind_m < pll_restriction[pllnum].m_min ) 
+        pll_khz_behind_m += pll_delta_m;
   }
 
   /* Check constraints for M output frequency */
@@ -797,7 +811,7 @@ static int32_t Pll_SetupMN ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t 
     /* To be compatible with L4 family, final divisor must be one of 2,4,6,8 
      * compute the minimum possible of these values.
      */
-     pqr_div = n_min / pll_out_khz;
+     pqr_div = (n_min + pll_out_khz - 1)/ pll_out_khz;
      if ( pqr_div < 2 ) pqr_div = 2;
      /* find next higher multiple of 2 */
      pqr_div = (pqr_div+1)/2;

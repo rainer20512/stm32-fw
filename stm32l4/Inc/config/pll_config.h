@@ -42,7 +42,7 @@
     #define PLLM_MIN        2660
     #define PLLM_MAX        8000
 
-    #define PLLM_EVEN       4000  /* standard output frq of M-stage for even input frequencies, 4MHz for L4+ devices due to minimal frq of 2.66 MHz after M-Stage */
+    #define PLLM_EVEN       2000  /* standard output frq of M-stage for even input frequencies */
     #define PLLM_ODD        5000  /* standard output frq of M-stage for off input frequencies  */
     #define PLL_PQR_DIVMAX  8     /* highest possible divisor in final stage                   */
 

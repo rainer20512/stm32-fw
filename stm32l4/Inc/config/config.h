@@ -25,9 +25,9 @@
 //#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
 //#define STM32L4S9ZXXREF
-#define STM32L4P5BAREMETAL
+//#define STM32L4P5BAREMETAL
 //#define STM32L476EVAL
-//#define STM32L476BAREMETAL
+#define STM32L476BAREMETAL
 
 
 /*
@@ -72,10 +72,10 @@
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI            0            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
-#define USE_USB             0  
+#define USE_USB             1  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
-#define USE_PERIPHTIMER     0
+#define USE_PERIPHTIMER     1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -103,8 +103,9 @@
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
-#define USER_CLOCKCONFIG           CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
+#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
+//define USER_CLOCKCONFIG          CLK_MPLL_VRNG1_48MHZ   /* 48 MHz, source PLL, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ   /* 64 MHz, source PLL, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ   /* 80 MHz, source PLL, Vrange1, 4 WS */
 

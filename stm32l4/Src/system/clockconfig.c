@@ -53,10 +53,6 @@
     #include "system/profiling.h"
 #endif
 
-/* set the Output frq. of the PLL's M-stage to a fixed value when PLL is used */
-/* This is not mandatory, but alleviates other setup                          */
-#define PLL_BASE_FRQ      8000000
-
 /*
  *************************************************************************************
  * As in Stop2 mode the wakeup clock is either MSI or HSI, we have to safe 
@@ -651,11 +647,24 @@ static void SystemClock_HSI_16MHz(bool bSwitchOffMSI, uint8_t vrange)
 
 #if USE_USB > 0
     /**************************************************************************
-     * PLL clock has been set up as system clock. During setup, output of the
-     * PLL's M-divider has been set to  PLL_BASE_FRQ
+     * PLL clock has been set up and configured properly as system clock. 
+     * For STM32L4 devices, the PLL's M-divider is set and fixed by that setup
+     * Now configure PLLSAI1 as 48MHz USB Clock, start PLLSAI1 and 
+     * select PLLSAI1 as USB clock source
      *************************************************************************/
-    static void SetupUSB48Clk(void)
+    static bool SetupUSB48Clk(void)
     {
+    RCC_PLLInitTypeDef PLL={0};
+    /* PLLSAI1 Q output to 48 MHz */
+    bool success_usb = PLL_Configure(&PLL, USB_PLL, USB_PLL_LINE, 48000) == PLL_CONFIG_OK;
+    if ( !success_usb ) Error_Handler_XX(-25, __FILE__, __LINE__);
+
+    success_usb = Pll_Set( &PLL, USB_PLL) == PLL_CONFIG_OK;
+    if ( !success_usb ) Error_Handler_XX(-26, __FILE__, __LINE__);
+    if ( success_usb ) success_usb = Pll_Start(USB_PLL) == PLL_CONFIG_OK;
+
+    if ( success_usb ) SC_SetUsbClockSource(RCC_USBCLKSOURCE_PLLSAI1);
+    return success_usb;
     }
 #endif
 
@@ -721,20 +730,6 @@ static bool SwitchOnPLL ( uint32_t xxmhz )
   if ( !success ) Error_Handler_XX(-21, __FILE__, __LINE__);
   if ( success ) success = Pll_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
     
-  #if USE_USB > 0
-    RCC_PLLInitTypeDef PLL={0};
-    /* PLLSAI1 Q output to 48 MHz */
-    bool success_usb = PLL_Configure(&PLL, USB_PLL, USB_PLL_LINE, 48000) == PLL_CONFIG_OK;
-    if ( !success ) Error_Handler_XX(-25, __FILE__, __LINE__);
-
-    success_usb = Pll_Set( &PLL, USB_PLL) == PLL_CONFIG_OK;
-    if ( !success_usb ) Error_Handler_XX(-26, __FILE__, __LINE__);
-    if ( success_usb ) success_usb = Pll_Start(USB_PLL) == PLL_CONFIG_OK;
-
-    if ( success_usb ) SC_SetUsbClockSource(RCC_USBCLKSOURCE_PLLSAI1);
-    success &= success_usb;
-  #endif
-
   return success;
 }
 
@@ -912,9 +907,9 @@ static const uint16_t pll_clk_rates[] = ALLOWED_PLL_CLOCKS;
 static uint16_t GetPLLClockRate( CLK_CONFIG_T clk_config_byte )
 {
     /* check for clk_config_byte being in the PLL range of configurations */
-    if ( clk_config_byte < CLK_PLL_VRNG1_16MHZ ) return 0;
+    if ( clk_config_byte < CLK_PLL_VRNG1_08MHZ ) return 0;
 
-    uint8_t clk_idx = clk_config_byte - CLK_PLL_VRNG1_16MHZ;
+    uint8_t clk_idx = clk_config_byte - CLK_PLL_VRNG1_08MHZ;
 
     if ( clk_idx >= ARRSIZE(uint16_t, pll_clk_rates) ) 
         return 0; 

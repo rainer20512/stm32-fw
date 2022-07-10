@@ -15,8 +15,6 @@
 #define OUTBUF_SIZE 2048
 #define INBUF_SIZE  2048
 
-#define HWUART      HW_COM9
-#define UARTHND     (&HandleCOM9)
 
 typedef enum {
     NO_ACTION  = 0,
@@ -59,7 +57,7 @@ static void Uart_OutputTransfer(uint32_t from, uint32_t to )
   bOngoingTransfer = 1;
   uint32_t transfer_size = to - from;
 
-  UsartStartTx(UARTHND, o.buf+o.rdptr, transfer_size);
+  UsartStartTx(USBUARTHND, o.buf+o.rdptr, transfer_size);
 }
 
 
@@ -71,7 +69,7 @@ void Usbd_SetComm( uint32_t  baudrate, uint32_t  stopbits, uint32_t  parity, uin
     comm.stopbits   = stopbits;
     comm.parity     = parity;
     comm.wordlength = wordlength;
-    Usart_SetCommParamsLong(&HWUART, &comm, false );
+    Usart_SetCommParamsLong(&USBUART, &comm, false );
     USBD_CDC_StartReceive();
 }
 
@@ -88,9 +86,9 @@ void U2U_InitTask(void)
 {
     CircBuff_Init           ( &o, OUTBUF_SIZE, outbuf );
     LinBuff_Init            ( &i, INBUF_SIZE,  inbuf  );
-    Usart_AssignBuffers     ( UARTHND, &i, NULL ); 
-    UsartAssignCallbacks    ( UARTHND,  UartTxCpltCallback, NULL, UartRxCpltCallback );
-    DEBUG_PRINTF            ("Connecting USBD_CDC and %s\n",HWUART.devName);
+    Usart_AssignBuffers     ( USBUARTHND, &i, NULL ); 
+    UsartAssignCallbacks    ( USBUARTHND,  UartTxCpltCallback, NULL, UartRxCpltCallback );
+    DEBUG_PRINTF            ("Connecting USBD_CDC and %s\n",USBUART.devName);
     USBD_CDC_SetCallbacks   ((USBD_CDC_CallbacksT*)&usbCBs);
     USBD_CDC_StartReceive   ();
 }

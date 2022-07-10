@@ -320,7 +320,11 @@
     #if USE_USB > 0
         #define USE_USART2
         #define USE_USART2_ALTN1
-        //#define COM2_USE_RX_DMA
+        // #define COM2_USE_RX_DMA
+
+        #define USBUART      HW_COM2
+        #define USBUARTHND   (&HandleCOM2)
+
     #endif
 
     /* Define the LPTimer that does timekeeping in case RTC is not used for that */

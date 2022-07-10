@@ -782,14 +782,7 @@ void SysTick_Handler(void)
 #endif
 
 #if USE_USB > 0
-    #include "usbd_cdc_interface.h"
     extern PCD_HandleTypeDef hpcd;
-    /* UART handler declared in "usbd_cdc_interface.c" file */
-    extern UART_HandleTypeDef UartHandle;
-
-    /* TIM handler declared in "usbd_cdc_interface.c" file */
-    extern TIM_HandleTypeDef TimHandle;
-
     void OTG_FS_IRQHandler(void)
     {
       HAL_PCD_IRQHandler(&hpcd);

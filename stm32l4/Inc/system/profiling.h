@@ -145,6 +145,7 @@ typedef enum ActiveJobEnum {
   void     ProfilerIncrementStopTime( uint32_t stop_us, uint32_t StopMode );
   bool     ProfilerDump(char *cmdline, size_t len, const void * arg );
   void     ProfilerDumpTime(uint64_t time64, char *text);
+  void     ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreUs);
 #else
   #define ProfilerSetupMicroCounter()
   #define ProfilerGetMicrosecond()

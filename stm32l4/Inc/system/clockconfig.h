@@ -86,20 +86,21 @@ typedef enum {
  *                              --------------------------------------  */
   /* 
    */   
-  CLK_PLL_VRNG1_16MHZ  = 18, /* 16 MHz,  HSE/HSI16, 0        0           */
-  CLK_PLL_VRNG1_24MHZ  = 19, /* 24 MHz,  HSE/HSI16, 1        1           */
-  CLK_PLL_VRNG1_32MHZ  = 20, /* 32 MHz,  HSE/HSI16, 1        1           */
-  CLK_PLL_VRNG1_48MHZ  = 21, /* 48 MHz,  HSE/HSI16, 2        2           */
-  CLK_PLL_VRNG1_64MHZ  = 22, /* 64 MHz,  HSE/HSI16, 3        3           */
-  CLK_PLL_VRNG1_80MHZ  = 23, /* 80 MHz,  HSE/HSI16, 4        3           */
-  CLK_PLL_VRNG1_100MHZ = 24, /* 100 MHz, HSE/HSI16, n/a      4           */
-  CLK_PLL_VRNG1_120MHZ = 25, /* 120 MHz, HSE/HSI16, n/a      5           */
+  CLK_PLL_VRNG1_08MHZ  = 18, /* 8  MHz,  HSE/HSI16, 0        0           */
+  CLK_PLL_VRNG1_16MHZ  = 19, /* 16 MHz,  HSE/HSI16, 0        0           */
+  CLK_PLL_VRNG1_24MHZ  = 20, /* 24 MHz,  HSE/HSI16, 1        1           */
+  CLK_PLL_VRNG1_32MHZ  = 21, /* 32 MHz,  HSE/HSI16, 1        1           */
+  CLK_PLL_VRNG1_48MHZ  = 22, /* 48 MHz,  HSE/HSI16, 2        2           */
+  CLK_PLL_VRNG1_64MHZ  = 23, /* 64 MHz,  HSE/HSI16, 3        3           */
+  CLK_PLL_VRNG1_80MHZ  = 24, /* 80 MHz,  HSE/HSI16, 4        3           */
+  CLK_PLL_VRNG1_100MHZ = 25, /* 100 MHz, HSE/HSI16, n/a      4           */
+  CLK_PLL_VRNG1_120MHZ = 26, /* 120 MHz, HSE/HSI16, n/a      5           */
 } CLK_CONFIG_T;
 
 #if defined(STM32L476xx) || defined(STM32L496xx) || defined(STM32L43xx)
-    #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,}
+    #define ALLOWED_PLL_CLOCKS  {8,16,24,32,48,64,80,}
 #elif defined(STM32L4Pxxx) || defined(STM32L4Qxxx) || defined(STM32L4Rxxx) || defined(STM32L4Sxxx) 
-    #define ALLOWED_PLL_CLOCKS  {16,24,32,48,64,80,100, 120}
+    #define ALLOWED_PLL_CLOCKS  {8,16,24,32,48,64,80,100, 120}
 #else
     #error "No clock configuration table for selected MCU"
 #endif

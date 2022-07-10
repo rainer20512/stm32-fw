@@ -71,7 +71,6 @@ uint32_t gflags;
 #include "usbd_core.h"
 #include "usbd_desc.h"
 #include "usbd_cdc.h" 
-#include "usbd_cdc_interface.h"
 USBD_HandleTypeDef USBD_Device;
 
 uint8_t CTL_error           =0;

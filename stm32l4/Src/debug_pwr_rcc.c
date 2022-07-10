@@ -613,7 +613,9 @@ void DBG_dump_rcc_apb1enr(uint32_t reg1, uint32_t reg2, uint32_t bSleepRegisters
   DBG_dump_onoffvalue  ("DAC1 Clock", reg1, RCC_APB1ENR1_DAC1EN);  
   DBG_dump_onoffvalue  ("PWR Clock", reg1, RCC_APB1ENR1_PWREN);  
   DBG_dump_onoffvalue  ("CAN1 Clock", reg1, RCC_APB1ENR1_CAN1EN);  
-  DBG_dump_onoffvalue  ("CRS Clock", reg1, RCC_APB1ENR1_CRSEN);  
+  #if defined(RCC_APB1ENR1_CRSEN)
+    DBG_dump_onoffvalue  ("CRS Clock", reg1, RCC_APB1ENR1_CRSEN);  
+  #endif
   DBG_dump_onoffvalue  ("I2C3 Clock", reg1, RCC_APB1ENR1_I2C3EN);  
   DBG_dump_onoffvalue  ("I2C2 Clock", reg1, RCC_APB1ENR1_I2C2EN);  
   DBG_dump_onoffvalue  ("I2C1 Clock", reg1, RCC_APB1ENR1_I2C1EN);  

@@ -162,7 +162,7 @@ void TaskDumpList(void)
 
     for ( i = 0, mask=1; i < MAX_TASK; i++, mask <<= 1 ) if ( taskUsedBits & mask ) {
         DBG_printf_indent("%3d",i);
-        DBG_printf_indent("   %20s",i, tasks[i].Name);
+        DBG_printf_indent("   %20s", tasks[i].Name);
         #if DEBUG_PROFILING > 0
             ProfilerFormatTime( ProfilerTimes[tasks[i].PrID], timestr, MAX_TIMELEN, true);
             DEBUG_PUTS(timestr);
