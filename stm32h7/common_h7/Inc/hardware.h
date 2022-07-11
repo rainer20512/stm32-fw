@@ -43,8 +43,11 @@
 #define ADC_HAS_CHIPTEMP(inst)          ( inst == (void *)ADC3_BASE )
 
 /* --- Type specific setup for Timers ---------------------------------------*/
-extern const TIM_TypeDef* apb1_timers[9];    /* Timers connected to APB1 */
-extern const TIM_TypeDef* apb2_timers[5];    /* Timers connected to APB2 */
+extern const TIM_TypeDef* apb1_timers[];    /* Timers connected to APB1 */
+extern const TIM_TypeDef* apb2_timers[];    /* Timers connected to APB2 */
+uint32_t GetAPB1TimerPrescaler  (void);     /* Get APB1 Timer prescaler */
+uint32_t GetAPB2TimerPrescaler  (void);     /* Get APB2 Timer prescaler */
+uint32_t GetAHBPrescaler        (void);     /* Get AHB Clock domain prescaler */
 uint32_t GetAPB1TimerFrequency  (void);     /* Get APB1 Timer input frq */
 uint32_t GetAPB2TimerFrequency  (void);     /* Get APB2 Timer input frq */
 uint32_t GetPerClkFrequency     (void);     /* Get the peripheral clock frq */

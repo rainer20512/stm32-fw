@@ -593,17 +593,21 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
      if ( bUseHSE ) {
         #if defined(HW_HAS_HSE)
             ConfigureHSE(&RCC_OscInitStruct);
+            pll_inp_khz = HW_HSE_FREQUENCY/1000;
             RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
         #else
             Error_Handler_XX(-5, __FILE__, __LINE__);       
         #endif
      } else { 
         ConfigureHSI(&RCC_OscInitStruct, PLL_HSI_BASE_FRQ_KHZ);
+        pll_inp_khz = PLL_HSI_BASE_FRQ_KHZ;
         RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
      }
+
      if (HAL_RCC_OscConfig(&RCC_OscInitStruct)!= HAL_OK) Error_Handler_XX(-6, __FILE__, __LINE__); 
-     RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;
-     RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+
+     /* Set all clocks and predividers according to that intermediate low and safe frequewncy */
+     SetPredividers(&RCC_ClkInitStruct, pll_inp_khz);
      if ( HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK ) Error_Handler_XX(-6, __FILE__, __LINE__); 
      
      /* Stop PLL */
@@ -761,9 +765,10 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
     ClockNotifyCallbacks(HAL_RCC_GetSysClockFreq());
 
     #if DEBUG_MODE > 0
-        DEBUG_PRINTF("SYSCLK nom. %d\n", HAL_RCC_GetSysClockFreq());
+        uint32_t sys_real = HAL_RCC_GetSysClockFreq();
+        DEBUG_PRINTF("SYSCLK nom. %d.%06dMHz\n",sys_real/1000000,sys_real%1000000 );
         uint32_t sysclk = Get_SysClockFrequency();
-        DEBUG_PRINTF("SYSCLK real  %d.%06d\n",sysclk/1000000,sysclk%1000000);
+        DEBUG_PRINTF("SYSCLK real %d.%06dMHz\n",sysclk/1000000,sysclk%1000000);
     #endif
 
 
@@ -793,11 +798,22 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   RCC_OscInitStruct.LSEState = bLSEon ? RCC_LSE_ON : RCC_LSE_OFF;
+
+  /*
+   * All platform except DevEBox H7 will run with lowest driving strength
+   */
+  if ( bLSEon ) {
+      #if defined(STM32H7_DEVEBOX )
+          __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_MEDIUMHIGH);
+      #else
+          /* Set to lowest driving strngth */
+          __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+      #endif
+  }
+
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
       Error_Handler_XX(-11, __FILE__, __LINE__);
   
-  /* Set to lowest driving strngth */
-  __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
  
   /* Set LSE as RTC clock source, if desired */
   if ( bUseAsRTCClock )  {
@@ -1024,7 +1040,12 @@ uint32_t HSI_FreqMeasure(void)
 
   /* Compute the average value corresponding the current trimming value */
   measured_frequency = (uint32_t)((__HAL_GET_TIM_PRESCALER(&TimHandle) + 1) * (measured_frequency / HSI_NUMBER_OF_LOOPS));
-  return measured_frequency;
+
+  /* 
+   * up to here we measured the timer clock domain frequency ( either APB1 or APB2 domain )
+   * to get the SYSCLK frequency, we have to take the APBx ad AHB prescaler values into consideration, too
+   */
+  return measured_frequency * TmrGetClockPrescaler(TIMx) * GetAHBPrescaler();
 }
 
 

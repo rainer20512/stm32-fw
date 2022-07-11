@@ -21,8 +21,9 @@
  ********************************************************************************
  */ 
 
-#define STM32H742REF
+//#define STM32H742REF
 //#define STM32H743EVAL2
+#define STM32H7_DEVEBOX
 
 /*
  ********************************************************************************
@@ -47,12 +48,12 @@
  */ 
 #define USE_ONEWIRE                 0
 #define USE_DS18X20                 0
-#define USE_EEPROM_EMUL             1
+#define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
-#define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_USB                     0   
 #define USE_USB_FS                  0
@@ -60,8 +61,8 @@
 #define USE_FMC_SRAM                0
 #define USE_FMC_SDRAM               0
 #define USE_FMC_NOR                 0
-#define USE_ETH                     1
-#define USE_LWIP                    1 
+#define USE_ETH                     0
+#define USE_LWIP                    0 
 #define USE_FATFS                   0
 #define USE_BDMA                    0
 #define USE_LTDC                    0
@@ -78,7 +79,7 @@
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
 #define USE_ETY_PHY_LAN8742         0
-#define USE_ETH_PHY_ENC28J60        1
+#define USE_ETH_PHY_ENC28J60        0
 
 /* Choose one in case of USE_QSPI == 1  */
 #define USE_XSPI_MX25               0
@@ -175,7 +176,7 @@
     #undef  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       16000000
 
-#elif defined(STM32H743EVAL2)
+#elif defined(STM32H743EVAL2) || defined(STM32H7_DEVEBOX)
     #define  HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       25000000
@@ -208,7 +209,12 @@
     #error "Must use LwIP when using ETH"
 #endif
 
-
+/* 
+ * The following two are neccessary for HAL
+ * - Set HSE according to used HSE crystal,
+ * - HSI frq is always 16MHz in this code
+ * - LSE is always 32768Hz
+ */
 #define HSE_VALUE HW_HSE_FREQUENCY
 
 /* Can we use an HSE Clock ? */

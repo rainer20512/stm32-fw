@@ -63,6 +63,9 @@
 #if defined(STM32H742REF) 
     /* STM32H742REF has an 8MByte qspi flash on PCB */
     #define START_PAGE_ADDRESS      0x7F8000   /*!< Last 8 sectors of 4kiByte size each = 0x7f8000 .. 0x7fffff */
+#if defined(STM32H7_DEVEBOX) 
+    /* DevEBox has an 8MByte qspi flash on PCB */
+    #define START_PAGE_ADDRESS      0x7F8000   /*!< Last 8 sectors of 4kiByte size each = 0x7f8000 .. 0x7fffff */
 #elif defined(STM32H743EVAL2) 
     /* STM32H743EVAL2 has two 64MByte qspi flash on board, we use only one of these */
     #define START_PAGE_ADDRESS      0x3ff8000   /*!< Last 8 sectors of 4kiByte size each = 0x3ff8000 .. 0x3ffffff */

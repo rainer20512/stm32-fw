@@ -17,6 +17,8 @@
   ******************************************************************************
   */ 
 
+#include "config/config.h"
+
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32H7xx_HAL_CONF_H
 #define __STM32H7xx_HAL_CONF_H

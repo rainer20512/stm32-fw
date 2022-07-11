@@ -45,6 +45,8 @@ extern "C" {
     #define BOARD   "STM32H743_EVAL2"
 #elif defined(STM32H745NUCLEO)
     #define BOARD   "STM32H745NUCLEO"
+#elif defined(STM32H7_DEVEBOX)
+    #define BOARD   "DevEBox STM32H7XX"
 #else
     #define BOARD   "Unknown Board"
 #endif

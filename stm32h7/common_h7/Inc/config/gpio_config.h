@@ -32,6 +32,22 @@
 /* Example entry for additional IO-Pins
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
 */
+#elif defined(STM32H7_DEVEBOX)
+  // LEDs  
+  #define IO_00                             { GPIO_PIN_1,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }
+  #define USERLEDNUM                        1
+  #define USERLEDS                          { 0, } 
+
+  // Buttons K1 and K2
+  #define IO_01_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_01                             { GPIO_PIN_3, GPIOE, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLUP, HW_IO_NORMAL, HW_INPUT,         IO_01_IRQ, "K1 PushBtn" }
+  #define IO_02_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_02                             { GPIO_PIN_5, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLUP, HW_IO_NORMAL, HW_INPUT,         IO_02_IRQ, "K2 PushBtn" }
+  #define IO_NUM                            3
+/* Example entry for additional IO-Pins
+  #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
+*/
+
 #elif defined(STM32H742REF)
   // LEDs  
   #define IO_00                             { GPIO_PIN_12, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }

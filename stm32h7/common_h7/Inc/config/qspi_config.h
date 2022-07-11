@@ -24,16 +24,16 @@
 
 /************************************************************************
  * Definition for QSPI resources
- * Function                     |   Altn1                      |  Altn2                       |  Altn3
- *------------------------------+------------------------------+------------------------------+------------------------------+
- * CLK                          : PB2/AF9                      | PF10/AF9                     | PB2/AF9
- *------------------------------+------------------------------+------------------------------+------------------------------+
- * NCS and SIO-Pins for QSPI1   : PB6/AF10                     | PB10/AF9                     | PG6(AF10)
- * SIO0(SI),SIO1(SO),SIO2, SIO3 : PC9, PC10, PE2, PA1  (AF9)   | PD11, PD12, PF7, PD1 (AF9)   | PF8,PF9(AF10), PF7,PF6(AF9)
- *------------------------------+------------------------------+------------------------------+------------------------------+
- * NCS and SIO-Pins for QSPI2   : PC11/AF9                     | PC11/AF9                     | PC11/AF9
- * SIO0(SI),SIO1(SO),SIO2, SIO3 : Pe7, PE8, PE9, PE10 (AF10)   | PH2, PH3, PG9, PG14 (AF9)    | Pe7, PE8, PE9, PE10 (AF10)
- *------------------------------+------------------------------+------------------------------+------------------------------+
+ * Function                     |   Altn1                      |  Altn2                       |  Altn3                       |  Altn4
+ *------------------------------+------------------------------+------------------------------+------------------------------+------------------------------+
+ * CLK                          : PB2/AF9                      | PF10/AF9                     | PB2/AF9                      | PB2/AF9                      
+ *------------------------------+------------------------------+------------------------------+------------------------------+------------------------------+
+ * NCS and SIO-Pins for QSPI1   : PB6/AF10                     | PB10/AF9                     | PG6(AF10)                    | PB6/AF10                     
+ * SIO0(SI),SIO1(SO),SIO2, SIO3 : PC9, PC10, PE2, PA1  (AF9)   | PD11, PD12, PF7, PD1 (AF9)   | PF8,PF9(AF10), PF7,PF6(AF9)  | PD11, PD12, PE2, PD13(AF9) 
+ *------------------------------+------------------------------+------------------------------+------------------------------+------------------------------+
+ * NCS and SIO-Pins for QSPI2   : PC11/AF9                     | PC11/AF9                     | PC11/AF9                     |
+ * SIO0(SI),SIO1(SO),SIO2, SIO3 : Pe7, PE8, PE9, PE10 (AF10)   | PH2, PH3, PG9, PG14 (AF9)    | Pe7, PE8, PE9, PE10 (AF10)   |
+ *------------------------------+------------------------------+------------------------------+------------------------------+------------------------------+
  *
  */ 
 #ifdef USE_QSPI1
@@ -61,6 +61,14 @@
     #define QSPI1_SO_SIO1                   { GPIO_PIN_9,  GPIOF, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi SIO1" }
     #define QSPI1_SIO2                      { GPIO_PIN_7,  GPIOF, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO2" }
     #define QSPI1_SIO3                      { GPIO_PIN_6,  GPIOF, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO3" }
+  #elif defined(USE_QSPI1_ALTN4)
+    /* See above Altn4 */
+    #define QSPI1_NCS                       { GPIO_PIN_6,  GPIOB, GPIO_AF10_QUADSPI, GPIO_NOPULL, "QSpi nCS"  }
+    #define QSPI1_CLK                       { GPIO_PIN_2,  GPIOB, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi Clk"  }
+    #define QSPI1_SI_SIO0                   { GPIO_PIN_11, GPIOD, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO0" }
+    #define QSPI1_SO_SIO1                   { GPIO_PIN_12, GPIOD, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO1" }
+    #define QSPI1_SIO2                      { GPIO_PIN_2,  GPIOE, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO2" }
+    #define QSPI1_SIO3                      { GPIO_PIN_13, GPIOD, GPIO_AF9_QUADSPI,  GPIO_NOPULL, "QSpi SIO3" }
   #else
     #error "No Pin definition for QSP1"
   #endif

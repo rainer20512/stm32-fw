@@ -66,6 +66,8 @@ void        TMR_Aquire              (TimerHandleT *hnd);
 void        TMR_Release             (TimerHandleT *hnd);
 void        TMR_Start               (const HW_DeviceType *dev, bool bIntEnable);
 void        TMR_Stop                (const HW_DeviceType *dev);
+int32_t     TmrGetClockPrescaler    ( TIM_TypeDef *tim );
+uint32_t    TmrGetClockFrq          ( TIM_TypeDef *tim );
 
 /* Public functions for BasicTimers --------------------------------------------*/
 void        BASTMR_IrqHandler       ( volatile uint32_t *CntHigh, TIM_TypeDef *htim);

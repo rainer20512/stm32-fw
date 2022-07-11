@@ -314,6 +314,8 @@
     // RHB tbd
 #elif defined(STM32H742REF)
     // RHB tbd
+#elif defined(STM32H7_DEVEBOX)
+    // RHB tbd
 #elif defined(STM32H743EVAL2)
     // RHB tbd
 #else

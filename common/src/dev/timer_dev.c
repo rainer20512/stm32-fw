@@ -253,12 +253,31 @@ static void TmrHandleInit (TimerHandleT *hnd, const HW_DeviceType *self)
 
 
 /****************************************************************************** 
+ * Return a timers clock domain ( ie APB1 or APB2 ) prescaler 
+ * Does not work for LPTIM timers
+ * -1 is returned, if the base clock cannot be determined
+  *****************************************************************************/
+int32_t TmrGetClockPrescaler ( TIM_TypeDef *tim )
+{
+    const TIM_TypeDef *iter;
+    uint32_t i;
+    for ( i=0; iter=apb1_timers[i], iter; i++ ) {
+        if ( tim == iter ) return GetAPB1TimerPrescaler();
+    }
+    for ( i=0; iter=apb2_timers[i], iter; i++ ) {
+        if ( tim == iter ) return GetAPB2TimerPrescaler();
+    }
+
+    return -1;
+}
+
+/****************************************************************************** 
  * Return a timers input clock frequency. This can either be the APB1 or
  * APB2 clock.
  * Does not work for LPTIM timers
  * 0 is returned, if the base clock cannot be determined
   *****************************************************************************/
-static uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
+uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
 {
     const TIM_TypeDef *iter;
     uint32_t i;
@@ -271,6 +290,7 @@ static uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
 
     return 0;
 }
+
 
 
 /******************************************************************************

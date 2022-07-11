@@ -20,8 +20,54 @@
 /*
  * Assignment of Timers to busses / clock sources 
  */
-const TIM_TypeDef* apb1_timers[9]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7, TIM12, TIM13, TIM14  };   /* Timers clocked by APB1 */
-const TIM_TypeDef* apb2_timers[5]={TIM1, TIM8,       TIM15, TIM16, TIM17 };                        /* Timers clocked by APB2 */
+const TIM_TypeDef* apb1_timers[9+1]={TIM2, TIM3, TIM4, TIM5,  TIM6,  TIM7, TIM12, TIM13, TIM14, NULL  };   /* Timers clocked by APB1 */
+const TIM_TypeDef* apb2_timers[5+1]={TIM1, TIM8,       TIM15, TIM16, TIM17, NULL };                        /* Timers clocked by APB2 */
+
+
+/****************************************************************************** 
+ * @brief  Return the APB1 timers and APB2 timers clock domain prescalers
+           APB1 and APB2 timer clocks are derived/prescaled from HCLK 
+           - If the prescaler is 1 ( ie APB clock = HCLK ), the timer input 
+             frequency is equal to APB1 clock
+           - If the prescaler is > 1, the timer input clock is TWICE the
+             APB clock
+ * @param  None
+ * @retval Actual APB1/APB2 timers prescaler value
+ *****************************************************************************/
+uint32_t GetAPB1TimerPrescaler(void)
+{
+  uint32_t bits = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE1_Msk ) >> RCC_D2CFGR_D2PPRE1_Pos;
+  if ( (bits & 0b100 ) == 0 )
+     return 1;
+  else 
+     return ( 2 << ( bits & 0b011 ) ) / 2;
+}
+
+uint32_t GetAPB2TimerPrescaler(void)
+{
+  uint32_t bits = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE2_Msk ) >> RCC_D2CFGR_D2PPRE2_Pos;
+  if ( (bits & 0b100 ) == 0 )
+     return 1;
+  else 
+     return ( 2 << ( bits & 0b011 ) ) / 2;
+}
+
+/****************************************************************************** 
+ * @brief  Return the AHB clock domain prescaler.
+           from             HCLK, the timer input frequency is twice the 
+           APB1-Clock. If APB1 clock is equal HCLK, timer input frequency is 
+           equal to APB1 clock
+ * @param  None
+ * @retval Actual APB1 timers input frequency
+ *****************************************************************************/
+uint32_t GetAHBPrescaler (void)
+{
+  uint32_t bits =  ( RCC->D1CFGR & RCC_D1CFGR_HPRE_Msk ) >> RCC_D1CFGR_HPRE_Pos;
+  if ( ( bits & 0b1000 ) == 0 ) 
+    return 1;
+  else 
+    return 2 << ( bits & 0b0111 );
+}
 
 /****************************************************************************** 
  * @brief  Return the APB1-Timers input frequency. If APB1 clock is prescaled 
@@ -33,26 +79,20 @@ const TIM_TypeDef* apb2_timers[5]={TIM1, TIM8,       TIM15, TIM16, TIM17 };     
  *****************************************************************************/
 uint32_t GetAPB1TimerFrequency(void)
 {
-  uint32_t uPclk1 =  HAL_RCC_GetPCLK1Freq();
-  uint32_t uPclk1Prescale = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE1_Msk ) >> RCC_D2CFGR_D2PPRE1_Pos;
-  DEBUG_PRINTF("APB1 clock .........=%d\n", uPclk1);
-  DEBUG_PRINTF("APB1 clock prescaler=%d\n", uPclk1Prescale);
-  if (uPclk1Prescale==RCC_HCLK_DIV1)
-     return uPclk1;
-  else 
-     return uPclk1*2;
+  uint32_t uPclk1         =  HAL_RCC_GetPCLK1Freq();
+  uint32_t uPclk1Prescale = GetAPB1TimerPrescaler();
+  //DEBUG_PRINTF("APB1 clock .........=%d\n", uPclk1);
+  //DEBUG_PRINTF("APB1 clock prescaler=%d\n", uPclk1Prescale);
+  return uPclk1/uPclk1Prescale;
 }
 
 uint32_t GetAPB2TimerFrequency(void)
 {
-  uint32_t uPclk2 =  HAL_RCC_GetPCLK2Freq();
-  uint32_t uPclk2Prescale = (RCC->D2CFGR & RCC_D2CFGR_D2PPRE2_Msk ) >> RCC_D2CFGR_D2PPRE2_Pos;
-  DEBUG_PRINTF("APB2 clock .........=%d\n", uPclk2);
-  DEBUG_PRINTF("APB2 clock prescaler=%d\n", uPclk2Prescale);
-  if (uPclk2Prescale==RCC_HCLK_DIV1)
-     return uPclk2;
-  else 
-     return uPclk2*2;
+  uint32_t uPclk2         =  HAL_RCC_GetPCLK2Freq();
+  uint32_t uPclk2Prescale = GetAPB2TimerPrescaler();
+  //DEBUG_PRINTF("APB2 clock .........=%d\n", uPclk2);
+  //DEBUG_PRINTF("APB2 clock prescaler=%d\n", uPclk2Prescale);
+  return uPclk2/uPclk2Prescale;
 }
 /******************************************************************************
  * Get the STM32H745 peripheral clock frequency. This can be either HSI, CSI or 
