@@ -365,6 +365,7 @@ static void DBG_dump_rcc_bdcr(void)
   }    
 
   dbg_rcc_on_ready("LSE",  RCC->BDCR, RCC_BDCR_LSEON,  RCC_BDCR_LSERDY );
+  dbg_rcc_on_ready("LSI",  RCC->CSR, RCC_CSR_LSION,  RCC_CSR_LSIRDY );
   if ( READ_BIT( RCC->BDCR, RCC_BDCR_LSEON ) ) {
     DBG_dump_bitvalue("LSE bypass", RCC->BDCR, RCC_BDCR_LSEBYP);
     DBG_dump_bitvalue("LSE CSS on", RCC->BDCR, RCC_BDCR_LSECSSON);

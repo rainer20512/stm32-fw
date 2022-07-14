@@ -588,6 +588,13 @@
       // #define QSPI1_USE_DMA Not implemented yet 
   #endif
 
+  #if USE_SDMMC1 > 0
+   /* Interrupt driven, 4 lines */
+    #define USE_SDMMC1_IRQ
+    #undef  USE_SDMMC1_8LINES
+    #define SDMMC_DEV       HW_SDMMC1
+  #endif
+
   #if USE_FATFS > 0
       #define FATFS_DEV     XSPI_DEV
       #define FATFS_HND     QSpi1Handle
@@ -600,19 +607,35 @@
 
   #define DEFAULT_STOP_MODE                2
 
-  #if USE_THPSENSOR > 0  
-      /* User I2C is I2C1 with PB6=SCL, PB7=SDA                                  */
-      #define USE_I2C1
-      #define I2C
-      #undef  USE_I2CDEV1_ALTN1
-      #undef  USE_I2CDEV1_ALTN2
-      #define I2C1_CLKSOURCE           I2cClock_HSI
-      #define I2C1_SPEED               I2c_StandardMode
-      #define I2C1_USE_IRQ
-      #define I2C1_USE_DMA
-      #define USER_I2C1
+
+#elif defined(STM32H7_OPENMV)
+
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM3
+    #define RTCTIMER_IRQn           LPTIM3_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM3_IRQHandler
+
+
+    #define USE_USART3             /* ALTN1 Pinout: PB10=Tx, PB11=Rx */
+    #define USE_USART3_ALTN1
+    #define COM3_USE_TX_DMA
+    //#define COM3_USE_RX_DMA
+    #define USE_USART3_DEBUG
+
+  // #define USE_ADC3
+  #define ADC3_USE_IRQ
+  #define ADC3_USE_DMA 
+  #define USER_ADC      HW_ADC3
+
+  #if USE_SDMMC1 > 0
+   /* Interrupt driven, 4 lines */
+    #define USE_SDMMC1_IRQ
+    #undef  USE_SDMMC1_8LINES
+    #define SDMMC_DEV       HW_SDMMC1
   #endif
 
+  #define DEFAULT_STOP_MODE                2
 
 #elif defined(STM32H743EVAL2)
 

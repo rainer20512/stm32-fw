@@ -164,6 +164,8 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_pcd_ex.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_sd.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_sdmmc.c" />
       </folder>
       <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_eth.c" />
     </folder>

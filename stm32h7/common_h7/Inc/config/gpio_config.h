@@ -48,6 +48,19 @@
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
 */
 
+#elif defined(STM32H7_OPENMV)
+  // LEDs  
+  #define IO_00                             { GPIO_PIN_0,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "Led rd" }
+  #define IO_01                             { GPIO_PIN_1,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "Led gn" }
+  #define IO_02                             { GPIO_PIN_2,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "Led bl" }
+  #define USERLEDNUM                        3
+  #define USERLEDS                          { 0, 1, 2, } 
+
+  #define IO_03_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_03                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_03_IRQ, "Tamper" }
+  #define IO_NUM                            4
+
+
 #elif defined(STM32H742REF)
   // LEDs  
   #define IO_00                             { GPIO_PIN_12, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }

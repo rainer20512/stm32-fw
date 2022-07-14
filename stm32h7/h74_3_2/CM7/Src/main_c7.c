@@ -129,7 +129,7 @@ int main(void)
      */
 
     TM1637PinT clk = { GPIOA, 3 };
-    TM1637PinT dio = { GPIOC, 0 };
+    TM1637PinT dio = { GPIOC, 3 };
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
@@ -179,8 +179,13 @@ int main(void)
     SystemClock_SetConfiguredClock();
     STATUS(11);
 
+#if HAS_NO_LSE > 0
+    // Switch LSI Clock on 
+    LSIClockConfig(true, true);
+#else
     // Switch LSE Clock on 
     LSEClockConfig(true, true);
+#endif
 
     #if USE_USB > 0
         stm32h7_enable_hsi48();

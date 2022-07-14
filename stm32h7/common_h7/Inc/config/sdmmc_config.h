@@ -44,16 +44,16 @@
 #if USE_SDMMC > 0
 
     #if USE_SDMMC1 > 0
-        #define SDMMC1_CK                         { GPIO_PIN_12, GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 CK"  }
-        #define SDMMC1_CMD                        { GPIO_PIN_2,  GPIOD, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 CMD"  }
-        #define SDMMC1_D0                         { GPIO_PIN_8,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D0"  }
-        #define SDMMC1_D1                         { GPIO_PIN_9,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D1"  }
-        #define SDMMC1_D2                         { GPIO_PIN_10, GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D2"  }
-        #define SDMMC1_D3                         { GPIO_PIN_11, GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D3"  }
-        #define SDMMC1_D4                         { GPIO_PIN_8,  GPIOB, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D4"  }
-        #define SDMMC1_D5                         { GPIO_PIN_9,  GPIOB, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D5"  }
-        #define SDMMC1_D6                         { GPIO_PIN_6,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D6"  }
-        #define SDMMC1_D7                         { GPIO_PIN_7,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D7"  }
+        #define SDMMC1_CK                         { GPIO_PIN_12, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 CK"  }
+        #define SDMMC1_CMD                        { GPIO_PIN_2,  GPIOD, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 CMD"  }
+        #define SDMMC1_D0                         { GPIO_PIN_8,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D0"  }
+        #define SDMMC1_D1                         { GPIO_PIN_9,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D1"  }
+        #define SDMMC1_D2                         { GPIO_PIN_10, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D2"  }
+        #define SDMMC1_D3                         { GPIO_PIN_11, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D3"  }
+        #define SDMMC1_D4                         { GPIO_PIN_8,  GPIOB, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D4"  }
+        #define SDMMC1_D5                         { GPIO_PIN_9,  GPIOB, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D5"  }
+        #define SDMMC1_D6                         { GPIO_PIN_6,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D6"  }
+        #define SDMMC1_D7                         { GPIO_PIN_7,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D7"  }
 
 
         /* Definition for SDMMC1 NVIC */
@@ -64,18 +64,18 @@
     #endif // USE_SDMMC1 > 0 
 
     #if USE_SDMMC2 > 0
-        #define SDMMC2_CK                         { GPIO_PIN_6,  GPIOD, GPIO_AF11_SDMMC2, GPIO_PULLUP, "SDIO2 CK"  }
-        #define SDMMC2_CMD                        { GPIO_PIN_7,  GPIOD, GPIO_AF11_SDMMC2, GPIO_PULLUP, "SDIO2 CMD"  }
-        #define SDMMC2_CK                         { GPIO_PIN_1,  GPIOC, GPIO_AF9_SDMMC2,  GPIO_PULLUP, "SDIO2 CK"  }
-        #define SDMMC2_CMD                        { GPIO_PIN_0,  GPIOA, GPIO_AF11_SDMMC2, GPIO_PULLUP, "SDIO2 CMD"  }
-        #define SDMMC2_D0                         { GPIO_PIN_14, GPIOB, GPIO_AF9_SDMMC2,  GPIO_PULLUP, "SDIO2 D0"  }
-        #define SDMMC2_D1                         { GPIO_PIN_15, GPIOB, GPIO_AF9_SDMMC2,  GPIO_PULLUP, "SDIO2 D1"  }
-        #define SDMMC2_D2                         { GPIO_PIN_3,  GPIOB, GPIO_AF9_SDMMC2,  GPIO_PULLUP, "SDIO2 D2"  }
-        #define SDMMC2_D3                         { GPIO_PIN_4,  GPIOB, GPIO_AF9_SDMMC2,  GPIO_PULLUP, "SDIO2 D3"  }
-        #define SDMMC2_D4                         { GPIO_PIN_8,  GPIOB, GPIO_AF10_SDMMC2, GPIO_PULLUP, "SDIO2 D4"  }
-        #define SDMMC2_D5                         { GPIO_PIN_9,  GPIOB, GPIO_AF10_SDMMC2, GPIO_PULLUP, "SDIO2 D5"  }
-        #define SDMMC2_D6                         { GPIO_PIN_6,  GPIOC, GPIO_AF10_SDMMC2, GPIO_PULLUP, "SDIO2 D6"  }
-        #define SDMMC2_D7                         { GPIO_PIN_7,  GPIOC, GPIO_AF10_SDMMC2, GPIO_PULLUP, "SDIO2 D7"  }
+        #define SDMMC2_CK                         { GPIO_PIN_6,  GPIOD, GPIO_AF11_SDMMC2, GPIO_NOPULL, "SDIO2 CK"  }
+        #define SDMMC2_CMD                        { GPIO_PIN_7,  GPIOD, GPIO_AF11_SDMMC2, GPIO_NOPULL, "SDIO2 CMD"  }
+        #define SDMMC2_CK                         { GPIO_PIN_1,  GPIOC, GPIO_AF9_SDMMC2,  GPIO_NOPULL, "SDIO2 CK"  }
+        #define SDMMC2_CMD                        { GPIO_PIN_0,  GPIOA, GPIO_AF11_SDMMC2, GPIO_NOPULL, "SDIO2 CMD"  }
+        #define SDMMC2_D0                         { GPIO_PIN_14, GPIOB, GPIO_AF9_SDMMC2,  GPIO_NOPULL, "SDIO2 D0"  }
+        #define SDMMC2_D1                         { GPIO_PIN_15, GPIOB, GPIO_AF9_SDMMC2,  GPIO_NOPULL, "SDIO2 D1"  }
+        #define SDMMC2_D2                         { GPIO_PIN_3,  GPIOB, GPIO_AF9_SDMMC2,  GPIO_NOPULL, "SDIO2 D2"  }
+        #define SDMMC2_D3                         { GPIO_PIN_4,  GPIOB, GPIO_AF9_SDMMC2,  GPIO_NOPULL, "SDIO2 D3"  }
+        #define SDMMC2_D4                         { GPIO_PIN_8,  GPIOB, GPIO_AF10_SDMMC2, GPIO_NOPULL, "SDIO2 D4"  }
+        #define SDMMC2_D5                         { GPIO_PIN_9,  GPIOB, GPIO_AF10_SDMMC2, GPIO_NOPULL, "SDIO2 D5"  }
+        #define SDMMC2_D6                         { GPIO_PIN_6,  GPIOC, GPIO_AF10_SDMMC2, GPIO_NOPULL, "SDIO2 D6"  }
+        #define SDMMC2_D7                         { GPIO_PIN_7,  GPIOC, GPIO_AF10_SDMMC2, GPIO_NOPULL, "SDIO2 D7"  }
 
 
         /* Definition for SDMMC1 NVIC */

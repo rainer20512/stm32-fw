@@ -18,7 +18,6 @@
  extern "C" {
 #endif
 
-
 typedef struct SdmmcHandleType {
     SD_HandleTypeDef halHandle ;    /* Associated HAL Handle */ 
 } SdmmcHandleT; 

@@ -316,7 +316,7 @@ static const uint32_t pllRdyFlags[MAX_PLLNUM] = PLLRDY_FLAGS;
  * @param pllnum - index of PLL to check
  * @returns 1, if in use, 0 if switched off
  *****************************************************************************/
-uint32_t Pll_InUse( uint32_t pllnum )
+uint32_t PLL_InUse( uint32_t pllnum )
 {
     return ( RCC->CR & pllOnFlags[pllnum] ) != 0 ? 1 : 0; 
 }
@@ -326,7 +326,7 @@ uint32_t Pll_InUse( uint32_t pllnum )
  * @param pllnum - index of PLL to start
  * @returns PLL_CONFIG_OK, if ok, returns PLL_CONFIG_TIMEOUT if unsuccessful
  *****************************************************************************/
-int32_t Pll_Start(uint32_t pllnum )
+int32_t PLL_Start(uint32_t pllnum )
 {
 
     if ( pllnum >= MAX_PLLNUM ) return PLL_CONFIG_PARAM_ERROR;
@@ -352,7 +352,7 @@ int32_t Pll_Start(uint32_t pllnum )
  *          PLL_CONFIG_PARAM_ERROR if pllnum invalid or if trying to stop
  *          a PLL that supplies the system clock
  *****************************************************************************/
-int32_t Pll_Stop(uint32_t pllnum )
+int32_t PLL_Stop(uint32_t pllnum )
 {
 
     if ( pllnum >= MAX_PLLNUM ) return PLL_CONFIG_PARAM_ERROR;
@@ -378,10 +378,10 @@ int32_t Pll_Stop(uint32_t pllnum )
  * Restart all PLLs, that are flagged as "started" in "pll_use_flag"
  * This functions is used to restart all active PLLs after wakeup from STOP
  *****************************************************************************/
-void Pll_Restart(void)
+void PLL_Restart(void)
 {
     for ( uint32_t i = 0;i < MAX_PLLNUM; i++ ) 
-        if ( pll_use_flags & ( 1 << i ) ) Pll_Start(i);
+        if ( pll_use_flags & ( 1 << i ) ) PLL_Start(i);
 
 }
 /******************************************************************************
@@ -588,14 +588,14 @@ static uint32_t Pll_CheckN ( uint32_t pllnum, uint32_t n_val )
  *          or PLL_CONFIG_PARAM_ERROR if no valid clock source is given
  * @Note Clocksource can be set only if NO PLL is active!
  *****************************************************************************/
-uint32_t Pll_SetClockSource( uint32_t clocksource, uint32_t srcclk_khz)
+uint32_t PLL_SetClockSource( uint32_t clocksource, uint32_t srcclk_khz)
 {
     /* Check clock source */
     if (!IS_RCC_PLLSOURCE(clocksource) ) return PLL_CONFIG_PARAM_ERROR;
 
     /* Check for all PLLs being inactive */
     for ( uint32_t i = 0; i < MAX_PLLNUM; i++ )
-        if ( Pll_InUse(i) ) return PLL_CONFIG_INUSE;
+        if ( PLL_InUse(i) ) return PLL_CONFIG_INUSE;
         
     /* Set the PLL clock source and save the pll input frequency */
     __HAL_RCC_PLL_PLLSOURCE_CONFIG(clocksource);
@@ -605,7 +605,7 @@ uint32_t Pll_SetClockSource( uint32_t clocksource, uint32_t srcclk_khz)
 }
 
 /******************************************************************************
- * Return the PLL input frequency as set by "Pll_SetClockSource"
+ * Return the PLL input frequency as set by "PLL_SetClockSource"
  * @returns PLL input frequency in kHz or PLL_CONFIG_NOTSET, if not set before
  *****************************************************************************/
 int32_t Pll_GetInputFrqKhz ( void )
@@ -621,10 +621,10 @@ int32_t Pll_GetInputFrqKhz ( void )
  *          PLL_CONFIG_PARAM_ERROR if illegal pllnum is given
  * @note    The PLL is not activated! This has to be done separately.
  *****************************************************************************/
-int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
+int32_t PLL_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
 {
     /* PLL or PLL line can only configured, if whole PLL is inactive */
-    if ( Pll_InUse(pllnum) ) return PLL_CONFIG_INUSE;
+    if ( PLL_InUse(pllnum) ) return PLL_CONFIG_INUSE;
 
 #if defined(STM32H7_FAMILY)
     /* 
@@ -757,7 +757,7 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
             return PLL_CONFIG_PARAM_ERROR;
     } // switch
 #else
-    #error "No Implemetation of ""Pll_Set"""
+    #error "No Implemetation of ""PLL_Set"""
 #endif
 
     return PLL_CONFIG_OK;
@@ -777,7 +777,7 @@ int32_t Pll_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
  * @param pll_inp_khz - actual PLL input frequency in kHz
  * 
  *****************************************************************************/
-static int32_t Pll_SetupMN ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_out_khz, uint32_t pll_inp_khz )
+static int32_t PLL_SetupMN ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_out_khz, uint32_t pll_inp_khz )
 {
   uint32_t pll_khz_behind_m;    /* PLL frq behind the M stage (VCO) */
   uint32_t pll_delta_m;         /* increments for VCO to reach the minimum frq */
@@ -864,7 +864,7 @@ int32_t PLL_Configure (RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_li
     PLL->PLLN =work;
   } else {
     /* otherwise compute M and N and check for errors */
-    int32_t work = Pll_SetupMN( PLL, pllnum, pll_out_khz, pll_input_frq);
+    int32_t work = PLL_SetupMN( PLL, pllnum, pll_out_khz, pll_input_frq);
     if ( work < 0 ) return work;
   }
 
@@ -873,7 +873,8 @@ int32_t PLL_Configure (RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_li
   uint32_t pqr_div = pll_behind_n / pll_out_khz;
   if ( pqr_div > pll_restriction[pllnum].pqrdiv_max ) return  PLL_CONFIG_VIOLATION_PQR;
 
-
+  /* check, whether the desired frequency is exactly hit */
+  if ( pll_behind_n / pqr_div != pll_out_khz ) return PLL_CONFIG_UNABLE;
 
   PLL->PLLP = PLL->PLLQ = PLL->PLLR = PLL_LINE_UNUSED;
   switch(pll_line) {
@@ -918,7 +919,7 @@ int32_t PLL_Configure_SYSCLK (RCC_OscInitTypeDef *RCC_OscInitStruct, uint32_t pl
 
     int32_t ret; 
 
-    ret = Pll_SetClockSource(RCC_OscInitStruct->PLL.PLLSource, pll_inp_khz);
+    ret = PLL_SetClockSource(RCC_OscInitStruct->PLL.PLLSource, pll_inp_khz);
     if ( ret < 0 ) return ret;
 
     ret =  PLL_Configure(&RCC_OscInitStruct->PLL, SYSCLK_PLL, SYSCLK_PLL_LINE, pll_out_khz);
@@ -928,3 +929,26 @@ int32_t PLL_Configure_SYSCLK (RCC_OscInitTypeDef *RCC_OscInitStruct, uint32_t pl
     return PLL_CONFIG_OK;
 }
 
+/******************************************************************************
+ * Configure one line of one PLL 
+ * @param pllnum      - Number of the PLL to be configured
+ * @param pllline     - Line Number of the PLL to be configured
+ * @returns           - any of the PLL_CONFIG_XXXX values defined in pll.h
+ * @Note    1. The whole PLL whose line is to be configured must be unused pon call
+ * @Note    2. Due to already set M and N values, the desired output may be unable
+ *             to be hit exactly. In this case PLL_CONFIG_UNABLE is returned
+ * @Note    3. PLL is not started!
+  *****************************************************************************/
+int32_t PLL_Configure_Line ( uint32_t pllnum, uint32_t pllline, uint32_t pll_out_khz )
+{
+    RCC_PLLInitTypeDef PLL;
+    int32_t ret;
+
+    /* Try to setup the PLL parameters */
+    ret = PLL_Configure(&PLL, pllnum, pllline, pll_out_khz);
+    if ( ret < 0 ) return ret;
+
+    /* If successful configured, setup PLL */
+    ret = PLL_Set ( &PLL, pllnum );
+    if ( ret < 0 ) return ret;
+}

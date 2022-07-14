@@ -147,6 +147,13 @@ void DBG_dump_uint32_hex (const char *text, uint32_t num )
   DEBUG_PRINTF(" 0x%08x\n", num );
 }
 
+void DBG_dump_uint32_hex_dec (const char *text, uint32_t num )
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(" 0x%08x(%d)\n", num,num );
+}
+
 void DBG_dump_uint32_kb (const char *text, uint32_t num )
 {
   DBG_do_indent();

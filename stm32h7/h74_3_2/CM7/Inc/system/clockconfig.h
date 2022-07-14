@@ -81,6 +81,7 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI );
 
 void SystemClock_SetConfiguredClock(void);
 void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock);
+void LSIClockConfig(bool bLSIon, bool bUseAsRTCClock);
 void HSIClockConfig(bool bHSIon);
 
 uint32_t Get_SysClockFrequency  ( void );

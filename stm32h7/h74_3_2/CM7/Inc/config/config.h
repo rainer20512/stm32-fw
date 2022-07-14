@@ -24,7 +24,7 @@
 //#define STM32H742REF
 //#define STM32H743EVAL2
 #define STM32H7_DEVEBOX
-
+//#define STM32H7_OPENMV
 /*
  ********************************************************************************
  * Application selection
@@ -66,7 +66,7 @@
 #define USE_FATFS                   0
 #define USE_BDMA                    0
 #define USE_LTDC                    0
-#define USE_SDMMC1                  0
+#define USE_SDMMC1                  1
 
 
 /* Choose one in case of USE_ETH == 1 
@@ -171,11 +171,13 @@
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
 
-#elif defined(STM32H742REF)
+#elif defined(STM32H742REF) || defined(STM32H7_OPENMV)
     #define  HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       16000000
-
+    #if defined(STM32H7_OPENMV)
+        #define HAS_NO_LSE          1
+    #endif
 #elif defined(STM32H743EVAL2) || defined(STM32H7_DEVEBOX)
     #define  HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS
@@ -184,6 +186,7 @@
 #else
      #error "Missing HSE definitions"
 #endif
+
 
 /* Logging to FAT filesystem requires active FAT FS support */
 #if LOGTO_FATFS > 0 && USE_FATFS == 0

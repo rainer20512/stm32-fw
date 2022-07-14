@@ -70,6 +70,7 @@ void DBG_strpadright(const char *text, uint32_t desiredlen, char padchar );
 void DBG_strpadright2(const char *text1, const char *text2, uint32_t desiredlen, char padchar );
 void DBG_dump_uint32_binary (const char *text, uint32_t num );
 void DBG_dump_uint32_hex (const char *text, uint32_t num );
+void DBG_dump_uint32_hex_dec (const char *text, uint32_t num );
 void DBG_dump_uint32_kb (const char *text, uint32_t num );
 void DBG_dump_section(const char *text, uint32_t start, uint32_t end, bool bIn_KByte  );
 void DBG_dump_section_useage (const char *text, uint32_t used, uint32_t total );

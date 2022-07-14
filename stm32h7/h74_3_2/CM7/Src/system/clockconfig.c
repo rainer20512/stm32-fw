@@ -217,8 +217,12 @@ static uint32_t SetupSysClkProvider ( RCC_OscInitTypeDef *o, RCC_ClkInitTypeDef 
     /* now handle the setup of the PLL and start it */
     if ( success && clk->SYSCLKSource == RCC_SYSCLKSOURCE_PLLCLK ) { 
       o->PLL.PLLState = RCC_PLL_ON;
-      success = Pll_Set( &o->PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
-      if ( success ) success = Pll_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
+      success = PLL_Set( &o->PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
+      #if USE_SDMMC > 0
+        PLL_Configure_Line ( SYSCLK_PLL, PLL_LINE_Q, 200000 );
+      #endif
+
+      if ( success ) success = PLL_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
     }
     
     return success;
@@ -350,7 +354,7 @@ static void SwitchOffHSI(RCC_OscInitTypeDef *osc)
  *****************************************************************************/
 static void SwitchOffSysClkPll(void)
 {
-    if ( Pll_Stop(SYSCLK_PLL) != PLL_CONFIG_OK ) {
+    if (PLL_Stop(SYSCLK_PLL) != PLL_CONFIG_OK ) {
         Error_Handler_XX(-4, __FILE__, __LINE__ );
     }
 }
@@ -611,7 +615,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
      if ( HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK ) Error_Handler_XX(-6, __FILE__, __LINE__); 
      
      /* Stop PLL */
-     Pll_Stop(SYSCLK_PLL);
+    PLL_Stop(SYSCLK_PLL);
 
      /* clear Osc and Clk init structures after use */
      memset(&RCC_OscInitStruct,0, sizeof(RCC_OscInitTypeDef));
@@ -659,6 +663,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   }
 
   PLL_Configure_SYSCLK(&RCC_OscInitStruct, pll_khz, pll_inp_khz);
+
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   
   DoClockTransition(pll_khz,&RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency,vosrange, -4);
@@ -799,21 +804,12 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   RCC_OscInitStruct.LSEState = bLSEon ? RCC_LSE_ON : RCC_LSE_OFF;
 
-  /*
-   * All platform except DevEBox H7 will run with lowest driving strength
-   */
-  if ( bLSEon ) {
-      #if defined(STM32H7_DEVEBOX )
-          __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_MEDIUMHIGH);
-      #else
-          /* Set to lowest driving strngth */
-          __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
-      #endif
-  }
+  if ( bLSEon ) __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+ 
 
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
       Error_Handler_XX(-11, __FILE__, __LINE__);
-  
+      
  
   /* Set LSE as RTC clock source, if desired */
   if ( bUseAsRTCClock )  {
@@ -821,6 +817,38 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
       PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
       if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
           Error_Handler_XX(-11, __FILE__, __LINE__);
+          
+  }
+
+}
+
+/* LSI --- LSI --- LSI --- LSI --- LSI --- LSI --- LSI --- LSI --- LSI --- LS*/
+ /*****************************************************************************
+  * @brief  Configure LSI
+  * @param  bLSIon - switch LSI on or off
+  * @param  bUseAsRTCClock - configure RTC to use LSI as clocksource
+  ****************************************************************************/
+void LSIClockConfig(bool bLSIon, bool bUseAsRTCClock)
+{
+  RCC_OscInitTypeDef        RCC_OscInitStruct;
+  RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
+  
+  /*Switch LSI on or OFF */
+  RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSI;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.LSIState = bLSIon ? RCC_LSI_ON : RCC_LSI_OFF;
+
+  if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+      Error_Handler_XX(-11, __FILE__, __LINE__);
+      
+ 
+  /* Set LSI as RTC clock source, if desired */
+  if ( bUseAsRTCClock )  {
+      PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+      PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+      if(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+          Error_Handler_XX(-11, __FILE__, __LINE__);
+          
   }
 
 }
