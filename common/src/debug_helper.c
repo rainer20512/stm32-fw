@@ -98,11 +98,21 @@ void DBG_printf_indent(const char *format, ...)
 
 }
 
+void DBG_dump_text(const char *text) 
+{
+  DBG_do_indent();
+  DEBUG_PRINTF(" %s\n", text);
+}
+
 void DBG_dump_textvalue(const char *text, const char *content ) 
 {
   DBG_do_indent();
-  DBG_strpadright(text, myDesiredLen, '.');
-  DEBUG_PRINTF(" %s\n", content);
+  if ( content ) {
+      DBG_strpadright(text, myDesiredLen, '.');
+      DEBUG_PRINTF(" %s\n", content);
+  } else {
+      DEBUG_PRINTF(" %s\n", text);
+  }
 }
 
 
@@ -145,6 +155,21 @@ void DBG_dump_uint32_hex (const char *text, uint32_t num )
   DBG_do_indent();
   DBG_strpadright(text, myDesiredLen, '.');
   DEBUG_PRINTF(" 0x%08x\n", num );
+}
+
+void DBG_dump_uint8_hex (const char *text, uint8_t num )
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(" 0x%02x\n", num );
+}
+
+
+void DBG_dump_uint16_hex (const char *text, uint16_t num )
+{
+  DBG_do_indent();
+  DBG_strpadright(text, myDesiredLen, '.');
+  DEBUG_PRINTF(" 0x%04x\n", num );
 }
 
 void DBG_dump_uint32_hex_dec (const char *text, uint32_t num )
@@ -232,6 +257,16 @@ void DBG_dump_endisvalue(const char *text, uint32_t regval, uint32_t bitval )
   DEBUG_PRINTF(" %sabled\n", regval & bitval ? "En" : "Dis");
 }
 
+void DBG_dump_onlyifset(const char *text, uint32_t regval, uint32_t bitval ) 
+{
+  if ( regval & bitval ) {
+      DBG_do_indent();
+      DBG_strpadright(text, myDesiredLen, '.');
+      DEBUG_PRINTF("Set\n");
+  }
+}
+
+
 /*
  * Dump a power-of-2 value
  * @param  exp - exponent of 2
@@ -267,6 +302,18 @@ void print_hexXX(uint8_t i)
   } else {
     DEBUG_PUTC(x+'0');
   }	
+}
+
+const char * const hal_err_txt[]={"Ok", "Error", "Busy", "Timeout"};
+/******************************************************
+ * return error text for HAL return status value
+ *****************************************************/
+const char* DBG_get_hal_errtxt(HAL_StatusTypeDef code )
+{
+  if ( code < sizeof(hal_err_txt)/sizeof(char *) ) 
+    return hal_err_txt[code];
+  else
+    return "??? ";
 }
 
 

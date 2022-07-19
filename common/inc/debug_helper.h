@@ -69,6 +69,8 @@ void DBG_printf_indent(const char *format, ...);
 void DBG_strpadright(const char *text, uint32_t desiredlen, char padchar );
 void DBG_strpadright2(const char *text1, const char *text2, uint32_t desiredlen, char padchar );
 void DBG_dump_uint32_binary (const char *text, uint32_t num );
+void DBG_dump_uint8_hex (const char *text, uint8_t num );
+void DBG_dump_uint16_hex (const char *text, uint16_t num );
 void DBG_dump_uint32_hex (const char *text, uint32_t num );
 void DBG_dump_uint32_hex_dec (const char *text, uint32_t num );
 void DBG_dump_uint32_kb (const char *text, uint32_t num );
@@ -81,11 +83,14 @@ void DBG_dump_onoffvalue(const char *text, uint32_t regval, uint32_t bitval);
 void DBG_dump_onoffvalue2(const char *text, uint32_t regval, uint32_t bitval, const char *append); 
 void DBG_dump_setresetvalue(const char *text, uint32_t regval, uint32_t bitval );
 void DBG_dump_endisvalue(const char *text, uint32_t regval, uint32_t bitval ); 
+void DBG_dump_onlyifset(const char *text, uint32_t regval, uint32_t bitval ); 
 void DBG_dump_po2 (const char *text, uint32_t exp );
 
 void CRLF(void);
 void print_hexXX(uint8_t i);
 void print_hexXXXX(uint16_t i);
+const char* DBG_get_hal_errtxt(HAL_StatusTypeDef code );
+
 #if ( DEBUG_RFM_STATUS > 0 || DEBUG_DUMP_RFM > 0 || DEBUG_DUMP_KEYS > 0 || DEBUG_CHECK_SEC > 0 || DEBUG_PRINT_RTC_TICKS > 0 || DEBUG_MEM_CHECK > 0 || DEBUG_SLEEP_MODE > 0 || DEBUG_PRINT_ADDITIONAL_TIMESTAMPS > 0 ) || USE_DISPLAY > 0
     void print_dec_number ( uint16_t num, uint8_t digits, bool bLeadingZeros);
     void print_decSXX(int8_t i);

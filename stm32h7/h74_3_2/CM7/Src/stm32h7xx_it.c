@@ -27,8 +27,13 @@
 #include "config/adc_config.h"
 
 #if USE_QSPI > 0
-    #include "config/qspi_config.h"
+    #include "dev/qspi_config.h"
 #endif
+
+#if USE_SDMMC > 0
+    #include "dev/sdmmc_dev.h"
+#endif
+
 #if USE_QENCODER > 0
     #include "config/qencode_config.h"
 #endif 
@@ -732,6 +737,25 @@ void DebugMon_Handler(void)
 #endif
 
 /******************************************************************************
+ * SDMMC interrupt handlers
+ *****************************************************************************/
+#if USE_SDMMC1 > 0 
+    void SDMMC1_IRQHandler(void)
+    {
+       HAL_SD_IRQHandler(&Sdmmc1Handle.halHandle);
+    }
+#endif
+
+#if USE_SDMMC2 > 0 
+    void SDMMC2_IRQHandler(void)
+    {
+       HAL_SD_IRQHandler(&Sdmmc2Handle.halHandle);
+    }
+#endif
+
+
+
+/******************************************************************************
  * CAN interrupt handlers
  *****************************************************************************/
 #if USE_CAN > 0
@@ -796,6 +820,8 @@ void DebugMon_Handler(void)
       HAL_PCD_IRQHandler(&hpcd);
     }
 #endif
+
+
 /**
   * @brief  This function handles DMA2 Stream 6 interrupt request.
   * @param  None

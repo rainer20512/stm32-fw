@@ -584,7 +584,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   bool bBaseClkSet = false;         /* flag for "PLL base clock has been set"   */
 
   /* Check constraints */
-  if ( pll_khz > 480000 || pll_khz < 64000) {
+  if ( pll_khz > 480000 || pll_khz < 50000) {
     Error_Handler_XX(-9, __FILE__, __LINE__);
   }
 
@@ -732,6 +732,9 @@ void SystemClock_Set(CLK_CONFIG_T clk_config_byte, bool bSwitchOffMSI )
 /* Note: Do not use PLL with HSI as input at higher frequencies, this will lead */
 /*       to unpredictable results / hanging system                              */
 /*------------------------------------------------------------------------------*/ 
+        case CLK_PLL_VRNG1_50MHZ_1WS:
+           SystemClock_PLL_xxxMHz_Vrange_01(50000, true, false);
+            break;
         case  CLK_PLL_VRNG1_100MHZ_1WS:
             SystemClock_PLL_xxxMHz_Vrange_01(100000, true, false);
             break;

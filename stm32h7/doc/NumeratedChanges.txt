@@ -70,3 +70,6 @@ Within the sources, the changes are marked as **** <num> ****
     ToDo: Restart PLLs after STOP when SYSCLK source is not a PLL
 
 
+006 In HAL-Driver-Directory stm327_hal_sd.c/stm327_hal_sd.h:
+    made "SD_SendStatus" public. 
+    !! has to be redone when changing the HAL-Firmware-Version !!

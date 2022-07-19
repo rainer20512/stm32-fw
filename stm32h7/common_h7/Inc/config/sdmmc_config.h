@@ -44,9 +44,9 @@
 #if USE_SDMMC > 0
 
     #if USE_SDMMC1 > 0
-        #define SDMMC1_CK                         { GPIO_PIN_12, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 CK"  }
+        #define SDMMC1_CK                         { GPIO_PIN_12, GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 CK"  }
         #define SDMMC1_CMD                        { GPIO_PIN_2,  GPIOD, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 CMD"  }
-        #define SDMMC1_D0                         { GPIO_PIN_8,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D0"  }
+        #define SDMMC1_D0                         { GPIO_PIN_8,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D0"  }
         #define SDMMC1_D1                         { GPIO_PIN_9,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D1"  }
         #define SDMMC1_D2                         { GPIO_PIN_10, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D2"  }
         #define SDMMC1_D3                         { GPIO_PIN_11, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D3"  }

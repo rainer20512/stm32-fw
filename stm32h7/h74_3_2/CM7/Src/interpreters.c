@@ -49,6 +49,10 @@
     #include "sensors/thp_sensor.h"
 #endif
 
+#if USE_SDMMC > 0
+    #include "dev/sdmmc_dev.h"
+#endif
+
 /** @addtogroup CmdLine
   * @{
   */ 
@@ -2216,6 +2220,95 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(FMC);
 #endif
 
+#if USE_SDMMC > 0
+
+    /*********************************************************************************
+     * @brief  Submenu for SDMMC test functions
+     *         
+     * @retval true on success, false otherwise
+     *
+     * @note  will try to read as many parameters as needed
+     ********************************************************************************/
+#define MAX_BUFSIZE   8192
+static uint8_t buffer[MAX_BUFSIZE];
+
+
+
+    static bool SDMMC_Menu ( char *cmdline, size_t len, const void * arg )
+    {
+      char *word;
+      size_t wordlen;
+      uint32_t num;
+      uint32_t addr;
+      bool ret;
+      
+      UNUSED(cmdline);UNUSED(len);
+
+      switch((uint32_t)arg) {
+        case 0:
+            SDMMC_DebugInfo(&HW_SDMMC1);
+            break;
+        case 1:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Read <blocknum> \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            ret =SDMMC_ReadBlocks(&Sdmmc1Handle, buffer, num, 1);
+            if (!ret) {
+                DEBUG_PRINTF("ReadBlocks failed\n");
+                return false;
+            }
+            for ( uint32_t j  = 0; j < 2048; j++ ) {
+                if ( j % 16 == 0 ) printf ( "0x%08x",j );
+                printf(" %02x", buffer[j]);
+                if ( (j+1) % 16 == 0 ) puts ("");
+            }
+            break;
+        case 2:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: Write <blocknum> <byte> \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            memset(buffer,(uint8_t)addr, MAX_BUFSIZE);
+            ret =SDMMC_WriteBlocks(&Sdmmc1Handle, buffer, num, 1);
+            if (!ret) {
+                DEBUG_PRINTF("WriteBlocks failed\n");
+                return false;
+            }
+
+            break;
+        default:
+          DEBUG_PUTS("SDMMC_Menu: command not implemented");
+      } /* end switch */
+
+      return true;
+    }
+
+    static const char *pmtSDMMC (void)
+    {
+      return "Sdmmc";
+    }
+
+
+    static const CommandSetT cmdSDMMC[] = {
+        { "Dump",                     ctype_fn, .exec.fn = SDMMC_Menu, VOID(0), "Dump SDMMC Infos" },
+        { "Read"          ,           ctype_fn, .exec.fn = SDMMC_Menu, VOID(1), "Read" },
+        { "Write",          ctype_fn, .exec.fn = SDMMC_Menu, VOID(2), "Write" },
+        { "Set Std Filter",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(3), "Set 11 bit filter id" },
+        { "Set Ext Filter",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(4), "Set 28 bit filter id" },
+        { "Set Tx ID",                ctype_fn, .exec.fn = SDMMC_Menu, VOID(5), "Set Msg ID for Xmit" },
+        { "Tx <n> Len <m>",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(6), "Tx <n> Msg of Len <m>" },
+        { "Start/Stop CAN",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(9), "Start(1) /Stop(0) CAN" },
+    };
+    ADD_SUBMODULE(SDMMC);
+#endif
+
 
 #include "eeprom.h"
 
@@ -2354,6 +2447,9 @@ static const CommandSetT cmdBasic[] = {
 #endif
 #if USE_FMC > 0
   { "FMC test",        ctype_sub, .exec.sub = &mdlFMC,         0,       "Test FMC functions" },
+#endif
+#if USE_SDMMC > 0
+  { "SDMMC test",      ctype_sub, .exec.sub = &mdlSDMMC,       0,       "Test SDMMC functions" },
 #endif
 #if LOGTO_FATFS > 0
   { "Write Logfile",    ctype_fn, .exec.fn = MainMenu,        VOID(2), "Write Logfile" },

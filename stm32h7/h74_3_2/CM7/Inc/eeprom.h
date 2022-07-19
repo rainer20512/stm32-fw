@@ -92,7 +92,7 @@ extern const EE_LimitsT eelimits[];
     /* 1a */ {                 1,   0,   1, EEType_YesNo,       "Led as Sleep\nIndicator (0=no, 1=yes)" },                 \
     /* 1b */ {                 1,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
     /* 1c */ { DEFAULT_STOP_MODE,   0,   2, EEType_Uint8_Dec,   "StopMode to enter on stop" },                             \
-    /* 1d */ { USER_CLOCKCONFIG,    0,  15, EEType_Uint8_Dec,   "Clock configuration to use" },                           \
+    /* 1d */ { USER_CLOCKCONFIG,    0,  25, EEType_Uint8_Dec,   "Clock configuration to use" },                           \
     /* 1e */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1e" },                                             \
     /* 1f */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1f" },                                             \
 
