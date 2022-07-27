@@ -28,7 +28,9 @@
  */    #if defined(CORE_CM7)
         #define DMAMEM                      __attribute((section(".dmamem")))
         #define IPCMEM                      __attribute((section(".ipcmem")))
-        #define AXISMEM                     __attribute((section(".axismem")))    
+        #define AXISMEM                     __attribute((section(".axismem"))) 
+        #define AXISDMAMEM                  __attribute((section(".axisdmamem"))) 
+          
     #endif
     #define BDMAMEM                         __attribute((section(".bdmamem")))
 #else

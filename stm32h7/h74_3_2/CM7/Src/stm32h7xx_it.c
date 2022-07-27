@@ -740,7 +740,7 @@ void DebugMon_Handler(void)
  * SDMMC interrupt handlers
  *****************************************************************************/
 #if USE_SDMMC1 > 0 
-    void SDMMC1_IRQHandler(void)
+    void SDMMC1_IRQHandler(void) 
     {
        HAL_SD_IRQHandler(&Sdmmc1Handle.halHandle);
     }

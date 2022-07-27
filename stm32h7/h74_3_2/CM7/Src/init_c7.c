@@ -168,18 +168,18 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL);
       }       
   #endif
-  #if USE_USB > 0 
-      dev_idx = AddDevice(&HW_USBDFS, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PUTS("Failed to init USB2-device");
-      } else {
-        DeviceInitByIdx(dev_idx, NULL);
-      }       
-  #endif
   #if USE_SDMMC1 > 0 
       dev_idx = AddDevice(&HW_SDMMC1, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init SDMMC1-device");
+      } else {
+        DeviceInitByIdx(dev_idx, NULL);
+      }       
+  #endif
+  #if USE_USB > 0 
+      dev_idx = AddDevice(&HW_USBDFS, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PUTS("Failed to init USB2-device");
       } else {
         DeviceInitByIdx(dev_idx, NULL);
       }       

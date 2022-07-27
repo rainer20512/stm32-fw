@@ -343,18 +343,21 @@ static void MPU_Setup(void)
 {
    extern uint32_t __SRAMUNCACHED_segment_start__,__SRAMUNCACHED_segment_size__;
    extern uint32_t __devicemem_start__, __devicemem_size__;
+   extern uint32_t __axisdmamem_start__, __axisdmamem_size__; /**** 007 ****/
    extern uint32_t __lwipheap_start__, __lwipheap_size__;
    uint32_t flashSize = *(uint16_t*)FLASHSIZE_BASE * 1024;
    uint32_t size;
 
-   /* find next greater or equal power of 2 for lwipheap size */
-   size = (uint32_t)&__lwipheap_size__;
-   if ( !PWROF2(size ) ) {
-      size = 1 << ( HW_GetLn2(size)+1);
-   }
 
     MPU_AddRegion ( FLASH_BANK1_BASE,                          MPUTPYE_FLASH_NOWRITE,        flashSize,                                0 );
     MPU_AddRegion ( (uint32_t)&__SRAMUNCACHED_segment_start__, MPUTYPE_RAM_NONCACHEABLE,     (uint32_t)&__SRAMUNCACHED_segment_size__, 1 );
+
+
+    /* find next greater or equal power of 2 for lwipheap size */
+    size = (uint32_t)&__lwipheap_size__;
+    if ( !PWROF2(size ) ) {
+       size = 1 << ( HW_GetLn2(size)+1);
+    }
     MPU_AddRegion ( (uint32_t)&__lwipheap_start__,             MPUTYPE_RAM_NONCACHEABLE,     size,                                     2 );
 
     /* find next greater or equal power of 2 for devicemem size */
@@ -365,6 +368,15 @@ static void MPU_Setup(void)
     
     /* devicemem is part of uncached mem, a higher region ID will cause the devicemem area setting to supersede that of the uncached mem  */
     MPU_AddRegion ( (uint32_t)&__devicemem_start__,            MPUTYPE_RAM_DEVICEMEM_SHARED, size,                                     3 );
+
+    /*** 007 **** find next greater or equal power of 2 for axisdmamem size */
+    size = (uint32_t)&__axisdmamem_size__;
+    if ( !PWROF2(size ) ) {
+       size = 1 << ( HW_GetLn2(size)+1);
+    }
+    
+    /**** 007 **** axisdmamem is placed within AXIS MEM, used for SDMMC MDMA in conjunction with USB MSC   */
+    MPU_AddRegion ( (uint32_t)&__axisdmamem_start__,            MPUTYPE_RAM_DEVICEMEM_SHARED, size,                                     4 );
 
     MPU_EnableAllRegions();
     MPU_Dump();

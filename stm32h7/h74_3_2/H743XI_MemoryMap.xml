@@ -28,7 +28,8 @@
   <MemorySegment start="0x30028000" name="SRAM2" size="0x18000" />
   <MemorySegment start="0x30020000" name="SRAMUNCACHED" size="0x8000" />
   <MemorySegment start="0x30000000" name="SRAM1" size="0x20000" />
-  <MemorySegment start="0x24000000" name="AXISRAM" size="0x80000" />
+  <MemorySegment start="0x24008000" name="AXISRAM" size="0x78000" />
+  <MemorySegment start="0x24000000" name="AXISUNCACHED" size="0x8000" />
   <MemorySegment start="0x20000000" name="DTCM" size="0x20000" />
   <MemorySegment start="0x20000000" name="RAM" size="0x20000" />
   <MemorySegment start="0x1FF00000" name="SYSTEM" size="0x20000" />
@@ -36,6 +37,7 @@
   <MemorySegment start="0x00000000" name="ITCM" size="0x10000" />
 </Root>
 <!-- DO NOT PLACE XML COMMENT LINES WITHIN FILE - PARSE WILL STOP HERE          /--->
-<!-- RHB use first quarter of SRAM2 (32k) as uncached Memory for DMA                             /--->
+<!-- RHB use first quarter of SRAM2 (32k) as uncached Memory for DMA            /--->
 <!-- RHB use 128kB of DTCM as RAM                                               /--->
+<!-- RHB use 32kB  of AXIS RAM as uncached DMA mem, mainly for SDMMC MDMA **** 007 **** /--->
 

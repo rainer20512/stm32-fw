@@ -31,10 +31,13 @@
 #include "config/usb_config.h"
 #include "debug_helper.h"
 
-#include "usbd_cdc.h"
-//#include "usbd_msc.h"
-#include "usbd_desc.h"
+#if USE_USB_MSC > 0
+    #include "usbd_msc.h"
+#else
+    #include "usbd_cdc.h"
+#endif
 
+#include "usbd_desc.h"
 
 /* forward declarations ------------------------------------------------------------*/
 bool USB_InitDev(const HW_DeviceType *self);
@@ -182,9 +185,11 @@ bool USBD_CanStop(const HW_DeviceType *self)
     return false;
 }
 
-extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
-//extern USBD_StorageTypeDef USBD_DISK_fops;
-
+#if USE_USB_MSC > 0
+    extern USBD_StorageTypeDef USBD_DISK_fops;
+#else
+    extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
+#endif
 /*ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
  * Can Device initialization: Reset handle, init GPIO pins and interrupts,
  * set default baudrate and normal bus mode, CAN will remain in sleep mode
@@ -220,19 +225,7 @@ bool USBD_InitDev(const HW_DeviceType *self)
     if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
 #endif
 
-    /* Init Device Library */
-    USBD_Init(hUsbd, &VCP_Desc, 0);
-
-    /* Add Supported Class */
-    USBD_RegisterClass(hUsbd, USBD_CDC_CLASS);
-
-    /* Add CDC Interface Class */
-    USBD_CDC_RegisterInterface(hUsbd, &USBD_CDC_fops);
-
-    /* Start Device Process */
-    USBD_Start(hUsbd);
- 
-#if 0
+#if USE_USB_MSC > 0
   /* Init Device Library */
   USBD_Init(hUsbd, &MSC_Desc, 0);
 
@@ -241,12 +234,20 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
   /* Add Storage callbacks for MSC Class */
   USBD_MSC_RegisterStorage(hUsbd, &USBD_DISK_fops);
+#else
+    /* Init Device Library */
+    USBD_Init(hUsbd, &VCP_Desc, 0);
 
-  /* Start Device Process */
-  USBD_Start(hUsbd);
-#endif
+    /* Add Supported Class */
+    USBD_RegisterClass(hUsbd, USBD_CDC_CLASS);
 
+    /* Add CDC Interface Class */
+    USBD_CDC_RegisterInterface(hUsbd, &USBD_CDC_fops);
+#endif 
 
+    /* Start Device Process */
+    USBD_Start(hUsbd);
+ 
     return true;
 }
 
@@ -308,7 +309,7 @@ void USBD_DeInitDev(const HW_DeviceType *self)
 
 
 
-#endif // USE_CAN
+#endif // USE_USB
 
 
 

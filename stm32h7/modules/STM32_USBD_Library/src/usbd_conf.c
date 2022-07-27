@@ -438,7 +438,7 @@ void USBD_LL_Delay(uint32_t Delay)
   */
 void *USBD_static_malloc(uint32_t size)
 {
-  static uint32_t mem[(sizeof(USBD_MSC_BOT_HandleTypeDef)/4)+1];/* On 32-bit boundary */
+  static uint32_t mem[(sizeof(USBD_MSC_BOT_HandleTypeDef)/4)+1] AXISDMAMEM;/* On 32-bit boundary */
   UNUSED(size);
   return mem;
 }

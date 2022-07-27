@@ -203,6 +203,12 @@
           <file file_name="../modules/STM32_USBD_Library/src/usbd_conf.c" />
           <file file_name="../modules/STM32_USBD_Library/src/usbd_desc.c" />
           <file file_name="../modules/STM32_USBD_Library/src/usbd_storage.c" />
+          <file file_name="../modules/STM32_USBD_Library/src/storage_impl_sdmmc.c" />
+          <file file_name="../modules/STM32_USBD_Library/src/storage_impl_xspi.c">
+            <configuration
+              Name="THUMB Debug"
+              build_exclude_from_build="Yes" />
+          </file>
         </folder>
         <folder Name="inc">
           <file file_name="../modules/STM32_USBD_Library/inc/usbd_conf.h" />
@@ -210,7 +216,9 @@
           <file file_name="../modules/STM32_USBD_Library/inc/usbd_desc.h" />
           <file file_name="../modules/STM32_USBD_Library/inc/usbd_storage.h" />
           <file file_name="../modules/STM32_USBD_Library/inc/stm32h743i_eval_conf.h" />
+          <file file_name="../modules/STM32_USBD_Library/inc/storage_provider.h" />
         </folder>
+        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
       </folder>
       <folder Name="FreeRTOS">
         <folder Name="CMSIS-RTOS">

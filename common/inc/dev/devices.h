@@ -108,4 +108,3 @@ bool     IsMyPin                        (                     uint32_t devIdx, G
 #endif /* __cplusplus */
 
 #endif /* __DEVICES_H */
-

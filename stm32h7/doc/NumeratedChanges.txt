@@ -73,3 +73,6 @@ Within the sources, the changes are marked as **** <num> ****
 006 In HAL-Driver-Directory stm327_hal_sd.c/stm327_hal_sd.h:
     made "SD_SendStatus" public. 
     !! has to be redone when changing the HAL-Firmware-Version !!
+
+007 USB MSC driver implementation with SDRAM needs uncached memory in AXIS RAM
+    therefore the area .axisdmamem was added as uncached area in AXIS RAM

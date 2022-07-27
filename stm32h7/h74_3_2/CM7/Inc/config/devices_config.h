@@ -590,8 +590,8 @@
 
   #if USE_SDMMC1 > 0
    /* Interrupt driven, 4 lines */
-    #define USE_SDMMC1_IRQ
-    #undef  USE_SDMMC1_8LINES
+    #define SDMMC1_USE_IRQ
+    #undef  SDMMC1_USE_8LINES
     #define SDMMC_DEV       HW_SDMMC1
   #endif
 
@@ -630,8 +630,8 @@
 
   #if USE_SDMMC1 > 0
    /* Interrupt driven, 4 lines */
-    #define USE_SDMMC1_IRQ
-    #undef  USE_SDMMC1_8LINES
+    #define SDMMC1_USE_IRQ
+    #undef  SDMMC1_USE_8LINES
     #define SDMMC_DEV       HW_SDMMC1
   #endif
 

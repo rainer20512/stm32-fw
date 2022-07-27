@@ -29,7 +29,7 @@
 #define LOGLEVEL_VERBOSE   6                    /* debug/log even more               */
 
 #if defined(DEBUG)
-    #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE    /* max. loglevel that will be generated in code */
+    #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE   /* max. loglevel that will be generated in code */
     #define DEBUG_MODE          1
 #else
     #define STATIC_LOGLIMIT     LOGLEVEL_ALWAYS 

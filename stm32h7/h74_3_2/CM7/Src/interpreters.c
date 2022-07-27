@@ -2229,8 +2229,9 @@ ADD_SUBMODULE(Test);
      *
      * @note  will try to read as many parameters as needed
      ********************************************************************************/
-#define MAX_BUFSIZE   8192
-static uint8_t buffer[MAX_BUFSIZE];
+#define MAX_BUFSIZE     8192
+#define SD_BLOCKSIZE    512
+static uint8_t buffer[MAX_BUFSIZE] AXISMEM;
 
 
 
@@ -2238,6 +2239,7 @@ static uint8_t buffer[MAX_BUFSIZE];
     {
       char *word;
       size_t wordlen;
+      uint32_t first;
       uint32_t num;
       uint32_t addr;
       bool ret;
@@ -2250,38 +2252,144 @@ static uint8_t buffer[MAX_BUFSIZE];
             break;
         case 1:
             if ( CMD_argc() < 1 ) {
-              printf("Usage: Read <blocknum> \n");
+              printf("Usage: Read <blocknum> [<count>]\n");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            ret =SDMMC_ReadBlocks(&Sdmmc1Handle, buffer, num, 1);
+            first = CMD_to_number ( word, wordlen );
+            if ( CMD_get_one_word( &word, &wordlen ) )
+               num = CMD_to_number ( word, wordlen );
+            else
+               num = 1;
+            if ( SD_BLOCKSIZE * num > MAX_BUFSIZE ) num = MAX_BUFSIZE / SD_BLOCKSIZE;
+
+            ret =SDMMC_ReadBlocks(&Sdmmc1Handle, buffer, first, num);
             if (!ret) {
                 DEBUG_PRINTF("ReadBlocks failed\n");
                 return false;
-            }
-            for ( uint32_t j  = 0; j < 2048; j++ ) {
+            } 
+            for ( uint32_t j  = 0; j < SD_BLOCKSIZE * num; j++ ) {
                 if ( j % 16 == 0 ) printf ( "0x%08x",j );
                 printf(" %02x", buffer[j]);
                 if ( (j+1) % 16 == 0 ) puts ("");
             }
             break;
         case 2:
-            if ( CMD_argc() < 2 ) {
-              printf("Usage: Write <blocknum> <byte> \n");
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: ReadDMA <blocknum> [<count>]\n");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
+            first = CMD_to_number ( word, wordlen );
+            if ( CMD_get_one_word( &word, &wordlen ) )
+               num = CMD_to_number ( word, wordlen );
+            else
+               num = 1;
+            if ( SD_BLOCKSIZE * num > MAX_BUFSIZE ) num = MAX_BUFSIZE / SD_BLOCKSIZE;
+
+            ret =SDMMC_ReadBlocksDMA(&Sdmmc1Handle, buffer, first, num);
+            if (!ret) {
+                DEBUG_PRINTF("ReadBlocksDMA failed\n");
+                return false;
+            } else {
+                uint32_t timeout = HAL_GetTick();
+                while((HAL_GetTick() - timeout) < 1000) {
+                    if (Sdmmc1Handle.bPerformingRead == 0 ) {
+                        break;
+                    }
+                }
+                if ( Sdmmc1Handle.bPerformingRead )
+                    DEBUG_PRINTF("Timeout when waiting for read DMA complete\n");
+            }
+            for ( uint32_t j  = 0; j < SD_BLOCKSIZE * num; j++ ) {
+                if ( j % 16 == 0 ) printf ( "0x%08x",j );
+                printf(" %02x", buffer[j]);
+                if ( (j+1) % 16 == 0 ) puts ("");
+            }
+            break;
+        case 3:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: Write <byte> <blocknum> [<count>]  \n");
+              return false;
+            }
             CMD_get_one_word( &word, &wordlen );
             addr = CMD_to_number ( word, wordlen );
-            memset(buffer,(uint8_t)addr, MAX_BUFSIZE);
-            ret =SDMMC_WriteBlocks(&Sdmmc1Handle, buffer, num, 1);
+            CMD_get_one_word( &word, &wordlen );
+            first = CMD_to_number ( word, wordlen );
+            if ( CMD_get_one_word( &word, &wordlen ) )
+               num = CMD_to_number ( word, wordlen );
+            else
+               num = 1;
+            if ( SD_BLOCKSIZE * num > MAX_BUFSIZE ) num = MAX_BUFSIZE / SD_BLOCKSIZE;
+
+            memset(buffer,(uint8_t)addr, SD_BLOCKSIZE * num);
+            ret = SDMMC_WriteBlocks(&Sdmmc1Handle, (uint32_t*)buffer, first, num);
             if (!ret) {
-                DEBUG_PRINTF("WriteBlocks failed\n");
+                DEBUG_PRINTF("Write of %d blocks failed\n",num);
                 return false;
             }
+            SDMMC_WaitForTransferState(&Sdmmc1Handle, 1000 );
 
+            /* Compare after write */
+            ret =SDMMC_ReadBlocks(&Sdmmc1Handle, (uint32_t*)buffer, first, num);
+            if (!ret) {
+                DEBUG_PRINTF("Read for compare failed\n");
+                return false;
+            }
+            for ( uint32_t i =0; i < SD_BLOCKSIZE*num; i++ )
+                if ( buffer[i] != (uint8_t)addr ) {
+                    DEBUG_PRINTF("Compare 0x%04x: expected: %02x got: %02x\n", i,(uint8_t)addr, buffer[i] );
+                    ret = false;
+                }
+            DEBUG_PRINTF("Write/Compare of %d blocks %s\n", num, ret ? "OK" : "FAIL" );            
+            break;
+        case 4:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: WriteDMA <byte> <blocknum> [<count>]  \n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            first = CMD_to_number ( word, wordlen );
+            if ( CMD_get_one_word( &word, &wordlen ) )
+               num = CMD_to_number ( word, wordlen );
+            else
+               num = 1;
+            if ( SD_BLOCKSIZE * num > MAX_BUFSIZE ) num = MAX_BUFSIZE / SD_BLOCKSIZE;
+
+            memset(buffer,(uint8_t)addr, SD_BLOCKSIZE * num);
+            /* flush D-cache */
+            SCB_CleanDCache_by_Addr((uint32_t*)buffer, SD_BLOCKSIZE * num);
+            ret = SDMMC_WriteBlocksDMA(&Sdmmc1Handle, (uint32_t*)buffer, first, num);
+            if (!ret) {
+                DEBUG_PRINTF("WriteDMA of %d blocks failed\n",num);
+                return false;
+            } else {
+                uint32_t timeout = HAL_GetTick();
+                while((HAL_GetTick() - timeout) < 1000) {
+                    if (Sdmmc1Handle.bPerformingWrite == 0 ) {
+                        break;
+                    }
+                }
+                if ( Sdmmc1Handle.bPerformingWrite )
+                    DEBUG_PRINTF("Timeout when waiting for write DMA complete\n");
+            }
+
+            SDMMC_WaitForTransferState(&Sdmmc1Handle, 1000 );
+
+            /* Compare after write */
+            ret =SDMMC_ReadBlocks(&Sdmmc1Handle, (uint32_t*)buffer, first, num);
+            if (!ret) {
+                DEBUG_PRINTF("Read for compare failed\n");
+                return false;
+            }
+            for ( uint32_t i =0; i < SD_BLOCKSIZE*num; i++ )
+                if ( buffer[i] != (uint8_t)addr ) {
+                    DEBUG_PRINTF("Compare 0x%04x: expected: %02x got: %02x\n", i,(uint8_t)addr, buffer[i] );
+                    ret = false;
+                }
+            DEBUG_PRINTF("Write/Compare of %d blocks %s\n", num, ret ? "OK" : "FAIL" );            
             break;
         default:
           DEBUG_PUTS("SDMMC_Menu: command not implemented");
@@ -2299,12 +2407,9 @@ static uint8_t buffer[MAX_BUFSIZE];
     static const CommandSetT cmdSDMMC[] = {
         { "Dump",                     ctype_fn, .exec.fn = SDMMC_Menu, VOID(0), "Dump SDMMC Infos" },
         { "Read"          ,           ctype_fn, .exec.fn = SDMMC_Menu, VOID(1), "Read" },
-        { "Write",          ctype_fn, .exec.fn = SDMMC_Menu, VOID(2), "Write" },
-        { "Set Std Filter",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(3), "Set 11 bit filter id" },
-        { "Set Ext Filter",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(4), "Set 28 bit filter id" },
-        { "Set Tx ID",                ctype_fn, .exec.fn = SDMMC_Menu, VOID(5), "Set Msg ID for Xmit" },
-        { "Tx <n> Len <m>",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(6), "Tx <n> Msg of Len <m>" },
-        { "Start/Stop CAN",           ctype_fn, .exec.fn = SDMMC_Menu, VOID(9), "Start(1) /Stop(0) CAN" },
+        { "ReadDMA",                  ctype_fn, .exec.fn = SDMMC_Menu, VOID(2), "Read DMA" },
+        { "Write",                    ctype_fn, .exec.fn = SDMMC_Menu, VOID(3), "Write" },
+        { "WriteDMA",                 ctype_fn, .exec.fn = SDMMC_Menu, VOID(4), "WriteDMA" },
     };
     ADD_SUBMODULE(SDMMC);
 #endif

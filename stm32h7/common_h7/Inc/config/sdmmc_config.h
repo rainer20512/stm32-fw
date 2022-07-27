@@ -45,7 +45,7 @@
 
     #if USE_SDMMC1 > 0
         #define SDMMC1_CK                         { GPIO_PIN_12, GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 CK"  }
-        #define SDMMC1_CMD                        { GPIO_PIN_2,  GPIOD, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 CMD"  }
+        #define SDMMC1_CMD                        { GPIO_PIN_2,  GPIOD, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 CMD"  }
         #define SDMMC1_D0                         { GPIO_PIN_8,  GPIOC, GPIO_AF12_SDMMC1, GPIO_PULLUP, "SDIO1 D0"  }
         #define SDMMC1_D1                         { GPIO_PIN_9,  GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D1"  }
         #define SDMMC1_D2                         { GPIO_PIN_10, GPIOC, GPIO_AF12_SDMMC1, GPIO_NOPULL, "SDIO1 D2"  }
@@ -58,7 +58,7 @@
 
         /* Definition for SDMMC1 NVIC */
         #if defined(SDMMC1_USE_IRQ)
-                #define SDMMC1_IRQ                        { SDMMC1_IRQn, SDMMC1_IRQ_PRIO, 0    }
+                #define SDMMC1_IRQ                        { SDMMC1_IRQn, SDMMC_IRQ_PRIO, 0    }
                 #define SDMMC1_IRQHandler                 SDMMC1_IRQHandler
         #endif
     #endif // USE_SDMMC1 > 0 
@@ -80,7 +80,7 @@
 
         /* Definition for SDMMC1 NVIC */
         #if defined(SDMMC2_USE_IRQ)
-                #define SDMMC2_IRQ                        { SDMMC2_IRQn, SDMMC2_IRQ_PRIO, 0    }
+                #define SDMMC2_IRQ                        { SDMMC2_IRQn, SDMMC_IRQ_PRIO, 0    }
                 #define SDMMC2_IRQHandler                 SDMMC2_IRQHandler
         #endif
     #endif // USE_SDMMC1 > 0 
