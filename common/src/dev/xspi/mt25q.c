@@ -324,8 +324,10 @@ void XSpecific_DumpStatusInternal(XSpiHandleT *myHandle)
 
     /* Access mode implemented by driver  */
     printf("%s Driver implemented access modes\n", txtbuf );
+#if DEBUG_MODE > 0
     printf("   Read mode        = %s\n",    rwmode_txt[defaultRMode]);
     printf("   Write mode       = %s\n",    rwmode_txt[defaultWMode]);
+#endif
 
     /* Read Status Register */
     sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;

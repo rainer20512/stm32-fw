@@ -52,7 +52,7 @@ osSemaphoreId osSemaphore;
 /* Exported variables --------------------------------------------------------*/
 uint32_t gflags;
 
-#if DEBUG_MODE 
+#if DEBUG_MODE > 0
   uint32_t console_debuglevel;
   uint32_t fatfs_debuglevel;
 #endif
@@ -242,12 +242,6 @@ int main(void)
     #endif
 
     
-    /* Define used semaphore */
-    osSemaphoreDef(SEM);  
-    /* Create the semaphore */
-    osSemaphore = osSemaphoreCreate(osSemaphore(SEM) , 1);
-
-    IO_AssignInterrupt(GPIO_PIN_13, PB_CB );
 
 
     /* Start the Core 1 init task, this task will start all other tasks */
@@ -273,6 +267,13 @@ static void prvCore1InitTask( void *pvParameters )
 {
   
     UNUSED(pvParameters);
+
+    /* Define used semaphore */
+    osSemaphoreDef(SEM);  
+    /* Create the semaphore */
+    osSemaphore = osSemaphoreCreate(osSemaphore(SEM) , 1);
+
+    IO_AssignInterrupt(GPIO_PIN_13, PB_CB );
 
     /* Start system tasks */
     TaskInitAll();

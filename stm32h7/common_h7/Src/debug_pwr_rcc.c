@@ -25,6 +25,7 @@
 
 #include "debug_helper.h"
 #include "rtc.h"
+#include "system/pll.h"
 
 #define DEBUG_DUMP_PWR      1
 #define DEBUG_DUMP_CLOCK    1
@@ -458,11 +459,19 @@ static const char* DBG_get_rcc_pllcfgr_pllsrc_txt(uint32_t sel )
   else
     return "Illegal";
 }
+
+/* format a number with a thousand separator */
+char *format_kHz( uint32_t khz, char *retbuf, size_t maxlen ) {
+    snprintf(retbuf, maxlen, "%d.%03dhKz", khz/1000, khz % 1000 );
+    return retbuf;
+}
+
 static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
 {
     uint32_t enableFlags;
+    char workbuf[20];
     switch ( pllnum ) {
-        case 1:
+        case SYS_PLL1:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
             pll->PLLM = (uint32_t) ((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM1)>> RCC_PLLCKSELR_DIVM1_Pos);
             pll->PLLN = (uint32_t) ((RCC->PLL1DIVR & RCC_PLL1DIVR_N1)     >> RCC_PLL1DIVR_N1_Pos)+ 1U;
@@ -474,7 +483,7 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
             pll->PLLFRACN = (uint32_t)(((RCC->PLL1FRACR & RCC_PLL1FRACR_FRACN1) >> RCC_PLL1FRACR_FRACN1_Pos));
             enableFlags = (uint32_t)((RCC->PLLCFGR  >> RCC_PLLCFGR_DIVP1EN_Pos) &0b111); 
            break;
-        case 2:
+        case SYS_PLL2:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
             pll->PLLM = (uint32_t)((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM2)>> RCC_PLLCKSELR_DIVM2_Pos);
             pll->PLLN = (uint32_t)((RCC->PLL2DIVR & RCC_PLL2DIVR_N2) >> RCC_PLL2DIVR_N2_Pos)+ 1U;
@@ -486,7 +495,7 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
             pll->PLLFRACN = (uint32_t)(((RCC->PLL2FRACR & RCC_PLL2FRACR_FRACN2) >> RCC_PLL2FRACR_FRACN2_Pos));
             enableFlags = (uint32_t)((RCC->PLLCFGR  >> RCC_PLLCFGR_DIVP2EN_Pos) &0b111); 
            break;
-        case 3:
+        case SYS_PLL3:
             pll->PLLSource = (uint32_t)(RCC->PLLCKSELR & RCC_PLLCKSELR_PLLSRC);
             pll->PLLM = (uint32_t)((RCC->PLLCKSELR & RCC_PLLCKSELR_DIVM3)>> RCC_PLLCKSELR_DIVM3_Pos);
             pll->PLLN = (uint32_t)((RCC->PLL3DIVR & RCC_PLL3DIVR_N3) >> RCC_PLL3DIVR_N3_Pos)+ 1U;
@@ -507,9 +516,15 @@ static bool dump_pllconfig( RCC_PLLInitTypeDef *pll, uint32_t pllnum )
     DBG_dump_textvalue("PLL source", DBG_get_rcc_pllcfgr_pllsrc_txt( pll->PLLSource >> RCC_PLLCKSELR_PLLSRC_Pos ) );  
     DBG_dump_number_and_text("PLLM", pll->PLLM, 3, pll->PLLM > 0 ?  "" : "Disabled" );  
     DBG_dump_number_and_text("PLLN", pll->PLLN, 3, "");  
-    DBG_dump_number_and_text("PLLR", pll->PLLR, 3, ( enableFlags & 0b100 ) != 0 ? "" : "Disabled" );  
-    DBG_dump_number_and_text("PLLQ", pll->PLLQ, 3, ( enableFlags & 0b010 ) != 0 ? "" : "Disabled" );    
-    DBG_dump_number_and_text("PLLP", pll->PLLP, 3, ( enableFlags & 0b001 ) != 0 ? "" : "Disabled" );   
+    
+    if (( enableFlags & 0b100 ) != 0) format_kHz(PLL_GetOutFrq(pllnum, PLL_LINE_R),workbuf, 20);
+    DBG_dump_number_and_text("PLLR", pll->PLLR, 3, ( enableFlags & 0b100 ) != 0 ? workbuf : "Disabled" );  
+    
+    if (( enableFlags & 0b010 ) != 0) format_kHz(PLL_GetOutFrq(pllnum, PLL_LINE_Q),workbuf, 20);
+    DBG_dump_number_and_text("PLLQ", pll->PLLQ, 3, ( enableFlags & 0b010 ) != 0 ? workbuf : "Disabled" );    
+
+    if (( enableFlags & 0b001 ) != 0) format_kHz(PLL_GetOutFrq(pllnum, PLL_LINE_P),workbuf, 20);
+    DBG_dump_number_and_text("PLLP", pll->PLLP, 3, ( enableFlags & 0b001 ) != 0 ? workbuf : "Disabled" );   
     DBG_dump_number_and_text("PLLRGE", pll->PLLRGE, 3, "" );
     DBG_dump_number_and_text("PLLVCOSEL", pll->PLLVCOSEL, 3, "" );
     DBG_dump_number_and_text("PLLFRACN", pll->PLLFRACN, 3, "" ); 
@@ -522,17 +537,17 @@ static void DBG_dump_rcc_pllcfgr(void)
   DBG_setPadLen(20);
 
   if ( READ_BIT(RCC->CR, RCC_CR_PLL1ON ) ) {
-    dump_pllconfig(&pll, 1);
+    dump_pllconfig(&pll, SYS_PLL1);
   } else  {
     DBG_printf_indent("PLL1 disabled\n" );    
   }
   if ( READ_BIT(RCC->CR, RCC_CR_PLL2ON ) ) {
-    dump_pllconfig(&pll, 2);
+    dump_pllconfig(&pll, SYS_PLL2);
   } else  {
     DBG_printf_indent("PLL2 disabled\n" );    
   }
   if ( READ_BIT(RCC->CR, RCC_CR_PLL3ON ) ) {
-    dump_pllconfig(&pll, 3);
+    dump_pllconfig(&pll, SYS_PLL3);
   } else  {
     DBG_printf_indent("PLL3 disabled\n" );    
   }

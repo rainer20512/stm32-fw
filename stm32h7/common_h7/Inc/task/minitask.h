@@ -34,21 +34,25 @@
  */
 
 #define TASK_TMR              0
-#define TASK_OW               1
-#define TASK_COM              2
-#define TASK_RTC              3
-#define TASK_LOG              4
-#define TASK_RFM              5
-#define TASK_PERIODIC         6
-#define TASK_ADC              7
-#define TASK_LCD              8
-#define TASK_XSPI             9
-#define TASK_REMOTE_CM7       10
-#define TASK_REMOTE_CM4       11
-#define TASK_SERIN            12
-#define TASK_LOGFILE          13
-#define TASK_ZZZ              14
-#define TASK_YYY              15
+#define TASK_COM              1
+#define TASK_OW               2
+#define TASK_USB              3
+#define TASK_RTC              4
+#define TASK_LOG              5
+#define TASK_RFM              6
+#define TASK_PERIODIC         7
+#define TASK_ADC              8
+#define TASK_LCD              9
+#define TASK_XSPI             10
+#define TASK_REMOTE_CM7       11
+#define TASK_REMOTE_CM4       12
+#define TASK_SERIN            13
+#define TASK_LOGFILE          14
+#define TASK_ZZZ              15
+#define TASK_YYY              16
+#define TASK_XXX              17
+#define TASK_WWW              18
+#define TASK_VVV              19
 
 /* functtion prototypes of Init and Run functions of task */
 /* both will be passed the task number as parameter       */
@@ -87,7 +91,7 @@ void              TaskSemaphoreFree (SemaphoreHandle_t used_sem);
     int32_t TaskIterateList ( uint32_t actionId, char *retbuf, size_t buflen, const char *prefixstr );
 #else
     void TaskRegisterTaskShort ( MiniTaskInitFn, MiniTaskRunFn, uint32_t num, int32_t PrID, StackType_t* stackMem, uint32_t ulStackDepth);
-    #define TaskRegisterTask(i,r,n,d,a)     TaskRegisterTaskShort(i,r,n,d)
+    #define TaskRegisterTask(i,r,n,p,s,d,a)     TaskRegisterTaskShort(i,r,n,p,s,d)
     #define TaskDumpList()
 #endif
 

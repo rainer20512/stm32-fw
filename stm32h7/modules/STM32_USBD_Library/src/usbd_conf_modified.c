@@ -17,24 +17,88 @@
   ******************************************************************************
   */
 
+
+/* Max time to wait for UsbSema to become available */
+#define USB_SEMA_WAITMS         2000
+
 /* Includes ------------------------------------------------------------------ */
 #include "config/config.h"
 #include "usbd_msc.h"
 
 #if USE_FREERTOS > 0
+    #include "FreeRTOS.h"
+    #include "semphr.h"
+    #include "cmsis_os.h"
+    #include "task/minitask.h"
     #include "log.h"
     #include "dev/usb_dev.h"
 #endif
 
+#include "log.h"
+
 /* Private typedef ----------------------------------------------------------- */
+
+/********************************************************************************
+ * Enumeration for all different Callback types
+ *******************************************************************************/
+typedef enum {
+    CB_SETUP            =0,
+    CB_DATAOUT          =1,
+    CB_DATAIN           =2,
+    CB_SOF              =3,
+    CB_RESET            =4,
+    CB_SUSPEND          =5,
+    CB_RESUME           =6,
+    CB_ISOOUTINCOMPLETE =7,
+    CB_ISOININCOMPLETE  =8,
+    CB_CONNECT          =9,
+    CB_DISCONNECT       =10,
+} CbEnumT;
+
 /* Private define ------------------------------------------------------------ */
+
 /* Private macro ------------------------------------------------------------- */
+#define INLINE          inline __attribute__((always_inline))
+
 /* Private variables --------------------------------------------------------- */
 PCD_HandleTypeDef hpcd;
+
+#if USE_FREERTOS > 0
+    typedef struct {
+        SemaphoreHandle_t CBSem;        /* Semaphore to access this structure      */
+        SemaphoreHandle_t USBTaskSem;   /* Semaphore for "USB task is running"     */
+        PCD_HandleTypeDef *hpcd;        /* passed PCD handle                       */
+        uint8_t epnum;                  /* passed epnum parameter (not always used)*/
+        void *arg;                      /* Argument of that function call          */
+    } USBD_XferT;
+    StaticSemaphore_t xCBSemBuffer;    
+    StaticSemaphore_t xUsbTaskSemBuffer;    
+    static USBD_XferT    UsbSema = {0};
+#endif
 
 /* Private function prototypes ----------------------------------------------- */
 /* Private functions --------------------------------------------------------- */
 
+#if USE_FREERTOS > 0
+    static void UsbTaskNotify( PCD_HandleTypeDef *hpcd, uint8_t epnum, CbEnumT cbnum )
+    {
+        LOGT_INFO("Notify USB(%d): %d", epnum, cbnum);
+        /* Wait for the UsbSema structure becoming free */
+        if ( osSemaphoreWait ( UsbSema.CBSem, USB_SEMA_WAITMS )  == osOK ) {
+            UsbSema.hpcd    = hpcd;
+            UsbSema.arg     = (void *)cbnum;
+            UsbSema.epnum   = epnum;
+            TaskNotify(TASK_USB);
+/*
+            if ( osSemaphoreWait ( UsbSema.USBTaskSem, USB_SEMA_WAITMS )  != osOK ) {
+                LOGT_ERROR("UsbTaskNotify: Timeout when waiting for USB-task to complete\n");
+            }
+*/
+        } else {
+            LOGT_ERROR("UsbTaskNotify: Timeout when waiting for UsbSema\n");
+        }
+    }
+#endif    
 
 /*******************************************************************************
                        LL Driver Callbacks (PCD -> USB Device Library)
@@ -45,9 +109,18 @@ PCD_HandleTypeDef hpcd;
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void SetupStageCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_SetupStage(hpcd->pData, (uint8_t *) hpcd->Setup);
+}
+
+void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 2
+    UsbTaskNotify(hpcd, 0, CB_SETUP);
+  #else
+    SetupStageCore(hpcd);
+  #endif
 }
 
 /**
@@ -56,9 +129,18 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef * hpcd)
   * @param  epnum: Endpoint Number
   * @retval None
   */
-void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+static INLINE void DataOutStageCore(PCD_HandleTypeDef * hpcd, uint8_t epnum)
 {
   USBD_LL_DataOutStage(hpcd->pData, epnum, hpcd->OUT_ep[epnum].xfer_buff);
+}
+
+void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, epnum, CB_DATAOUT);
+  #else
+    DataOutStageCore(hpcd, epnum);
+  #endif
 }
 
 /**
@@ -67,9 +149,18 @@ void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
   * @param  epnum: Endpoint Number
   * @retval None
   */
-void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+static INLINE void DataInStageCore(PCD_HandleTypeDef * hpcd, uint8_t epnum)
 {
   USBD_LL_DataInStage(hpcd->pData, epnum, hpcd->IN_ep[epnum].xfer_buff);
+}
+
+void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, epnum, CB_DATAIN);
+  #else
+    DataInStageCore(hpcd, epnum);
+  #endif
 }
 
 /**
@@ -77,9 +168,19 @@ void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_SOFCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void SOFCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_SOF(hpcd->pData);
+}
+
+
+void HAL_PCD_SOFCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, 0, CB_SOF);
+  #else
+    SOFCore(hpcd);
+  #endif
 }
 
 /**
@@ -87,7 +188,7 @@ void HAL_PCD_SOFCallback(PCD_HandleTypeDef * hpcd)
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_ResetCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void ResetCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_SpeedTypeDef speed = USBD_SPEED_FULL;
 
@@ -113,14 +214,32 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef * hpcd)
   USBD_LL_SetSpeed(hpcd->pData, speed);
 }
 
+void HAL_PCD_ResetCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 2
+    UsbTaskNotify(hpcd, 0, CB_RESET);
+  #else
+    ResetCore(hpcd);
+  #endif
+}
+
 /**
   * @brief  Suspend callback.
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_SuspendCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void SuspendCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_Suspend(hpcd->pData);
+}
+
+void HAL_PCD_SuspendCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 2
+    UsbTaskNotify(hpcd, 0, CB_SUSPEND);
+  #else
+    SuspendCore(hpcd);
+  #endif
 }
 
 /**
@@ -128,9 +247,18 @@ void HAL_PCD_SuspendCallback(PCD_HandleTypeDef * hpcd)
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_ResumeCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void ResumeCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_Resume(hpcd->pData);
+}
+
+void HAL_PCD_ResumeCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, 0, CB_RESUME);
+  #else
+    ResumeCore(hpcd);
+  #endif
 }
 
 /**
@@ -139,9 +267,19 @@ void HAL_PCD_ResumeCallback(PCD_HandleTypeDef * hpcd)
   * @param  epnum: Endpoint Number
   * @retval None
   */
-void HAL_PCD_ISOOUTIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+static INLINE void ISOOUTIncompleteCore(PCD_HandleTypeDef * hpcd, uint8_t epnum)
 {
   USBD_LL_IsoOUTIncomplete(hpcd->pData, epnum);
+}
+
+
+void HAL_PCD_ISOOUTIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, epnum, CB_ISOOUTINCOMPLETE);
+  #else
+    ISOOUTIncompleteCore(hpcd, epnum);
+  #endif
 }
 
 /**
@@ -150,9 +288,18 @@ void HAL_PCD_ISOOUTIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
   * @param  epnum: Endpoint Number
   * @retval None
   */
-void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+static INLINE void ISOINIncompleteCore(PCD_HandleTypeDef * hpcd, uint8_t epnum)
 {
   USBD_LL_IsoINIncomplete(hpcd->pData, epnum);
+}
+
+void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, epnum, CB_ISOININCOMPLETE);
+  #else
+    ISOINIncompleteCore(hpcd, epnum);
+  #endif
 }
 
 /**
@@ -160,9 +307,18 @@ void HAL_PCD_ISOINIncompleteCallback(PCD_HandleTypeDef * hpcd, uint8_t epnum)
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_ConnectCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void ConnectCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_DevConnected(hpcd->pData);
+}
+
+void HAL_PCD_ConnectCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, 0, CB_CONNECT);
+  #else
+    ConnectCore(hpcd);
+  #endif
 }
 
 /**
@@ -170,9 +326,18 @@ void HAL_PCD_ConnectCallback(PCD_HandleTypeDef * hpcd)
   * @param  hpcd: PCD handle
   * @retval None
   */
-void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef * hpcd)
+static INLINE void DisconnectCore(PCD_HandleTypeDef * hpcd)
 {
   USBD_LL_DevDisconnected(hpcd->pData);
+}
+
+void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef * hpcd)
+{
+  #if USE_FREERTOS > 0
+    UsbTaskNotify(hpcd, 0, CB_DISCONNECT);
+  #else
+    DisconnectCore(hpcd);
+  #endif
 }
 
 
@@ -187,6 +352,8 @@ void HAL_PCD_DisconnectCallback(PCD_HandleTypeDef * hpcd)
   */
 USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
 {
+
+
 #if USE_USB_FS > 0
   /* Set LL Driver parameters */
   hpcd.Instance = USB2_OTG_FS;
@@ -202,7 +369,6 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
   /* Link The driver to the stack */
   hpcd.pData = pdev;
   pdev->pData = &hpcd;
-
   /* Initialize LL Driver */
   HAL_PCD_Init(&hpcd);
 
@@ -234,13 +400,11 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
   hpcd.pData = pdev;
   pdev->pData = &hpcd;
 
-  /* RHB Added with H7FW V1.9 
-   * commented out: Don't know why whole D-cache was disabled
+  /* RHB Added with H7FW V1.9 */
   if (hpcd.Init.dma_enable == 1U)
   {
     SCB_DisableDCache();
   }
-  */
 
   /* Initialize LL Driver */
   HAL_PCD_Init(&hpcd);
@@ -463,29 +627,79 @@ void USBD_static_free(void *p)
 #if USE_FREERTOS > 0
 
 /******************************************************************************
- * USB task initialization: Start the USB interface
+ * - Create an blocked semaphore for callback functions 
+ *   and release that lock immeditaley 
+ * - Create an blocked Semaphore for "usb task running". This semaphore
+ *   will be unlocked when the USB task has responded to any USB request
+ * - Start the USB device
  *****************************************************************************/
 void task_init_usb(void)
 {
+    UsbSema.CBSem = xSemaphoreCreateBinaryStatic( &xCBSemBuffer );
+    osSemaphoreRelease(UsbSema.CBSem);
+
+    UsbSema.USBTaskSem = xSemaphoreCreateBinaryStatic( &xUsbTaskSemBuffer );
+
     /* Start the USB device */
     USBD_Start(&USBDFSHandle.hUsb);
+    LOGT_INFO("Init USB");
+
 }
 
-
 /******************************************************************************
- * USB main task: handle USB Interrupt
+ * USB main task: act upon USB messages 
  *****************************************************************************/
 void task_handle_usb(uint32_t arg)
 {
     UNUSED(arg);
-//    LOGU_INFO("USB task start");
-    HAL_PCD_IRQHandler(&hpcd);
-//    LOGU_INFO("USB task end");
-    (void)USB_EnableGlobalInt((USB_OTG_GlobalTypeDef *)HW_USBDFS.devBase);
+
+    PCD_HandleTypeDef *hpcd = UsbSema.hpcd;
+    LOGT_INFO("Handle USB: %d", (CbEnumT)UsbSema.arg);
+    switch ( (CbEnumT)UsbSema.arg ) { 
+        case CB_SETUP:
+            SetupStageCore(UsbSema.hpcd);
+            break;
+        case CB_DATAOUT:
+            DataOutStageCore(hpcd,UsbSema.epnum);
+            break;
+        case CB_DATAIN:
+            DataInStageCore(hpcd,UsbSema.epnum);
+            break;
+        case CB_SOF:
+            SOFCore(UsbSema.hpcd);
+            break;
+        case CB_RESET:
+            ResetCore(UsbSema.hpcd);
+            break;
+        case CB_SUSPEND:
+            SuspendCore(UsbSema.hpcd);
+            break;
+        case CB_RESUME:
+            ResumeCore(UsbSema.hpcd);
+            break;
+        case CB_ISOOUTINCOMPLETE:
+            ISOOUTIncompleteCore(hpcd,UsbSema.epnum);
+            break;
+        case CB_ISOININCOMPLETE:
+            ISOINIncompleteCore(hpcd,UsbSema.epnum);
+            break;
+        case CB_CONNECT:
+            ConnectCore(hpcd);
+            break;
+        case CB_DISCONNECT:
+            DisconnectCore(hpcd);
+            break;
+        default:
+            LOG_ERROR("task_handle_usb: Undefined callback #%d\n",(CbEnumT)UsbSema.arg);
+    } // switch
+
+    /* Release the UsbSema - lock */
+    osSemaphoreRelease(UsbSema.CBSem);
+    /* Release the USB-Task semaphore */
+    // osSemaphoreRelease(UsbSema.USBTaskSem);
+
 }
 
 #endif
-
-
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

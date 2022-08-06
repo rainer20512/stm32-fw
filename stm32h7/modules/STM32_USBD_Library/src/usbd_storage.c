@@ -7,8 +7,6 @@
   *          storage provider with debug output ( if configured )
   *          The real storage provider has to implement all methods noted in
   *          "storage_provider.h"
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
   *
   * This software component is licensed by ST under Ultimate Liberty license
   * SLA0044, the "License"; You may not use this file except in compliance with
@@ -18,15 +16,15 @@
   ******************************************************************************
   */
 
-#undef USE_EXTMEM_QSPI
 
 /* Includes ------------------------------------------------------------------ */
 #include "config/config.h"
 
 #if USE_USB_MSC > 0
 
+#define DEBUG_USB_STORAGE               1
 
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
+#if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
     #include "log.h"
 #endif
 
@@ -65,7 +63,7 @@ USBD_StorageTypeDef USBD_DISK_fops = {
 };
 
 /* Private functions ------------------------------------------------------- */
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
+#if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
     static const char * get_ret_str( int8_t ret )
     {
         return ret == 0 ? "ok" : "failed";
@@ -82,7 +80,7 @@ USBD_StorageTypeDef USBD_DISK_fops = {
 int8_t STORAGE_Init(uint8_t lun)
 {
     int8_t ret = ST_Init(lun);
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
+#if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
     DBGU_PALAVER("StorageInit %s\n",get_ret_str(ret));
 #endif
     return ret;
@@ -98,7 +96,7 @@ int8_t STORAGE_Init(uint8_t lun)
 int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t * block_num, uint16_t * block_size)
 {
     int8_t ret = ST_GetCapacity(lun, block_num, block_size);
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
+#if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
     DBGU_VERBOSE("StorageCapacity: %d blocks of size %d %s", *block_num +1, *block_size, get_ret_str(ret));
 #endif
     return ret;
@@ -112,7 +110,7 @@ int8_t STORAGE_GetCapacity(uint8_t lun, uint32_t * block_num, uint16_t * block_s
 int8_t STORAGE_IsReady(uint8_t lun)
 {
     int8_t ret = ST_IsReady(lun);
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
+#if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
     DBGU_PALAVER("StorageIsReady %d", get_ret_str(ret));
 #endif
     return ret;
@@ -139,14 +137,14 @@ int8_t STORAGE_IsWriteProtected(uint8_t lun)
 int8_t STORAGE_Read(uint8_t lun, uint8_t * buf, uint32_t blk_addr, uint16_t blk_len)
 {
     int8_t ret = ST_Read( lun, buf, blk_addr, blk_len );
-    #if DEBUG_MODE > 0 && DEBUG_USB > 0
+    #if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
         if ( blk_len == 1 ) {
             DBGU_VERBOSE("StorageRead block %d", blk_addr);
         } else {
             DBGU_VERBOSE("StorageRead block %d...%d", blk_addr, blk_addr+blk_len-1);
         }
+        DBGU_VERBOSE(" returns %s\n", get_ret_str(ret));
     #endif
-    DBGU_VERBOSE(" returns %s\n", get_ret_str(ret));
 
     return ret;
 }
@@ -162,14 +160,14 @@ int8_t STORAGE_Write(uint8_t lun, uint8_t * buf, uint32_t blk_addr, uint16_t blk
 {
     int8_t ret = ST_Write( lun, buf, blk_addr, blk_len );
 
-    #if DEBUG_MODE > 0 && DEBUG_USB > 0
+    #if DEBUG_MODE > 0 && DEBUG_USB_STORAGE > 0
         if ( blk_len == 1 ) {
             DBGU_VERBOSE("StorageWrite block %d", blk_addr);
         } else {
             DBGU_VERBOSE("StorageWrite block %d...%d", blk_addr, blk_addr+blk_len-1);
         }
+        DBGU_VERBOSE(" returns %s\n", get_ret_str(ret));
     #endif
-    DBGU_VERBOSE(" returns %s\n", get_ret_str(ret));
     return ret;
 }
 

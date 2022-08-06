@@ -61,6 +61,7 @@
 
 
 #include "dev/devices.h"
+#include "log.h"
    
 
 /* Private typedef -----------------------------------------------------------*/
@@ -811,13 +812,21 @@ void DebugMon_Handler(void)
 
 #if USE_USB > 0
     extern PCD_HandleTypeDef hpcd;
-    #ifdef USE_USB_FS > 0
+    #if USE_USB_FS > 0
         void OTG_FS_IRQHandler(void)
     #else
         void OTG_HS_IRQHandler(void)
     #endif
     {
-      HAL_PCD_IRQHandler(&hpcd);
+      #if USE_FREERTOS > 0
+        (void)USB_DisableGlobalInt((USB_OTG_GlobalTypeDef *)HW_USBDFS.devBase);
+//        LOGU_INFO("USB IRQ");
+        TaskNotify(TASK_USB);
+      #else
+        ProfilerPush(JOB_IRQ_USB);
+        HAL_PCD_IRQHandler(&hpcd);
+        ProfilerPop();
+      #endif
     }
 #endif
 

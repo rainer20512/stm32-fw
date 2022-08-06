@@ -33,6 +33,7 @@
 
 #include "debug_helper.h"
 #include "log.h"
+#include "system/pll.h"
 
 /* Private defines --------------------------------------------------------------*/
 #define SD_DEFAULT_BLOCK_SIZE 512                   /* logical block size to use */
@@ -222,9 +223,7 @@ void Sdmmc_DeInit(const HW_DeviceType *self)
 }
 
 /**************************************************************************************
- * Initialize quadrature encoder, i.e. set all GPIO pins and activate all interrupts  *
- * After successful initialization, the device is deactivated to reduce power         *
- * consumption. So, to use the device, it has to be activated first                   *
+ * Initialize SDMMC interface, i.e. set all GPIO pins and activate all interrupts     *
  *************************************************************************************/
 bool Sdmmc_Init(const HW_DeviceType *self)
 {
@@ -248,11 +247,7 @@ bool Sdmmc_Init(const HW_DeviceType *self)
 #if  USE_SD_TRANSCEIVER > 0
     hsd->Init.TranceiverPresent   = SDMMC_TRANSCEIVER_PRESENT;
 #endif
-    #if ( USE_SD_HIGH_PERFORMANCE > 0 )
-        hsd->Init.ClockDiv            = SDMMC_HSpeed_CLK_DIV;
-    #else
-        hsd->Init.ClockDiv            = SDMMC_INIT_CLK_DIV;
-    #endif
+    hsd->Init.ClockDiv            = SDMMC_HSpeed_CLK_DIV;
 
     /* HAL SD initialization   */
 
@@ -442,7 +437,7 @@ bool SDMMC_CardInTransferState(SdmmcHandleT *myHandle)
   uint32_t ret = HAL_SD_GetCardState(&myHandle->halHandle);
   #if DEBUG_SDMMC > 0
     if ( ret != HAL_SD_CARD_TRANSFER ) {
-        DEBUG_PRINTF("HAL_SD_GetCardState returned state %s(#%d) when exepecting ""trans""\n", get_state_str(ret), ret );
+        LOG_ERROR("HAL_SD_GetCardState returned state %s(#%d) when exepecting ""trans""", get_state_str(ret), ret );
     }
   #endif
   return ret == HAL_SD_CARD_TRANSFER;
@@ -460,18 +455,20 @@ bool SDMMC_WaitForTransferState(SdmmcHandleT *myHandle, uint32_t tmo)
     uint32_t ret;
     uint32_t loops = 0;
     #if DEBUG_SDMMC > 0
-        LOGU_VERBOSE("Wait for transfer starts\n" );
+        LOGU_PALAVER("Wait for transfer starts\n" );
     #endif
 
+    ProfilerPush(JOB_TASK_WAITOTHER);
     uint32_t timeout = HAL_GetTick();
     while((HAL_GetTick() - timeout) < tmo) {
         ret = HAL_SD_GetCardState(&myHandle->halHandle); 
         loops++;
         if (ret == HAL_SD_CARD_TRANSFER ) break;
     }
+    ProfilerPop();
 
     #if DEBUG_SDMMC > 0
-        LOGU_VERBOSE("Wait for transfer finishes after %d loops: %s\n", loops, ret == HAL_SD_CARD_TRANSFER ? "OK" : "FAIL" );
+        LOGU_PALAVER("Wait for transfer finishes after %d loops: %s\n", loops, ret == HAL_SD_CARD_TRANSFER ? "OK" : "FAIL" );
     #endif
 
     return ret == HAL_SD_CARD_TRANSFER;
@@ -868,8 +865,16 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
 
     {
         SdmmcHandleT *h = Sdmmc_GetMyHandle(self);
+        SDMMC_TypeDef *sdmmc = (SDMMC_TypeDef *)self->devBase;
     
         DEBUG_PRINTF("Dumping Data of %s\n", self->devName);
+        uint32_t prediv = ( sdmmc->CLKCR & SDMMC_CLKCR_CLKDIV_Msk ) >> SDMMC_CLKCR_CLKDIV_Pos;
+        if ( prediv == 0 ) 
+            prediv = 1;
+        else    
+            prediv *= 2;
+        DEBUG_PRINTF("Clock speed: %dkHz\n", PLL_GetOutFrq(SYS_PLL1, PLL_LINE_Q) / prediv);
+
         SDMMC_DumpGeometry(self);
 
         SDMMC_DumpStatusRegister(self);
@@ -1007,7 +1012,7 @@ void HAL_SD_ErrorCallback(SD_HandleTypeDef *hsd)
         DBG_setIndentAbs(2);
         DBG_setPadLen(20);
         DBG_dump_number ("MMCA Version", csd.mmca_vsn );
-        DBG_dump_number("cmdclass", csd.cmdclass );
+        DBG_dump_uint16_hex("CMD classes", csd.cmdclass );
         DBG_dump_number("TAAC clks", csd.tacc_clks );
         DBG_dump_number("TAAC ns", csd.tacc_ns );
         DBG_dump_number("R2W factor", csd.r2w_factor );

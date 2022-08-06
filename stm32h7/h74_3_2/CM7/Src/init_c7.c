@@ -11,9 +11,7 @@
 #include "config/devices_config.h"
 #include "dev/devices.h"
 
-#if DEBUG_MODE > 0
-    #include "debug_helper.h"
-#endif
+#include "debug_helper.h"
 
 /* - Add additional conditional #includes here ------------------------------*/
 
@@ -216,6 +214,10 @@ void Init_OtherDevices(void)
     #include "system/util.h"
 #endif
 
+#if USE_USB > 0
+    #include "usbd_conf.h"
+#endif
+
 #if LOGTO_FATFS > 0
     #include "logfile.h"
 #endif
@@ -234,6 +236,8 @@ void CM7_handle_remote(uint32_t);
 #define RMT_STACK_SIZE  256
 #define QSP_STACK_SIZE  128
 #define LOG_STACK_SIZE  512
+#define USB_STACK_SIZE  512
+
 
 static StackType_t tmrStack[TMR_STACK_SIZE];
 static StackType_t rtcStack[RTC_STACK_SIZE];
@@ -241,6 +245,7 @@ static StackType_t cmdStack[CMD_STACK_SIZE];
 static StackType_t outStack[OUT_STACK_SIZE];
 static StackType_t perStack[PER_STACK_SIZE];
 static StackType_t adcStack[ADC_STACK_SIZE];
+static StackType_t usbStack[USB_STACK_SIZE];
 
 
 /******************************************************************************
@@ -274,6 +279,9 @@ void Init_DefineTasks(void)
 #endif
 #if USE_DS18X20 > 0
     AtHour(0,ResetMinMaxTemp, (void*)0, "ResetMinMaxTemp");
+#endif
+#if USE_USB > 0
+  TaskRegisterTask(task_init_usb, task_handle_usb,  TASK_USB,        JOB_TASK_USB,   usbStack, USB_STACK_SIZE, "USB I/O");  
 #endif
 #if LOGTO_FATFS > 0
   static StackType_t logStack[LOG_STACK_SIZE];

@@ -205,49 +205,55 @@ bool USBD_InitDev(const HW_DeviceType *self)
 
     UsbSetClockSource(self);
 
-#if defined(STM32L4_FAMILY)
-    /* Get clock status of PWR domain and switch on, if not already on*/
-    uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
-    if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
-#endif
+    #if defined(STM32L4_FAMILY)
+        /* Get clock status of PWR domain and switch on, if not already on*/
+        uint32_t pwrbit = __HAL_RCC_PWR_IS_CLK_ENABLED();
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_ENABLE();
+    #endif
  
-#if defined(STM32L4_FAMILY)
-    /* enable USB power on Pwrctrl CR2 register */
-    HAL_PWREx_EnableVddUSB();
-#elif defined(STM32H7_FAMILY)
-    HAL_PWREx_EnableUSBVoltageDetector();
-#else 
-    #error "No suitable USB Initialization for selected MCU"  
-#endif
+    #if defined(STM32L4_FAMILY)
+        /* enable USB power on Pwrctrl CR2 register */
+        HAL_PWREx_EnableVddUSB();
+    #elif defined(STM32H7_FAMILY)
+        HAL_PWREx_EnableUSBVoltageDetector();
+    #else 
+        #error "No suitable USB Initialization for selected MCU"  
+    #endif
 
-#if defined(STM32L4_FAMILY)
-    /* Switch PWR domain clock off again, if it was off before */
-    if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
-#endif
+    #if defined(STM32L4_FAMILY)
+        /* Switch PWR domain clock off again, if it was off before */
+        if ( !pwrbit ) __HAL_RCC_PWR_CLK_DISABLE();
+    #endif
 
-#if USE_USB_MSC > 0
-  /* Init Device Library */
-  USBD_Init(hUsbd, &MSC_Desc, 0);
+    #if USE_USB_MSC > 0
+      /* Init Device Library */
+      USBD_Init(hUsbd, &MSC_Desc, 0);
 
-  /* Add Supported Class */
-  USBD_RegisterClass(hUsbd, USBD_MSC_CLASS);
+      /* Add Supported Class */
+      USBD_RegisterClass(hUsbd, USBD_MSC_CLASS);
 
-  /* Add Storage callbacks for MSC Class */
-  USBD_MSC_RegisterStorage(hUsbd, &USBD_DISK_fops);
-#else
-    /* Init Device Library */
-    USBD_Init(hUsbd, &VCP_Desc, 0);
+      /* Add Storage callbacks for MSC Class */
+      USBD_MSC_RegisterStorage(hUsbd, &USBD_DISK_fops);
+    #else
+        /* Init Device Library */
+        USBD_Init(hUsbd, &VCP_Desc, 0);
 
-    /* Add Supported Class */
-    USBD_RegisterClass(hUsbd, USBD_CDC_CLASS);
+        /* Add Supported Class */
+        USBD_RegisterClass(hUsbd, USBD_CDC_CLASS);
 
-    /* Add CDC Interface Class */
-    USBD_CDC_RegisterInterface(hUsbd, &USBD_CDC_fops);
-#endif 
+        /* Add CDC Interface Class */
+        USBD_CDC_RegisterInterface(hUsbd, &USBD_CDC_fops);
+    #endif 
 
-    /* Start Device Process */
-    USBD_Start(hUsbd);
- 
+    
+    /* 
+     * In an RTOS environment the USB device will be started after
+     * scheduler start to be ready to react to USB request w/o delay
+     */
+    #if USE_FREERTOS < 1
+        USBD_Start(hUsbd);
+    #endif
+    
     return true;
 }
 

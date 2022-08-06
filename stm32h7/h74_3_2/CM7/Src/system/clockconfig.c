@@ -45,9 +45,7 @@
 #include "system/timer_handler.h"
 
 
-#if DEBUG_MODE > 0
-    #include "debug_helper.h"
-#endif
+#include "debug_helper.h"
 
 #if DEBUG_PROFILING > 0
     #include "system/profiling.h"

@@ -242,8 +242,12 @@
     #define FLOGU_PALAVER(...)
 #endif
 
-void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* format, ... );
-void Log_SetDebugLevels(uint32_t config_value);
-
+#if DEBUG_MODE > 0
+    void _LOG( uint32_t loglvl,  uint32_t logts,  uint32_t logdest, const char* format, ... );
+    void Log_SetDebugLevels(uint32_t config_value);
+#else
+    #define _LOG( ... )
+    #define Log_SetDebugLevels(c)
+#endif
 
 #endif /* if ! defined(_LOG_H_) */

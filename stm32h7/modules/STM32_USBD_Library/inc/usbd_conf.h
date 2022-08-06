@@ -87,10 +87,11 @@
 #define USBD_UsrLog(...) do {} while (0)
 #endif
 
-/* Exported functions ------------------------------------------------------- */
 /* Exported functions -------------------------------------------------------*/
-void *USBD_static_malloc(uint32_t size);
-void USBD_static_free(void *p);
+void  task_init_usb(void);
+void  task_handle_usb(uint32_t arg);
+void* USBD_static_malloc(uint32_t size);
+void  USBD_static_free(void *p);
 
 #endif /* __USBD_CONF_H */
 

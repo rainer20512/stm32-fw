@@ -51,6 +51,9 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
 #if LOGTO_FATFS > 0
     JOB_TASK_LOGFILE,
 #endif
+#if USE_USB > 0
+    JOB_TASK_USB,
+#endif
     JOB_ADC,
     JOB_SLEEP,
     JOB_STOP0,
@@ -63,9 +66,13 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
     JOB_IRQ_TMR,
     JOB_IRQ_EXTI,
     JOB_IRQ_DMA,
+    JOB_IRQ_USB,
     JOB_IRQ_PROFILER,
     JOB_TASK_PROFILER,
     JOB_TASK_SEMWAIT,
+    JOB_TASK_WAITWR,
+    JOB_TASK_WAITRD,
+    JOB_TASK_WAITOTHER,
     JOB_TASK_UNCLASSIFIED,
 
     JOB_NROF_ELEMENTS                        /* Keep this element as last entry in enum ! */
@@ -108,8 +115,15 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
   #define JOBNAMES5 JOBNAMES4
 #endif             
 
+#if USE_USB > 0
+  #define JOBNAMES6 JOBNAMES5 \
+  "USB I/O",
+#else
+  #define JOBNAMES6 JOBNAMES5
+#endif             
+
 #define JOBNAMES99 \
-  JOBNAMES5     \
+  JOBNAMES6     \
   "ADC",        \
   "SLEEP",      \
   "STOP0",      \
@@ -122,9 +136,13 @@ void ProfilerFormatTime(uint64_t time64, char *buffer, size_t buflen, bool bAreU
   "IRQ_TMR",    \
   "IRQ_EXTI",   \
   "IRQ_DMA",    \
+  "IRQ_USB",    \
   "IRQ_PROFILER",\
   "PROFILER",   \
   "SEMWAIT",    \
+  "Wait.Write", \
+  "Wait.Read",  \
+  "Wait.Other", \
   "UNCLASSIFIED"
 
 

@@ -20,9 +20,8 @@
 #include "system/profiling.h"
 #include "FreeRTOS.h"
 
-#if DEBUG_MODE > 0
-    #include "log.h"
-#endif
+#include "log.h"
+
 /* Private define ------------------------------------------------------------*/
 
 /* 
@@ -36,7 +35,7 @@
  * and deallocated by any task
  * ( one semaphore requires 84 bytes of SRAM )
  */
-#define MAX_SEMA            5
+// #define MAX_SEMA            5
 
 /* Private typedef -----------------------------------------------------------*/
 typedef struct {
@@ -62,7 +61,10 @@ typedef struct {
 
 /* Array of registered tasks */
 static MiniTaskT       tasks[MAX_TASK] = {0};
-static SemaphoreT semaphores[MAX_SEMA] = {0};
+
+#if 0
+    static SemaphoreT semaphores[MAX_SEMA] = {0};
+#endif
 
 #if DEBUG_MODE > 0
     /* flag variable to inhibit StopMode (for debug purposes) */
@@ -113,7 +115,7 @@ void TaskRTOSWrapper ( void *taskArg ) {
 #if DEBUG_MODE > 0
 void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth, const char *Name )
 #else 
-void TaskRegisterTask( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth )
+void TaskRegisterTaskShort( MiniTaskInitFn i, MiniTaskRunFn r, uint32_t num, int32_t profilerID, StackType_t* stackMem, uint32_t ulStackDepth )
 #endif
 {
     assert( num < MAX_TASK);
@@ -162,6 +164,7 @@ void TaskInitAll ( void )
 
             /* start task */
             ret = xTaskCreateStatic( TaskRTOSWrapper, TASK_NAME(i), tasks[i].stackSize, (void *)i, i, tasks[i].stackMem, &tasks[i].staticTCB );
+            LOGT_INFO("Started %s", TASK_NAME(i));
             if ( ret ) 
                 tasks[i].TaskID = ret;
             else {
@@ -172,12 +175,13 @@ void TaskInitAll ( void )
         }
     } // for
 
+#if 0
     /* Initialize the pool of shared semaphores */
     for ( uint32_t i=0; i < MAX_SEMA; i++ ) {
         semaphores[i].binaryTaskSemaphore = xSemaphoreCreateBinaryStatic(&(semaphores[i].staticSemaphore));
         semaphores[i].bIsAllocated        = 0;
     }
-
+#endif
     ProfilerPop();
 }
 
@@ -201,7 +205,7 @@ void TaskNotify ( uint32_t num )
     }
 }
 
-
+#if 0
 /******************************************************************************
  * Allocate one semaphore from the static pool of semaphores, execute "give" and
  * return ready for use to caller
@@ -231,7 +235,7 @@ void TaskSemaphoreFree( SemaphoreHandle_t used_sem )
 }
 
 
-#if 0
+
 /******************************************************************************
  * Notify another task out of an interrupt context 
  * Notifications my be cumulated, resulting in more than one execution loop

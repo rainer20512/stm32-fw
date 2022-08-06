@@ -15,12 +15,11 @@
 
 #include "dev/sdmmc_dev.h"
 
-#if DEBUG_MODE > 0 && DEBUG_USB > 0
-    #include "log.h"
-#endif
+#include "log.h"
 
 #include "usbd_storage.h"
 #include "storage_provider.h"
+#include "system/profiling.h"
 
 /* Private typedef ----------------------------------------------------------- */
 /* Private define ------------------------------------------------------------ */
@@ -137,12 +136,14 @@ int8_t ST_Read(uint8_t lun, uint32_t * buf, uint32_t blk_addr, uint32_t blk_coun
 
     if ( SDMMC_ReadBlocksDMA(h, buf, blk_addr, blk_count) ) {
         uint32_t timeout = HAL_GetTick();
+        ProfilerPush(JOB_TASK_WAITRD);
         while((HAL_GetTick() - timeout) < SD_TIMEOUT) {
             if (h->bPerformingRead == 0 ) {
                 ret = ST_OK;
                 break;
             }
         }
+        ProfilerPop();
         if ( ret == ST_OK ) {
             /*
                the SCB_InvalidateDCache_by_Addr() requires a 32-Byte aligned address,
@@ -180,6 +181,7 @@ int8_t ST_Write(uint8_t lun, uint32_t* buf, uint32_t blk_addr, uint32_t blk_coun
     }
 #endif    
     if ( SDMMC_WriteBlocksDMA(GetHandle(lun), buf, blk_addr, blk_count) ) {
+        ProfilerPush(JOB_TASK_WAITWR);
         uint32_t timeout = HAL_GetTick();
         while((HAL_GetTick() - timeout) < SD_TIMEOUT) {
             if (h->bPerformingWrite == 0 ) {
@@ -187,6 +189,7 @@ int8_t ST_Write(uint8_t lun, uint32_t* buf, uint32_t blk_addr, uint32_t blk_coun
                 break;
             }
         }
+        ProfilerPop();
         if ( ret == ST_OK ) {
         } else {
             LOG_ERROR("Timeout while waiting for DMA completion\n");

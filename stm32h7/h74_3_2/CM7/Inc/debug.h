@@ -32,14 +32,13 @@
     #define STATIC_LOGLIMIT     LOGLEVEL_VERBOSE   /* max. loglevel that will be generated in code */
     #define DEBUG_MODE          1
 #else
-    #define STATIC_LOGLIMIT     LOGLEVEL_ALWAYS 
+    #define STATIC_LOGLIMIT     LOGLEVEL_ERROR 
     #define DEBUG_MODE          0
 #endif
 
 /* Enable/Disable different logging destinations */
 #define LOGTO_FATFS         0  
-#define LOGTO_CONSOLE       1   
-
+#define LOGTO_CONSOLE       1
 
 /* Enable/Disable different debug packets */
 #define DEBUG_STARTUP       0
@@ -73,7 +72,7 @@
 
 #define DEBUG_PRINT_ADDITIONAL_TIMESTAMPS 0
 
-#if DEBUG_MODE 
+#if DEBUG_MODE > 0
   #include <stdint.h>
   extern uint32_t console_debuglevel;
   extern uint32_t fatfs_debuglevel;

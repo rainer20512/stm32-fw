@@ -56,7 +56,8 @@ uint32_t PLL_SetClockSource( uint32_t clocksource, uint32_t srcclk_khz);
 int32_t  PLL_Configure (RCC_PLLInitTypeDef *PLL, uint32_t pllnum, uint32_t pll_line, uint32_t pll_out_khz );
 int32_t  PLL_Configure_SYSCLK (RCC_OscInitTypeDef*, uint32_t pll_out_khz, uint32_t pll_inp_khz );
 int32_t  PLL_Configure_Line ( uint32_t pllnum, uint32_t pllline, uint32_t pll_out_khz );
-
+const char * PLL_GetName(uint32_t pllnum );
+uint32_t PLL_GetOutFrq ( uint32_t pllnum, uint32_t pll_line );
 
 #ifdef __cplusplus
 }

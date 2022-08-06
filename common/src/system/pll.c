@@ -460,6 +460,19 @@ static uint32_t Pll_GetActiveLines( uint32_t pllnum )
     #error "No Implemetation of ""Pll_GetActiveLines"""
 #endif
 }
+
+/******************************************************************************
+ * return the PLL's name
+ *****************************************************************************/
+const char * PLL_GetName(uint32_t pllnum )
+{
+    if ( pllnum >= MAX_PLLNUM )
+        return "Illegal PLL idx";
+    else    
+        return pll_restriction[pllnum].pllname;
+}
+
+
 /******************************************************************************
  * return the M-Divisor value for the selected PLL
  * @param pllnum - index of PLL to check
@@ -500,9 +513,9 @@ int32_t Pll_GetM(uint32_t pllnum )
 }
 
 /******************************************************************************
- * return the M-Divisor value for the selected PLL
+ * return the N-Multiplier value for the selected PLL
  * @param pllnum - index of PLL to check
- * @returns M-Divisor value if in use, 0 if PLL is unused
+ * @returns N-Multiplier if in use, 0 if PLL is unused
  * @returns Error value ( < 0 ) if pllnum is invalid
  *****************************************************************************/
 int32_t Pll_GetN(uint32_t pllnum )
@@ -529,6 +542,89 @@ int32_t Pll_GetN(uint32_t pllnum )
         default:
             return PLL_CONFIG_PARAM_ERROR;
     }
+#else
+    #error "No Implemetation of ""Pll_GetN"""
+#endif
+}
+
+/******************************************************************************
+ * return the P,Q or R divisor for the selected PLL
+ * @param pllnum   - index of PLL to check
+ * @param pll_line - PLL line to check
+ * @returns P, Q or R divisor if in use, 0 if PLL is unused
+ * @returns Error value ( < 0 ) if pllnum is invalid
+ *****************************************************************************/
+int32_t Pll_GetPQR(uint32_t pllnum, uint32_t pll_line )
+{
+    uint32_t cfgreg;
+    uint32_t temp;
+
+#if defined(STM32H7_FAMILY)
+    switch ( pllnum ) {
+        case SYS_PLL1:
+            cfgreg = RCC->PLL1DIVR;
+            break;
+        case SYS_PLL2:
+            cfgreg = RCC->PLL1DIVR;
+            break;
+        case SYS_PLL3:
+            cfgreg = RCC->PLL1DIVR;
+            break;
+        default:
+            return PLL_CONFIG_PARAM_ERROR;
+    }
+    /*
+     * P, Q, and R posisitons in all CFG-registers are the same.
+     * So we can use one HAL mask and position constant for all PLLs
+     */
+    switch ( pll_line )  {
+        case PLL_LINE_P:
+            return maskout(cfgreg, RCC_PLL1DIVR_P1_Msk, RCC_PLL1DIVR_P1_Pos) + 1;
+        case PLL_LINE_Q:
+            return maskout(cfgreg, RCC_PLL1DIVR_Q1_Msk, RCC_PLL1DIVR_Q1_Pos) + 1;
+        case PLL_LINE_R:
+            return maskout(cfgreg, RCC_PLL1DIVR_R1_Msk, RCC_PLL1DIVR_R1_Pos) + 1;
+        default:
+            return PLL_CONFIG_PARAM_ERROR;
+    }
+
+#elif defined(STM32L4_FAMILY) 
+    switch ( pllnum ) {
+        case SYS_PLL1:
+            cfgreg = RCC->PLLCFGR;
+            break;
+        case SYS_PLL2:
+            cfgreg = RCC->PLLSAI1CFGR;
+            break;
+        case SYS_PLL3:
+            cfgreg = RCC->PLLSAI2CFGR;
+            break;
+        default:
+            return PLL_CONFIG_PARAM_ERROR;
+    }
+    /*
+     * P, Q, and R posisitons in all CFG-registers are the same.
+     * So we can use one HAL mask and position constant for all PLLs
+     */
+    switch ( pll_line )  {
+        case PLL_LINE_P:
+           /* If PLLP division bits are defined, these bit define the divisor, if = 0 */
+           #if defined( RCC_PLLCFGR_PLLPDIV )
+                temp = maskout(cfgreg, RCC_PLLCFGR_PLLPDIV_Msk , RCC_PLLCFGR_PLLPDIV_Pos);
+                if ( temp ) return temp;
+           #endif
+           /* PLLP division bits undefined or 0: Must check PLLP bit */
+           return cfgreg & RCC_PLLCFGR_PLLP ? 17 : 7;
+        case PLL_LINE_Q:
+            /* 2, 4, 6 or 8 are valid */
+            return 2 * (maskout(cfgreg, RCC_PLLCFGR_PLLQEN_Msk, RCC_PLLCFGR_PLLQEN_Pos) + 1);
+        case PLL_LINE_R:
+            /* 2, 4, 6 or 8 are valid */
+            return 2 * (maskout(cfgreg, RCC_PLLCFGR_PLLREN_Msk, RCC_PLLCFGR_PLLREN_Pos) + 1);
+        default:
+            return PLL_CONFIG_PARAM_ERROR;
+    }
+
 #else
     #error "No Implemetation of ""Pll_GetN"""
 #endif
@@ -951,4 +1047,23 @@ int32_t PLL_Configure_Line ( uint32_t pllnum, uint32_t pllline, uint32_t pll_out
     /* If successful configured, setup PLL */
     ret = PLL_Set ( &PLL, pllnum );
     if ( ret < 0 ) return ret;
+}
+
+/******************************************************************************
+ * Return the PLL output frequency of the specfied line of the specified PLL
+ * @param pllnum      - Number of the PLL to be requested
+ * @param pllline     - Line Number of the PLL to be requested
+ * @returns           - The actual PLL output frequency in kHz, if PLL line is active
+ *                    - 0xFFFFFFFF, if the pll line is not active
+  *****************************************************************************/
+uint32_t PLL_GetOutFrq ( uint32_t pllnum, uint32_t pll_line )
+{
+
+    /* First ensure, that PLL line is active */
+    if ( Pll_GetActiveLines(pllnum) &&  Pll_GetActiveLines(pllnum) & pll_line ) {
+        return pll_input_frq / Pll_GetM(pllnum) * Pll_GetN(pllnum) / Pll_GetPQR(pllnum, pll_line);
+    } else {
+        /* Line is not active */
+        return PLL_LINE_UNUSED;
+    }
 }
