@@ -16,6 +16,7 @@
 #include "dev/i2c_abstract.h"
 #include "dev/devices.h"
 #include "debug_helper.h"
+#include "eeprom.h"
 #include "system/periodic.h"
 
 #if USE_BME280 > 0
@@ -183,13 +184,23 @@ int32_t THPSENSOR_GetH (void)
         return DoScale(thpsensor_drv->GetHRaw(), conversiondecis.h_decis);
 }
 
-int32_t THPSENSOR_GetP (void)
+int32_t THPSENSOR_GetLocalP (void)
 {
     if ( !HasCapability(THPSENSOR_HAS_P) ) 
         return THPSENSOR_ERROR;
     else
         return DoScale(thpsensor_drv->GetPRaw(), conversiondecis.p_decis);
 }
+
+/**** 006 ****/
+int32_t THPSENSOR_GetP_MSL (void)
+{
+    int32_t ret = THPSENSOR_GetLocalP();
+    if ( ret != THPSENSOR_ERROR )
+        ret+= ((uint16_t)config.PressureComp)*10;
+    return ret;
+}
+
 
 /**** 001 ****/
 int32_t THPSENSOR_GetCO2 (void)

@@ -351,7 +351,7 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
  ******************************************************************************/
 static void LCD_Display_Temp(uint8_t scheme, uint8_t force ) 
 {
-#if USE_DS18X20 > 0 || defined(TX18LISTENER) || USE_BME280 > 0 
+#if USE_DS18X20 > 0 || defined(TX18LISTENER) || USE_BME280 > 0
     #include "system/util.h"
     uint8_t strlen;
 
@@ -482,7 +482,11 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
      ******************************************************************************/
     static void LCD_Display_Pressure(uint8_t scheme, uint8_t force) 
     {
-        uint16_t val = (uint16_t)THPSENSOR_GetP();
+        /**** 006 **** 
+         * THPSENSOR_GetP will return the local pressure. It has to be compensated
+         * to get the MSL pressure
+         */          
+        uint16_t val = (uint16_t)(int16_t)THPSENSOR_GetP_MSL();
         uint16_t pixlen;	
 
         // Display only, if changed

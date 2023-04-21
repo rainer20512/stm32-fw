@@ -1644,8 +1644,6 @@ static struct bme280_dev bme280Dev;
 static struct bme280_data comp_data;
 static uint8_t dev_addr = BME280_I2C_ADDR_PRIM;
 
-/* global variable for pressure */
-uint16_t bmp_pressure;      // pressure in hPA * 10
 
 
 BME280_INTF_RET_TYPE bme280Read(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)

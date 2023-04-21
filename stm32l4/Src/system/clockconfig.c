@@ -686,7 +686,7 @@ static bool SwitchOnPLL ( uint32_t xxmhz )
     /* if so, select HSI as temporary system clock source and stop PLL in order to reconfigure it */
     /* Vrange and Wait states have been set by caller */
     SC_SwitchOnHSI16(1);
-    Pll_Stop(SYSCLK_PLL);
+    PLL_Stop(SYSCLK_PLL);
   }
 
   #if USE_USB > 0
@@ -726,9 +726,9 @@ static bool SwitchOnPLL ( uint32_t xxmhz )
   success = PLL_Configure_SYSCLK(&RCC_OscInitStruct, xxmhz*1000, PLL_INP_FRQ/1000) == PLL_CONFIG_OK;
   if ( !success ) Error_Handler_XX(-20, __FILE__, __LINE__);
     
-  success = Pll_Set( & RCC_OscInitStruct.PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
+  success = PLL_Set( & RCC_OscInitStruct.PLL, SYSCLK_PLL) == PLL_CONFIG_OK;
   if ( !success ) Error_Handler_XX(-21, __FILE__, __LINE__);
-  if ( success ) success = Pll_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
+  if ( success ) success = PLL_Start(SYSCLK_PLL) == PLL_CONFIG_OK;
     
   return success;
 }
@@ -743,7 +743,7 @@ static void SystemClock_PLL_xxMHz_Vrange1_restore (uint32_t xxmhz, bool bSwitchO
   uint32_t flash_latency = SystemClock_GetFlashLatency(1, xxmhz );
 
   /* Restart all previously enabled PLLs */
-  Pll_Restart();
+  PLL_Restart();
 
   /* Set system clock source to PLL */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK;

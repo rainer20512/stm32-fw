@@ -23,3 +23,11 @@ where <nnn> is the threeed igit number from below
 
 005 Unify the PLL programming / handling for all three PLLs in ppl.c, pll.h and pll_config.h
     ToDo: Restart PLLs after STOP when SYSCLK source is not a PLL
+
+006 THPSENSOR_GetP() will always return the local pressure. To get the pressure at MSL, this value has to be
+    compensated, ie add the pressure difference between local elevation and MSL, which is 1hPa per 30 ft
+    To keep it easy, THPSENSOR provides two functions to read the pressure:
+       int32_t              THPSENSOR_GetLocalP    (void);   /* local pressure */
+       int32_t              THPSENSOR_GetP_MSL     (void);   /* local pressure at MSL */
+    the function THPSENSOR_GetP is no longer available
+    the global variable bmp_pressure is no longe available, so it is no longer supplied by "watch.c"

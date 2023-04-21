@@ -213,5 +213,10 @@
             }
 
 
+    7. When FreeRTOS does not compile due to error in port.asm (generated from port.c)
+       selected processor does not support `vstmdbeq r0!,{s16-s31}' in Thumb mode
+
+       --> Change the ProjectProperty "Code/CodeGeneration/ARM FP ABI Type" from "Soft" to "Hard"
+
             
 

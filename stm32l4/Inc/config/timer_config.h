@@ -122,7 +122,33 @@
     #endif 
 #endif /* TIM5 */
 
-/* RHB todo TIM8, TIM15, TIM16, TIM17 */
+#if defined(USE_TIM15) && defined(TIM15)
+    #if defined(USE_TIM15_ALTN1)
+        /* CH1,CH2,Ch1N : PA2,PA3, PA1  */
+        #define TIM15_CH1                         { GPIO_PIN_2,  GPIOA, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1" }
+        #define TIM15_CH2                         { GPIO_PIN_3,  GPIOA, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch2" }
+        #define TIM15_CH1N                        { GPIO_PIN_1,  GPIOA, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1N" }
+    #elif defined(USE_TIM15_ALTN2)
+        /* CH1,CH2,Ch1N : PB14,PB15, PB13  */
+        #define TIM15_CH1                         { GPIO_PIN_14, GPIOB, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1" }
+        #define TIM15_CH2                         { GPIO_PIN_15, GPIOB, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch2" }
+        #define TIM15_CH1N                        { GPIO_PIN_13, GPIOB, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1N" }
+    #elif defined(USE_TIM15_ALTN3)
+        /* CH1,CH2,Ch1N : PF9, PF10, PG9  */
+        #define TIM15_CH1                         { GPIO_PIN_9,  GPIOF, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1" }
+        #define TIM15_CH2                         { GPIO_PIN_10, GPIOF, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch2" }
+        #define TIM15_CH1N                        { GPIO_PIN_9,  GPIOG, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1N" }
+    #elif defined(USE_TIM15_ALTN3)
+        /* CH1,CH2,Ch1N : PG10,PG11, PG9  */
+        #define TIM15_CH1                         { GPIO_PIN_10, GPIOG, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1" }
+        #define TIM15_CH2                         { GPIO_PIN_11, GPIOG, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch2" }
+        #define TIM15_CH1N                        { GPIO_PIN_9,  GPIOG, GPIO_AF14_TIM15, GPIO_PULLDOWN, "Tim15_Ch1N" }
+    #else
+        #error("No config for TIM15 found");
+    #endif 
+#endif /* TIM15 */
+
+/* RHB todo TIM8, TIM16, TIM17 */
 
 /******************************************************************************************/
 /* BASE TIMER BASE TIMER BASE TIMER BASE TIMER BASE TIMER BASE TIMER BASE TIMER BASE TIMER*/

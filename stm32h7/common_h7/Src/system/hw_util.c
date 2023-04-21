@@ -444,7 +444,8 @@ void HW_InitJtagDebug(void)
 static const char *Get_DeviceName ( uint16_t devID )
 {
     switch(devID) {
-        case 0x450: return "STM32H7XX";
+        case 0x450: return "STM32H74x,H75x";
+        case 0x483: return "STM32H72x,H73x"
         default:    return "Unknown Device";
     }
 }
@@ -472,12 +473,31 @@ static const char *Get_DeviceName ( uint16_t devID )
             default: return "Unknown Package";
         }
     }
+#elif defined(STM32H72x)  || defined(STM32H73x)
+    static const char *Get_PackageName( uint16_t package )
+    {
+        switch(package&0b111) {
+            case 0b0000: return "VFQFPN68 Industrial";
+            case 0b0001: return "LQFP100/TFBGA100 Legacy";
+            case 0b0010: return "LQFP100 Industrial";
+            case 0b0011: return "TFBGA100 Industrial";
+            case 0b0100: return "WLCSP115 Industrial";
+            case 0b0101: return "TQFP144 Legacy";
+            case 0b0110: return "UFBGA144 Legacy";
+            case 0b0101: return "LQFP144 Industrial";
+            case 0b1000: return "UFBGA169 Industrial";
+            case 0b1001: return "UFBGA176+25 Industrial";
+            case 0b1010: return "LQFP176 Industrial";
+            default: return "Unknown Package";
+        }
+    }
 #endif
 char Get_RevisionName( uint16_t devID, uint16_t revID)
 {
     UNUSED(devID);
     char work;
     switch (revID) {
+        case 0x1000 : work = 'A'; break;
         case 0x1001 : work = 'Z'; break;
         case 0x1003 : work = 'Y'; break;
         case 0x2001 : work = 'X'; break;

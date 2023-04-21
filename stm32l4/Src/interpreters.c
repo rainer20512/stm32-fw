@@ -616,7 +616,7 @@ ADD_SUBMODULE(Devices);
                     DEBUG_PRINTF("Hum= %d.%1d\n",work/10, work%10);
                 }
                 if ( THPSENSOR_HAS_P & THPSENSOR_GetCapability() ) {
-                    work = THPSENSOR_GetP();
+                    work = THPSENSOR_GetP_MSL();
                     DEBUG_PRINTF("Pres=%d.%1d\n",work/10, work%10);
                 }
                 break;
@@ -2224,8 +2224,10 @@ ADD_SUBMODULE(Test);
             } else  
                 printf("No rel. Hum. capability\n");
             if ( num & THPSENSOR_HAS_P ) {
-                ret= THPSENSOR_GetP();
-                printf("Pressure=%d\n", ret );
+                ret= THPSENSOR_GetLocalP();
+                printf("local Pressure=%d\n", ret );
+                ret= THPSENSOR_GetP_MSL();
+                printf("MSL Pressure=%d\n", ret );
             } else  
                 printf("No pressure capability\n");
             if ( num & THPSENSOR_HAS_CO2 ) {

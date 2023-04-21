@@ -781,6 +781,43 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     };
 #endif /* TIM3 */
 
+#if defined(USE_TIM15) && defined(TIM15)
+    TimerHandleT         TIM15Handle;
+
+    static const HW_GpioList_AF gpio_tim15 = {
+        /* CH1, CH2, CH1N must be specified, will only be initialized when used */
+        .gpio = { 
+             TIM15_CH1,
+             TIM15_CH2,
+             TIM15_CH1N,
+        },
+        .num = 3, 
+    };
+
+    static const TMR_AdditionalDataType additional_tim15 = {
+        .myTmrHandle = &TIM15Handle,
+        .base_frq   = 8000000,
+    };
+
+    const HW_DeviceType HW_TIM15 = {
+        .devName        = "TIM15",
+        .devBase        = TIM15,
+        .devGpioAF      = &gpio_tim15,
+        .devGpioIO      = NULL,
+        .devType        = HW_DEVICE_PWMTIMER,
+        .devData        = &additional_tim15,
+        .devIrqList     = NULL,
+        .devDmaTx       = NULL,
+        .devDmaRx       = NULL,
+        .Init           = TMR_Init,
+        .DeInit         = TMR_DeInit,
+        .OnFrqChange    = TMR_OnFrqChange,
+        .AllowStop      = TMR_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif /* TIM15 */
+
 #if USE_BASICTIMER_FOR_TICKS > 0
     /*
      * If Basictimer is used for tick generation, the following

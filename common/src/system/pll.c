@@ -557,7 +557,9 @@ int32_t Pll_GetN(uint32_t pllnum )
 int32_t Pll_GetPQR(uint32_t pllnum, uint32_t pll_line )
 {
     uint32_t cfgreg;
-    uint32_t temp;
+    #if defined( RCC_PLLCFGR_PLLPDIV )
+        uint32_t temp;
+    #endif
 
 #if defined(STM32H7_FAMILY)
     switch ( pllnum ) {
@@ -1047,6 +1049,8 @@ int32_t PLL_Configure_Line ( uint32_t pllnum, uint32_t pllline, uint32_t pll_out
     /* If successful configured, setup PLL */
     ret = PLL_Set ( &PLL, pllnum );
     if ( ret < 0 ) return ret;
+
+    return PLL_CONFIG_OK;
 }
 
 /******************************************************************************

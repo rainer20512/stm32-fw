@@ -80,7 +80,7 @@ static int16_t md;
 static uint16_t ut;
 static uint16_t up;
 static int16_t bmp085_temp;			// T in °C * 10
-uint16_t bmp_pressure;      // pressure in hPA * 10
+static uint16_t bmp_pressure;      // pressure in hPA * 10
 static int32_t x1, x2, b5, b6, x3, b3, p;
 static uint32_t b4, b7;
 
@@ -127,10 +127,11 @@ static void BMP085_CalcPressure(void)
     x1 = (x1 * 3038) >> 16;
     x2 = (-7357 * p) >> 16;
     bmp_pressure = (uint16_t)((p + ((x1 + x2 + 3791) >> 4)+5)/10);
-    bmp_pressure += ((uint16_t)config.PressureComp)*10;
+    /**** 006 **** bmp_pressure now holds the local pressure */
+    // bmp_pressure += ((uint16_t)config.PressureComp)*10;
     #if DEBUG_MODE && DEBUG_BMP085
         if ( console_debuglevel > 2 ) {
-            DEBUG_PRINTF("Press = %d\n",bmp_pressure);
+            DEBUG_PRINTF("local Press = %d\n",bmp_pressure);
         }
     #endif
 }
@@ -369,6 +370,7 @@ id_err:
 uint32_t BMP085_GetCapability(void)
 {
     /* Sensor may suppy Temp ( chip temp ) and pressure */
+    /* Temp is more accurate when read from DS18B20, so don't use here */
     return THPSENSOR_HAS_P;
 }
 

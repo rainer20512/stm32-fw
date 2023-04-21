@@ -25,9 +25,9 @@
 //#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
 //#define STM32L4S9ZXXREF
-#define STM32L4P5BAREMETAL
+//#define STM32L4P5BAREMETAL
 //#define STM32L476EVAL
-//#define STM32L476BAREMETAL
+#define STM32L476BAREMETAL
 
 
 /*
@@ -37,7 +37,7 @@
  */ 
 //#define NOEXTENSION 
 #define UNIVERSAL 
-// #define ENVIRONMENTAL
+//#define ENVIRONMENTAL
 // #define TX18LISTENER        
 
 
@@ -54,25 +54,25 @@
  * Application tayloring
  ********************************************************************************
  */ 
-#define USE_RFM12           0
+#define USE_RFM12           1
 #define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
-#define USE_BME280          0
+#define USE_BME280          1
 #define USE_CCS811          0
 #define USE_EPAPER          0
 #define USE_ONEWIRE         0
 #define USE_DS18X20         0
 #define USE_EEPROM_EMUL     1
-#define USE_QENCODER        0
-#define USE_DISPLAY         0
-#define USE_DOGM132         0
+#define USE_QENCODER        1
+#define USE_DISPLAY         1
+#define USE_DOGM132         1
 #define USE_SECONDTIMER     1
-#define USE_PWMTIMER        0
+#define USE_PWMTIMER        1
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI            0            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_CAN             0
-#define USE_USB             1  
+#define USE_USB             0  
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
@@ -310,20 +310,21 @@
     MK_CONFIGSTR(USE_FMC_SRAM,20)
 
     MK_CONFIGSTR(USE_FMC_NOR,21)
-
-    #define MAX_CONFIGSTR   21
+    MK_CONFIGSTR(USE_PERIPHTIMER,22)
+    
+    #define MAX_CONFIGSTR   22
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
-            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, //ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, //ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
-            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, //ConfigVal22, ConfigVal23, ConfigVal24,
+            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 
 #endif

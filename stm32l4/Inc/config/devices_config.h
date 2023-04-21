@@ -419,9 +419,10 @@
   #define USER_ADC              HW_ADC1
 
   #if USE_PERIPHTIMER > 0
-      #define PERIPH_TIMER      HW_TIM2
-      #define USE_TIM2
-      #define USE_TIM2_ALTN1
+      #define PERIPH_TIMER          HW_TIM15
+      #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
+      #define USE_TIM15
+      #define USE_TIM15_ALTN1
   #endif   
 
   #if USE_PWMTIMER > 0

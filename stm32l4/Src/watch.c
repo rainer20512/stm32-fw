@@ -44,7 +44,7 @@ static uint32_t rtc_time;
 static uint32_t prof_time;
 
 static uint32_t watch_map[WATCH_N] = {
-#if USE_BMP085 > 0	
+#if 0 && USE_BMP085 > 0	/**** 006 **** global variable bmp_pressure no longer available */
     /* 00 */ ((uint32_t) &bmp_pressure) + B16,                          // BMP085 pressure
 #elif USE_OPTICAL_EMETER > 0
     /* 00 */ ((uint16_t) &SML_error_count) + B16,			// SML parser error count

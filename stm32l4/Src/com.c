@@ -84,7 +84,7 @@ void COM_print_debug(bool rfm_transmit)
 
     #if defined(TX18LISTENER) || defined(UNIVERSAL) 
         #if USE_THPSENSOR > 0
-            DEBUG_PRINTF(" P:%04d", THPSENSOR_GetP()/10);
+            DEBUG_PRINTF(" P:%04d", THPSENSOR_GetP_MSL()/10);
         #endif
     #endif
 
@@ -159,7 +159,8 @@ void COM_print_debug(bool rfm_transmit)
         /* 09 */wireless_putchar(EXT_TYPE_OUTDOOR); // Outdoor Frame type
         #if USE_THPSENSOR > 0
             { 
-                work = THPSENSOR_GetP();
+                /**** 06 **** do the pressure compensation to MSL */
+                work = THPSENSOR_GetP_MSL();
                 /* 0A */wireless_putchar(work >> 8); // Pressure
                 /* 0B */wireless_putchar((uint8_t)work & 0xff);
             }

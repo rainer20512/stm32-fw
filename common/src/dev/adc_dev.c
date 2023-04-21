@@ -177,7 +177,7 @@ static void Adc_SetupVariableParams ( const HW_DeviceType *self, uint32_t adcRes
         Init->ScanConvMode          = ENABLE;                    /* Sequencer enabled  when more than one channel */
         Init->EOCSelection          = ADC_EOC_SEQ_CONV;          /* EOC flag picked-up to indicate end of whole sequence */
         adt->myAdcHandle->bSequence = true;                      /* remember that we configured a sequence */ 
-   }
+    }
     Init->NbrOfConversion       = nrofChannels;                  /* As passed */
     Init->ExternalTrigConv      = extTriggerSrc;      
     if ( extTriggerSrc == ADC_SOFTWARE_START ) {
@@ -723,8 +723,8 @@ void ADC_SetupGroup (const HW_DeviceType *self, uint32_t bStandard)
     #else
         #error "NO ADC setup for selected STM32 type"
     #endif
-        ADC_EXTERNALTRIG_T2_TRGO,        /* Start by TRGO of TIM2 */  
-        PeriphTimer_StartStop,            /* Start/Stop of TIM2 */
+        PERIPH_TIMER_TRG_ADC,             /* Set the peripheral timer as external trigger for ADC */  
+        PeriphTimer_StartStop,            /* Start/Stop of peripheral timer */
         nrofch,
         ADC_DEFAULT_OVRSAMPLE
      );

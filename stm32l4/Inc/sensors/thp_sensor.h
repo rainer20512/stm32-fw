@@ -63,7 +63,9 @@ THPSENSOR_StatusEnum THPSENSOR_Calibrate    (void);
 THPSENSOR_StatusEnum THPSENSOR_Measure      (const uint32_t what);
 int32_t              THPSENSOR_GetT         (void);
 int32_t              THPSENSOR_GetH         (void);
-int32_t              THPSENSOR_GetP         (void);
+/**** 006 ****/
+int32_t              THPSENSOR_GetLocalP    (void);
+int32_t              THPSENSOR_GetP_MSL     (void); 
 /**** 001 ****/
 int32_t              THPSENSOR_GetCO2       (void); 
 int32_t              THPSENSOR_GetTVOC      (void);

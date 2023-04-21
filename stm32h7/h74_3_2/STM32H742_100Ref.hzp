@@ -390,6 +390,8 @@
             <file file_name="../../common/src/dev/xspi/mt25q.h" />
             <file file_name="../../common/src/dev/xspi/mx25r6435f.c" />
             <file file_name="../../common/src/dev/xspi/mx25r6435f.h" />
+            <file file_name="../../common/src/dev/xspi/w25qxx.c" />
+            <file file_name="../../common/src/dev/xspi/w25qxx.h" />
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
           <file file_name="../../common/src/dev/fmc_dev.c" />

@@ -61,6 +61,12 @@ typedef struct TimerHandleType {
     extern TimerHandleT         TIM7Handle;
 #endif
 
+/* Peripheral Timer -----------------------------------------------------------------*/
+#if defined(TIM15) && defined(USE_TIM15)
+    extern const HW_DeviceType  HW_TIM15;
+    extern TimerHandleT         TIM15Handle;
+#endif
+
 /* Public functions for all types of Timers ------------------------------------*/
 void        TMR_Aquire              (TimerHandleT *hnd);
 void        TMR_Release             (TimerHandleT *hnd);
