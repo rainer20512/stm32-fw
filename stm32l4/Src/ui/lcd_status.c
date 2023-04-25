@@ -518,6 +518,37 @@ static void LCD_Display_Temp(uint8_t scheme, uint8_t force )
         }
     }
 #endif
+#if defined(LCD_STATUS_RELHUM)
+    static uint16_t last_rh=0xffff;
+
+    /******************************************************************************
+     * Display the pressure in format ppp%
+     ******************************************************************************/
+    static void LCD_Display_RelHum(uint8_t scheme, uint8_t force) 
+    {
+
+        /* Relative Humidity is only displayed in scheme 0 */
+        if ( scheme != 0 ) return;
+
+        /* Original value is promille, so convert to % */
+        uint16_t val = ((uint16_t)(int16_t)THPSENSOR_GetH())/10;
+        uint16_t pixlen;	
+
+        // Display only, if changed
+        if ( !force && last_rh == val )return;
+        last_rh=val;
+
+        char *p = my_itoa(val, LCD_numbuf, 5, false);
+
+        //  Append % 
+        *p = '%';
+        *(++p)='\0';
+        /* we need no switch(scheme) here, rel. humidity is displayed only in scheme 0 */
+        pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, LCD_numbuf);
+        dogm_moveto_xy(3,132-pixlen-1);
+        lcd_put_string(FONT_PROP_8, NORMAL, LCD_numbuf);
+    }
+#endif
 
 #if defined(TX18LISTENER)
     #include "global_flags.h"
@@ -612,6 +643,9 @@ static uint32_t OnRedraw(uint32_t redraw_bits)
     else if (redraw_bits & LCD_STATUS_RFM)	{ redraw_bits &= ~LCD_STATUS_RFM; 	LCD_Display_StatusText(work); }
 #if defined(LCD_STATUS_PRESSURE)
     else if (redraw_bits & LCD_STATUS_PRESSURE)	{ redraw_bits &= ~LCD_STATUS_PRESSURE;  LCD_Display_Pressure(work,force); }
+#endif
+#if defined(LCD_STATUS_RELHUM)
+    else if (redraw_bits & LCD_STATUS_RELHUM)	{ redraw_bits &= ~LCD_STATUS_RELHUM;    LCD_Display_RelHum(work,force); }
 #endif
 #if defined(LCD_STATUS_CO2)
     else if (redraw_bits & LCD_STATUS_CO2)	{ redraw_bits &= ~LCD_STATUS_CO2;  LCD_Display_Environmental(work,force); }

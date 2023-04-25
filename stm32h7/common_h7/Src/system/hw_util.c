@@ -445,7 +445,7 @@ static const char *Get_DeviceName ( uint16_t devID )
 {
     switch(devID) {
         case 0x450: return "STM32H74x,H75x";
-        case 0x483: return "STM32H72x,H73x"
+        case 0x483: return "STM32H72x,H73x";
         default:    return "Unknown Device";
     }
 }

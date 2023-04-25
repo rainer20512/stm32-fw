@@ -16,7 +16,6 @@
 #include <stdio.h>
 
 
-const char VersionString[] = VERSION_STRING;
 
 void Dump_VersionInfo(void)
 {
@@ -24,9 +23,8 @@ void Dump_VersionInfo(void)
     char line[MAXLINE+1];
     uint32_t idx;
     LOG_ALWAYS("\r\nBuild Information:");
-    LOG_ALWAYS("%s",VERSION_STRING1);
-    LOG_ALWAYS("%s",VERSION_STRING2);
-    LOG_ALWAYS("\r\nConfig Information:");
+    LOG_ALWAYS("%s %s %s %s",APP_STRING, MCU_STRING, BOARD_STRING, BUILD_STRING);
+    LOG_ALWAYS("\nConfig Information:");
     for ( idx = 0; idx < GetConfigNumLines(); idx++ ) 
        LOG_ALWAYS(GetConfigLine(line, MAXLINE,idx,false));
        // LOG_ALWAYS("IDX=%d",idx);

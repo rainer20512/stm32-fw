@@ -31,3 +31,5 @@ where <nnn> is the threeed igit number from below
        int32_t              THPSENSOR_GetP_MSL     (void);   /* local pressure at MSL */
     the function THPSENSOR_GetP is no longer available
     the global variable bmp_pressure is no longe available, so it is no longer supplied by "watch.c"
+
+007 Display relative humidity in display scheme 0 

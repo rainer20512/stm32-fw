@@ -37,13 +37,13 @@ static uint8_t LDC_Display_EEPROM_useage(uint8_t redraw_bits)
     const char *ptext;
     
     if ( redraw_bits & LCD_TEXT_LINE0 ) {
-        ptext = VERSION_STRING1;
+        ptext = APP_STRING;
         pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, ptext);
         dogm_moveto_xy(0,(131-pixlen)/2);
         lcd_put_string(FONT_PROP_8, NORMAL, ptext);
         redraw_bits &= ~LCD_TEXT_LINE0;
     } else if ( redraw_bits & LCD_TEXT_LINE1 ) {
-        ptext = VERSION_STRING2;
+        ptext = BUILD_STRING;
         pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, ptext);
         dogm_moveto_xy(1,(131-pixlen)/2);
         lcd_put_string(FONT_PROP_8, NORMAL, ptext);

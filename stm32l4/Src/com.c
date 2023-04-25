@@ -236,20 +236,46 @@ static void COM_write_u16(uint16_t w) {
 
 /*!
  *******************************************************************************
- *  \brief helper function print version string
+ *  \brief helper function print one char of the version string
  *
  *  \note
  ******************************************************************************/
+static void COM_print_vchar ( const char c, bool bToWireless)
+{
+    DEBUG_PUTC(c);
+    if (bToWireless) wireless_putchar(c);
+}
+
+/*!
+ *******************************************************************************
+ *  \brief helper function print one portion of the whole version string
+ *         written to serial in any case,
+ *         written to wirelessif "bToWireless" is true
+ *         "cAppendChar" is appended to string, if != '\0'
+ *  \note
+ ******************************************************************************/
+static void COM_print_vstring ( char *s, bool bToWireless, char cAppendChar)
+{
+    for (char c = *s; c; ++s, c = *s ) {
+      COM_print_vchar(c, bToWireless);
+    }
+    if ( cAppendChar ) COM_print_vchar(cAppendChar, bToWireless);
+
+}
+
+/*!
+ *******************************************************************************
+ *  \brief helper function print version string
+ *
+ *  \note  MAX string length to transmit via wireless is roundabout 55 bytes
+ *         make sure not to exceed!
+ ******************************************************************************/
 void COM_print_version(bool bToWireless) 
 {
-    char *s = VERSION_STRING "\n";
-    
-    DEBUG_PUTC('V');
-    char c;
-    for (c = *s; c; ++s, c = *s ) {
-      DEBUG_PUTC(c);
-      if (bToWireless) wireless_putchar(c);
-    }
+    COM_print_vstring(APP_STRING, bToWireless, ' ');
+    COM_print_vstring(MCU, bToWireless, ' ');
+    /* '\n' is mandatory as last character when transmitting wireless, so append in any case */
+    COM_print_vstring(BUILD_STRING, bToWireless,'\n');
 }
 
 /*!

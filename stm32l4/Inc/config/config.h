@@ -56,12 +56,12 @@
  */ 
 #define USE_RFM12           1
 #define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
-#define USE_BMP085          0
-#define USE_BME280          1
+#define USE_BMP085          1
+#define USE_BME280          0
 #define USE_CCS811          0
 #define USE_EPAPER          0
-#define USE_ONEWIRE         0
-#define USE_DS18X20         0
+#define USE_ONEWIRE         1
+#define USE_DS18X20         1
 #define USE_EEPROM_EMUL     1
 #define USE_QENCODER        1
 #define USE_DISPLAY         1
@@ -102,10 +102,10 @@
 //#define USER_CLOCKCONFIG         CLK_HSE_VRNG1         /*  8 MHz, source HSE, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_80MHZ   /* 80 MHz, source PLL with HSI, Vrange1, 4 WS */
+#define USER_CLOCKCONFIG         CLK_HSI_VRNG2_16MHZ   /* 16 MHz, source HSI16, Vrange2, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
-#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
-//define USER_CLOCKCONFIG          CLK_MPLL_VRNG1_48MHZ   /* 48 MHz, source PLL, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_48MHZ   /* 48 MHz, source PLL, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ   /* 64 MHz, source PLL, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_80MHZ   /* 80 MHz, source PLL, Vrange1, 4 WS */
 

@@ -64,15 +64,13 @@ extern "C" {
 
 #define VERSION_NUMBER  "V" STR(MAJOR_VERSION) "." STR(MINOR_VERSION)
 
-#define MCU_TYPE "for " MCU " family" 
+#define APP_STRING      APP_NAME " " VERSION_NUMBER 
 
-#define BOARD_STRING "on board " BOARD
+#define MCU_STRING      "for " MCU " family" 
 
-#define VERSION_STRING1  APP_NAME " " VERSION_NUMBER " " MCU_TYPE " " BOARD_STRING
+#define BOARD_STRING    "on board " BOARD
 
-#define VERSION_STRING2  "Built " __DATE__ " " __TIME__ 
-
-#define VERSION_STRING   VERSION_STRING1 "\r\n" VERSION_STRING2 
+#define BUILD_STRING    "Built " __DATE__ " " __TIME__ 
 
 extern const char VersionString[];
 void        Dump_VersionInfo(void);

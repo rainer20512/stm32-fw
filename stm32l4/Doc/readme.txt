@@ -10,15 +10,11 @@ reset_handler:
   bl SystemInit
 #endif
 
-// RHB chgd: Preset all RAM with an uniform pattern
-
+/* RHB inserted: Preset all RAM with an uniform pattern */
 #ifdef DO_RAM_PRESET
-  ldr r0, =__RAM_segment_end__
-  mov sp, r0
   bl RamPreset
 #endif
-
-// RHB End of insertion
+/* RHB End of insertion */
 
 #ifdef VECTORS_IN_RAM
   ..

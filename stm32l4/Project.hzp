@@ -229,7 +229,7 @@
     <folder Name="System Files">
       <file file_name="$(StudioDir)/source/thumb_crt0.s" />
       <file file_name="$(ProjectDir)/Src/hardfault.s" />
-      <file file_name="$(TargetsDir)/STM32/STM32_startup.s" />
+      <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="stm32l476rg_MemoryMap.xml" />
       <file file_name="stm32l496rg_MemoryMap.xml" />
       <file file_name="stm32l4s9zi_MemoryMap.xml" />
