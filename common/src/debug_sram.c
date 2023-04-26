@@ -155,6 +155,18 @@ static void DBG_dump_sram_areas(void)
   DO_DUMP_RAMAREA("SRAM4",__SRAM4_segment);
   DEBUG_PUTC('\n');
 }
+
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+static void DBG_dump_sram_areas(void)
+{
+  DBG_setPadLen(8);
+  DO_DUMP_RAMAREA("DTCM",__DTCM_segment);
+  DO_DUMP_RAMAREA("AXISRAM",__AXISRAM_segment);
+  DO_DUMP_RAMAREA("SRAM1",__SRAM1_segment);
+  DO_DUMP_RAMAREA("SRAM2",__SRAM2_segment);
+  DO_DUMP_RAMAREA("SRAM4",__SRAM4_segment);
+  DEBUG_PUTC('\n');
+}
 #else
     #error "No RAM dump routine defined for selected hardware"
 #endif

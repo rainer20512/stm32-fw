@@ -94,7 +94,7 @@ UsartHandleT * USART_GetHandleFromDev(const HW_DeviceType *self)
 
 #define TX_IDX  0
 #define RX_IDX  1
-#if 0
+#if 0   
 #define USE_USART2
 #define USE_USART3
 #define USE_UART4
@@ -909,6 +909,63 @@ bool COM_AllowStop(const HW_DeviceType *self)
     };
 #endif
 
+#if defined(UART7) && defined(USE_UART7)
+    UsartHandleT HandleCOM7;
+
+    static const HW_GpioList_AF gpio_com7 = {
+        .num = 2,
+        .gpio = {COM7_TX, COM7_RX} ,
+    };
+
+    static const USART_AdditionalDataType additional_com7 = {
+        &HandleCOM7,
+        DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
+    };
+
+    #if defined(COM7_USE_TX_DMA)
+        static DMA_HandleTypeDef hdma_com7_tx;
+        static const HW_DmaType dmatx_com7 = { &hdma_com7_tx, COM7_TX_DMA };
+    #endif
+    #if defined(COM7_USE_RX_DMA)
+        static DMA_HandleTypeDef hdma_com7_rx;
+        static const HW_DmaType dmarx_com7 = { &hdma_com7_rx, COM7_RX_DMA };
+    #endif
+
+    static const HW_IrqList irq_com7 = {
+        .num = 1,
+        .irq = { COM7_IRQ, },
+    };
+
+    const HW_DeviceType HW_COM7 = {
+        .devName        = "COM7",
+        .devBase        = UART7,
+        .devGpioAF      = &gpio_com7,
+        .devGpioIO      = NULL,
+        .devType        =  HW_DEVICE_UART,
+        .devData        = &additional_com7,
+        .devIrqList     = &irq_com7,
+        #if defined(COM7_USE_TX_DMA)
+            .devDmaTx = &dmatx_com7,
+        #else
+            .devDmaTx = NULL,
+        #endif
+        #if defined(COM7_USE_RX_DMA)
+            .devDmaRx = &dmarx_com7,
+        #else
+            .devDmaRx = NULL,
+        #endif
+
+        .Init           = COM_Init,
+        .DeInit         = COM_DeInit,
+        .OnFrqChange    = Usart_OnFrqChange,
+        .AllowStop      = COM_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif
 #if defined(LPUART1) && defined(USE_LPUART1)
     UsartHandleT HandleCOM9;
 

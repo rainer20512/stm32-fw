@@ -232,7 +232,8 @@
 /******************************************************************************
  * Setup the MCU family
  *****************************************************************************/
-#if  defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+#if   defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx) \
+   || defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
     #define STM32H7_FAMILY
 #elif defined(STM32L476xx) || defined(STM32L496xx) 
     #define STM32L4_FAMILY

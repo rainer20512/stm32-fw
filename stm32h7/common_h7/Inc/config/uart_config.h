@@ -292,8 +292,59 @@
   #endif
   #define COM6_IRQHandler                     USART6_IRQHandler
 
-#endif // COM9
+#endif // COM6
 
+/************************************************************************
+ * Definition for UART7 pins
+ * UART7 : RX:[PA8/AF11,PB3/AF11,PE7/AF7, PF6/AF7] TX:[PA15/AF11, PB4/AF11,PE8/AF7, PF7/AF7] 
+ */
+#ifdef USE_UART7
+  #define COM7                           UART7
+ 
+   /* Alternatives for UART7 : 
+   * DEFAULT TX:PA15  RX:PA8   AF11
+   * ALTN1   TX:PB4   RX:PB3   AF11
+   * ALTN2   TX:PE8   RX:PE7   AF7
+   * ALTN3   TX:PF7   RX:PF6   AF7
+   */
+  #if defined(USE_UART7_ALTN1)
+    /* TX:PB4   RX:PB3   AF11 */
+    #define COM7_TX                        { GPIO_PIN_4, GPIOB, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Tx" }
+    #define COM7_RX                        { GPIO_PIN_3, GPIOB, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Rx" }
+  #elif defined(USE_UART7_ALTN2)
+    /* ALTN2   TX:PE8   RX:PE7   AF7    */
+    #define COM7_TX                        { GPIO_PIN_8, GPIOE, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Tx" }
+    #define COM7_RX                        { GPIO_PIN_7, GPIOE, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Rx" }
+  #elif defined(USE_UART7_ALTN3)
+    /* ALTN3   TX:PF7   RX:PF6   AF7    */
+    #define COM7_TX                        { GPIO_PIN_7, GPIOF, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Tx" }
+    #define COM7_RX                        { GPIO_PIN_6, GPIOF, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Rx" }
+  #else
+    /* DEFAULT TX:PA15  RX:PA8   AF11   */
+    #define COM7_TX                        { GPIO_PIN_15,GPIOA, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Tx" }
+    #define COM7_RX                        { GPIO_PIN_8, GPIOA, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Tx" }
+  #endif
+
+  #ifdef COM7_USE_TX_DMA
+    /* Definition for USART3 TX DMA */
+    #define COM7_TX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_UART7_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM7_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
+  #endif
+  #ifdef COM7_USE_RX_DMA
+    /* Definition for USART3 RX DMA */
+    #define COM7_RX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_UART7_RX, DMA_PRIORITY_LOW
+//    #define COM7_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
+  #endif
+
+  /* Definition for COM9's NVIC */
+  #if defined(USE_UART7_DEBUG)
+    #define COM7_IRQ                          { UART7_IRQn, DEBUG_IRQ_PRIO, 0    }
+  #else
+    #define COM7_IRQ                          { UART7_IRQn, USART_IRQ_PRIO, 0    }
+  #endif
+  #define COM7_IRQHandler                     UART7_IRQHandler
+
+#endif // COM9
 /* UART7, UART8 tbd */
 
 /************************************************************************

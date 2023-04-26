@@ -22,6 +22,20 @@ extern "C" {
     #define MCU "STM32H742xx"
 #elif defined(STM32H743xx)
     #define MCU "STM32H743xx"
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+    #if   defined(STM32H723xx) 
+        #define MCU "STM32H723xx"
+    #elif defined(STM32H733xx) 
+        #define MCU "STM32H733xx"
+    #elif defined(STM32H725xx) 
+        #define MCU "STM32H725xx"
+    #elif defined(STM32H735xx) 
+        #define MCU "STM32H735xx"
+    #elif defined(STM32H730xx) 
+        #define MCU "STM32H730xx"
+    #else
+        #define MCU "Unknown"
+    #endif
 #elif defined(STM32H745xx) || defined(STM32H747xx)
     #if defined(STM32H745xx) 
         #define MCU "STM32H745xx"

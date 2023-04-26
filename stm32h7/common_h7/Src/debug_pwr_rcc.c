@@ -55,7 +55,8 @@ static const char* DBG_get_pwr_vos_txt(uint32_t sel)
 
 static uint32_t get_vos_value (void)
 {
-#if defined(STM32H747xx) || defined(STM32H745xx)
+#if   defined(STM32H747xx) || defined(STM32H745xx) \
+   || defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
     return ( PWR->D3CR & PWR_D3CR_VOS_Msk  ) >> PWR_D3CR_VOS_Pos;
 #elif defined(STM32H742xx) || defined(STM32H743xx)
     /* VOSrange 0 is coded as VOSrange 1 PLUS ODEN bit in SYSCFG->PWRCR set */
@@ -192,16 +193,24 @@ static void DBG_dump_pwr_d3cr(void)
   DBG_dump_bitvalue("VOS rdy", PWR->D3CR, PWR_D3CR_VOSRDY);
 }
 
+/* not all STM32H7 have all wakeup pins connected, 
+ * so define a suitable bitmnask 
+ */
+#if    defined(STM32H747xx) || defined(STM32H745xx)
+    || defined(STM32H742xx) || defined(STM32H743xx) 
+    #define WAKEUP_PIN_BITMASK 0b00111111
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+    #define WAKEUP_PIN_BITMASK 0b00101011
+#else
+    #error "No Wakeup pin mask defined"
+#endif
 
 static void DBG_dump_pwr_wkupfr(void)
 {
   DBG_setPadLen(24);
-  DBG_dump_bitvalue("WkUp via WKUP0 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG1);
-  DBG_dump_bitvalue("WkUp via WKUP1 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG2);
-  DBG_dump_bitvalue("WkUp via WKUP2 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG3);
-  DBG_dump_bitvalue("WkUp via WKUP3 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG4);
-  DBG_dump_bitvalue("WkUp via WKUP4 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG5);
-  DBG_dump_bitvalue("WkUp via WKUP5 Pin", PWR->WKUPFR, PWR_WAKEUP_FLAG6);
+  for ( uint32_t i =0; i<6; i++ ) if ( ( 1 << i ) & WAKEUP_PIN_BITMASK ) {
+      DBG_printf_indent("WkUp via WKUP%d Pin: %s\n", i, PWR->WKUPFR & ( 1 << i ) ? "Yes": "No");
+  }
 }
 
 const char * const pupd_txt[]={"NoPull", "PU", "PD", "Resvd" };
@@ -230,8 +239,10 @@ static void DBG_dump_pwr_wkupepr(void)
   uint32_t pupd_pos = PWR_WKUPEPR_WKUPPUPD1_Pos;
   register uint32_t reg = PWR->WKUPEPR;
   for ( uint32_t i=0; i<6; i++ ) {
-    DBG_printf_indent("WkUp pin %d config: ",i);
-    dump_one_wkup_pin(reg & ena_pos, reg & pol_pos, (reg & pupd_mask ) >> pupd_pos);
+    if ( ( 1 << i ) & WAKEUP_PIN_BITMASK ) {
+        DBG_printf_indent("WkUp pin %d config: ",i);
+        dump_one_wkup_pin(reg & ena_pos, reg & pol_pos, (reg & pupd_mask ) >> pupd_pos);
+    }
     ena_pos  <<= 1;
     pol_pos  <<= 1;
     pupd_mask <<= 2;
@@ -300,6 +311,7 @@ void DBG_dump_powersetting(void)
 /*
  *************************************************************
  * Functions to dump RCC settings
+ * Continue here for STM725xx
  *************************************************************
  */
 
@@ -886,7 +898,8 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 
 #if defined(STM32H747xx) || defined(STM32H745xx)
     #define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
-#elif defined(STM32H742xx) || defined(STM32H743xx)
+#elif defined(STM32H742xx) || defined(STM32H743xx) \
+   || defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
     #define MK_3ARGS(a)     RCC->a, 0, 0 
 #else
     #error "No RCC domain mapping defined"

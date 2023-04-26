@@ -418,7 +418,7 @@ const char * const exti_line_name[]= {
   "PVD/AVD",      "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",    "I2C2 wkup",    
   "I2C3 wkup",    "I2C4 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   
   "UART7 wkup",   "UART8 wkup",   "LPUART1 rx",   "LPUART1 tx",   "SPI1 wkup",    "SPI2 wkup",    "SPI3 wkup",    "SPI4 wkup",
-  "SPI7 wkup",    "SPI6 wkup",    "MDIO wkup",    "USB1 wkup",    "USB2 wkup",    "resvd",        "resvd",        "LPTIM1 wkup",    
+  "SPI5 wkup",    "SPI6 wkup",    "MDIO wkup",    "USB1 wkup",    "USB2 wkup",    "resvd",        "resvd",        "LPTIM1 wkup",    
   "LPTIM2 wkup",  "LPTIM2 outp",  "LPTIM3 wkup",  "LPTIM3 outp",  "LPTIM4 wkup",  "LPTIM5 wkup",  "SWPMI wkup",   "WKUP0 pin", 
   "WKUP1 pin",    "WKUP2 pin",    "WKUP3 pin",    "WKUP4 pin",    "WKUP5 pin",    "RCC Interr.",  "I2C4 Event",   "I2C4 Error",     
   "LPUART1 wkup", "SPI6 Interr.", "BDMA CH0 Int", "BDMA CH1 Int", "BDMA CH2 Int", "BDMA CH3 Int", "BDMA CH4 Int", "BDMA CH5 Int", 
@@ -432,7 +432,41 @@ const char * const exti_domain_name[]= { "EXTI   " };
 
 #define EXTI1_IS_CONFIGURABLE   0b00000000001111111111111111111111
 #define EXTI2_IS_CONFIGURABLE   0b00000000000010100000000000000000 
-#define EXTI3_IS_CONFIGURABLE   0b00000000011101000000000000000000 
+#define EXTI3_IS_CONFIGURABLE   0b00000000011000000000000000000000 
+#define EXTI_IS_GPIO(i)         ( i < 16 )
+#define EXTI_IS_CFGABLE2(i)     ( i > 63 ? EXTI3_IS_CONFIGURABLE : EXTI2_IS_CONFIGURABLE )
+#define EXTI_IS_CFGABLE(i)      ( i > 31 ? EXTI_IS_CFGABLE2(i)   : EXTI1_IS_CONFIGURABLE )
+
+#define GET_INSTNAME(inst)  EXTI
+#define GET_IMR(inst,num)   ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->IMR3 : GET_INSTNAME(inst)->IMR2  : GET_INSTNAME(inst)->IMR1 )
+#define GET_EMR(inst,num)   ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->EMR3 : GET_INSTNAME(inst)->EMR2  : GET_INSTNAME(inst)->EMR1 )
+#define GET_PR(inst,num)    ( num > 31 ? num > 63 ? GET_INSTNAME(inst)->PR3  : GET_INSTNAME(inst)->PR2   : GET_INSTNAME(inst)->PR1  )
+
+#define GET_FTSR(i)  ( i > 31 ? i > 63 ? EXTI->FTSR3 : EXTI->FTSR2 : EXTI->FTSR1 )
+#define GET_RTSR(i)  ( i > 31 ? i > 63 ? EXTI->RTSR3 : EXTI->RTSR2 : EXTI->RTSR1 )
+
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+const char * const exti_line_name[]= { 
+/* insert pattern ( max length is 12 ) 
+  "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", "LPUART1 wkup", */
+  "PVD/AVD",      "RTC alarms",   "RTC tamper  ", "RTC wkup tmr", "COMP1 output", "COMP2 output", "I2C1 wkup",    "I2C2 wkup",    
+  "I2C3 wkup",    "I2C4 wkup",    "USART1 wkup",  "USART2 wkup",  "USART3 wkup",  "USART3 wkup",  "UART4 wkup",   "UART5 wkup",   
+  "UART7 wkup",   "UART8 wkup",   "LPUART1 rx",   "LPUART1 tx",   "SPI1 wkup",    "SPI2 wkup",    "SPI3 wkup",    "SPI4 wkup",
+  "SPI5 wkup",    "SPI6 wkup",    "MDIO wkup",    "USB1 wkup",    "resvd",        "resvd",        "resvd",        "LPTIM1 wkup",    
+  "LPTIM2 wkup",  "LPTIM2 outp",  "LPTIM3 wkup",  "LPTIM3 outp",  "LPTIM4 wkup",  "LPTIM5 wkup",  "SWPMI wkup",   "WKUP0 pin", 
+  "WKUP1 pin",    "resvd",        "WKUP3 pin",    "resvd",        "WKUP5 pin",    "RCC Interr.",  "I2C4 Event",   "I2C4 Error",     
+  "LPUART1 wkup", "SPI6 Interr.", "BDMA CH0 Int", "BDMA CH1 Int", "BDMA CH2 Int", "BDMA CH3 Int", "BDMA CH4 Int", "BDMA CH5 Int", 
+  "BDMA CH6 Int", "BDMA CH7 Int", "DMAMUX2 Int",  "ADC3 Int",     "SAI4 Int",     "HSEM0",        "resvd",        "resvd",
+  "resvd",        "resvd",        "resvd",        "resvd",        "resvd",        "HDMICEC wkup", "ETHER wkup",   "HSECSS wkup",
+  "TEMP",         "UART9 wkup",   "USART10 wkup", "I2C5 wkup",
+};
+const char * const exti_domain_name[]= { "EXTI   " };
+#define EXTI_MAXNUM             91
+#define EXTI_MAXDOMAIN          1
+
+#define EXTI1_IS_CONFIGURABLE   0b00000000001111111111111111111111
+#define EXTI2_IS_CONFIGURABLE   0b00000000000010100000000000000000 
+#define EXTI3_IS_CONFIGURABLE   0b00000000011000000000000000000000 
 #define EXTI_IS_GPIO(i)         ( i < 16 )
 #define EXTI_IS_CFGABLE2(i)     ( i > 63 ? EXTI3_IS_CONFIGURABLE : EXTI2_IS_CONFIGURABLE )
 #define EXTI_IS_CFGABLE(i)      ( i > 31 ? EXTI_IS_CFGABLE2(i)   : EXTI1_IS_CONFIGURABLE )
@@ -670,6 +704,31 @@ const char * const user_nvic_name[150]= { /* fill in the array size to be sure, 
       "DMAMUX_OVR",     "BDMA_Ch#0",      "BDMA_Ch#1",      "BDMA_Ch#2",      "BDMA_Ch#3",      "BDMA_Ch#4",      "BDMA_Ch#5",      "BDMA_Ch#6",       
       "BDMA_Ch#7",      "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "WWDG_RST",       
       "CRS",            "ECC",            "SAI4",           "HOLD_CORE",      "WKUP",
+    };
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+const char * const user_nvic_name[170]= { /* fill in the array size to be sure, all names have been hacked in */
+    /*.                 .                 .                 .                 .                 .                 .                 . */
+      "WWDG",           "PVD/PVM",        "RTC tamper",     "RTC wkup",       "Flash",          "RCC",            "EXTI0",          "EXTI1", 
+      "EXTI2",          "EXTI3",          "EXTI4",          "DMA1_St#0",      "DMA1_St#1",      "DMA1_St#2",      "DMA1_St#3",      "DMA1_St#4",
+      "DMA1_St#5",      "DMA1_St#6",      "ADC1/ADC2",      "FDCAN1_IT0",     "FDCAN2_IT0",     "FDCAN1_IT1",     "FDCAN2_IT1",     "EXTI9_5",
+      "TIM1_BRK",       "TIM1_UP",        "TIM1_TRG",       "TIM1_CC",        "TIM2",           "TIM3",           "TIM4",           "I2C1_EV",
+      "I2C1_ER",        "I2C2_EV",        "I2C2_ER",        "SPI1",           "SPI2",           "USART1",         "USART2",         "USART3", 
+      "EXTI15_10",      "RTC alarm",      "resvd",          "TIM8_BRK/TIM12", "TIM8_UP/TIM13",  "TIM8_TRG/TIM14", "TIM8_CC",        "DMA1_St#7",
+      "FMC",            "SDMMC1",         "TIM5",           "SPI3",           "UART4",          "UART5",          "TIM6_DACUNDER",  "TIM7", 
+      "DMA2_St#0",      "DMA2_St#1",      "DMA2_St#2",      "DMA2_St#3",      "DMA2_St#4",      "ETH",            "ETH_WKUP",       "FDCAN_CAL",
+      "n/c",            "n/c",            "n/c",            "n/c",            "DMA2_St#5",      "DMA2_St#6",      "DMA2_St#7",      "USART6",
+      "I2C3_EV",        "I2C3_ER",        "USB1_HS_OUT",    "USB1_HS_IN",     "USB1_HS_WKUP",   "USB1_HS",        "DCMI",           "CRYP",
+      "HASH_RNG",       "FPU",            "UART7",          "UART8",          "SPI4",           "SPI5",           "SPI6",           "SAI1",
+      "LTDC",           "LTDC_ER",        "DMA2D",          "n/c",            "OCTOSPI1",       "LPTIM1",         "CEC",            "I2C4_EV",
+      "I2C4_ER",        "SPDIF",          "n/c",            "n/c",            "n/c",            "n/c",            "DMAMUX1_OVR",    "n/c",
+      "n/c",            "n/c",            "n/c",            "n/c",            "n/c",            "n/c",            "DFSDM1_FILT0",   "DFSDM1_FILT1",   
+      "DFSDM1_FILT2",   "DFSDM1_FILT3",   "n/c",            "SWPMI1",         "TIM15",          "TIM16",          "TIM17",          "MDIOS_WKUP",
+      "MDIOS",          "n/c",            "MDMA",           "n/c",            "SDMMC2",         "HSEM0",          "n/c",            "ADC3",
+      "DMAMUX2_OVR",    "BDMA_Ch#0",      "BDMA_Ch#1",      "BDMA_Ch#2",      "BDMA_Ch#3",      "BDMA_Ch#4",      "BDMA_Ch#5",      "BDMA_Ch#6",       
+      "BDMA_Ch#7",      "COMP",           "LPTIM2",         "LPTIM3",         "LPTIM4",         "LPTIM5",         "LPUART",         "n/c",       
+      "CRS",            "RAMECC",         "SAI4",           "TEMP_IT",        "n/c",            "WKUP",           "OCTOSPI2",       "OTFDEC1",
+      "OTFDEC2",        "FMAC",           "CORDIC",         "UART9",          "USART10",        "I2C5_EV",        "I2C5_ER",        "FDCAN3_IT0",     
+      "FDCAN3_IT1",     "TIM23",          "TIM24",
     };
 #elif defined(STM32H742xx) || defined(STM32H743xx)
 const char * const user_nvic_name[150]= { /* fill in the array size to be sure, all names have been hacken in */
