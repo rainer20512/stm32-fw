@@ -120,6 +120,10 @@ typedef struct {
     #define MCUSTR "STM32H745"
 #elif defined(STM32H747xx)
     #define MCUSTR "STM32H747"
+#elif defined(STM32H725xx)
+    #define MCUSTR "STM32H725"
+#elif defined(STM32H723xx)
+    #define MCUSTR "STM32H723"
 #else
     #define MCUSTR "Unknown MCU"
 #endif

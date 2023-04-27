@@ -102,12 +102,11 @@ void ClockReconfigureAfterStop(void)
     RestoreFn( saved_khz, saved_bSwitchOffMSI );
 }
 
+
 /*
  *******************************************************************************
  * Flash wait states in dependency of Vcore and HCLK
  * see STM32H7 RefMan pg 166 / Table 16
- * Flash programming delay will never be altered from reset value, 
- * which is FLASH_PROGRAMMING_DELAY_3
  * @note flash_khz is the AXI clock, which is limited to 240MHz
  *******************************************************************************
  */
@@ -148,14 +147,44 @@ static uint32_t GetFlashLatency( uint32_t vrange, uint32_t flash_khz )
     }
     return flash_latency;
 }
+
+/*
+ *******************************************************************************
+ * Flash programming delay depends only from AXI/AHB frequency
+ * see STM32H7 RefMan pg 166 / Table 16
+ * @note flash_khz is the AXI clock, which is limited to 240MHz
+ *******************************************************************************
+ */
+static uint32_t GetFlashPrgDelay(uint32_t flash_khz)
+{
+    return flash_khz > 185000 ? FLASH_PROGRAMMING_DELAY_2 : flash_khz > 70000 ? FLASH_PROGRAMMING_DELAY_1 : FLASH_PROGRAMMING_DELAY_0 ;
+}
+
 /******************************************************************************
  * Set all peripheral clocks to their maximum values with respect to current
  * sysclk rate 
  * @return the selected AHB clock frequency
  *****************************************************************************/
+#if   defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+    /* Max values for CPU clock, AXI & AHB Clock, APB Clock are :480Mhz, 240MHz, 120 MHz,  */
+    /* Values must be specified in kHz */
+    #define MAX_CLK_CPU     480000
+    #define MAX_CLK_AHB     240000
+    #define MAX_CLK_APB     120000
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+    /* Max values for CPU clock, AXI & AHB Clock, APB Clock are :550Mhz, 275MHz, 137.5 MHz,  */
+    /* Values must be specified in kHz */
+    #define MAX_CLK_CPU     550000
+    #define MAX_CLK_AHB     275000
+    #define MAX_CLK_APB     137500
+#else
+    #error "No Clock limits defined for this MCU"
+#endif
+
 static uint32_t SetPredividers( RCC_ClkInitTypeDef *ClkInit, uint32_t sysclk_khz )
 {
-    if ( sysclk_khz > 480000 ) {
+    /* First check the maximum cpu clock limit */
+    if ( sysclk_khz > MAX_CLK_CPU ) {
         Error_Handler_XX(-3, __FILE__, __LINE__); 
     }  
 
@@ -165,17 +194,22 @@ static uint32_t SetPredividers( RCC_ClkInitTypeDef *ClkInit, uint32_t sysclk_khz
     /* D1CPrescaler is always 1 */
     ClkInit->SYSCLKDivider = RCC_SYSCLK_DIV1;
 
-    /* sysclk_khz <= 480000 here */
-    if ( sysclk_khz > 240000 ) {
+    /* 
+     * We will always operate with the maximum possible AHB/AXI clock:
+     * If sysclk is greater than maximum allowed AHB/AXI clock, set predivider to 2, otherwise to 1  
+     */
+    if ( sysclk_khz > MAX_CLK_AHB ) {
         ClkInit->AHBCLKDivider = RCC_HCLK_DIV2;
         sysclk_khz /= 2;
     } else {
         ClkInit->AHBCLKDivider = RCC_HCLK_DIV1;
     }   
-    /* sysclk_khz is now the AHB clock frequency */
 
-    /* AHB clk <= 240000 here */
-    if ( sysclk_khz > 120000 ) {
+    /* 
+     * sysclk_khz is now the AHB clock frequency and AHB clk <= MAX_CLK_AHB at this point 
+     * same strategy as before: Use the maximum possible APB clock frequency for all APB buses
+     */
+    if ( sysclk_khz > MAX_CLK_APB ) {
         ClkInit->APB3CLKDivider = RCC_APB3_DIV2;
         ClkInit->APB1CLKDivider = RCC_APB1_DIV2;
         ClkInit->APB2CLKDivider = RCC_APB2_DIV2;
@@ -237,7 +271,7 @@ static uint32_t SetupSysClkProvider ( RCC_OscInitTypeDef *o, RCC_ClkInitTypeDef 
  *    1. Change Clock, Prescalers and flash waitstates ( consistency is guaranteed by HAL )
  *    2. Decrease Vcore
  **********************************************************************************/
-static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_ClkInitTypeDef *clk, uint32_t flash_latency, uint32_t reg_scale, int32_t err_code)
+static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_ClkInitTypeDef *clk, uint32_t flash_latency, uint32_t prg_delay, uint32_t reg_scale, int32_t err_code)
 {
     uint32_t old_khz = HAL_RCC_GetSysClockFreq()/1000;
 
@@ -261,8 +295,9 @@ static void   DoClockTransition ( uint32_t new_khz, RCC_OscInitTypeDef *o, RCC_C
               while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY));
               break;
            case 2:
-              if (HAL_RCC_ClockConfig(clk, flash_latency)!= HAL_OK) 
-                 Error_Handler_XX(err_code, __FILE__, __LINE__); 
+              /* Set flash latency and programming delay */
+              if (HAL_RCC_ClockConfig(clk, flash_latency)!= HAL_OK) Error_Handler_XX(err_code, __FILE__, __LINE__); 
+              __HAL_FLASH_SET_PROGRAM_DELAY(prg_delay);
               break;
         }
     }
@@ -399,7 +434,8 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
      * At this "low" frequencies AHB clock frq = sysclk, so we can safely use sysclk 
      * as flash clock parameter for GetFlashLatency()
      */
-    uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, hsi_khz);
+    uint32_t flash_latency= GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, hsi_khz);
+    uint32_t prg_delay    = GetFlashPrgDelay(hsi_khz);
 
     /* configure HSI Oscillator */
     ConfigureHSI(& RCC_OscInitStruct, hsi_khz);
@@ -407,7 +443,7 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
     SetPredividers( &RCC_ClkInitStruct, hsi_khz );
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
 
-    DoClockTransition ( hsi_khz, &RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -6);
+    DoClockTransition ( hsi_khz, &RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency, prg_delay, PWR_REGULATOR_VOLTAGE_SCALE3, -6);
   
     /* Switch off PLL in any case */
     SwitchOffSysClkPll();
@@ -490,8 +526,10 @@ static void SystemClock_HSI_VOSrange_3(uint32_t hsi_khz)
        * At this "low" frequencies AHB clock frq = sysclk, so we can safely use sysclk 
        * as flash clock parameter for GetFlashLatency()
        */
-      uint32_t flash_latency=GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, HW_HSE_FREQUENCY/1000);
-      DoClockTransition(HW_HSE_FREQUENCY/1000, &osc, &RCC_ClkInitStruct, flash_latency, PWR_REGULATOR_VOLTAGE_SCALE3, -5);
+      uint32_t flash_latency= GetFlashLatency(PWR_REGULATOR_VOLTAGE_SCALE3, HW_HSE_FREQUENCY/1000);
+      uint32_t prg_delay    = GetFlashPrgDelay(HW_HSE_FREQUENCY/1000);
+
+      DoClockTransition(HW_HSE_FREQUENCY/1000, &osc, &RCC_ClkInitStruct, flash_latency, prg_delay, PWR_REGULATOR_VOLTAGE_SCALE3, -5);
 
       /* Disable HSI Oscillator, if desired */
       if ( bSwitchOffHSI ) {
@@ -582,6 +620,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
   bool bBaseClkSet = false;         /* flag for "PLL base clock has been set"   */
 
   /* Check constraints */
+  /* RHB: ToDo */
   if ( pll_khz > 480000 || pll_khz < 50000) {
     Error_Handler_XX(-9, __FILE__, __LINE__);
   }
@@ -637,11 +676,15 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
       /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
       /* For lower frequencies, select scale 2, scale 1 only for high requencies */
       uint32_t vosrange = ( ahb_clock_khz > 225000 ? PWR_REGULATOR_VOLTAGE_SCALE0 :  ahb_clock_khz > 140000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : PWR_REGULATOR_VOLTAGE_SCALE2 );
+  #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+      /* See Chapter 6.3.1  "General Operating Conditions", Table 13 for AHB/AXI clock limits for certain VOS values */
+      uint32_t vosrange = ( ahb_clock_khz > 200000 ? PWR_REGULATOR_VOLTAGE_SCALE0 :  ahb_clock_khz > 150000 ? PWR_REGULATOR_VOLTAGE_SCALE1 : ahb_clock_khz > 85000 ? PWR_REGULATOR_VOLTAGE_SCALE2 : PWR_REGULATOR_VOLTAGE_SCALE3 );
   #else
       #error "No VOS range determination defined"
   #endif
   /* calculate neccessary minimum flash latency */
   uint32_t flash_latency = GetFlashLatency(vosrange, ahb_clock_khz);
+  uint32_t prg_delay     = GetFlashPrgDelay(ahb_clock_khz);
 
   /* configure PLL input clock */
   if ( bUseHSE ) {
@@ -664,7 +707,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_01(uint32_t pll_khz, bool bUseHSE, boo
 
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   
-  DoClockTransition(pll_khz,&RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency,vosrange, -4);
+  DoClockTransition(pll_khz,&RCC_OscInitStruct, &RCC_ClkInitStruct, flash_latency, prg_delay, vosrange, -4);
 
 
   /* Disable MSI Oscillator, if desired */

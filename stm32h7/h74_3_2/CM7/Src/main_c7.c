@@ -135,7 +135,11 @@ int main(void)
     HW_InitJtagDebug();  
 
     /* PWR-CR3 must be written initially once to be able to change the VOS selection */
-    PWR->CR3 = ( PWR_CR3_SCUEN | PWR_CR3_LDOEN );
+    #if defined(STM32H745xx) || defined(STM32H747xx) || defined(STM32H742xx) || defined(STM32H743xx)
+        PWR->CR3 = ( PWR_CR3_SCUEN | PWR_CR3_LDOEN );
+    #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+        /* Nothing to do here: Internal SMPS is enabled by default */
+    #endif
   
     /* 
      * MPU Configuration: Define Flash ReadOnly (to detect faulty flash write accesses) 

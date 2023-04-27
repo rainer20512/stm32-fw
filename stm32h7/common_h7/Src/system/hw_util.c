@@ -27,10 +27,12 @@
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM4;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM4;  \
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM5;  DBGMCU->APB4FZ2  |= DBGMCU_APB4FZ2_DBG_LPTIM5;  \
                                              } while (0)
-#elif defined(STM32H742xx) || defined(STM32H743xx)
-    /* Stop rtc when either M7 or M4 is in debug mode */
+#elif defined(STM32H742xx) || defined(STM32H743xx) \
+      || defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+
+    /* Stop rtc when M7 is in debug mode */
     #define TMR_DEBUG_STOP()                 do { DBGMCU->APB4FZ1 |=  DBGMCU_APB4FZ1_DBG_RTC;  } while (0)
-    /* Stop LPTIMERS when either M7 or M4 is in debug mode */
+    /* Stop LPTIMERS when M7 is in debug mode */
     #define RTC_DEBUG_STOP()                 do {DBGMCU->APB1LFZ1 |= DBGMCU_APB1LFZ1_DBG_LPTIM1;  \
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM2;   \
                                                  DBGMCU->APB4FZ1  |= DBGMCU_APB4FZ1_DBG_LPTIM3;   \
@@ -128,8 +130,14 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(UART8) && defined(USE_UART8)
    { UART8, &RCC->APB1LENR, RCC_APB1LENR_UART8EN_Pos, &RCC->APB1LRSTR, RCC_APB1LRSTR_UART8RST_Pos, COMBINE('U', 8) },
 #endif
+#if defined(UART9) && defined(USE_UART9)
+   { UART9, &RCC->APB2ENR, RCC_APB2ENR_UART9EN_Pos, &RCC->APB2RSTR, RCC_APB2RSTR_UART9RST_Pos, COMBINE('U', 9) },
+#endif
+#if defined(USART10) && defined(USE_USART10)
+   { USART10, &RCC->APB2ENR, RCC_APB2ENR_USART10EN_Pos, &RCC->APB2RSTR, RCC_APB2RSTR_USART10RST_Pos, COMBINE('U', 10) },
+#endif
 #if defined(LPUART1) && defined(USE_LPUART1)
-   { LPUART1, &RCC->APB4ENR, RCC_APB4ENR_LPUART1EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPUART1RST_Pos, COMBINE('U', 9) },
+   { LPUART1, &RCC->APB4ENR, RCC_APB4ENR_LPUART1EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPUART1RST_Pos, COMBINE('U', 21) },
 #endif
 
 /* SPI --------------------------------------------------------------------------------------------------------------------- */
@@ -164,6 +172,9 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #endif
 #if defined(I2C4) && defined(USE_I2C4)
    { I2C4, &RCC->APB4ENR, RCC_APB4ENR_I2C4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_I2C4RST_Pos, COMBINE('I', 4) },
+#endif
+#if defined(I2C5) && 1 // defined(USE_I2C5)
+   { I2C5, &RCC->APB1LENR, RCC_APB1LENR_I2C5EN_Pos, &RCC->APB1LRSTR, RCC_APB1LRSTR_I2C5RST_Pos, COMBINE('I', 5) },
 #endif
 
 /* ADC     - All ADC share ONE clock enable and ONE reset bit  -------------------------------------------------------------- */
@@ -225,25 +236,40 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
 #if defined(TIM17) 
    { TIM17, &RCC->APB2ENR, RCC_APB2ENR_TIM17EN_Pos, &RCC->APB2RSTR, RCC_APB2RSTR_TIM17RST_Pos, COMBINE('T', 17) },
 #endif
-#if defined(LPTIM1) 
-   { LPTIM1, &RCC->APB1LENR, RCC_APB1LENR_LPTIM1EN_Pos, &RCC->APB1LRSTR, RCC_APB1LRSTR_LPTIM1RST_Pos, COMBINE('T', 21) },
+
+#if defined(TIM23) 
+   { TIM23, &RCC->APB1HENR, RCC_APB1HENR_TIM23EN_Pos, &RCC->APB1HRSTR, RCC_APB1HRSTR_TIM23RST_Pos, COMBINE('T', 23) },
 #endif
-#if defined(LPTIM2) 
-   { LPTIM2, &RCC->APB4ENR, RCC_APB4ENR_LPTIM2EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM2RST_Pos, COMBINE('T', 22) },
-#endif
-#if defined(LPTIM3) 
-   { LPTIM3, &RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM3RST_Pos, COMBINE('T', 23) },
-#endif
-#if defined(LPTIM4) 
-   { LPTIM4, &RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM4RST_Pos, COMBINE('T', 24) },
-#endif
-#if defined(LPTIM5) 
-   { LPTIM5, &RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM5RST_Pos, COMBINE('T', 25) },
+#if defined(TIM24) 
+   { TIM24, &RCC->APB1HENR, RCC_APB1HENR_TIM24EN_Pos, &RCC->APB1HRSTR, RCC_APB1HRSTR_TIM24RST_Pos, COMBINE('T', 24) },
 #endif
 
-/* QUADSPI  --------------------------------------------------------------------------------------------------------------- */
+
+#if defined(LPTIM1) 
+   { LPTIM1, &RCC->APB1LENR, RCC_APB1LENR_LPTIM1EN_Pos, &RCC->APB1LRSTR, RCC_APB1LRSTR_LPTIM1RST_Pos, COMBINE('T', 41) },
+#endif
+#if defined(LPTIM2) 
+   { LPTIM2, &RCC->APB4ENR, RCC_APB4ENR_LPTIM2EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM2RST_Pos, COMBINE('T', 42) },
+#endif
+#if defined(LPTIM3) 
+   { LPTIM3, &RCC->APB4ENR, RCC_APB4ENR_LPTIM3EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM3RST_Pos, COMBINE('T', 43) },
+#endif
+#if defined(LPTIM4) 
+   { LPTIM4, &RCC->APB4ENR, RCC_APB4ENR_LPTIM4EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM4RST_Pos, COMBINE('T', 44) },
+#endif
+#if defined(LPTIM5) 
+   { LPTIM5, &RCC->APB4ENR, RCC_APB4ENR_LPTIM5EN_Pos, &RCC->APB4RSTR, RCC_APB4RSTR_LPTIM5RST_Pos, COMBINE('T', 45) },
+#endif
+
+/* QUADSPI / OCTOSPI ------------------------------------------------------------------------------------------------------ */
 #if defined(QUADSPI) && defined(USE_QSPI1) 
    { QUADSPI, &RCC->AHB3ENR, RCC_AHB3ENR_QSPIEN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_QSPIRST_Pos, COMBINE('Q', 1) },
+#endif
+#if defined(OCTOSPI1) && defined(USE_OSPI1) 
+   { OCTOSPI1, &RCC->AHB3ENR, RCC_AHB3ENR_OSPI1EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_OSPI1RST_Pos, COMBINE('O', 1) },
+#endif
+#if defined(OCTOSPI2) && defined(USE_OSPI2) 
+   { OCTOSPI2, &RCC->AHB3ENR, RCC_AHB3ENR_OSPI2EN_Pos, &RCC->AHB3RSTR, RCC_AHB3RSTR_OSPI2RST_Pos, COMBINE('O', 2) },
 #endif
 #define USE_CAN1
 /* CAN1  ------------------------------------------------------------------------------------------------------------------ */
@@ -473,7 +499,7 @@ static const char *Get_DeviceName ( uint16_t devID )
             default: return "Unknown Package";
         }
     }
-#elif defined(STM32H72x)  || defined(STM32H73x)
+#elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)  
     static const char *Get_PackageName( uint16_t package )
     {
         switch(package&0b111) {
@@ -484,13 +510,15 @@ static const char *Get_DeviceName ( uint16_t devID )
             case 0b0100: return "WLCSP115 Industrial";
             case 0b0101: return "TQFP144 Legacy";
             case 0b0110: return "UFBGA144 Legacy";
-            case 0b0101: return "LQFP144 Industrial";
+            case 0b0111: return "LQFP144 Industrial";
             case 0b1000: return "UFBGA169 Industrial";
             case 0b1001: return "UFBGA176+25 Industrial";
             case 0b1010: return "LQFP176 Industrial";
             default: return "Unknown Package";
         }
     }
+#else
+    #error "No PackageName decoder for this STM32 type"
 #endif
 char Get_RevisionName( uint16_t devID, uint16_t revID)
 {

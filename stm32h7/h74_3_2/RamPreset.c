@@ -50,16 +50,16 @@ void RamPreset(void)
      * Enable SRAM 1,2, and SRAM3, if available 
      * **** 002 in clues.txt RHB added ****
      */
-    #if defined(STM32H742xx)
-        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
-    #else
+    #if defined(RCC_AHB2ENR_SRAM3EN)
         RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN | RCC_AHB2ENR_SRAM3EN;
+    #else
+        RCC->AHB2ENR = RCC_AHB2ENR_SRAM1EN | RCC_AHB2ENR_SRAM2EN;
     #endif
 
     PRESET_RAMAREA(__SRAM1);
     PRESET_RAMAREA(__SRAM2);
 
-    #if !defined(STM32H742xx)
+    #if defined(RCC_AHB2ENR_SRAM3EN)
         PRESET_RAMAREA(__SRAM3);
     #endif
     PRESET_RAMAREA(__SRAM4);

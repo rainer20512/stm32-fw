@@ -346,7 +346,7 @@ static void DBG_dump_rcc_cr(void)
   dbg_rcc_on_ready("HSI", RCC->CR, RCC_CR_HSION, RCC_CR_HSIRDY );
   DBG_dump_bitvalue("HSI On in STOPmode", RCC->CR, RCC_CR_HSIKERON);
   if ( READ_BIT( RCC->CR, RCC_CR_HSION ) ) {
-    DBG_dump_number("HSI Frequency (MHz)", 64 / ((( RCC->CR & RCC_CR_HSIDIV_Msk ) >>  RCC_CR_HSIDIV_Pos ) + 1) );
+    DBG_dump_number("HSI Frequency (MHz)", 64 >> (( RCC->CR & RCC_CR_HSIDIV_Msk ) >>  RCC_CR_HSIDIV_Pos )  );
     DBG_dump_bitvalue("HSI frac divider", RCC->CR, RCC_CR_HSIDIVF);
   }
 }
@@ -456,7 +456,9 @@ static void DBG_dump_rcc_cfgr(void)
     DBG_dump_number("MCO prescaler", mcopre );
     DBG_dump_textvalue("MCO Source", DBG_get_rcc_cfgr_mcosel1_txt(( RCC->CFGR & RCC_CFGR_MCO1_Msk ) >> RCC_CFGR_MCO1_Pos) );
   }
-  DBG_dump_textvalue("HRTIM Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_HRTIMSEL)    ? "CM7 Clk" : "APB1 Clk" );    
+  #if defined(RCC_CFGR_HRTIMSEL)
+      DBG_dump_textvalue("HRTIM Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_HRTIMSEL)    ? "CM7 Clk" : "APB1 Clk" );    
+  #endif
   DBG_dump_textvalue("System WkUp Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_STOPWUCK)    ? "CSI" : "HSI" );    
   DBG_dump_textvalue("Kernel WkUp Clksrc", READ_BIT(RCC->CFGR, RCC_CFGR_STOPKERWUCK) ? "CSI" : "HSI" );    
   DBG_dump_textvalue("SysClk source", DBG_get_rcc_cfgr_sws_txt(( RCC->CFGR & RCC_CFGR_SWS_Msk  ) >> RCC_CFGR_SWS_Pos) );
@@ -686,17 +688,21 @@ void DBG_dump_when_on( const char *txt, uint32_t d1, uint32_t c1, uint32_t c2, u
  * ordinary and sleep mode registers are (nearly)identical
  *************************************************************
  */
-void DBG_dump_rcc_ahb1enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_ahb1enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   AHB1LPENR raw " : "   AHB1ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB1LPENR raw " : "C1_AHB1ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB1LPENR raw " : "C2_AHB1ENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB1LPENR raw " : "C1_AHB1ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB1LPENR raw " : "C2_AHB1ENR raw ", c2 );  
+  }
 
+#if defined(RCC_AHB1ENR_USB2OTGHSEN)
   DBG_dump_when_on ("USB2OTG Clk",    d1, c1, c2, RCC_AHB1ENR_USB2OTGHSEN);  
+  DBG_dump_when_on ("USB2 PHY Clk",   d1, c1, c2, RCC_AHB1ENR_USB2OTGHSULPIEN);  
+#endif
   DBG_dump_when_on ("USB1 PHY Clk",   d1, c1, c2, RCC_AHB1ENR_USB1OTGHSULPIEN);  
   DBG_dump_when_on ("USB1OTG Clk",    d1, c1, c2, RCC_AHB1ENR_USB1OTGHSEN);  
-  DBG_dump_when_on ("USB2 PHY Clk",   d1, c1, c2, RCC_AHB1ENR_USB2OTGHSULPIEN);  
   DBG_dump_when_on ("ETH1 Rx Clk",    d1, c1, c2, RCC_AHB1ENR_ETH1RXEN);  
   DBG_dump_when_on ("ETH1 Tx Clk",    d1, c1, c2, RCC_AHB1ENR_ETH1TXEN);  
   DBG_dump_when_on ("ETH1 MAC Clk",   d1, c1, c2, RCC_AHB1ENR_ETH1MACEN);  
@@ -709,20 +715,30 @@ void DBG_dump_rcc_ahb1enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_ahb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_ahb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   AHB2LPENR raw " : "   AHB2ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB2LPENR raw " : "C1_AHB2ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB2LPENR raw " : "C2_AHB2ENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB2LPENR raw " : "C1_AHB2ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB2LPENR raw " : "C2_AHB2ENR raw ", c2 );  
+  }
 
-  DBG_dump_when_on ("SRAM3 Clk",   d1, c1, c2, RCC_AHB2ENR_SRAM3EN);  
+  #if defined(RCC_AHB2ENR_SRAM3EN)  
+    DBG_dump_when_on ("SRAM3 Clk",   d1, c1, c2, RCC_AHB2ENR_SRAM3EN);  
+  #endif
   DBG_dump_when_on ("SRAM2 Clk",   d1, c1, c2, RCC_AHB2ENR_SRAM2EN);  
   DBG_dump_when_on ("SRAM1 Clk",   d1, c1, c2, RCC_AHB2ENR_SRAM1EN);  
+  #if defined(CORDIC)
+    DBG_dump_when_on ("CORDIC Clk",  d1, c1, c2, RCC_AHB2ENR_CORDICEN);  
+  #endif
+  #if defined(FMAC)
+    DBG_dump_when_on ("FMAC Clk",    d1, c1, c2, RCC_AHB2ENR_FMACEN);  
+  #endif
   DBG_dump_when_on ("SDMMC2 Clk",  d1, c1, c2, RCC_AHB2ENR_SDMMC2EN);  
   DBG_dump_when_on ("RNG Clk",     d1, c1, c2, RCC_AHB2ENR_RNGEN);  
 #if defined(HASH)
-  DBG_dump_when_on ("HASH Clk",    d1, c1, c2, RCC_AHB2ENR_HASHEN);  
+  DBG_dump_when_on ("HASH Clk",    d1, c1, c2, RCC  _AHB2ENR_HASHEN);  
 #endif
 #if defined(CRYP)
   DBG_dump_when_on ("CRYPT Clk",   d1, c1, c2, RCC_AHB2ENR_CRYPEN);  
@@ -731,35 +747,61 @@ void DBG_dump_rcc_ahb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_ahb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_ahb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   AHB3LPENR raw " : "   AHB3ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB3LPENR raw " : "C1_AHB3ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB3LPENR raw " : "C2_AHB3ENR raw ", c2 );  
-
-  DBG_dump_when_on ("AXISRAM Clk",  d1, c1, c2, RCC_AHB3LPENR_AXISRAMLPEN);  
-  DBG_dump_when_on ("ITCM Clk",     d1, c1, c2, RCC_AHB3LPENR_ITCMLPEN);  
-  DBG_dump_when_on ("DTCM1 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM1LPEN);  
-  DBG_dump_when_on ("DTCM2 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM2LPEN);  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB3LPENR raw " : "C1_AHB3ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB3LPENR raw " : "C2_AHB3ENR raw ", c2 );  
+  }
+ 
+  if ( bSleepRegisters ) {
+      DBG_dump_when_on ("AXISRAM Clk",  d1, c1, c2, RCC_AHB3LPENR_AXISRAMLPEN);  
+      DBG_dump_when_on ("ITCM Clk",     d1, c1, c2, RCC_AHB3LPENR_ITCMLPEN);  
+      DBG_dump_when_on ("DTCM1 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM1LPEN);  
+      DBG_dump_when_on ("DTCM2 Clk",    d1, c1, c2, RCC_AHB3LPENR_DTCM2LPEN);  
+  }
+  #if defined(RCC_AHB3ENR_OTFDEC2EN)
+    DBG_dump_when_on ("OTFDEC2 Clk", d1, c1, c2, RCC_AHB3ENR_OTFDEC2EN);
+  #endif
+  #if defined(RCC_AHB3ENR_OTFDEC1EN)
+    DBG_dump_when_on ("OTFDEC1 Clk", d1, c1, c2, RCC_AHB3ENR_OTFDEC1EN);
+  #endif
+  #if defined(RCC_AHB3ENR_IOMNGREN)
+    DBG_dump_when_on ("OSPI IOMGR Clk", d1, c1, c2, RCC_AHB3ENR_IOMNGREN);
+  #endif
+  #if defined(RCC_AHB3ENR_OSPI2EN)
+    DBG_dump_when_on ("OSPI2 Clk",   d1, c1, c2, RCC_AHB3ENR_OSPI2EN);
+  #endif
   DBG_dump_when_on ("SDMMC1 Clk",   d1, c1, c2, RCC_AHB3ENR_SDMMC1EN);  
-  DBG_dump_when_on ("QSPI Clk",   d1, c1, c2, RCC_AHB3ENR_QSPIEN);  
+  #if defined(RCC_AHB3ENR_QSPIEN)  
+    DBG_dump_when_on ("QSPI Clk",   d1, c1, c2, RCC_AHB3ENR_QSPIEN);  
+  #endif
+  #if defined(RCC_AHB3ENR_OSPI1EN)
+    DBG_dump_when_on ("OSPI1 Clk",   d1, c1, c2, RCC_AHB3ENR_OSPI1EN);
+  #endif
+
   DBG_dump_when_on ("FMC Clk",   d1, c1, c2, RCC_AHB3ENR_FMCEN);  
   #if defined(FLITF)
     DBG_dump_when_on ("FLITF Clk",   d1, c1, c2, RCC_AHB3ENR_FLITFEN);  
   #endif
-  DBG_dump_when_on ("JPGDEC Clk",   d1, c1, c2, RCC_AHB3ENR_JPGDECEN);  
+  #if defined(JPGDEC)
+    DBG_dump_when_on ("JPGDEC Clk",   d1, c1, c2, RCC_AHB3ENR_JPGDECEN);  
+  #endif
   DBG_dump_when_on ("DMA2D Clk",   d1, c1, c2, RCC_AHB3ENR_DMA2DEN);  
   DBG_dump_when_on ("MDMA Clk",   d1, c1, c2, RCC_AHB3ENR_MDMAEN);  
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_ahb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_ahb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   AHB4LPENR raw " : "   AHB4ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB4LPENR raw " : "C1_AHB4ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB4LPENR raw " : "C2_AHB4ENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_AHB4LPENR raw " : "C1_AHB4ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_AHB4LPENR raw " : "C2_AHB4ENR raw ", c2 );  
+  }
 
   DBG_dump_when_on ("BKPRAM Clk", d1, c1, c2, RCC_AHB4ENR_BKPRAMEN);  
   DBG_dump_when_on ("HSEM Clk",   d1, c1, c2, RCC_AHB4ENR_HSEMEN);  
@@ -768,7 +810,9 @@ void DBG_dump_rcc_ahb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DBG_dump_when_on ("CRC Clk",    d1, c1, c2, RCC_AHB4ENR_CRCEN);  
   DBG_dump_when_on ("GPIOK Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOKEN);  
   DBG_dump_when_on ("GPIOJ Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOJEN);  
-  DBG_dump_when_on ("GPIOI Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOIEN);  
+  #if defined(GPIOI)
+    DBG_dump_when_on ("GPIOI Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOIEN);  
+  #endif
   DBG_dump_when_on ("GPIOH Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOHEN);  
   DBG_dump_when_on ("GPIOG Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOGEN);  
   DBG_dump_when_on ("GPIOF Clk",  d1, c1, c2, RCC_AHB4ENR_GPIOFEN);  
@@ -780,13 +824,21 @@ void DBG_dump_rcc_ahb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DEBUG_PRINTF("\n");
 }
  
-void DBG_dump_rcc_apb1henr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_apb1henr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   APB1HLPENR raw " : "   APB1HENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB1HLPENR raw " : "C1_APB1HENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB1HLPENR raw " : "C2_APB1HENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB1HLPENR raw " : "C1_APB1HENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB1HLPENR raw " : "C2_APB1HENR raw ", c2 );  
+  }
 
+  #if defined(TIM24)
+    DBG_dump_when_on ("TIM24 Clk", d1, c1, c2, RCC_APB1HENR_TIM24EN);  
+  #endif
+  #if defined(TIM23)
+    DBG_dump_when_on ("TIM23 Clk", d1, c1, c2, RCC_APB1HENR_TIM23EN);  
+  #endif
   DBG_dump_when_on ("FDCAN Clk", d1, c1, c2, RCC_APB1HENR_FDCANEN);  
   DBG_dump_when_on ("MDIOS Clk", d1, c1, c2, RCC_APB1HENR_MDIOSEN);  
   DBG_dump_when_on ("OPAMP Clk", d1, c1, c2, RCC_APB1HENR_OPAMPEN);  
@@ -795,18 +847,23 @@ void DBG_dump_rcc_apb1henr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSlee
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_apb1lenr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_apb1lenr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   APB1LLPENR raw " : "   APB1LENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB1LLPENR raw " : "C1_APB1LENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB1LLPENR raw " : "C2_APB1LENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB1LLPENR raw " : "C1_APB1LENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB1LLPENR raw " : "C2_APB1LENR raw ", c2 );  
+  }
 
   DBG_dump_when_on ("UART8 Clk",    d1, c1, c2, RCC_APB1LENR_UART8EN);  
   DBG_dump_when_on ("UART7 Clk",    d1, c1, c2, RCC_APB1LENR_UART7EN);  
   DBG_dump_when_on ("DAC12 Clk",    d1, c1, c2, RCC_APB1LENR_DAC12EN);  
   DBG_dump_when_on ("CEC Clk",      d1, c1, c2, RCC_APB1LENR_CECEN);  
-  DBG_dump_when_on ("I2C3 Clk",     d1, c1, c2, RCC_APB1LENR_I2C3EN);  
+  DBG_dump_when_on ("CEC Clk",      d1, c1, c2, RCC_APB1LENR_CECEN);
+  #if defined(I2C5)
+    DBG_dump_when_on ("I2C5 Clk",     d1, c1, c2, RCC_APB1LENR_I2C5EN);  
+  #endif
   DBG_dump_when_on ("I2C2 Clk",     d1, c1, c2, RCC_APB1LENR_I2C2EN);  
   DBG_dump_when_on ("I2C1 Clk",     d1, c1, c2, RCC_APB1LENR_I2C1EN);  
   DBG_dump_when_on ("UART5 Clk",    d1, c1, c2, RCC_APB1LENR_UART5EN);  
@@ -832,17 +889,25 @@ void DBG_dump_rcc_apb1lenr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSlee
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_apb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_apb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   APB2LPENR raw " : "   APB2ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB2LPENR raw " : "C1_APB2ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB2LPENR raw " : "C2_APB2ENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB2LPENR raw " : "C1_APB2ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB2LPENR raw " : "C2_APB2ENR raw ", c2 );  
+  }
 
-  DBG_dump_when_on ("HRTIM Clk",    d1, c1, c2, RCC_APB2ENR_HRTIMEN);  
+  #if defined(HRTIM)
+    DBG_dump_when_on ("HRTIM Clk",    d1, c1, c2, RCC_APB2ENR_HRTIMEN);  
+  #endif
   DBG_dump_when_on ("DFSDM1 Clk",   d1, c1, c2, RCC_APB2ENR_DFSDM1EN);  
-  DBG_dump_when_on ("SAI3 Clk",     d1, c1, c2, RCC_APB2ENR_SAI3EN);  
-  DBG_dump_when_on ("SAI2 Clk",     d1, c1, c2, RCC_APB2ENR_SAI2EN);  
+  #if defined(SAI3)  
+    DBG_dump_when_on ("SAI3 Clk",     d1, c1, c2, RCC_APB2ENR_SAI3EN);  
+  #endif
+  #if defined(SAI2)  
+    DBG_dump_when_on ("SAI2 Clk",     d1, c1, c2, RCC_APB2ENR_SAI2EN);
+  #endif
   DBG_dump_when_on ("SAI1 Clk",     d1, c1, c2, RCC_APB2ENR_SAI1EN);  
   DBG_dump_when_on ("SPI5 Clk",     d1, c1, c2, RCC_APB2ENR_SPI5EN);  
   DBG_dump_when_on ("TIM17 Clk",    d1, c1, c2, RCC_APB2ENR_TIM17EN);  
@@ -850,6 +915,12 @@ void DBG_dump_rcc_apb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DBG_dump_when_on ("TIM15 Clk",    d1, c1, c2, RCC_APB2ENR_TIM15EN);  
   DBG_dump_when_on ("SPI4 Clk",     d1, c1, c2, RCC_APB2ENR_SPI4EN);  
   DBG_dump_when_on ("SPI1 Clk",     d1, c1, c2, RCC_APB2ENR_SPI1EN);  
+  #if defined(USART10)
+    DBG_dump_when_on ("USART10 Clk",  d1, c1, c2, RCC_APB2ENR_USART10EN);  
+  #endif 
+  #if defined(UART9)
+    DBG_dump_when_on ("UART9 Clk",  d1, c1, c2, RCC_APB2ENR_UART9EN);  
+  #endif 
   DBG_dump_when_on ("USART6 Clk",   d1, c1, c2, RCC_APB2ENR_USART6EN);  
   DBG_dump_when_on ("USART1 Clk",   d1, c1, c2, RCC_APB2ENR_USART1EN);  
   DBG_dump_when_on ("TIM8 Clk",     d1, c1, c2, RCC_APB2ENR_TIM8EN);  
@@ -857,12 +928,14 @@ void DBG_dump_rcc_apb2enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_apb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_apb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   APB3LPENR raw " : "   APB3ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB3LPENR raw " : "C1_APB3ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB3LPENR raw " : "C2_APB3ENR raw ", c2 );  
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB3LPENR raw " : "C1_APB3ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB3LPENR raw " : "C2_APB3ENR raw ", c2 );  
+  }
 
   DBG_dump_when_on ("WWDG1 Clk", d1, c1, c2, RCC_APB3ENR_WWDG1EN);  
   #if defined(DSI)
@@ -872,13 +945,17 @@ void DBG_dump_rcc_apb3enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
   DEBUG_PRINTF("\n");
 }
 
-void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleepRegisters )
+void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bHas2Domains, uint32_t bSleepRegisters )
 {
   DBG_setPadLen(16);
   DBG_dump_uint32_hex(bSleepRegisters ? "   APB4LPENR raw " : "   APB4ENR raw ", d1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB4LPENR raw " : "C1_APB4ENR raw ", c1 );  
-  DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB4LPENR raw " : "C2_APB4ENR raw ", c2 );  
-
+  if ( bHas2Domains ) {
+      DBG_dump_uint32_hex(bSleepRegisters ? "C1_APB4LPENR raw " : "C1_APB4ENR raw ", c1 );  
+      DBG_dump_uint32_hex(bSleepRegisters ? "C2_APB4LPENR raw " : "C2_APB4ENR raw ", c2 );  
+  }
+  #if defined(DTS)
+    DBG_dump_when_on ("DST Clk",    d1, c1, c2, RCC_APB4ENR_DTSEN);  
+  #endif
   DBG_dump_when_on ("SAI4 Clk",   d1, c1, c2, RCC_APB4ENR_SAI4EN);  
   DBG_dump_when_on ("RTCAPB Clk", d1, c1, c2, RCC_APB4ENR_RTCAPBEN);  
   DBG_dump_when_on ("VREF Clk",   d1, c1, c2, RCC_APB4ENR_VREFEN);  
@@ -897,10 +974,10 @@ void DBG_dump_rcc_apb4enr(uint32_t d1, uint32_t c1, uint32_t c2, uint32_t bSleep
 
 
 #if defined(STM32H747xx) || defined(STM32H745xx)
-    #define MK_3ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a
+    #define MK_4ARGS(a)     RCC_C1->a | RCC_C2->a, RCC_C1->a,  RCC_C2->a, true
 #elif defined(STM32H742xx) || defined(STM32H743xx) \
    || defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
-    #define MK_3ARGS(a)     RCC->a, 0, 0 
+    #define MK_4ARGS(a)     RCC->a, 0, 0, false 
 #else
     #error "No RCC domain mapping defined"
 #endif
@@ -915,20 +992,20 @@ void DBG_dump_peripheralclocksetting(bool bDumpAll)
       /********  AHB peripheral clock enable register *****************/
       DBG_printf_indent("AHB devices state\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_ahb1enr(MK_3ARGS(AHB1ENR), 0);
-      DBG_dump_rcc_ahb2enr(MK_3ARGS(AHB2ENR), 0);
-      DBG_dump_rcc_ahb3enr(MK_3ARGS(AHB3ENR), 0);
-      DBG_dump_rcc_ahb4enr(MK_3ARGS(AHB4ENR), 0);
+      DBG_dump_rcc_ahb1enr(MK_4ARGS(AHB1ENR), 0);
+      DBG_dump_rcc_ahb2enr(MK_4ARGS(AHB2ENR), 0);
+      DBG_dump_rcc_ahb3enr(MK_4ARGS(AHB3ENR), 0);
+      DBG_dump_rcc_ahb4enr(MK_4ARGS(AHB4ENR), 0);
       DBG_setIndentRel(-2);
 
       /********  APB peripheral clock enable register *****************/
       DBG_printf_indent("APB devices state\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_apb1henr(MK_3ARGS(APB1HENR), 0);
-      DBG_dump_rcc_apb1lenr(MK_3ARGS(APB1LENR), 0);
-      DBG_dump_rcc_apb2enr (MK_3ARGS(APB2ENR) , 0);
-      DBG_dump_rcc_apb3enr (MK_3ARGS(APB3ENR) , 0);
-      DBG_dump_rcc_apb4enr (MK_3ARGS(APB4ENR) , 0);
+      DBG_dump_rcc_apb1henr(MK_4ARGS(APB1HENR), 0);
+      DBG_dump_rcc_apb1lenr(MK_4ARGS(APB1LENR), 0);
+      DBG_dump_rcc_apb2enr (MK_4ARGS(APB2ENR) , 0);
+      DBG_dump_rcc_apb3enr (MK_4ARGS(APB3ENR) , 0);
+      DBG_dump_rcc_apb4enr (MK_4ARGS(APB4ENR) , 0);
       DBG_setIndentRel(-2);
 
       /********  Backup Domain control register *****************/
@@ -949,24 +1026,24 @@ void DBG_dump_peripheralclocksetting_insleepmode(bool bDumpAll)
   DEBUG_PUTS("Peripheral Clock Settings ** IN SLEEP MODE ** ---" );
   int oldIndent = DBG_setIndentRel(+2);
 
-  #if DEBUG_DUMP_PERCLK > 0 && 0
+  #if DEBUG_DUMP_PERCLK > 0
       /********  AHB peripheral clock enable register *****************/
-      DBG_printf_indent("AHB peripheral clocks in SleepMode\n" );
+      DBG_printf_indent("AHB devices state ** IN SLEEP MODE **\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_ahbenr(RCC->AHB1SMENR, RCC->AHB2SMENR, RCC->AHB3SMENR, 1);
+      DBG_dump_rcc_ahb1enr(MK_4ARGS(AHB1LPENR), 1);
+      DBG_dump_rcc_ahb2enr(MK_4ARGS(AHB2LPENR), 1);
+      DBG_dump_rcc_ahb3enr(MK_4ARGS(AHB3LPENR), 1);
+      DBG_dump_rcc_ahb4enr(MK_4ARGS(AHB4LPENR), 1);
       DBG_setIndentRel(-2);
 
-      /********  APB1 peripheral clock enable register *****************/
-      DBG_printf_indent("APB1 peripheral clocks in SleepMode\n" );
+      /********  APB peripheral clock enable register *****************/
+      DBG_printf_indent("APB devices state ** IN SLEEP MODE **\n" );
       DBG_setIndentRel(+2);
-      DBG_dump_rcc_apb1enr(RCC->APB1SMENR1, RCC->APB1SMENR2, 1);
-      DBG_setIndentRel(-2);
-
-      /********  APB2 peripheral clock enable register *****************/
-      DBG_printf_indent("APB2 peripheral clocks in SleepMode\n" );
-      DBG_setIndentRel(+2);
-      DBG_dump_rcc_apb2enr(RCC->APB2SMENR, 1);
-      DBG_setIndentRel(-2);
+      DBG_dump_rcc_apb1henr(MK_4ARGS(APB1HLPENR), 1);
+      DBG_dump_rcc_apb1lenr(MK_4ARGS(APB1LLPENR), 1);
+      DBG_dump_rcc_apb2enr (MK_4ARGS(APB2LPENR) , 1);
+      DBG_dump_rcc_apb3enr (MK_4ARGS(APB3LPENR) , 1);
+      DBG_dump_rcc_apb4enr (MK_4ARGS(APB4LPENR) , 1);
   #else
       DBG_printf_indent("configured out\n");
   #endif
@@ -1004,6 +1081,7 @@ static const char* DBG_get_hclk3_pll1q_pll2r_perclk_txt(uint32_t sel)
 #define OUTOF4(sel, a,b,c,d)        (sel==3?d:OUTOF3(sel,a,b,c))
 #define OUTOF5(sel, a,b,c,d,e)      (sel==4?e:OUTOF4(sel,a,b,c,d))
 #define OUTOF6(sel, a,b,c,d,e,f)    (sel==5?f:OUTOF5(sel,a,b,c,d,e))
+#define OUTOF7(sel, a,b,c,d,e,f,g)  (sel==6?g:OUTOF6(sel,a,b,c,d,e,f))
 
 void DBG_dump_peripheralclockconfig(void)
 {
@@ -1013,25 +1091,33 @@ void DBG_dump_peripheralclockconfig(void)
 
   #if DEBUG_DUMP_PERCLK > 0
       DBG_dump_textvalue("Peripheral Clk Source", DBG_get_rcc_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_CKPERSEL_Msk) >> RCC_D1CCIPR_CKPERSEL_Pos) );    
+
+      /* --- D1 Peripherals --- */
       if ( __HAL_RCC_SDMMC1_IS_CLK_ENABLED() || __HAL_RCC_SDMMC2_IS_CLK_ENABLED() ) 
           DBG_dump_textvalue("SDMMC Clk Source", READ_BIT(RCC->D1CCIPR ,RCC_D1CCIPR_SDMMCSEL) ? "PLL2R" : "PLL1Q" );    
 
-      /* D1 Peripherals */
       #if defined(DSI)
-      if ( __HAL_RCC_SDMMC1_IS_CLK_ENABLED() )
-          DBG_printf_indent("*** Not implemented ***");
+          if ( __HAL_RCC_DSI_IS_CLK_ENABLED() )
+              DBG_printf_indent("*** Not implemented ***");
       #endif
-      if ( __HAL_RCC_QSPI_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("QSPI Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_QSPISEL_Msk) >> RCC_D1CCIPR_QSPISEL_Pos) );    
+
+      #if    defined(STM32H747xx) || defined(STM32H745xx) \
+          || defined(STM32H742xx) || defined(STM32H743xx)          
+          if ( __HAL_RCC_QSPI_IS_CLK_ENABLED() )
+                DBG_dump_textvalue("QSPI Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR &  RCC_D1CCIPR_QSPISEL_Msk) >> RCC_D1CCIPR_QSPISEL_Pos) );    
+      #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+          if ( __HAL_RCC_OSPI1_IS_CLK_ENABLED() || __HAL_RCC_OSPI2_IS_CLK_ENABLED() )
+                DBG_dump_textvalue("OSPIx Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR &  RCC_D1CCIPR_OCTOSPISEL_Msk) >> RCC_D1CCIPR_OCTOSPISEL_Pos) );    
+      #endif
+
       if ( __HAL_RCC_FMC_IS_CLK_ENABLED() )
           DBG_dump_textvalue("FMC Clk Source", DBG_get_hclk3_pll1q_pll2r_perclk_txt((RCC->D1CCIPR & RCC_D1CCIPR_FMCSEL_Msk) >> RCC_D1CCIPR_FMCSEL_Pos) );    
 
-
-      /* D2 Peripherals */
+      /* --- D2 Peripherals --- */
       if ( __HAL_RCC_SWPMI1_IS_CLK_ENABLED() )
           DBG_dump_textvalue("SWPMI Clk Source",  READ_BIT(RCC->D2CCIP1R ,RCC_D2CCIP1R_SWPSEL) ? "HSI" : "PCLK1" ); 
       if ( __HAL_RCC_FDCAN_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("FDCAN Clk Source", OUTOF4((RCC->D2CCIP1R & RCC_D2CCIP1R_FDCANSEL_Msk ) >> RCC_D2CCIP1R_FDCANSEL_Pos,"HSE","PLL1Q","PLL2R","resvd/disable" ));    
+          DBG_dump_textvalue("FDCAN Clk Source", OUTOF4((RCC->D2CCIP1R & RCC_D2CCIP1R_FDCANSEL_Msk ) >> RCC_D2CCIP1R_FDCANSEL_Pos,"HSE","PLL1Q","PLL2Q","resvd/disable" ));    
       if ( __HAL_RCC_DFSDM1_IS_CLK_ENABLED() )
           DBG_dump_textvalue("DFSDM1 Clk Source",  READ_BIT(RCC->D2CCIP1R ,RCC_D2CCIP1R_SWPSEL) ? "SYSCLK" : "PCLK2" ); 
       if ( __HAL_RCC_SPDIFRX_IS_CLK_ENABLED() )
@@ -1039,31 +1125,65 @@ void DBG_dump_peripheralclockconfig(void)
       if ( __HAL_RCC_SPI4_IS_CLK_ENABLED() || __HAL_RCC_SPI5_IS_CLK_ENABLED())
           DBG_dump_textvalue("SPI4,5 Clk Source", OUTOF6((RCC->D2CCIP1R & RCC_D2CCIP1R_SPI45SEL_Msk ) >> RCC_D2CCIP1R_SPI45SEL_Pos,"PCLK", "PLL2Q","PLL3Q","HSI","CSI","HSE" ));    
       if ( __HAL_RCC_SPI1_IS_CLK_ENABLED() || __HAL_RCC_SPI2_IS_CLK_ENABLED() || __HAL_RCC_SPI3_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("SPI1,2,3 Clk Source", OUTOF6((RCC->D2CCIP1R & RCC_D2CCIP1R_SPI123SEL_Msk ) >> RCC_D2CCIP1R_SPI123SEL_Pos,"PLL1Q", "PLL2P","PLL3P","I2S_IN","CSI","PER" ));    
+          DBG_dump_textvalue("SPI1,2,3 Clk Source", OUTOF5((RCC->D2CCIP1R & RCC_D2CCIP1R_SPI123SEL_Msk ) >> RCC_D2CCIP1R_SPI123SEL_Pos,"PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
+      if ( __HAL_RCC_SAI1_IS_CLK_ENABLED() )
+          DBG_dump_textvalue("SPI1,2,3 Clk Source", OUTOF5((RCC->D2CCIP1R & RCC_D2CCIP1R_SPI123SEL_Msk ) >> RCC_D2CCIP1R_SPI123SEL_Pos,"PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
 
       if ( __HAL_RCC_LPTIM1_IS_CLK_ENABLED() )
           DBG_dump_textvalue("LPTIM1 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_LPTIM1SEL_Msk ) >> RCC_D2CCIP2R_LPTIM1SEL_Pos,"PCLK1", "PLL2P","PLL3R","LSE","LSI","PER" ));        
       if ( __HAL_RCC_CEC_IS_CLK_ENABLED() )
           DBG_dump_textvalue("CEC Clk Source", OUTOF3((RCC->D2CCIP2R & RCC_D2CCIP2R_CECSEL_Msk ) >> RCC_D2CCIP2R_CECSEL_Pos,"LSE", "LSI", "CSI"));        
-      if ( __HAL_RCC_USB1_OTG_HS_IS_CLK_ENABLED() || __HAL_RCC_USB2_OTG_FS_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("USB Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_USBSEL_Msk ) >> RCC_D2CCIP2R_USBSEL_Pos,"Disabled", "PLL1Q", "PLL3Q","HSI48"));        
-      if ( __HAL_RCC_I2C1_IS_CLK_ENABLED() || __HAL_RCC_I2C2_IS_CLK_ENABLED() || __HAL_RCC_I2C3_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("I2C1,2,3 Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_I2C123SEL_Msk ) >> RCC_D2CCIP2R_I2C123SEL_Pos,"PCLK1", "PLL3R", "HSI","CSI"));        
+
+      #if    defined(STM32H747xx) || defined(STM32H745xx) \
+          || defined(STM32H742xx) || defined(STM32H743xx)          
+          if ( __HAL_RCC_USB1_OTG_HS_IS_CLK_ENABLED() || __HAL_RCC_USB2_OTG_FS_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("USB Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_USBSEL_Msk ) >> RCC_D2CCIP2R_USBSEL_Pos,"Disabled", "PLL1Q", "PLL3Q","HSI48"));        
+      #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+          if ( __HAL_RCC_USB1_OTG_HS_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("USB Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_USBSEL_Msk ) >> RCC_D2CCIP2R_USBSEL_Pos,"Disabled", "PLL1Q", "PLL3Q","HSI48"));        
+      #endif
+      #if    defined(STM32H747xx) || defined(STM32H745xx) \
+          || defined(STM32H742xx) || defined(STM32H743xx)          
+          if ( __HAL_RCC_I2C1_IS_CLK_ENABLED() || __HAL_RCC_I2C2_IS_CLK_ENABLED() || __HAL_RCC_I2C3_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("I2C1,2,3 Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_I2C123SEL_Msk ) >> RCC_D2CCIP2R_I2C123SEL_Pos,"PCLK1", "PLL3R", "HSI","CSI"));        
+      #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+          if ( __HAL_RCC_I2C1_IS_CLK_ENABLED() || __HAL_RCC_I2C2_IS_CLK_ENABLED() || __HAL_RCC_I2C3_IS_CLK_ENABLED() || __HAL_RCC_I2C5_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("I2C1,2,3,5 Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_I2C1235SEL_Msk ) >> RCC_D2CCIP2R_I2C1235SEL_Pos,"PCLK1", "PLL3R", "HSI","CSI"));        
+      #endif
+
       if ( __HAL_RCC_RNG_IS_CLK_ENABLED() )
           DBG_dump_textvalue("RNG Clk Source", OUTOF4((RCC->D2CCIP2R & RCC_D2CCIP2R_RNGSEL_Msk ) >> RCC_D2CCIP2R_RNGSEL_Pos,"HSI48", "PLL1Q", "LSE","LSI"));        
-      if ( __HAL_RCC_USART1_IS_CLK_ENABLED() || __HAL_RCC_USART6_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("USART1,6 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_USART16SEL_Msk ) >> RCC_D2CCIP2R_USART16SEL_Pos,"PCLK2", "PLL2Q","PLL3Q","HSI","CSI","LSE" ));    
+      #if    defined(STM32H747xx) || defined(STM32H745xx) \
+          || defined(STM32H742xx) || defined(STM32H743xx)          
+          if ( __HAL_RCC_USART1_IS_CLK_ENABLED() || __HAL_RCC_USART6_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("USART1,6 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_USART16SEL_Msk ) >> RCC_D2CCIP2R_USART16SEL_Pos,"PCLK2", "PLL2Q","PLL3Q","HSI","CSI","LSE" ));    
+      #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+          if ( __HAL_RCC_USART1_IS_CLK_ENABLED() || __HAL_RCC_USART6_IS_CLK_ENABLED() || __HAL_RCC_UART9_IS_CLK_ENABLED() || __HAL_RCC_USART10_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("USART1,6,9,10 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_USART16910SEL_Msk ) >> RCC_D2CCIP2R_USART16910SEL_Pos,"PCLK2", "PLL2Q","PLL3Q","HSI","CSI","LSE" ));    
+      #endif
       if (  __HAL_RCC_USART2_IS_CLK_ENABLED() || __HAL_RCC_USART3_IS_CLK_ENABLED() 
           || __HAL_RCC_UART4_IS_CLK_ENABLED() || __HAL_RCC_UART5_IS_CLK_ENABLED() || __HAL_RCC_UART7_IS_CLK_ENABLED() || __HAL_RCC_UART8_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("U(S)ART2-5,7,8 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_USART16SEL_Msk ) >> RCC_D2CCIP2R_USART16SEL_Pos,"PCLK1", "PLL2Q","PLL3Q","HSI","CSI","LSE" ));    
+          DBG_dump_textvalue("U(S)ART2-5,7,8 Clk Source", OUTOF6((RCC->D2CCIP2R & RCC_D2CCIP2R_USART28SEL_Msk ) >> RCC_D2CCIP2R_USART28SEL_Pos,"PCLK1", "PLL2Q","PLL3Q","HSI","CSI","LSE" ));    
 
       /* D3 Peripherals */
-      if ( __HAL_RCC_SPI6_IS_CLK_ENABLED() )
-          DBG_dump_textvalue("SPI6 Clk Source", OUTOF6((RCC->D3CCIPR & RCC_D3CCIPR_SPI6SEL_Msk ) >> RCC_D3CCIPR_SPI6SEL_Pos, "PCLK4", "PLL2Q","PLL3Q","HSI","CSI","HSE" ));    
-      if ( __HAL_RCC_SAI4_IS_CLK_ENABLED() ) {
-          DBG_dump_textvalue("SAI4B Clk Source", OUTOF5((RCC->D3CCIPR & RCC_D3CCIPR_SAI4BSEL_Msk ) >> RCC_D3CCIPR_SAI4BSEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
-          DBG_dump_textvalue("SAI4A Clk Source", OUTOF5((RCC->D3CCIPR & RCC_D3CCIPR_SAI4ASEL_Msk ) >> RCC_D3CCIPR_SAI4ASEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
-      }
+
+      #if    defined(STM32H747xx) || defined(STM32H745xx) \
+          || defined(STM32H742xx) || defined(STM32H743xx)          
+          if ( __HAL_RCC_SPI6_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("SPI6 Clk Source", OUTOF6((RCC->D3CCIPR & RCC_D3CCIPR_SPI6SEL_Msk ) >> RCC_D3CCIPR_SPI6SEL_Pos, "PCLK4", "PLL2Q","PLL3Q","HSI","CSI","HSE" ));    
+          if ( __HAL_RCC_SAI4_IS_CLK_ENABLED() ) {
+              DBG_dump_textvalue("SAI4B Clk Source", OUTOF5((RCC->D3CCIPR & RCC_D3CCIPR_SAI4BSEL_Msk ) >> RCC_D3CCIPR_SAI4BSEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
+              DBG_dump_textvalue("SAI4A Clk Source", OUTOF5((RCC->D3CCIPR & RCC_D3CCIPR_SAI4ASEL_Msk ) >> RCC_D3CCIPR_SAI4ASEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER" ));    
+          }
+      #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+          /* This types have some more config options */
+          if ( __HAL_RCC_SPI6_IS_CLK_ENABLED() )
+              DBG_dump_textvalue("SPI6 Clk Source", OUTOF7((RCC->D3CCIPR & RCC_D3CCIPR_SPI6SEL_Msk ) >> RCC_D3CCIPR_SPI6SEL_Pos, "PCLK4", "PLL2Q","PLL3Q","HSI","CSI","HSE","I2S_IN" ));    
+          if ( __HAL_RCC_SAI4_IS_CLK_ENABLED() ) {
+              DBG_dump_textvalue("SAI4B Clk Source", OUTOF6((RCC->D3CCIPR & RCC_D3CCIPR_SAI4BSEL_Msk ) >> RCC_D3CCIPR_SAI4BSEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER","SPDIFRX_SYMB" ));    
+              DBG_dump_textvalue("SAI4A Clk Source", OUTOF6((RCC->D3CCIPR & RCC_D3CCIPR_SAI4ASEL_Msk ) >> RCC_D3CCIPR_SAI4ASEL_Pos, "PLL1Q", "PLL2P","PLL3P","I2S_IN","PER","SPDIFRX_SYMB" ));    
+          }
+      #endif
       if ( __HAL_RCC_ADC12_IS_CLK_ENABLED() || __HAL_RCC_ADC3_IS_CLK_ENABLED() )
           DBG_dump_textvalue("ADC1,2,3 Clk Source", OUTOF3((RCC->D3CCIPR & RCC_D3CCIPR_ADCSEL_Msk ) >> RCC_D3CCIPR_ADCSEL_Pos, "PLL2P", "PLL3R","PER" ));    
       if ( __HAL_RCC_LPTIM3_IS_CLK_ENABLED() || __HAL_RCC_LPTIM4_IS_CLK_ENABLED() || __HAL_RCC_LPTIM5_IS_CLK_ENABLED() )
@@ -1134,6 +1254,7 @@ void DBG_dump_all_DMA (void )
   DBG_setPadLen(18);
 
   DBG_dump_DMA(1);
+  DBG_dump_DMA(2);
 
   DBG_setIndentAbs(oldIndent);
 }
