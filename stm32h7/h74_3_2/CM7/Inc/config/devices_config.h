@@ -608,6 +608,118 @@
   #define DEFAULT_STOP_MODE                2
 
 
+#elif defined(STM32H725_WIOLITEAI)
+
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM3
+    #define RTCTIMER_IRQn           LPTIM3_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM3_IRQHandler
+
+    // #define USE_USART2
+    //#define USE_USART2_ALTN1
+    #define COM2_USE_TX_DMA
+    #define COM2_USE_RX_DMA
+    //#define USE_USART2_DEBUG
+
+    #define USE_USART3             /* Default Pinout: PD8=Tx, PD9=Rx */
+    //#define USE_USART3_ALTN1
+    #define COM3_USE_TX_DMA
+    //#define COM3_USE_RX_DMA
+    #define USE_USART3_DEBUG
+    
+    // #define USE_USART6
+    #define COM6_USE_TX_DMA
+    //#define COM6_USE_RX_DMA
+    // #define USE_USART6_DEBUG
+ 
+    // #define USE_UART4
+    #define COM4_USE_TX_DMA
+    #define COM4_USE_RX_DMA
+
+    // #define USE_UART5  
+    #define COM5_USE_TX_DMA
+    #define COM5_USE_RX_DMA
+
+    //#define USE_LPUART1
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
+    #define USE_LPUART1_ALTN2
+    //#define USE_LPUART1_DEBUG
+
+   //#define USE_SPI1
+    // #define SPIDEV1_USE_IRQ
+   #define USE_SPI1_ALTN2
+   #define SPIDEV1_USE_IRQ
+   #define SPI1_BAUDRATE             400000
+   #define USE_SPI1_MASTER
+    
+    // #define USE_SPI2
+    #define SPIDEV2_USE_IRQ
+    #define SPIDEV2_USE_DMA
+    #define USE_SPI2_ALTN1
+    #define SPI2_BAUDRATE            400000
+    #define USE_SPI2_MASTER
+
+    // #define USE_SPI3
+    #define USE_SPI3_ALTN3
+    //  #define SPI3_USE_IRQ
+    #define SPI3_USE_MISO
+    #define SPI3_BAUDRATE            6000000
+    #define USE_SPI3_MASTER
+    #define SPI3_USE_INP             /* Interrupt pin of enc28j60 */
+    #define SPI3_USE_RST             /* Hardware Rest Pin of enc28j60 */
+    #define SPI3_USE_INP_IRQ
+    #define SPI3_INP_IRQ_MODE        GPIO_MODE_IT_FALLING
+
+
+    // #define USE_I2C1
+
+    // #define USE_I2C2
+    #define I2C2_CLKSOURCE           I2cClock_HSI
+    #define I2C2_SPEED               I2c_StandardMode
+    #define I2C2_USE_IRQ
+    #define I2C2_USE_DMA
+
+  // #define USE_ADC3
+  #define ADC3_USE_IRQ
+  #define ADC3_USE_DMA 
+  #define USER_ADC      HW_ADC3
+
+  #if USE_QSPI > 0
+      #define XSPI_DEV          HW_QSPI1
+      #define QSPI_HND          QSpi1Handle
+      #define USE_QSPI1
+      /* 
+       * Use low clk rates on breadboard, up to 1 MHz
+       * use clk rates up to 50MHz on PCB
+       */ 
+      #define QSPI1_CLKSPEED    50000000      
+      #define USE_QSPI1_ALTN4
+      #define QSPI1_USE_IRQ
+      #undef  QSPI1_HAS_DS_MODE
+      // #define QSPI1_USE_DMA Not implemented yet 
+  #endif
+
+  #if USE_SDMMC1 > 0
+   /* Interrupt driven, 4 lines */
+    #define SDMMC1_USE_IRQ
+    #undef  SDMMC1_USE_8LINES
+    #define SDMMC_DEV       HW_SDMMC1
+  #endif
+
+  #if USE_FATFS > 0
+      #define FATFS_DEV     XSPI_DEV
+      #define FATFS_HND     QSpi1Handle
+  #endif
+
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_DEV             HW_ETH
+  #endif
+
+  #define DEFAULT_STOP_MODE                2
+
 #elif defined(STM32H7_OPENMV)
 
 

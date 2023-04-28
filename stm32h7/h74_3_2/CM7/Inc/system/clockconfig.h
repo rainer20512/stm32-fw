@@ -47,18 +47,24 @@
  ******************************************************************************
  */
 typedef enum {
-  CLK_HSI_VRNG3_08MHZ_0WS = 0,   /*  8 MHz, source HSI, VOSrange3, 0 WS */
-  CLK_HSI_VRNG3_16MHZ_0WS = 1,   /* 16 MHz, source HSI, VOSrange3, 0 WS */
-  CLK_HSI_VRNG3_32MHZ_0WS = 2,   /* 32 MHz, source HSI, VOSrange3, 0 WS */
-  CLK_HSI_VRNG3_64MHZ_1WS = 3,   /* 64 MHz, source HSI, VOSrange3, 1 WS */
-  CLK_PLL_VRNG1_50MHZ_1WS = 4,   /* 50 MHz, source PLL with HSE, VOSrange3, 1 WS */
-  CLK_PLL_VRNG1_100MHZ_1WS = 5,  /* 100 MHz,source PLL with HSE, VOSrange1, 1 WS */
-  CLK_PLL_VRNG1_200MHZ_2WS = 6,  /* 200 MHz,source PLL with HSE, VOSrange1, 2 WS */
-  CLK_PLL_VRNG1_300MHZ_2WS = 7,  /* 300 MHz,source PLL with HSE, VOSrange1, 2 WS */
-  CLK_PLL_VRNG1_400MHZ_3WS = 8,  /* 300 MHz,source PLL with HSE, VOSrange1, 3 WS */
-  CLK_PLL_VRNG0_480MHZ_4WS = 9,  /* 480 MHz,source PLL with HSE, VOSrange0, 4 WS */
+  CLK_HSI_08MHZ  = 0,   /*  8 MHz, source HSI */ 
+  CLK_HSI_16MHZ  = 1,   /* 16 MHz, source HSI */ 
+  CLK_HSI_32MHZ  = 2,   /* 32 MHz, source HSI */
+  CLK_HSI_64MHZ  = 3,   /* 64 MHz, source HSI */
+  CLK_PLL_50MHZ  = 4,   /* 50 MHz, source PLL with HSE */
+  CLK_PLL_100MHZ = 5,   /* 100 MHz,source PLL with HSE */
+  CLK_PLL_200MHZ = 6,   /* 200 MHz,source PLL with HSE */
+  CLK_PLL_300MHZ = 7,   /* 300 MHz,source PLL with HSE */
+  CLK_PLL_400MHZ = 8,   /* 300 MHz,source PLL with HSE */
+  CLK_PLL_480MHZ = 9,   /* 480 MHz,source PLL with HSE */
+
+#if  defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+  CLK_PLL_500MHZ = 10,  /* 500 MHz,source PLL with HSE */
+  CLK_PLL_550MHZ = 11,  /* 550 MHz,source PLL with HSE */
+#endif
+
 #if defined(HW_HAS_HSE)
-  CLK_HSE_VRNG3_xxMHZ_0WS = 10,  /*  xx MHz, source HSE, Vrange1, 0 WS */
+  CLK_HSE_xxMHZ  = 20,  /*  xx MHz, source HSE, Vrange1, 0 WS */
 #endif
 
 } CLK_CONFIG_T;

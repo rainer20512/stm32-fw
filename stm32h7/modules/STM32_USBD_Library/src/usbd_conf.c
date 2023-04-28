@@ -189,7 +189,11 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
 {
 #if USE_USB_FS > 0
   /* Set LL Driver parameters */
+#if defined( USB2_OTG_FS )
   hpcd.Instance = USB2_OTG_FS;
+#else   
+  hpcd.Instance = USB_OTG_HS;
+#endif
   hpcd.Init.dev_endpoints = 8;
   hpcd.Init.use_dedicated_ep1 = 0;
   hpcd.Init.low_power_enable = 0;
@@ -212,7 +216,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
 
 #endif
 
-#ifdef USE_USB_HS
+#if USE_USB_HS > 0
   /* Set LL Driver parameters */
   hpcd.Instance = USB1_OTG_HS;
   hpcd.Init.dev_endpoints = 8;
@@ -234,13 +238,6 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef * pdev)
   hpcd.pData = pdev;
   pdev->pData = &hpcd;
 
-  /* RHB Added with H7FW V1.9 
-   * commented out: Don't know why whole D-cache was disabled
-  if (hpcd.Init.dma_enable == 1U)
-  {
-    SCB_DisableDCache();
-  }
-  */
 
   /* Initialize LL Driver */
   HAL_PCD_Init(&hpcd);

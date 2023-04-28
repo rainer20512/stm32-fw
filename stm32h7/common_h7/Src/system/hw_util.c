@@ -292,8 +292,8 @@ static const GPIO_RegisterBitStructType GPIO_ClockBits[] = {
    { SDMMC2, &RCC->AHB2ENR, RCC_AHB2ENR_SDMMC2EN_Pos, &RCC->AHB2RSTR, RCC_AHB2RSTR_SDMMC2RST_Pos, COMBINE('M', 2) },
 #endif
 /* USB OTG  --------------------------------------------------------------------------------------------------------------- */
-#if defined(USB1_OTG_FS) && defined(USE_USB) 
-   { USB1_OTG_FS, &RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_USB1OTGHSRST_Pos, COMBINE('O', 1) },
+#if defined(USB1_OTG_HS) && defined(USE_USB) 
+   { USB1_OTG_HS, &RCC->AHB1ENR, RCC_AHB1ENR_USB1OTGHSEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_USB1OTGHSRST_Pos, COMBINE('O', 1) },
 #endif
 #if defined(USB2_OTG_FS) && defined(USE_USB)
    { USB2_OTG_FS, &RCC->AHB1ENR, RCC_AHB1ENR_USB2OTGHSEN_Pos, &RCC->AHB1RSTR, RCC_AHB1RSTR_USB2OTGHSRST_Pos, COMBINE('O', 2) },
@@ -491,7 +491,7 @@ static const char *Get_DeviceName ( uint16_t devID )
 #elif defined(STM32H742xx)  || defined(STM32H743xx)
     static const char *Get_PackageName( uint16_t package )
     {
-        switch(package&0b111) {
+        switch(package&0b1111) {
             case 0b0000: return "LQFP100";
             case 0b0010: return "TQFP144";
             case 0b0101: return "TQFP176/UFBGA176";
@@ -502,7 +502,7 @@ static const char *Get_DeviceName ( uint16_t devID )
 #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)  
     static const char *Get_PackageName( uint16_t package )
     {
-        switch(package&0b111) {
+        switch(package&0b1111) {
             case 0b0000: return "VFQFPN68 Industrial";
             case 0b0001: return "LQFP100/TFBGA100 Legacy";
             case 0b0010: return "LQFP100 Industrial";

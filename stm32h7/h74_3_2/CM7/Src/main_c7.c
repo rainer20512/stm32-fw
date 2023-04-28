@@ -138,7 +138,12 @@ int main(void)
     #if defined(STM32H745xx) || defined(STM32H747xx) || defined(STM32H742xx) || defined(STM32H743xx)
         PWR->CR3 = ( PWR_CR3_SCUEN | PWR_CR3_LDOEN );
     #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
-        /* Nothing to do here: Internal SMPS is enabled by default */
+        /*Internal SMPS on, internal LDO off */
+        PWR->CR3 = PWR_CR3_SMPSEN;
+        /* Select Vrange0 and wait for Vrange0 ready   */
+        __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+        while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY));
+
     #endif
   
     /* 
@@ -387,5 +392,3 @@ static void MPU_Setup(void)
     MPU_Dump();
 
 }
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

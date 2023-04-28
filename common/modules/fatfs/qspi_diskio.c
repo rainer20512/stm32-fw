@@ -9,13 +9,14 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "config/config.h"
+
+#if USE_FATFS > 0
+
 #include "ff_gen_drv.h"
 #include "dev/xspi_dev.h"
-
 #include "log.h"
 
 
-#if USE_FATFS > 0
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

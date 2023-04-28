@@ -21,7 +21,13 @@
 #if defined(STM32L4_FAMILY)
     #define USB_HARDWARE        USB_OTG_FS
 #else
-    #define USB_HARDWARE        USB2_OTG_FS
+    #if   defined(STM32H747xx) || defined(STM32H745xx) || defined(STM32H742xx) || defined(STM32H743xx)
+        #define USB_HARDWARE        USB2_OTG_FS
+    #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)
+        #define USB_HARDWARE        USB1_OTG_HS
+    #else
+        #error "No USB hardware defined"
+    #endif
 #endif
 
 

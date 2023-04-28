@@ -44,4 +44,11 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Gleiches gilt für ST-Link/V3: Firmware nicht über Version V3J4M2 flashen
      mit höherer Version wird STM32H743 von Rowley Crossworks nicht mehr als solcher erkannt  
     
+004: STM32H723/725/733/735/730: Besonderheit: ITCM wird vom oberen Ende des AXISRAM abgezwackt.
+     Die Größe vom ITCM ist ein Wert aus 64k, 128k, 192k oder 256k. Konkret wird das in den
+     Option Bytes eingestellt. Der ITCM-Teil steht dann dem AXISRAM nicht mehr zur Verfügung.
+     Ein Zugriff über den AXISRAM-Adressbereich hier drauf führt zu einem HardFault.
+     Abhilfe: Im MemoryMap-File die Größe des AXISRAM analog zur eingestellten Größe des ITCM
+     verringern.
+     
 

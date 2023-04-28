@@ -23,8 +23,9 @@
 
 //#define STM32H742REF
 //#define STM32H743EVAL2
-#define STM32H7_DEVEBOX
+//#define STM32H7_DEVEBOX
 //#define STM32H7_OPENMV
+#define STM32H725_WIOLITEAI
 /*
  ********************************************************************************
  * Application selection
@@ -55,9 +56,11 @@
 #define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_OSPI                    0            
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_USB                     1   
-#define USE_USB_FS                  1
+#define USE_USB_FS                  0
+#define USE_USB_HS                  1
 #define USE_USB_MSC                 1
 #define USE_FMC_SRAM                0
 #define USE_FMC_SDRAM               0
@@ -117,7 +120,7 @@
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_100MHZ_1WS   /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_200MHZ_2WS   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_300MHZ_2WS   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
-#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_400MHZ_3WS   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
+#define USER_CLOCKCONFIG         CLK_PLL_400MHZ               /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG0_480MHZ_4WS   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage */
 //#define USER_CLOCKCONFIG         CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
 
@@ -182,7 +185,13 @@
     #if defined(STM32H7_OPENMV)
         #define HAS_NO_LSE          1
     #endif
+
 #elif defined(STM32H743EVAL2) || defined(STM32H7_DEVEBOX)
+    #define  HW_HAS_HSE_CRYSTAL
+    #undef  HW_HAS_HSE_BYPASS
+    #define  HW_HSE_FREQUENCY       25000000
+
+#elif defined(STM32H725_WIOLITEAI)
     #define  HW_HAS_HSE_CRYSTAL
     #undef  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       25000000
@@ -304,29 +313,31 @@
     MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,9)
     MK_CONFIGSTR(USE_USB,10)
     MK_CONFIGSTR(USE_USB_FS,11)
-    MK_CONFIGSTR(USE_USB_MSC,12)
-    MK_CONFIGSTR(USE_FMC_SRAM,13)
-    MK_CONFIGSTR(USE_FMC_SDRAM,14)
-    MK_CONFIGSTR(USE_FMC_NOR,15)
-    MK_CONFIGSTR(USE_ETH,16)
-    MK_CONFIGSTR(USE_LWIP,17)
-    MK_CONFIGSTR(USE_FATFS,18)
-    MK_CONFIGSTR(USE_BDMA,19)
-    MK_CONFIGSTR(USE_LTDC,20)
+    MK_CONFIGSTR(USE_USB_HS,12)
+    MK_CONFIGSTR(USE_USB_MSC,13)
+    MK_CONFIGSTR(USE_FMC_SRAM,14)
+    MK_CONFIGSTR(USE_FMC_SDRAM,15)
+    MK_CONFIGSTR(USE_FMC_NOR,16)
+    MK_CONFIGSTR(USE_ETH,17)
+    MK_CONFIGSTR(USE_LWIP,18)
+    MK_CONFIGSTR(USE_FATFS,19)
+    MK_CONFIGSTR(USE_BDMA,20)
+    MK_CONFIGSTR(USE_LTDC,21)
+    MK_CONFIGSTR(USE_SDMMC1,22)
 
-    #define MAX_CONFIGSTR   20
+    #define MAX_CONFIGSTR   22
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
-            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, //ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, //ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
-            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, //ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
+            ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 
 #if 0

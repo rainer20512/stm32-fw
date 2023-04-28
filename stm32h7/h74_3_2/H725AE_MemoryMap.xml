@@ -27,7 +27,7 @@
   <MemorySegment start="0x30006000" name="SRAM2" size="0x2000" />
   <MemorySegment start="0x30004000" name="SRAMUNCACHED" size="0x2000" />
   <MemorySegment start="0x30000000" name="SRAM1" size="0x4000" />
-  <MemorySegment start="0x24008000" name="AXISRAM" size="0x58000" />
+  <MemorySegment start="0x24008000" name="AXISRAM" size="0x48000" />
   <MemorySegment start="0x24000000" name="AXISUNCACHED" size="0x8000" />
   <MemorySegment start="0x20000000" name="DTCM" size="0x20000" />
   <MemorySegment start="0x20000000" name="RAM" size="0x20000" />
@@ -35,3 +35,11 @@
   <MemorySegment start="0x08000000" name="FLASH" size="0x80000" access="ReadOnly" />
   <MemorySegment start="0x00000000" name="ITCM" size="0x10000" />
 </Root>
+<!-- DO NOT PLACE XML COMMENT LINES WITHIN FILE - PARSE WILL STOP HERE          /--->
+<!-- RHB use first half of SRAM2 (8k) as uncached Memory for DMA            /--->
+<!-- RHB use 128kB of DTCM as RAM                                               /--->
+<!-- RHB use 32kB  of AXIS RAM as uncached DMA mem, mainly for SDMMC MDMA **** 007 **** /--->
+<!-- RHB Caution: Reduce AXISRAM-Size by the portion used for shared ITCM. Size of this /--->
+<!--     shared portion is defined in Option Bytes, default is 64k, so effective AXIS RAM /--->
+<!--     size is  0x50000                                                                 /--->
+

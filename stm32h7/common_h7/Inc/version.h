@@ -63,6 +63,8 @@ extern "C" {
     #define BOARD   "DevEBox STM32H7XX"
 #elif defined(STM32H7_OPENMV)
     #define BOARD   "OpenMV STM32H743IIT"
+#elif defined(STM32H725_WIOLITEAI)
+    #define BOARD   "Wio Lite AI STM32H725AE"
 #else
     #define BOARD   "Unknown Board"
 #endif
