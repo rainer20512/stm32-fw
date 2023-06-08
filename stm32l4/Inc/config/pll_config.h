@@ -30,8 +30,15 @@
  * Array of "On"- and "Ready"-Flags in RCC->CR register 
  * RCC constant, that defines PLL as SYSCLK source
  */
-#define PLLON_FLAGS     { RCC_CR_PLLON, RCC_CR_PLLSAI1ON, RCC_CR_PLLSAI2ON, }
-#define PLLRDY_FLAGS    { RCC_CR_PLLRDY, RCC_CR_PLLSAI1RDY, RCC_CR_PLLSAI2RDY, }
+#if defined(RCC_CR_PLLSAI2ON)  
+    #define PLLON_FLAGS     { RCC_CR_PLLON, RCC_CR_PLLSAI1ON, RCC_CR_PLLSAI2ON, }
+    #define PLLRDY_FLAGS    { RCC_CR_PLLRDY, RCC_CR_PLLSAI1RDY, RCC_CR_PLLSAI2RDY, }
+    #define PLL_HAS_PLL3
+#else
+    #define PLLON_FLAGS     { RCC_CR_PLLON, RCC_CR_PLLSAI1ON,   }
+    #define PLLRDY_FLAGS    { RCC_CR_PLLRDY, RCC_CR_PLLSAI1RDY, }
+    #undef  PLL_HAS_PLL3
+#endif
 #define RCC_SYSPLL_MASK RCC_CFGR_SWS_PLL
 
 #define PLL_TIMEOUT_VALUE   2U          /* 2 ms (minimum Tick + 1) */

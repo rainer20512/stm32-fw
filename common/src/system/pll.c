@@ -446,13 +446,15 @@ static uint32_t Pll_GetActiveLines( uint32_t pllnum )
             return getactive(RCC->PLLCFGR, RCC_PLLCFGR_PLLPEN, RCC_PLLCFGR_PLLQEN, RCC_PLLCFGR_PLLREN );
         case SYS_PLL2:
             return getactive(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1PEN, RCC_PLLSAI1CFGR_PLLSAI1QEN, RCC_PLLSAI1CFGR_PLLSAI1REN );
-        case SYS_PLL3:
-            #if defined(STM32L4PLUS_FAMILY)
-                /* STM32L4 family has no Q line in PLLSAI2 */
-                return getactive(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2PEN, RCC_PLLSAI2CFGR_PLLSAI2QEN, RCC_PLLSAI2CFGR_PLLSAI2REN );
-            #else
-                return getactive(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2PEN, 0,                          RCC_PLLSAI2CFGR_PLLSAI2REN );
-            #endif
+        #if defined(PLL_HAS_PLL3)
+            case SYS_PLL3:
+                #if defined(STM32L4PLUS_FAMILY)
+                    /* STM32L4 family has no Q line in PLLSAI2 */
+                    return getactive(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2PEN, RCC_PLLSAI2CFGR_PLLSAI2QEN, RCC_PLLSAI2CFGR_PLLSAI2REN );
+                #else
+                    return getactive(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2PEN, 0,                          RCC_PLLSAI2CFGR_PLLSAI2REN );
+                #endif
+        #endif
         default:
             return 0xFFFFFFFF;
     }
@@ -537,8 +539,10 @@ int32_t Pll_GetN(uint32_t pllnum )
             return maskout(RCC->CFGR, RCC_PLLCFGR_PLLN_Msk, RCC_PLLCFGR_PLLN_Pos);
         case SYS_PLL2:
             return maskout(RCC->PLLSAI1CFGR, RCC_PLLSAI1CFGR_PLLSAI1N_Msk, RCC_PLLSAI1CFGR_PLLSAI1N_Pos);
-        case SYS_PLL3:
-            return maskout(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2N_Msk, RCC_PLLSAI2CFGR_PLLSAI2N_Pos);
+        #if defined(PLL_HAS_PLL3)
+            case SYS_PLL3:
+                return maskout(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2N_Msk, RCC_PLLSAI2CFGR_PLLSAI2N_Pos);
+        #endif    
         default:
             return PLL_CONFIG_PARAM_ERROR;
     }
@@ -598,9 +602,11 @@ int32_t Pll_GetPQR(uint32_t pllnum, uint32_t pll_line )
         case SYS_PLL2:
             cfgreg = RCC->PLLSAI1CFGR;
             break;
-        case SYS_PLL3:
-            cfgreg = RCC->PLLSAI2CFGR;
-            break;
+        #if defined(PLL_HAS_PLL3)
+            case SYS_PLL3:
+                cfgreg = RCC->PLLSAI2CFGR;
+                break;
+        #endif
         default:
             return PLL_CONFIG_PARAM_ERROR;
     }
@@ -831,26 +837,28 @@ int32_t PLL_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum )
                 SET_BIT(RCC->PLLSAI1CFGR,  RCC_PLLSAI1CFGR_PLLSAI1REN);
             }
             break;
-        case SYS_PLL3:
-            #if defined(STM32L4PLUS_FAMILY)
-                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2M_Msk,      PLL->PLLM-1, RCC_PLLSAI2CFGR_PLLSAI2M_Pos);
-            #endif
-            MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2N_Msk,      PLL->PLLN,   RCC_PLLSAI2CFGR_PLLSAI2N_Pos);
-            if ( PLL->PLLP != PLL_LINE_UNUSED ) {
-                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2P_Msk,  PLL->PLLP,   RCC_PLLSAI2CFGR_PLLSAI2P_Pos);
-                SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2PEN);
-            }
-            #if defined(STM32L4PLUS_FAMILY)
-                if ( PLL->PLLQ != PLL_LINE_UNUSED ) {
-                    MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2Q_Msk,  PLL->PLLQ/2-1, RCC_PLLSAI2CFGR_PLLSAI2Q_Pos);
-                    SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2QEN);
+        #if defined(PLL_HAS_PLL3)
+            case SYS_PLL3:
+                #if defined(STM32L4PLUS_FAMILY)
+                    MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2M_Msk,      PLL->PLLM-1, RCC_PLLSAI2CFGR_PLLSAI2M_Pos);
+                #endif
+                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2N_Msk,      PLL->PLLN,   RCC_PLLSAI2CFGR_PLLSAI2N_Pos);
+                if ( PLL->PLLP != PLL_LINE_UNUSED ) {
+                    MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2P_Msk,  PLL->PLLP,   RCC_PLLSAI2CFGR_PLLSAI2P_Pos);
+                    SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2PEN);
                 }
-            #endif
-            if ( PLL->PLLR != PLL_LINE_UNUSED ) {
-                MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2R_Msk,  PLL->PLLR/2-1, RCC_PLLSAI2CFGR_PLLSAI2R_Pos);
-                SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2REN);
-            }
-            break;
+                #if defined(STM32L4PLUS_FAMILY)
+                    if ( PLL->PLLQ != PLL_LINE_UNUSED ) {
+                        MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2Q_Msk,  PLL->PLLQ/2-1, RCC_PLLSAI2CFGR_PLLSAI2Q_Pos);
+                        SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2QEN);
+                    }
+                #endif
+                if ( PLL->PLLR != PLL_LINE_UNUSED ) {
+                    MASKIN(RCC->PLLSAI2CFGR, RCC_PLLSAI2CFGR_PLLSAI2R_Msk,  PLL->PLLR/2-1, RCC_PLLSAI2CFGR_PLLSAI2R_Pos);
+                    SET_BIT(RCC->PLLSAI2CFGR,  RCC_PLLSAI2CFGR_PLLSAI2REN);
+                }
+                break;
+        #endif
         default:
             return PLL_CONFIG_PARAM_ERROR;
     } // switch

@@ -168,7 +168,7 @@ uint8_t Spi8TxRxByte_bb(SpiHandleT *self, uint8_t outval)
 bool Spi8TxRxVector_bb(SpiHandleT *self, uint8_t *vectorOut, uint8_t *vectorIn, uint16_t size)
 {
     uint32_t i;
-    if ( !vectorIn && !vectorOut ) return;
+    if ( !vectorIn && !vectorOut ) return false;
 
     if        ( !vectorIn ) {
         for ( i = 0; i < size; i++ ) Spi8TxByte_bb(self, vectorOut[i]);

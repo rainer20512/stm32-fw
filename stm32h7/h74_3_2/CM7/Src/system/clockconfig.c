@@ -775,7 +775,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_Auto(uint32_t pll_khz, bool bUseHSE, b
         pll_inp_khz = PLL_HSI_BASE_FRQ_KHZ;
   }
 
-  PLL_Configure_SYSCLK(&RCC_OscInitStruct, pll_khz, pll_inp_khz);
+  if ( PLL_Configure_SYSCLK(&RCC_OscInitStruct, pll_khz, pll_inp_khz) != PLL_CONFIG_OK ) Error_Handler_XX(-6, __FILE__, __LINE__); 
 
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   

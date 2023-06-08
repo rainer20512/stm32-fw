@@ -24,10 +24,10 @@
       arm_target_interface_type="Default"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
-      c_preprocessor_definitions="STM32L4;STM32L476xx;STM32L4PLUS;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
+      c_preprocessor_definitions="STM32L4;STM32L476xx;STARTUP_FROM_RESET;DO_RAM_PRESET;RAM_PRESET_VALUE=0xDEADBEEF;USE_HAL_I2C_REGISTER_CALLBACKS=1"
       c_user_include_directories=".//inc;./../common/inc;./modules/eeprom_emul/core;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/CMSIS/Include;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/CMSIS/Device/ST/STM32L4xx/Include;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/BSP/STM32L4xx_Nucleo;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/BSP/Components/Common;./modules/STM32_USBD_Library/inc;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Middlewares/ST/STM32_USB_Device_Library/Core/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc;E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Middlewares/ST/STM32_USB_Device_Library/Class/MSC/Inc"
       debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
-      linker_memory_map_file="$(TargetsDir)/STM32/STM32L476RG_MemoryMap.xml"
+      linker_memory_map_file="$(ProjectDir)/stm32l476rg_MemoryMap.xml"
       linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
       linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml"
       macros="DeviceVectorsFile=STM32L476xx.vec"
@@ -316,7 +316,7 @@
           <file file_name="modules/STM32_USBD_Library/src/usbd_conf.c" />
           <file file_name="modules/STM32_USBD_Library/src/usbd_desc.c" />
         </folder>
-        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
       </folder>
     </folder>
     <folder Name="Common Files">

@@ -14,7 +14,7 @@
 #if USE_CAN > 0 
 
 #if DEBUG_MODE > 0
-    #define DEBUG_CAN               1
+    #define DEBUG_CAN               0
     #define DEBUG_MIN_ENABLE_DUMP   1
 #endif
 

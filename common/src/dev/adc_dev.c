@@ -25,9 +25,9 @@
 #include "system/periodic.h"
 
 
-#define DEBUG_ADC 1
+#define DEBUG_ADC 2
 
-#if DEBUG_MODE > 0 && DEBUG_ADC > 0
+#if DEBUG_MODE > 0  
     #include "debug_helper.h"
     #include "system/profiling.h"
 #else

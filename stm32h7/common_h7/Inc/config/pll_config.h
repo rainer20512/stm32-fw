@@ -48,12 +48,12 @@
 #define PLL1R           1
 
 /* Restrictions for PLL1 
- * - N Stage output frq between 150 and 960 MHz
- * - P Stage output max 480 MHz
-*/
-#define PLLN1_MIN       150000
-#define PLLN1_MAX       960000
-#define PLLP1_MAX       480000
+     * - N Stage output frq between 192 and 836 MHz
+     * - P Stage output max 480 MHz
+    */
+    #define PLLN1_MIN       192000
+    #define PLLN1_MAX       836000
+    #define PLLP1_MAX       480000
 
 
 /* PLL2 ------------------------------------------------ */
@@ -64,9 +64,9 @@
 #define PLL2R           1
         
 /* Restrictions for PLL2 
- * N Stage output frq between 150 and 960 MHz
+ * N Stage output frq between 192 and 960 MHz
 */
-#define PLLN2_MIN       150000
+#define PLLN2_MIN       192000
 #define PLLN2_MAX       960000
 
 /* PLL3 ------------------------------------------------ */
@@ -77,9 +77,9 @@
 #define PLL3R           1
 
 /* Restrictions for PLL3 
- * N Stage output frq between 150 and 960 MHz
+ * N Stage output frq between 192 and 960 MHz
 */
-#define PLLN3_MIN       150000
-#define PLLN3_MAX       960000
+#define PLLN3_MIN       PLLN2_MIN
+#define PLLN3_MAX       PLLN2_MAX
 
 #endif /* __PLL_CONFIG_h */

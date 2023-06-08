@@ -141,7 +141,7 @@ void LCD_TextClick ( void )
     LCD_SwitchToDefault();
 }
 
-uint32_t LCD_InitText ( void *InitArg )
+uint32_t LCD_InitText ( const void *InitArg )
 {
     display_mode = (uint32_t)InitArg;
 
