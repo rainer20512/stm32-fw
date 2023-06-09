@@ -499,6 +499,17 @@ uint8_t ow_rom_search(void)
 }
 
 /******************************************************************************
+ * Dump one ROM, *rom points to the first byte of the specific rom
+ *****************************************************************************/
+void ow_dump_one_rom( uint8_t *rom )
+{
+    for ( uint8_t j=0; j < OW_ROMCODE_SIZE; j++ ) {
+        print_hexXX(*(rom++));putchar(' ');
+    }
+}
+
+
+/******************************************************************************
  * Dump the content of "ow_SensorIDs", i.e. show all found ROMs 
  *****************************************************************************/
 void ow_dump_rom(void)
@@ -506,9 +517,7 @@ void ow_dump_rom(void)
     printf("found %d OneWire devices\n", ow_nSensors );
     for ( uint8_t i = 0; i < ow_nSensors; i++ ) {
         printf("%2d) ",i);
-        for ( uint8_t j=0; j < OW_ROMCODE_SIZE; j++ ) {
-            print_hexXX(ow_SensorIDs[i][j]);putchar(' ');
-        }
+        ow_dump_one_rom(ow_SensorIDs[i]);
         putchar('\n');
     }       
 }

@@ -268,12 +268,22 @@ static bool ds_prepare_command( uint8_t command, uint8_t *id )
 {
     bool ret;
     ow_encoder_reset();
+    #if DEBUG_MODE > 0 && DEBUG_DS18X20 > 0
+         DEBUG_PRINTF("Sending OW-Cmd 0x%02x to ", command); 
+    #endif
     if( id ) {
+            #if DEBUG_MODE > 0 && DEBUG_DS18X20 > 0
+                 ow_dump_one_rom(id);
+                 putchar('\n');
+            #endif
             ret = ow_encode_byte(OW_MATCH_ROM);       // to a single device
             ret &= ow_encode_vector(id, OW_ROMCODE_SIZE);
     } 
     else {
             ret = ow_encode_byte( OW_SKIP_ROM );      // to all devices
+            #if DEBUG_MODE > 0 && DEBUG_DS18X20 > 0
+                 DEBUG_PUTS("ALL");
+            #endif
     }
     ret &= ow_encode_byte(command);
 
@@ -451,7 +461,7 @@ static void ds_command_termination_cb ( void )
             } else {
                     temptemp = ds_rawtemp_to_decicelsius( ds_scheduler.ds18x20_familyID, scratchpad );
                     /* check for wrong readout due to low voltage */
-                    if ( temptemp >1100 ) {
+                    if ( temptemp >1200 ) {
                        ds_scheduler.exec_status = DS18X20_BADVALUE;
                     } else {
                         ds18x20_decicelsius = temptemp;    
@@ -612,7 +622,7 @@ bool DS18X20_Init(void)
             /* more than one DS18X20 found */
             ds18x20_myrom = ow_SensorIDs[idx];
             #if DEBUG_MODE > 0 
-                  DEBUG_PUTS("More than one DS18X20 device found, using the last one");
+                  DEBUG_PRINTF("Found %d DS18X20 devices\n", ow_nSensors);
             #endif
         }
         ds18x20_unique = false;
@@ -744,10 +754,10 @@ void CheckForTemp(void *arg)
     uint32_t secs = RTC_GetSecond();
 
     if       ( secs == tempMeasureNext ) {
-        if ( DS18X20_Found() ) DS18X20_start_meas(0);
+        if ( DS18X20_Found() ) DS18X20_start_meas(true);
     } else if  ( secs == (tempMeasureNext+1)%60 ) {
         if ( DS18X20_Found() ) {
-            DS18X20_read_scratchpad(false);
+            DS18X20_read_scratchpad(true);
         }
     } else if  ( secs == (tempMeasureNext+2)%60 ) {
         /* schedule next remp measurement */

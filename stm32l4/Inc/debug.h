@@ -61,8 +61,8 @@
 #define DEBUG_EPAPER        0
 #define DEBUG_LCD           0
 #define DEBUG_LCD_MENU      0
-#define DEBUG_ONEWIRE       4
-#define DEBUG_DS18X20       4
+#define DEBUG_ONEWIRE       1
+#define DEBUG_DS18X20       1
 #define DEBUG_BMP085        0
 // DEBUG_BME280 in bme280.c
 // DEBUG_CCS811 in ccs811.c

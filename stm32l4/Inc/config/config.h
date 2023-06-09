@@ -22,12 +22,12 @@
  */ 
 //#define BL475IOT   
 //#define DRAGONFLY476
-#define STM32L476NUCLEO
+//#define STM32L476NUCLEO
 //#define STM32L4R9DISCOVERY
 //#define STM32L4S9ZXXREF
 //#define STM32L4P5BAREMETAL
 //#define STM32L476EVAL
-//#define STM32L476BAREMETAL
+#define STM32L476BAREMETAL
 
 
 /*
@@ -54,7 +54,7 @@
  * Application tayloring
  ********************************************************************************
  */ 
-#define USE_RFM12           0
+#define USE_RFM12           1
 #define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
 #define USE_BME280          0
@@ -63,9 +63,9 @@
 #define USE_ONEWIRE         1
 #define USE_DS18X20         1
 #define USE_EEPROM_EMUL     1
-#define USE_QENCODER        0
-#define USE_DISPLAY         0
-#define USE_DOGM132         0
+#define USE_QENCODER        1
+#define USE_DISPLAY         1
+#define USE_DOGM132         1
 #define USE_SECONDTIMER     1
 #define USE_PWMTIMER        0
 #define USE_BASICTIMER      1

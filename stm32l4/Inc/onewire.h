@@ -41,6 +41,7 @@ bool     ow_Initialized(void);
 
 uint8_t  ow_rom_search(void);
 void     ow_dump_rom(void);
+void     ow_dump_one_rom( uint8_t *rom );
 
 void     ow_set_callbacks(OneWireCB onCommDone, OneWireCB onTimeout);
 bool     ow_reset_successful ( void );
