@@ -168,7 +168,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 	#define EE_LAYOUT (0xD2) //!< EEPROM layout version (Stromsensor)
 #elif defined(GASSENSOR) 
 	#define EE_LAYOUT (0xD1) //!< EEPROM layout version (Gassensor)
-#elif defined(UNIVERSAL) || defined(NOEXTENSION) || defined(ENVIRONMENTAL)
+#elif defined(UNIVERSAL) || defined(NOEXTENSION) || defined(ENVIRONMENTAL) || defined(MULTITEMP)
 	#define EE_LAYOUT (0xD0) //!< EEPROM layout version (Universal 0) 
 #elif defined(TX18LISTENER)
 	#define EE_LAYOUT (0xA0) //!< EEPROM layout version (Außen 0)

@@ -33,3 +33,7 @@ where <nnn> is the threeed igit number from below
     the global variable bmp_pressure is no longe available, so it is no longer supplied by "watch.c"
 
 007 Display relative humidity in display scheme 0 
+
+008 Uart_Dev: Check, whether CircBuff or LinBuf is used oer whether simple array is assigned as transfer buffer
+
+009 New Device type EXT_TYPE_MULTITEMP for multiple DS18X20 temperature sensor tied to one device

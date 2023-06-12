@@ -1555,7 +1555,7 @@ ADD_SUBMODULE(Test);
             DS18X20_read_scratchpad(ch != 0);
             break;
         case 4:
-            t = DS18X20_GetTemp();
+            t = DS18X20_GetOneTemp();
             printf("Temp=%d.%ddegC\n",t/10,t%10);
             break;
         case 5:

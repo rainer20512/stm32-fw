@@ -283,8 +283,8 @@
         #define USE_USART1
         #define ONEWIRE_DEV            HW_COM1
         #define USE_USART1_ALTN1
-        #define COM1_USE_TX_DMA
-        #define COM1_USE_RX_DMA
+        //#define COM1_USE_TX_DMA
+        //#define COM1_USE_RX_DMA
         #define USART1_CLKSOURCE       RCC_USART1CLKSOURCE_HSI
     #endif
 
@@ -340,8 +340,8 @@
     //#define USE_USART2_DEBUG
 
     // #define USE_USART3
-    #define COM3_USE_TX_DMA
-    #define COM3_USE_RX_DMA
+    //#define COM3_USE_TX_DMA
+    //#define COM3_USE_RX_DMA
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
     // #define USE_UART4
     #define COM4_USE_TX_DMA

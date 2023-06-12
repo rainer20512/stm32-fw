@@ -16,6 +16,8 @@ extern "C" {
     #define APP_NAME "NoExtension"
 #elif defined(UNIVERSAL) 
     #define APP_NAME "Universal"
+#elif defined(MULTITEMP) 
+    #define APP_NAME "MultiTemp"
 #elif defined(ENVIRONMENTAL) 
     #define APP_NAME "Environment"
 #elif defined(TX18LISTENER)        

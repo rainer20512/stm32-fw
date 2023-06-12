@@ -44,6 +44,7 @@ static uint8_t                  ds_iterator;                /* iterator to step 
 static uint8_t                  ds_iterating;               /* flag for "within iterating loop"                  */
 static uint8_t                  ds18x20_bitstatus;          /* last result when reading any bitstatus            */
 static int16_t                  ds18x20_decicelsius;        /* last temperature conversion result in 1/10 degC   */
+static int16_t                  all_decicelsius[MAXSENSORS];/* Storage for last temp value of all sensors        */
 
 uint32_t ds_ok_cnt = 0, ds_err_cnt = 0, ds_bad_cnt  = 0;
 
@@ -355,7 +356,7 @@ static void ds_command( DS_StateMachine sm, uint8_t command, uint8_t *id, DS18X2
 }
 
 /******************************************************************************
- * Error callback, currently used by all statemachines
+ * Error callback, currently used by send command and read bitstatus SM
  *****************************************************************************/
 static void ds_error_cb ( DS18X20StateEnum ds_err, uint32_t state )
 {
@@ -477,7 +478,21 @@ static void ds_command_termination_cb ( void )
             ds_trigger_sm();
     }
 }
-/*---------------------------------------------------------------------------*/
+
+/******************************************************************************
+ * Readout the next OW device when iterating thru all devices
+ *****************************************************************************/
+static void ds_scratchpad_iterate(void)
+{
+    if ( ds_iterating ) {
+        uint8_t *id;
+        if ( FIND_NEXT(&id) ) ds_read_one_scratchpad(id);
+    }
+}
+
+/******************************************************************************
+ * Callback for Read scratchpad SM normal termination: Save temp and iterate
+ *****************************************************************************/
 static void ds_scratchpad_cb ( void )
 {
     #if DEBUG_MODE > 0 
@@ -491,12 +506,27 @@ static void ds_scratchpad_cb ( void )
         #if DEBUG_DS18X20 > 0
             DEBUG_PRINTF("Temp=%d.%d\n",ds18x20_decicelsius/10, ds18x20_decicelsius%10 );
         #endif
-        SetTemp(ds18x20_decicelsius * 10);
     #endif
-    if ( ds_iterating ) {
-        uint8_t *id;
-        if ( FIND_NEXT(&id) ) ds_read_one_scratchpad(id);
-    }
+
+    SetTemp(ds18x20_decicelsius * 10);
+    all_decicelsius[ds_iterator] = ds18x20_decicelsius;
+    /* read out the next sensor */
+    ds_scratchpad_iterate();
+}
+
+/******************************************************************************
+ * Error callback when reading scratchpad/raw temperature value
+ *****************************************************************************/
+static void ds_scratchpad_error_cb ( DS18X20StateEnum ds_err, uint32_t state )
+{
+    #if DEBUG_MODE > 0
+        printf("DS18X20 error %d in state %d: %s\n", ds_err, state, ds_errrxt[ds_err]);
+    #else
+        printf("DS18X20 error %d in state %d\n", ds_err, state);
+    #endif
+
+    /* read out the next sensor */
+    ds_scratchpad_iterate();
 }
 
 
@@ -538,6 +568,21 @@ static void ds_bitstatus_cb ( void )
  -- public functions ----------------------------------------------------------
  ----------------------------------------------------------------------------*/
 
+
+
+/******************************************************************************
+ * Get the last temp conversion result for any attached sensor
+ *****************************************************************************/
+int16_t DS18X20_GetTemp(uint32_t idx)
+{
+    if ( idx < ow_nSensors )
+        return all_decicelsius[idx];
+    else {
+        DEBUG_PRINTF("DS18X20_GetTemp: index %d out of bounds\n",idx );
+        return 0;
+    }
+}
+
 /******************************************************************************
  * Trigger a temperature measurement
  *****************************************************************************/
@@ -562,7 +607,7 @@ static void ds_read_one_scratchpad(uint8_t *id)
 {
     /* Remember familyID, we need it later when evaluating temperature */
     ds_scheduler.ds18x20_familyID = ( id ? *id : *ds18x20_myrom );
-    ds_command( ds_SM_ReadSP, DS18X20_READ, id, ds_scratchpad_cb, ds_error_cb );
+    ds_command( ds_SM_ReadSP, DS18X20_READ, id, ds_scratchpad_cb, ds_scratchpad_error_cb );
 }
 
 /******************************************************************************
@@ -647,7 +692,7 @@ bool DS18X20_Found(void)
  * Return the last temperature measurement result
  * value is in decicelsius
  *****************************************************************************/
-int16_t DS18X20_GetTemp(void)
+int16_t DS18X20_GetOneTemp(void)
 {
     return ds18x20_decicelsius;
 }

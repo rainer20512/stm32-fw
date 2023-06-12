@@ -1112,6 +1112,8 @@ void UsartIRQHandler(UsartHandleT *uhandle)
         CLEAR_BIT(errorflags, USART_ISR_NE );
 
         uhandle->last_errors = errorflags;
+        if (errorflags) DEBUG_PRINTTS("RX err flags=0x%08x\n",errorflags);
+
         if ( errorflags && uhandle->OnError ) uhandle->OnError(uhandle);
     }
 
@@ -1145,12 +1147,21 @@ void UsartIRQHandler(UsartHandleT *uhandle)
     /* More Characters to transmit ?*/
     if( uhandle->TxCount < uhandle->TxSize )
     {
-      assert(CircBuff_Get_Indexed(uhandle->out, uhandle->TxCount, &ch));
-      #if 0
-          if ( ch < 0x0a || ch > 0x7f ) {
-              ch ='!';
-          }
-      #endif
+      /***** 008 *****/
+      if ( uhandle->out ) {
+         /* If CircBuff is assigned, take char from that */
+          assert(CircBuff_Get_Indexed(uhandle->out, uhandle->TxCount, &ch));
+          #if 0
+              if ( ch < 0x0a || ch > 0x7f ) {
+                  ch ='!';
+              }
+          #endif
+
+      } else { 
+        /* Otherwise take it from assigned array */
+        ch = *(uhandle->blockIn + uhandle->TxCount);
+      } 
+      
       /* Transmit next character */
       uhandle->Instance->TDR = ch;
       uhandle->TxCount++;

@@ -31,6 +31,10 @@
     #include "sensors/thp_sensor.h"
 #endif
 
+#if defined(MULTITEMP)
+    #include "onewire.h"
+#endif
+
 /** @addtogroup COM
   * @{
   */ 
@@ -58,7 +62,46 @@
 #define EXT_TYPE_COUNTER        0x52
 #define EXT_TYPE_ALARM		0x53
 #define EXT_TYPE_ENVIRONMENT    0x55
+#define EXT_TYPE_MULTITEMP      0x56            // Lots of DS18X20 temperature sensors tied to one device ***** 009 *****/
 
+#if defined(MULTITEMP)
+    /*****009 ***** Define a buffer and a routine to perform the int16 to packed int12 number format */
+    #define CONV_BUFSIZE        5
+    #define MAXTEMPVALS         4               // max 5 temperature values may be transmitted 
+    typedef union {
+        int16_t decicelsius;
+        uint8_t hi,lo;
+    } UConvT;
+
+    static uint8_t convbuf[CONV_BUFSIZE];
+    
+
+    /*
+     * Convert signed 16 to signed 10 with the following algorithm:
+     * add offset of -16384, so the range will be -16384 .. 49151                    
+     * cutoff the 5 MSB bits, so the range will be - 512 to 1535, i.e. -51.2 .. 153.5 degrees
+     * divide by two, so the range will be -51.2 .. 153.5 degress with a granularity of 0.2 deg.
+     */
+    static void com_pack_temperatures(void)
+    {
+        /* Zero memory */
+        memset(convbuf,0, CONV_BUFSIZE);
+
+        UConvT conv;
+        uint8_t *bufptr=convbuf;
+        uint8_t *lastbyte = convbuf+CONV_BUFSIZE-1;
+
+        /* temp value of first sensor has already been coded, so start with second sensor (with offset 1) */
+        for ( uint32_t i=1;i <= MAXTEMPVALS;i++) {
+            conv.decicelsius = ( i < ow_nSensors ? DS18X20_GetTemp(i) : 0 );    
+            /* Fetch two temp values (int16 ) and pack them into 10 bits  */
+            /* bit 7:0 are written directly, bits 9:8 are packed into last byte of convbuf */
+            conv.decicelsius = (conv.decicelsius - 16384)/2;
+            *(bufptr++) = conv.lo;
+            *lastbyte  |= (conv.hi & 0b11) << (i-1);
+        }    
+    }
+#endif
 
 void COM_print_debug(bool rfm_transmit) 
 {
@@ -127,11 +170,17 @@ void COM_print_debug(bool rfm_transmit)
     
     #if defined(TX18LISTENER) || USE_DS18X20 > 0 || USE_BME280 > 0 
         #if USE_DS18X20 > 0
-            int16_t t = 10*DS18X20_GetTemp();
+            #if defined(MULTITEMP)
+                /***** 009 ***** when multiple temp sensors are configured, the first one is coded here with 16 bit */
+                int16_t t = 10*DS18X20_GetTemp(0);
+            #else
+                /***** 009 ***** Otherwise read the first one in the list of sensors */
+                int16_t t = 10*DS18X20_GetOneTemp();
+            #endif
             /* 04 */wireless_putchar(t >> 8); // current temp
             /* 05 */wireless_putchar(t & 0xff);
         #else
-            /* 04 */wireless_putchar(abstemp >> 8); // current temp
+            /* 04 */wireless_putchar(abstemp >> 8); // current temp or Sensor0 temp
             /* 05 */wireless_putchar(abstemp & 0xff);
         #endif
     #else 
@@ -217,6 +266,13 @@ void COM_print_debug(bool rfm_transmit)
             /* 0A */wireless_putchar(0); 
             /* 0B */wireless_putchar(0);
         #endif
+    #elif defined(MULTITEMP)
+        /***** 009 ***** Multiple DS18X20 Sensors on 1Wire-lane. Up to 5 may be coded in RFM_frame */
+        /* 09 */wireless_putchar(EXT_TYPE_MULTITEMP); // Multitemp Frame type
+        com_pack_temperatures();
+        /* 0A, 0B, 0C, 0D, 0E */
+        for ( work = 0; work < CONV_BUFSIZE; work++ )
+            wireless_putchar(convbuf[work]);
     #elif defined(NOEXTENSION)
         /* 09 */wireless_putchar(EXT_TYPE_NOTYPE); // No extension type
     #else

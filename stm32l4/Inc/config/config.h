@@ -36,7 +36,8 @@
  ********************************************************************************
  */ 
 //#define NOEXTENSION 
-#define UNIVERSAL 
+//#define UNIVERSAL 
+#define MULTITEMP
 //#define ENVIRONMENTAL
 // #define TX18LISTENER        
 
@@ -220,6 +221,15 @@
     #define USE_FMC 1
 #else
     #define USE_FMC 0
+#endif
+
+/******************************************************************************
+ * Check and set constraints for MULTITEMP
+ *****************************************************************************/
+#if defined(MULTITEMP)
+    #if !defined(USE_DS18X20) || USE_DS18X20 < 1
+        #error "MULTITEMP requires USE_DS18X20"
+    #endif
 #endif
 
 /******************************************************************************

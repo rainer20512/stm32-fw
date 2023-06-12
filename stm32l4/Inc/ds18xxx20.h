@@ -107,7 +107,8 @@ void        DS18X20_set_callbacks   (DS18X20_TerminationCB, DS18X20_ErrorCB);
 void        DS18X20_start_meas      (bool bTriggerAll);
 void        DS18X20_read_bitstatus  (void);
 void        DS18X20_read_scratchpad (bool bReadAll);
-int16_t     DS18X20_GetTemp         (void);
+int16_t     DS18X20_GetOneTemp      (void);
+int16_t     DS18X20_GetTemp         (uint32_t idx);
 bool        DS18X20_GetTempStr      ( int16_t decicelsius, char str[], size_t n);
 
 void        task_handle_ds          (uint32_t arg);
