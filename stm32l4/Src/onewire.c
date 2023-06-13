@@ -102,7 +102,14 @@ static void OneWire_AsyncTmoCallback( uint32_t timerID )
     UNUSED(timerID);
     UsartAbortOp(myUHandle);
     #if DEBUG_MODE > 0  && DEBUG_ONEWIRE > 0
-        DEBUG_PRINTTS("ow tmo cb Rx=%d,Tx=%d\n",myUHandle->hRxDma->Instance->CNDTR,myUHandle->hTxDma->Instance->CNDTR);
+        if ( myUHandle->hRxDma )
+            DEBUG_PRINTTS("OneWire Timeout Rx=%d,",myUHandle->hRxDma->Instance->CNDTR);
+        else
+            DEBUG_PRINTTS("OneWire Timeout Rx=%d/%d,",myUHandle->RxCount, myUHandle->RxSize);
+        if ( myUHandle->hTxDma )
+            DEBUG_PRINTF("%d\n",myUHandle->hTxDma->Instance->CNDTR );
+        else
+            DEBUG_PRINTF("Tx=%d/%d,",myUHandle->TxCount, myUHandle->TxSize);
     #endif
     if ( ow_tCB ) ow_tCB();
 }
