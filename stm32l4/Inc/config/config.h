@@ -68,7 +68,7 @@
 #define USE_DISPLAY         1
 #define USE_DOGM132         1
 #define USE_SECONDTIMER     1
-#define USE_PWMTIMER        0
+#define USE_PWMTIMER        1
 #define USE_BASICTIMER      1
 #define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI            0            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
@@ -103,8 +103,8 @@
 //#define USER_CLOCKCONFIG         CLK_HSE_VRNG1         /*  8 MHz, source HSE, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-#define USER_CLOCKCONFIG         CLK_HSI_VRNG2_16MHZ   /* 16 MHz, source HSI16, Vrange2, 2 WS */
-//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_VRNG2_16MHZ   /* 16 MHz, source HSI16, Vrange2, 2 WS */
+#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_48MHZ   /* 48 MHz, source PLL, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ   /* 64 MHz, source PLL, Vrange1, 3 WS */
