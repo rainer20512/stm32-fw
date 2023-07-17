@@ -70,7 +70,6 @@
         </folder>
         <folder Name="config">
           <file file_name="$(ProjectDir)/Inc/config/spi_config.h" />
-          <file file_name="$(ProjectDir)/Inc/config/config.h" />
           <file file_name="$(ProjectDir)/Inc/config/devices_config.h" />
           <file file_name="$(ProjectDir)/Inc/config/gpio_config.h" />
           <file file_name="$(ProjectDir)/Inc/stm32l4xx_hal_conf.h" />
@@ -89,7 +88,6 @@
         <folder Name="debug">
           <file file_name="$(ProjectDir)/Inc/debug_pwr_rcc.h" />
         </folder>
-        <file file_name="$(ProjectDir)/Inc/debug.h" />
         <file file_name="$(ProjectDir)/Inc/onewire.h" />
         <file file_name="$(ProjectDir)/Inc/ds18xxx20.h" />
         <file file_name="$(ProjectDir)/Inc/version.h" />
@@ -413,6 +411,10 @@
           <file file_name="../common/inc/logfile.h" />
         </folder>
       </folder>
+    </folder>
+    <folder Name="_config">
+      <file file_name="$(ProjectDir)/Inc/config/config.h" />
+      <file file_name="$(ProjectDir)/Inc/debug.h" />
     </folder>
   </project>
   <configuration Name="THUMB Debug" inherited_configurations="THUMB;Debug" />

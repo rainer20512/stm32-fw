@@ -100,8 +100,8 @@ static bool Adc_AssertChiptemp(const HW_DeviceType *self)
     return ret;
 }
 static const uint32_t ovrsampleCode[9] = { 0, 
-    ADC_OVERSAMPLING_RATIO_2,  ADC_OVERSAMPLING_RATIO_4,  ADC_OVERSAMPLING_RATIO_8,   ADC_OVERSAMPLING_RATIO_16, 
-    ADC_OVERSAMPLING_RATIO_32, ADC_OVERSAMPLING_RATIO_64, ADC_OVERSAMPLING_RATIO_128, ADC_OVERSAMPLING_RATIO_256 };
+    LL_ADC_OVS_RATIO_2,  LL_ADC_OVS_RATIO_4,  LL_ADC_OVS_RATIO_8,   LL_ADC_OVS_RATIO_16, 
+    LL_ADC_OVS_RATIO_32, LL_ADC_OVS_RATIO_64, LL_ADC_OVS_RATIO_128, LL_ADC_OVS_RATIO_256 };
 static const uint32_t rshiftCode[9] = { ADC_RIGHTBITSHIFT_NONE,
     ADC_RIGHTBITSHIFT_1, ADC_RIGHTBITSHIFT_2, ADC_RIGHTBITSHIFT_3, ADC_RIGHTBITSHIFT_4, 
     ADC_RIGHTBITSHIFT_5, ADC_RIGHTBITSHIFT_6, ADC_RIGHTBITSHIFT_7, ADC_RIGHTBITSHIFT_8 };
@@ -136,8 +136,8 @@ static void Adc_SetupOvrSampling ( ADC_InitTypeDef *Init, uint8_t nOvrSample  )
  *****************************************************************************/
 static void Adc_SetupStdParams( ADC_InitTypeDef *Init )
 {
-    Init->DataAlign             = ADC_DATAALIGN_RIGHT;              /* Right-alignment for converted data */
-    Init->DMAContinuousRequests = DISABLE;                          /* ADC DMA for only one sequence */
+    Init->DataAlign             = LL_ADC_DATA_ALIGN_RIGHT;       /* Right-alignment for converted data */
+    Init->DMAContinuousRequests = DISABLE;                       /* ADC DMA for only one sequence */
     Init->LowPowerAutoWait      = DISABLE;                       /* Auto-delayed conversion feature disabled */
     Init->ContinuousConvMode    = DISABLE;                       /* Continuous mode disabled (one shot conversion) */
     Init->DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because continuous mode is disabled */
@@ -509,7 +509,11 @@ bool ADC_Calibrate(const HW_DeviceType *self)
         return false;
     }
     /* Store both calibration factors */
+#if defined(STM32L4_FAMILY) || defined(STM32H747xx) || defined(STM32H745xx)
     adt->myAdcHandle->adc_calfact = hAdc->Instance->CALFACT;
+#else
+    adt->myAdcHandle->adc_calfact = ( hAdc->Instance == ADC3 ? hAdc->Instance->HTR2_CALFACT : hAdc->Instance->CALFACT_RES13);
+#endif
     return true;
 }
  
@@ -895,7 +899,9 @@ void Adc_Dump_CFGR( uint32_t cfgr )
     DBG_dump_endisvalue("Overrun mode", cfgr, ADC_CFGR_OVRMOD_Msk );
     DBG_dump_textvalue("External trigger mode", adc_cfgr_get_exten_txt((cfgr &ADC_CFGR_EXTEN_Msk )>>ADC_CFGR_EXTEN_Pos ));
     if ( (cfgr &ADC_CFGR_EXTEN_Msk )>>ADC_CFGR_EXTEN_Pos ) DBG_dump_number("Trigger event #", (cfgr &ADC_CFGR_EXTSEL_Msk )>>ADC_CFGR_EXTSEL_Pos );
+#if defined(STM32L4_FAMILY)
     DBG_dump_endisvalue("Right alignment", ~cfgr, ADC_CFGR_ALIGN_Msk );
+#endif
     DBG_dump_textvalue("Resolution", adc_cfgr_get_res_txt((cfgr &ADC_CFGR_RES_Msk )>>ADC_CFGR_RES_Pos ));
     DBG_setPadLen ( oldpadlen );
     DBG_setIndentRel(-2);
@@ -1025,7 +1031,7 @@ static void Adc_Handle(AdcHandleT *myHandle)
     /* reset "conversion doen" flag, to prevent another processing */
     myHandle->bSequenceDone = false;
 
-    ADC_ShowStatus(&HW_ADC1);
+    ADC_ShowStatus(&USER_ADC);
     for ( uint32_t i = 0; i<myHandle->seqLen; i++ )
         printf("Ch %d:Raw %d is %dmV\n", i, myHandle->seqResultPtr[i], __HAL_ADC_CALC_DATA_TO_VOLTAGE(myHandle->vdda,myHandle->seqResultPtr[i], myHandle->hAdc.Init.Resolution) );
     puts("");

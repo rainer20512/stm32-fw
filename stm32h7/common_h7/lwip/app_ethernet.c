@@ -19,7 +19,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "config/config.h"
 #include "lwip/opt.h"
-#include "main.h"
+
+#include "stm32h7xx_nucleo.h"       // LED1 is defined herein
 
 #if LWIP_DHCP
     #include "lwip/dhcp.h"

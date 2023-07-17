@@ -1,25 +1,27 @@
 /**
   ******************************************************************************
-  * @file    FreeRTOS/FreeRTOS_AMP_Dual_RTOS/CM7/Src/main.c
-  * @author  MCD Application Team
-  *          This is the main program for Cortex-M7 
-  ******************************************************************************
-  * @attention
+  * @file    main_c7.c
+  * @author  Rainer
+  * @brief   Main routine for Cortex M7-Core in single and dual core environments
   *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
+  *          1. Setup MPU and enable D- and I-caches
+  *          2. Init all devices and start profiling timer ( if configured )
+  *          3. Initialize / Read simulated eeprom
+  *          4. Set configured clock source/speed, 
+  *          5. start LSE-clock, start USB-clock ( if configured )
+  *          6. start basic devices ( IO-DEV, DEBUG, FATFS (if configured) )
+  *          7. Start profiler ( if configured ) 
+  *          8. start all other configured devices
+  *          9. define initial set of FreeRTOS tasks
+  *         10. Start the task-creator-task
+  *         11. Start FreeRTOS scheduler
   *
   ******************************************************************************
   */
 
 /* Includes ------------------------------------------------------------------*/
 #include "config/config.h"
-#include "main.h"
+//#include "main.h"
 
 /* Standard includes. */
 #include "stdio.h"
@@ -261,15 +263,10 @@ int main(void)
     /* Start scheduler */
     IO_UserLedOn(0);
     vTaskStartScheduler();
+
     /* We should never get here as control is now taken by the scheduler */
     for (;;);
 }
-
-/**
-  * @brief  BSP Configuration
-  * @param  None
-  * @retval None
-  */
 
 /* Initialization of CM7 Tasks and RTOS environment */
 static void prvCore1InitTask( void *pvParameters )
@@ -340,7 +337,7 @@ void D_CACHE_Disable(void)
   SCB_DisableDCache();
 }
 
-#define PWROF2(a)           ( (a & (a-1)) == 0 ) 
+#define IS_PWROF2(a)           ( (a & (a-1)) == 0 ) 
 
 /******************************************************************************
  * define MPU regions and enable them
@@ -365,14 +362,14 @@ static void MPU_Setup(void)
 
     /* find next greater or equal power of 2 for lwipheap size */
     size = (uint32_t)&__lwipheap_size__;
-    if ( !PWROF2(size ) ) {
+    if ( !IS_PWROF2(size ) ) {
        size = 1 << ( HW_GetLn2(size)+1);
     }
     MPU_AddRegion ( (uint32_t)&__lwipheap_start__,             MPUTYPE_RAM_NONCACHEABLE,     size,                                     2 );
 
     /* find next greater or equal power of 2 for devicemem size */
     size = (uint32_t)&__devicemem_size__;
-    if ( !PWROF2(size ) ) {
+    if ( !IS_PWROF2(size ) ) {
        size = 1 << ( HW_GetLn2(size)+1);
     }
     
@@ -381,7 +378,7 @@ static void MPU_Setup(void)
 
     /*** 007 **** find next greater or equal power of 2 for axisdmamem size */
     size = (uint32_t)&__axisdmamem_size__;
-    if ( !PWROF2(size ) ) {
+    if ( !IS_PWROF2(size ) ) {
        size = 1 << ( HW_GetLn2(size)+1);
     }
     

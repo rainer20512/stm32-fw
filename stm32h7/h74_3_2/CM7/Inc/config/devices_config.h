@@ -681,10 +681,16 @@
     #define I2C2_USE_IRQ
     #define I2C2_USE_DMA
 
-  // #define USE_ADC3
-  #define ADC3_USE_IRQ
-  #define ADC3_USE_DMA 
-  #define USER_ADC      HW_ADC3
+    #define USE_ADC3
+    #define ADC1_USE_IRQ
+    #define ADC1_USE_DMA 
+    #define USER_ADC      HW_ADC3
+  #if USE_PERIPHTIMER > 0
+      #define PERIPH_TIMER          HW_TIM15
+      #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
+      #define USE_TIM15
+      #define USE_TIM15_ALTN1
+  #endif   
 
   #if USE_QSPI > 0
       #define XSPI_DEV          HW_QSPI1

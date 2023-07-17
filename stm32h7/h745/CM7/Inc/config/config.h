@@ -48,6 +48,7 @@
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_BDMA                    0
+#define USE_PERIPHTIMER             1
 
 
 #define GENERAL_BAUDRATE    500000
@@ -170,9 +171,45 @@
  * Build the config-string for version.h buildinfo
  ********************************************************************************
  */
-
-
 #if BUILD_CONFIG_STR > 0
+    #define PPCAT_NXE(A, B)   A " = " #B "\r\n"
+    #define PPCAT_E(A)     PPCAT_NXE(#A,A)
+
+#define MK_CONFIGSTR(a,i) \
+    const char ConfigStr##i[] = #a; \
+    const uint8_t ConfigVal##i = a; 
+
+    MK_CONFIGSTR(USE_ONEWIRE,1)
+    MK_CONFIGSTR(USE_DS18X20,2)
+    MK_CONFIGSTR(USE_EEPROM_EMUL,3)
+    MK_CONFIGSTR(USE_QENCODER,4)
+    MK_CONFIGSTR(USE_SECONDTIMER,5)
+    MK_CONFIGSTR(USE_PWMTIMER,6)
+    MK_CONFIGSTR(USE_BASICTIMER,7)
+    MK_CONFIGSTR(USE_QSPI,8)
+    MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,9)
+    MK_CONFIGSTR(USE_BDMA,10)
+
+    #define MAX_CONFIGSTR   10
+
+    const char *ConfigStrings[MAX_CONFIGSTR] = 
+        {
+            ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
+            ConfigStr9,  ConfigStr10, // ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
+            // ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+        };
+    const uint8_t ConfigValues[MAX_CONFIGSTR] = 
+        {
+            ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
+            ConfigVal9,  ConfigVal10, // ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
+            // ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
+        };
+
+
+#endif
+
+
+#if 0
     #define PPCAT_NXE(A, B)   A " = " #B "\r\n"
     #define PPCAT_E(A)     PPCAT_NXE(#A,A)
 

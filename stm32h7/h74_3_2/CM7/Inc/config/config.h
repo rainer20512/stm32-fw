@@ -71,6 +71,7 @@
 #define USE_BDMA                    0
 #define USE_LTDC                    0
 #define USE_SDMMC1                  1
+#define USE_PERIPHTIMER             1
 
 
 /* Choose one in case of USE_ETH == 1 
@@ -340,28 +341,7 @@
             ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 
-#if 0
-    #define CONFIG_STRING   \
-    { \
-        PPCAT_E(USE_ONEWIRE),    \
-        PPCAT_E(USE_DS18X20),    \
-        PPCAT_E(USE_EEPROM_EMUL),      \
-        PPCAT_E(USE_QENCODER),  \
-        PPCAT_E(USE_SECONDTIMER),  \
-        PPCAT_E(USE_PWMTIMER),  \
-        PPCAT_E(USE_BASICTIMER),  \
-        PPCAT_E(USE_QSPI),  \
-        PPCAT_E(USE_BASICTIMER_FOR_TICKS),  \
-        PPCAT_E(USE_USB),  \
-        PPCAT_E(USE_USB_FS),  \
-        PPCAT_E(USE_FMC_SRAM),  \
-        PPCAT_E(USE_FMC_SDRAM),  \
-        PPCAT_E(USE_FMC_NOR),  \
-        PPCAT_E(USE_ETH),  \
-        PPCAT_E(USE_FATFS),  \
-        PPCAT_E(USE_BDMA),  \
-    }
-#endif
+
 #endif
 
 

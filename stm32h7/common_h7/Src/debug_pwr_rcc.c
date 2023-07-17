@@ -196,7 +196,7 @@ static void DBG_dump_pwr_d3cr(void)
 /* not all STM32H7 have all wakeup pins connected, 
  * so define a suitable bitmnask 
  */
-#if    defined(STM32H747xx) || defined(STM32H745xx)
+#if    defined(STM32H747xx) || defined(STM32H745xx) \
     || defined(STM32H742xx) || defined(STM32H743xx) 
     #define WAKEUP_PIN_BITMASK 0b00111111
 #elif defined(STM32H723xx) || defined(STM32H733xx) || defined(STM32H725xx) || defined(STM32H735xx) || defined(STM32H730xx)

@@ -46,7 +46,7 @@
 #endif
 
 #if defined(USE_ADC3) && defined(ADC3)
-    /* ADC1 has internal channels Vrefint, Vts, Vbat/3 */
+    /* ADC3 has internal channels Vrefint, Vts, Vbat/3 */
     #define ADC3CH_REFINT       { ADC_CHANNEL_VREFINT,      ADC_SAMPLETIME_64CYCLES_5, NULL, 0, "Refint" }
     #define ADC3CH_TEMPSENSOR   { ADC_CHANNEL_TEMPSENSOR,   ADC_SAMPLETIME_32CYCLES_5, NULL, 0, "ChipTemp" }
     #define ADC3CH_VBAT         { ADC_CHANNEL_VBAT,         ADC_SAMPLETIME_32CYCLES_5, NULL, 0, "Vbat" }
