@@ -76,3 +76,20 @@ Within the sources, the changes are marked as **** <num> ****
 
 007 USB MSC driver implementation with SDRAM needs uncached memory in AXIS RAM
     therefore the area .axisdmamem was added as uncached area in AXIS RAM
+
+*** Update to STM32H7Cube Firmware V1.11
+    Redo adaptions of 001 and 002: 
+    - for 001 Repeat 001
+    - for 002 Insert this in tasks.c:
+    
+    /*
+     ***** 002 *****
+     * Due to useage of Basictimer as Tick-Timer
+     */
+    #include "dev/timer_dev.h"
+
+    *********** Note: Switch to FW V1.11 ABANDONED *************************
+    ** due to major changes in stm32h7xx_hal_eth.c which will not compile **
+    ************************************************************************
+    
+    Rollback To V1.9

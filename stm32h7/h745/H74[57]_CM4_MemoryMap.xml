@@ -14,9 +14,9 @@
   <MemorySegment start="0x64000000" name="$(NOR_PSRAM2_NAM:NOR_PSRAM2)" size="$(NOR_PSRAM2_SIZE:0)" access="$(NOR_PSRAM2_ACCESS:Read/Write)" />
   <MemorySegment start="0x60000000" name="$(NOR_PSRAM1_NAME:NOR_PSRAM1)" size="$(NOR_PSRAM1_SIZE:0)" access="$(NOR_PSRAM1_ACCESS:Read/Write)" />
   <MemorySegment start="0x5C001000" name="DBGMCU" size="0x58" />
-  <MemorySegment start="0x58020000" name="AHB4" size="0x6800" />
-  <MemorySegment start="0x58000000" name="APB4" size="0x6C00" />
-  <MemorySegment start="0x51000000" name="AHB3" size="0x1008000" />
+  <MemorySegment start="0x58020000" name="AHB4" size="0x8000" />
+  <MemorySegment start="0x58000000" name="APB4" size="0x8000" />
+  <MemorySegment start="0x51000000" name="AHB3" size="0x01010000" />
   <MemorySegment start="0x50000000" name="APB3" size="0x4000" />
   <MemorySegment start="0x48022800" name="AHB2" size="0x400" />
   <MemorySegment start="0x40020000" name="AHB1" size="0x08002800" />
