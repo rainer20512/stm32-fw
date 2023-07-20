@@ -128,15 +128,21 @@ int main(void)
 
     int32_t timeout;
 
-    /* 
-     * STM32H745 Nucleo does only support SMPS. So select once at startup 
-     * and do not touch again. Due to this, VOS scale0 is inhibited and
-     * max SYSCLK is 400MHZ.
-     */
-    HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
+    #if defined(STM32H745xx)
+        /* 
+         * STM32H745 Nucleo does only support SMPS. So select once at startup 
+         * and do not touch again. Due to this, VOS scale0 is inhibited and
+         * max SYSCLK is 400MHZ.
+         */
+        HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
 
-    TM1637PinT clk = { GPIOA, 3 };
-    TM1637PinT dio = { GPIOC, 0 };
+        TM1637PinT clk = { GPIOA, 3 };
+        TM1637PinT dio = { GPIOC, 0 };
+
+    #elif defined(STM32H747xx)
+        TM1637PinT clk = { GPIOA, 3 };
+        TM1637PinT dio = { GPIOC, 0 };
+    #endif
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
@@ -339,7 +345,7 @@ static void prvCore1InitTask( void *pvParameters )
     xTaskCreate( prvCore1ModifiedTask, "Mod1", 256, NULL, tskIDLE_PRIORITY, NULL );		
 #endif
 
-    STATUS(44);
+    STATUS(99);
 
     /* Terminate initialization task */ 
     vTaskDelete(NULL);

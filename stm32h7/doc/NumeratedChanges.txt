@@ -93,3 +93,7 @@ Within the sources, the changes are marked as **** <num> ****
     ************************************************************************
     
     Rollback To V1.9
+
+008 STM32H7 ADC's support any integral number of oversamples, not only power 
+    of 2 values. We still use only power of 2 values in order to suit to the 
+    ADC's right shift values

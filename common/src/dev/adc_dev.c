@@ -99,17 +99,47 @@ static bool Adc_AssertChiptemp(const HW_DeviceType *self)
     #endif
     return ret;
 }
-static const uint32_t ovrsampleCode[9] = { 0, 
-    LL_ADC_OVS_RATIO_2,  LL_ADC_OVS_RATIO_4,  LL_ADC_OVS_RATIO_8,   LL_ADC_OVS_RATIO_16, 
-    LL_ADC_OVS_RATIO_32, LL_ADC_OVS_RATIO_64, LL_ADC_OVS_RATIO_128, LL_ADC_OVS_RATIO_256 };
-static const uint32_t rshiftCode[9] = { ADC_RIGHTBITSHIFT_NONE,
-    ADC_RIGHTBITSHIFT_1, ADC_RIGHTBITSHIFT_2, ADC_RIGHTBITSHIFT_3, ADC_RIGHTBITSHIFT_4, 
-    ADC_RIGHTBITSHIFT_5, ADC_RIGHTBITSHIFT_6, ADC_RIGHTBITSHIFT_7, ADC_RIGHTBITSHIFT_8 };
 
+#if defined(STM32H7_FAMILY)
+
+    #define N_OVRSAMPLE_MAX     11      /* i.e. no oversampling to 1024x oversampling */
+    /***** 008 ***** 
+     * Any integer number of oevrsample is possible.
+     * We only use Power of 2 values to fit to the right shift codes
+     */
+    static const uint32_t ovrsampleCode[N_OVRSAMPLE_MAX] = { 
+        (1<< 0)-1,  // 0 = No Oversampling, one conversion
+        (1<< 1)-1,   // 1 = TWO samples
+        (1<< 2)-1,   // 3 = FOUR samples
+        (1<< 3)-1,   // and so on 
+        (1<< 4)-1,
+        (1<< 5)-1,
+        (1<< 6)-1,
+        (1<< 7)-1,
+        (1<< 8)-1,
+        (1<< 9)-1,
+        (1<<10)-1,
+    };
+    static const uint32_t rshiftCode[N_OVRSAMPLE_MAX] = { ADC_RIGHTBITSHIFT_NONE,
+    ADC_RIGHTBITSHIFT_1, ADC_RIGHTBITSHIFT_2, ADC_RIGHTBITSHIFT_3, ADC_RIGHTBITSHIFT_4, 
+    ADC_RIGHTBITSHIFT_5, ADC_RIGHTBITSHIFT_6, ADC_RIGHTBITSHIFT_7, ADC_RIGHTBITSHIFT_8,
+    ADC_RIGHTBITSHIFT_9, ADC_RIGHTBITSHIFT_10,                                           };
+    /* ADC_RIGHTBITSHIFT_11 would also be possible, but has no matching oversample number ( only 0-1023 ) */
+#else
+    /* STM32_L4xx */
+    #define N_OVRSAMPLE_MAX     9       /* i.e. no oversampling to 256x oversampling */
+
+    static const uint32_t ovrsampleCode[N_OVRSAMPLE_MAX] = { 0, 
+        LL_ADC_OVS_RATIO_2,  LL_ADC_OVS_RATIO_4,  LL_ADC_OVS_RATIO_8,   LL_ADC_OVS_RATIO_16, 
+        LL_ADC_OVS_RATIO_32, LL_ADC_OVS_RATIO_64, LL_ADC_OVS_RATIO_128, LL_ADC_OVS_RATIO_256 };
+    static const uint32_t rshiftCode[N_OVRSAMPLE_MAX] = { ADC_RIGHTBITSHIFT_NONE,
+        ADC_RIGHTBITSHIFT_1, ADC_RIGHTBITSHIFT_2, ADC_RIGHTBITSHIFT_3, ADC_RIGHTBITSHIFT_4, 
+        ADC_RIGHTBITSHIFT_5, ADC_RIGHTBITSHIFT_6, ADC_RIGHTBITSHIFT_7, ADC_RIGHTBITSHIFT_8 };
+#endif
 /******************************************************************************
  * Setup Oversampling according to nOvrSample
- *  - nOvrSample must be in the range 0 .. 8, which means 0 .. 256 x oversampling,
- 
+ *  - STM32L4: nOvrSample must be in the range 0 .. 8,  which means 0 .. 256  x oversampling,
+ *  - STM32H7: nOvrSample must be in the range 0 .. 10, which means 0 .. 1024 x oversampling, 
  *  - RightBitShift is alway set accordingly
  *  - No Reset on Injected conversions
  *  - All samples to be done in one step
@@ -118,7 +148,7 @@ static void Adc_SetupOvrSampling ( ADC_InitTypeDef *Init, uint8_t nOvrSample  )
 {
     ADC_OversamplingTypeDef *o  = &Init->Oversampling;
 
-    if ( nOvrSample > 8 ) nOvrSample = 8;
+    if ( nOvrSample >= N_OVRSAMPLE_MAX ) nOvrSample = N_OVRSAMPLE_MAX-1;
     o->OversamplingStopReset    = ADC_REGOVERSAMPLING_CONTINUED_MODE;   /* Preserve Oversampling buffer during injected conversions */
     o->TriggeredMode            = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;     /* All samples done in one step */
     o->Ratio                    = ovrsampleCode[nOvrSample];            /* OvrSampling and Rshift according to nOvrSample */
@@ -136,13 +166,18 @@ static void Adc_SetupOvrSampling ( ADC_InitTypeDef *Init, uint8_t nOvrSample  )
  *****************************************************************************/
 static void Adc_SetupStdParams( ADC_InitTypeDef *Init )
 {
-    Init->DataAlign             = LL_ADC_DATA_ALIGN_RIGHT;       /* Right-alignment for converted data */
-    Init->DMAContinuousRequests = DISABLE;                       /* ADC DMA for only one sequence */
-    Init->LowPowerAutoWait      = DISABLE;                       /* Auto-delayed conversion feature disabled */
-    Init->ContinuousConvMode    = DISABLE;                       /* Continuous mode disabled (one shot conversion) */
-    Init->DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because continuous mode is disabled */
-    Init->NbrOfDiscConversion   = 1;                             /* Parameter discarded because sequencer is disabled */
-    Init->Overrun               = ADC_OVR_DATA_OVERWRITTEN;      /* DR register is overwritten with the last conversion result in case of overrun */
+#if defined(STM32H7_FAMILY)
+    /* STM32H7: Data alignment is always right aligned in the moment */
+    Init->ConversionDataManagement  = ADC_CONVERSIONDATA_DMA_ONESHOT; /* ADC DMA for only one sequence */
+#else
+    Init->DataAlign                 = LL_ADC_DATA_ALIGN_RIGHT;       /* Right-alignment for converted data */
+    Init->DMAContinuousRequests     = DISABLE;                       /* ADC DMA for only one sequence */
+#endif
+    Init->LowPowerAutoWait          = DISABLE;                       /* Auto-delayed conversion feature disabled */
+    Init->ContinuousConvMode        = DISABLE;                       /* Continuous mode disabled (one shot conversion) */
+    Init->DiscontinuousConvMode     = DISABLE;                       /* Parameter discarded because continuous mode is disabled */
+    Init->NbrOfDiscConversion       = 1;                             /* Parameter discarded because sequencer is disabled */
+    Init->Overrun                   = ADC_OVR_DATA_OVERWRITTEN;      /* DR register is overwritten with the last conversion result in case of overrun */
 }
 
 /******************************************************************************
@@ -209,7 +244,7 @@ bool ADC_SetupStd(const HW_DeviceType *self, uint8_t nrofChannels )
      */
 
     /* Setup Oversampling */
-    Adc_SetupOvrSampling(Init, PeriphTimer_StartStop);
+    Adc_SetupOvrSampling(Init, ADC_DEFAULT_OVRSAMPLE);
 
     /*Set the standard (unchanged) init parameters */
     Adc_SetupStdParams(Init);

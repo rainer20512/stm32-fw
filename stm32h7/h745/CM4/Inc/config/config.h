@@ -206,19 +206,21 @@
     MK_CONFIGSTR(USE_ETH,11)
     MK_CONFIGSTR(USE_BDMA,12)
     MK_CONFIGSTR(USE_LWIP,13)
+    MK_CONFIGSTR(USE_ETY_PHY_LAN8742,14)
+    MK_CONFIGSTR(USE_ETH_PHY_ENC28J60,15)
 
-    #define MAX_CONFIGSTR   13
+    #define MAX_CONFIGSTR   15
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
-            ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, // ConfigStr14, ConfigStr15, ConfigStr16,
+            ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, // ConfigStr16,
             // ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
-            ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, // ConfigVal14, ConfigVal15, ConfigVal16,
+            ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, // ConfigVal16,
             // ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 
