@@ -344,8 +344,47 @@
   #endif
   #define COM7_IRQHandler                     UART7_IRQHandler
 
-#endif // COM9
-/* UART7, UART8 tbd */
+#endif // COM7
+
+
+/************************************************************************
+ * Definition for UART8 pins
+ * UART8 : RX:[PE0/AF8,PJ9/AF8] TX:[PE1/AF8,PJ8/AF8] 
+ */
+#ifdef USE_UART8
+  #define COM8                           UART8
+ 
+   /* Alternatives for UART8 : 
+   * DEFAULT TX:PE1   RX:PE0   AF8
+   * ALTN1   TX:PJ8   RX:PJ1   AF8
+   */
+  #if defined(USE_UART8_ALTN1)
+    #define COM8_TX                        { GPIO_PIN_8, GPIOJ, GPIO_AF8_UART8, GPIO_PULLUP, "Uart8_Tx" }
+    #define COM8_RX                        { GPIO_PIN_9, GPIOJ, GPIO_AF8_UART8, GPIO_PULLUP, "Uart8_Rx" }
+  #else
+    #define COM8_TX                        { GPIO_PIN_1, GPIOE, GPIO_AF8_UART8, GPIO_PULLUP, "Uart8_Tx" }
+    #define COM8_RX                        { GPIO_PIN_0, GPIOE, GPIO_AF8_UART8, GPIO_PULLUP, "Uart8_Tx" }
+  #endif
+  #ifdef COM8_USE_TX_DMA
+    /* Definition for USART3 TX DMA */
+    #define COM8_TX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_UART8_TX, DMA_PRIORITY_MEDIUM 
+//    #define COM8_DMA_TX_IRQHandler         DMA1_Stream4_IRQHandler
+  #endif
+  #ifdef COM8_USE_RX_DMA
+    /* Definition for USART3 RX DMA */
+    #define COM8_RX_DMA                    NULL, HW_DMA_STREAM, DMA_REQUEST_UART8_RX, DMA_PRIORITY_LOW
+//    #define COM8_DMA_RX_IRQHandler         DMA1_Stream6_IRQHandler
+  #endif
+
+  /* Definition for COM8's NVIC */
+  #if defined(USE_UART8_DEBUG)
+    #define COM8_IRQ                          { UART8_IRQn, DEBUG_IRQ_PRIO, 0    }
+  #else
+    #define COM8_IRQ                          { UART8_IRQn, USART_IRQ_PRIO, 0    }
+  #endif
+  #define COM8_IRQHandler                     UART8_IRQHandler
+
+#endif // COM8
 
 /************************************************************************
  * Definition for LPUART1 clock resources

@@ -291,6 +291,106 @@
       #define USER_I2C1
   #endif
 
+#elif defined(STM32H747IDISCO)
+
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM3
+    #define RTCTIMER_IRQn           LPTIM3_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM3_IRQHandler
+
+    //#define USE_USART1              // USART1-TX (PA9 ) and RX ( PA10 ) are tied to STLINK VCP
+    #define USE_USART1_ALTN1
+    #define COM1_USE_TX_DMA
+    // #define COM1_USE_RX_DMA
+    #define USART1_CLKSOURCE         RCC_USART1CLKSOURCE_HSI
+    // #define USE_USART1_DEBUG
+    
+    //#define USE_USART2              // USART1-TX (PD5) and RX (PD6) are tied to STLINK PMOD-Connector Pin 2 and Pin 3
+    // #define USE_USART2_ALTN1
+    #define COM1_USE_TX_DMA
+    // #define COM1_USE_RX_DMA
+    #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+    //#define USE_USART2_DEBUG
+
+    //#define USE_USART3
+    #define COM3_USE_TX_DMA
+    //#define COM3_USE_RX_DMA
+    #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
+    //#define USE_USART3_DEBUG
+ 
+    // #define USE_UART4
+    #define COM4_USE_TX_DMA
+    #define COM4_USE_RX_DMA
+    #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
+
+    // #define USE_UART5  
+    #define COM5_USE_TX_DMA
+    #define COM5_USE_RX_DMA
+    #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
+
+    // UART8 TX-PJ8 and RX-PJ9 are tied to arduino connector Tx and RX, use these for CM4 debug output
+    #define USE_UART8               
+    #define USE_UART8_ALTN1
+    #define COM8_USE_TX_DMA
+    // #define COM2_USE_RX_DMA
+    #define UART8_CLKSOURCE         RCC_UART8CLKSOURCE_HSI
+    #define USE_UART8_DEBUG
+
+    //#define USE_LPUART1
+    #define COM9_USE_TX_DMA
+    //#define COM9_USE_RX_DMA
+    #define LPUART1_CLKSOURCE        RCC_LPUART1CLKSOURCE_HSI
+    #define USE_LPUART1_ALTN2
+    #define USE_LPUART1_DEBUG
+
+    // #define USE_I2C1
+
+    // #define USE_I2C2
+    #define I2C2_CLKSOURCE           I2cClock_HSI
+    #define I2C2_SPEED               I2c_StandardMode
+    #define I2C2_USE_IRQ
+    #define I2C2_USE_DMA
+
+    #define USE_ADC3
+    #define ADC3_USE_IRQ
+    #define ADC3_USE_DMA 
+    #define USER_ADC      HW_ADC3
+
+  #if USE_PERIPHTIMER > 0
+      #define PERIPH_TIMER          HW_TIM15
+      #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
+      #define USE_TIM15
+      #define USE_TIM15_ALTN1
+  #endif   
+
+  #if USE_PWMTIMER > 0
+      #define USE_TIM3
+      #define USE_TIM3_ALTN2
+      #define PWM_FREQUENCY 20000
+      #define HW_PWMTIMER HW_TIM3
+      #define LCD_BKLGHT_CH         1
+  #endif
+
+  #if USE_QSPI > 0
+      #define QSPI_DEV          HW_QSPI1
+      #define QSPI_HND          QSpi1Handle
+      #define USE_QSPI1
+      #define QSPI1_CLKSPEED    300000       // Use low clk rates on breadboard
+      #define QSPI1_HAS_LP_MODE
+      #define USE_QSPI1_ALTN4
+      #define QSPI1_USE_IRQ
+
+      // #define QSPI1_USE_DMA Not implemented yet 
+  #endif
+
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_DEV             HW_ETH
+  #endif
+
+  #define DEFAULT_STOP_MODE                2
+
 #else
   #error "No valid device configuration in devices_config.h"
 #endif

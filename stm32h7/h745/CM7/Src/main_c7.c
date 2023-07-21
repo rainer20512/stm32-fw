@@ -18,7 +18,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+// #include "main.h"
 
 /* Standard includes. */
 #include "stdio.h"
@@ -41,6 +41,12 @@
 
 #include "system/tm1637.h"
 #include "cmsis_os.h"
+
+#if defined(STM32H745NUCLEO)
+    #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
+#elif defined(STM32H747IDISCO)
+    #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#endif
 
 #define INIT_STACK_SIZE 256
 
@@ -90,15 +96,15 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 
 
 
-uint32_t LedToggle ( uint32_t duration, uint32_t num )
+uint32_t LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
 {   uint32_t k = 0;
     for ( uint32_t i = 0; i < num; i++ ) {
-        BSP_LED_Toggle(LED2);
+        BSP_LED_Toggle(lednum);
         for ( uint32_t j=0; j < duration * 2000; j++ ) {
             k += j;
             asm("nop");
         }
-        BSP_LED_Toggle(LED2);
+        BSP_LED_Toggle(lednum);
         for ( uint32_t j=0; j < duration * 2000; j++ ) {
             k += j;
             asm("nop");
@@ -107,6 +113,21 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num )
     return k;
 }
 
+/******************************************************************************
+ * Blink the red led forever as primitive error indicator
+ * duration = coarse interval in ms
+ *****************************************************************************/
+void ErrorLed ( uint32_t duration )
+{
+    uint32_t k = 0;
+    for ( ;; ) {
+        BSP_LED_Toggle(LED_RED);
+        for ( uint32_t j=0; j < duration * 2000; j++ ) {
+            k += j;
+            asm("nop");
+        }
+    }
+}
 
 void PB_CB ( uint16_t u, uint16_t pinvalue, void * arg )
 {  
@@ -128,20 +149,19 @@ int main(void)
 
     int32_t timeout;
 
+    /* 
+     * STM32H745 Nucleo does only support SMPS. So select once at startup 
+     * and do not touch again. Due to this, VOS scale0 is inhibited and
+     * max SYSCLK is 400MHZ.
+     */
+    HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
+
     #if defined(STM32H745xx)
-        /* 
-         * STM32H745 Nucleo does only support SMPS. So select once at startup 
-         * and do not touch again. Due to this, VOS scale0 is inhibited and
-         * max SYSCLK is 400MHZ.
-         */
-        HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
-
         TM1637PinT clk = { GPIOA, 3 };
         TM1637PinT dio = { GPIOC, 0 };
-
     #elif defined(STM32H747xx)
-        TM1637PinT clk = { GPIOA, 3 };
-        TM1637PinT dio = { GPIOC, 0 };
+        TM1637PinT clk = { GPIOJ, 3 }; // Arduion Conn CN6/D2
+        TM1637PinT dio = { GPIOF, 8 }; // Arduion Conn CN6/D3
     #endif
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
@@ -158,21 +178,25 @@ int main(void)
     CPU_CACHE_Enable();
 
     BSP_LED_Init(LED2); 
-    LedToggle(250,2);
-
+    BSP_LED_Init(LED_RED); 
+    
+    LedToggle(250,2,LED2);
+    
     TM1637_Init( clk, dio, DELAY_TYPICAL);
 
     /* Init variables and structures for device handling */
     DevicesInit();
 
     /* Wait until CPU2 boots and enters in stop mode or timeout*/
+    #if 0
     timeout = 0xFFFFFF;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
     if ( timeout < 0 )
     {
+        ErrorLed( 500 );
         Error_Handler_XX(-1, __FILE__, __LINE__);
     }
-
+    #endif
 
     /* STM32H7xx HAL library initialization:
        - TIM6 timer is configured by default as source of HAL time base, but user
@@ -253,6 +277,7 @@ int main(void)
 #endif
     
     MPU_Dump();
+    DEBUG_PRINTF("HSI    = %dMHz\n", HSI_VALUE/1000000 ); 
     DEBUG_PRINTF("SYSCLK = %d\n", Get_SysClockFrequency() ); 
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );

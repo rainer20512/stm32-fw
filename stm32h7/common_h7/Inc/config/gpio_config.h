@@ -32,6 +32,24 @@
 /* Example entry for additional IO-Pins
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    IO_NO_IRQ }
 */
+#elif defined(STM32H747IDISCO)
+  // LEDs  
+  #define IO_00                             { GPIO_PIN_12, GPIOI, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed gr" }
+  #define IO_01                             { GPIO_PIN_13, GPIOI, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed or" }
+  #define IO_02                             { GPIO_PIN_14, GPIOI, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed rd" }
+  #define IO_03                             { GPIO_PIN_15, GPIOI, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed bl" }
+//  #define IO_01                             { GPIO_PIN_10, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
+//  #define IO_02                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
+  #define USERLEDNUM                        4
+  #define USERLEDS                          { 0, 1, 2, 3} 
+  // Blue pushbutton, assigned only ot CM7 core
+#if defined(CORE_CM7)
+  #define IO_04_IRQ                         { BUTTON_IRQ_PRIO, 0 }
+  #define IO_04                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_FALLING, GPIO_SPEED_FREQ_LOW, GPIO_PULLDOWN, HW_IO_NORMAL, HW_INPUT,         IO_04_IRQ, "Blue PushBtn" }
+  #define IO_NUM                            5
+#else
+  #define IO_NUM                            4
+#endif
 #elif defined(STM32H7_DEVEBOX)
   // LEDs  
   #define IO_00                             { GPIO_PIN_1,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }

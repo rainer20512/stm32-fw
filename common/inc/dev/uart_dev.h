@@ -91,6 +91,10 @@ typedef struct UsartHandleType {
   extern const HW_DeviceType HW_COM7;
   extern UsartHandleT HandleCOM7;
 #endif
+#if defined(UART8) && defined(USE_UART8)
+  extern const HW_DeviceType HW_COM8;
+  extern UsartHandleT HandleCOM8;
+#endif
 #if defined(LPUART1) && defined(USE_LPUART1)
   extern const HW_DeviceType HW_COM9;
   extern UsartHandleT HandleCOM9;

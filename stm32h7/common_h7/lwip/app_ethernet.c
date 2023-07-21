@@ -20,7 +20,11 @@
 #include "config/config.h"
 #include "lwip/opt.h"
 
-#include "stm32h7xx_nucleo.h"       // LED1 is defined herein
+#if defined(STM32H745NUCLEO)
+    #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
+#elif defined(STM32H747IDISCO)
+    #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#endif
 
 #if LWIP_DHCP
     #include "lwip/dhcp.h"

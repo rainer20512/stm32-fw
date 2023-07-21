@@ -297,6 +297,86 @@
       #define USER_I2C1
   #endif
 
+#elif defined(STM32H747IDISCO)
+
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM4
+    #define RTCTIMER_IRQn           LPTIM4_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM4_IRQHandler
+
+    
+    // #define USE_USART3
+    #define COM3_USE_TX_DMA
+    //#define COM3_USE_RX_DMA
+    #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
+ 
+    // Uart4 TX-PA0 and RX-PA1 are tied to arduino connector A2 and A3
+    #define USE_UART4             
+    // #define USE_UART4_ALTN1
+    #define COM4_USE_TX_DMA
+    // #define COM4_USE_RX_DMA
+    #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
+    #define USE_UART4_DEBUG
+
+
+    // UART8 TX-PJ8 and RX-PJ9 are tied to arduino connector Tx and RX, use these for CM4 debug output
+    // #define USE_UART8               
+    #define USE_UART8_ALTN1
+    #define COM8_USE_TX_DMA
+    // #define COM2_USE_RX_DMA
+    #define UART8_CLKSOURCE         RCC_UART8CLKSOURCE_HSI
+    //#define USE_UART8_DEBUG
+
+    // #define USE_UART5  
+    #define COM5_USE_TX_DMA
+    #define COM5_USE_RX_DMA
+    #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
+
+
+    // #define USE_SPI1
+    #define USE_SPI1_ALTN2
+    // #define SPIDEV1_USE_IRQ
+    #define SPI1_USE_MISO
+    #define SPI1_BAUDRATE            6000000
+    #define USE_SPI1_MASTER
+    #define SPI1_USE_INP             /* Interrupt pin of enc28j60 */
+    #define SPI1_USE_RST             /* Hardware Rest Pin of enc28j60 */
+    #define SPI1_USE_INP_IRQ
+    #define SPI1_INP_IRQ_MODE        GPIO_MODE_IT_FALLING
+
+    // #define USE_I2C1
+
+    // #define USE_I2C2
+    #define I2C2_CLKSOURCE           I2cClock_HSI
+    #define I2C2_SPEED               I2c_StandardMode
+    #define I2C2_USE_IRQ
+    #define I2C2_USE_DMA
+
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_USE_IRQ
+    #define ETH_DEV             HW_ETH
+  #endif
+
+  #if USE_PWMTIMER > 0
+      #define USE_TIM3
+      #define USE_TIM3_ALTN2
+      #define PWM_FREQUENCY 20000
+      #define HW_PWMTIMER HW_TIM3
+      #define LCD_BKLGHT_CH         1
+  #endif
+
+  #if USE_QSPI > 0
+      #define QSPI_DEV          HW_QSPI1
+      #define USE_QSPI1
+      #define USE_QSPI1_ALTN1
+      #define QSPI1_USE_IRQ
+      #define QSPI1_USE_DMA
+  #endif
+
+  #define DEFAULT_STOP_MODE                2
+
 #else
   #error "No valid device configuration in devices_config.h"
 #endif

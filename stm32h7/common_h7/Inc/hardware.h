@@ -22,15 +22,17 @@
 #define DMA_GET_RXSIZE(hdma)            ( ((DMA_Stream_TypeDef *)hdma->Instance)->NDTR )
 
 #if defined(CORE_CM7) || defined(CORE_CM4)
-/**** 003 **** 
- * Whenever BDMA is used ( here: for LPUART1 ), the DMA memory has to reside
- * in SRAM4. 
- */    #if defined(CORE_CM7)
+    /**** 003 **** 
+     * Whenever BDMA is used ( here: for LPUART1 ), the DMA memory has to reside
+     * in SRAM4. 
+     */    
+    #if defined(CORE_CM7)
         #define DMAMEM                      __attribute((section(".dmamem")))
         #define IPCMEM                      __attribute((section(".ipcmem")))
         #define AXISMEM                     __attribute((section(".axismem"))) 
         #define AXISDMAMEM                  __attribute((section(".axisdmamem"))) 
-          
+    #else
+        #define DMAMEM     
     #endif
     #define BDMAMEM                         __attribute((section(".bdmamem")))
 #else

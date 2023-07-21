@@ -37,6 +37,11 @@
 #include "task/minitask.h"
 #include "debug_helper.h"
 
+#if defined(STM32H745NUCLEO)
+    #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
+#elif defined(STM32H747IDISCO)
+    #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#endif
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

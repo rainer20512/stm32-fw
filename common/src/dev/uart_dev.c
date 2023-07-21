@@ -966,6 +966,66 @@ bool COM_AllowStop(const HW_DeviceType *self)
         .OnWakeUp       = NULL,
     };
 #endif
+
+#if defined(UART8) && defined(USE_UART8)
+    UsartHandleT HandleCOM8;
+
+    static const HW_GpioList_AF gpio_com8 = {
+        .num = 2,
+        .gpio = {COM8_TX, COM8_RX} ,
+    };
+
+    static const USART_AdditionalDataType additional_com8 = {
+        &HandleCOM8,
+        DEBUG_BAUDRATE,
+        UART_STOPBITS_1,
+        UART_PARITY_NONE,
+        UART_WORDLENGTH_8B,
+    };
+
+    #if defined(COM8_USE_TX_DMA)
+        static DMA_HandleTypeDef hdma_com8_tx;
+        static const HW_DmaType dmatx_com8 = { &hdma_com8_tx, COM8_TX_DMA };
+    #endif
+    #if defined(COM8_USE_RX_DMA)
+        static DMA_HandleTypeDef hdma_com8_rx;
+        static const HW_DmaType dmarx_com8 = { &hdma_com8_rx, COM8_RX_DMA };
+    #endif
+
+    static const HW_IrqList irq_com8 = {
+        .num = 1,
+        .irq = { COM8_IRQ, },
+    };
+
+    const HW_DeviceType HW_COM8 = {
+        .devName        = "COM8",
+        .devBase        = UART8,
+        .devGpioAF      = &gpio_com8,
+        .devGpioIO      = NULL,
+        .devType        =  HW_DEVICE_UART,
+        .devData        = &additional_com8,
+        .devIrqList     = &irq_com8,
+        #if defined(COM8_USE_TX_DMA)
+            .devDmaTx = &dmatx_com8,
+        #else
+            .devDmaTx = NULL,
+        #endif
+        #if defined(COM8_USE_RX_DMA)
+            .devDmaRx = &dmarx_com8,
+        #else
+            .devDmaRx = NULL,
+        #endif
+
+        .Init           = COM_Init,
+        .DeInit         = COM_DeInit,
+        .OnFrqChange    = Usart_OnFrqChange,
+        .AllowStop      = COM_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif
+
+
 #if defined(LPUART1) && defined(USE_LPUART1)
     UsartHandleT HandleCOM9;
 

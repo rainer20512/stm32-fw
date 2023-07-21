@@ -312,6 +312,8 @@
 
 #elif defined(STM32H745NUCLEO)
     // RHB tbd
+#elif defined(STM32H747IDISCO)
+    // RHB tbd
 #elif defined(STM32H742REF)
     // RHB tbd
 #elif defined(STM32H7_DEVEBOX)

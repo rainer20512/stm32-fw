@@ -5,7 +5,7 @@
       CMSIS_CORE="Yes"
       Name="Common"
       Placement="Flash"
-      Target="STM32H745ZI_CM4"
+      Target="STM32H747XI_CM4"
       arm_architecture="v7EM"
       arm_core_type="Cortex-M4"
       arm_fp_abi="Hard"
@@ -16,16 +16,16 @@
       arm_linker_process_stack_size="0"
       arm_linker_stack_size="1024"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
-      arm_simulator_memory_simulation_parameter="STM32H745ZI_CM4;0x200000;0x100000"
+      arm_simulator_memory_simulation_parameter="STM32H747XI_CM4;0x200000;0x100000"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
       c_preprocessor_definitions="CORE_CM4"
       c_user_include_directories="./CM4/Inc"
-      debug_register_definition_file="$(TargetsDir)/STM32/STM32H745_CM4_Peripherals.xml"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32H747_CM4_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/H74[57]_CM4_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM4.xml"
-      macros="DeviceVectorsFile=STM32H745xx.vec"
+      macros="DeviceVectorsFile=STM32H747xx.vec"
       project_directory=""
       project_type="Executable"
       property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
@@ -49,8 +49,8 @@
       <file file_name="$(TargetsDir)/STM32/$(DeviceVectorsFile)" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />
       <file file_name="flash_placement_CM4.xml" />
-      <file file_name="H745_CM4_MemoryMap.xml" />
       <file file_name="RamPreset.c" />
+      <file file_name="H74[57]_CM4_MemoryMap.xml" />
     </folder>
     <folder Name="Application">
       <folder Name="EWARM">
@@ -239,10 +239,10 @@
           <file file_name="../../common/src/debug_helper.c" />
           <file file_name="../../common/src/debug_outbuf.c" />
           <file file_name="../../common/src/debug_sram.c" />
+          <file file_name="../../common/src/dev/io_dev.c" />
         </folder>
         <folder Name="dev">
           <file file_name="../../common/src/dev/hw_device.c" />
-          <file file_name="../../common/src/dev/io_dev.c" />
           <file file_name="../../common/src/dev/timer_dev.c" />
           <file file_name="../../common/src/dev/uart_dev.c" />
           <file file_name="../../common/src/dev/eth_dev.c">
@@ -277,8 +277,8 @@
           <file file_name="../../common/inc/dev/timer_dev.h" />
           <file file_name="../../common/inc/dev/uart_dev.h" />
           <file file_name="../../common/inc/dev/eth_dev.h" />
+          <file file_name="../../common/inc/timer.h" />
         </folder>
-        <file file_name="../../common/inc/timer.h" />
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />
         </folder>
@@ -326,9 +326,9 @@
       <folder Name="Doc">
         <file file_name="../doc/ErrorCodes.txt" />
         <file file_name="../doc/Howto.txt" />
-        <file file_name="../doc/NumeratedChanges.txt" />
         <file file_name="../doc/Changes.txt" />
         <file file_name="../doc/Clues.txt" />
+        <file file_name="../doc/NumeratedChanges.txt" />
       </folder>
     </folder>
   </project>
@@ -362,7 +362,7 @@
       CMSIS_CORE="Yes"
       Name="Common"
       Placement="Flash"
-      Target="STM32H745ZI_CM7"
+      Target="STM32H747XI_CM7"
       arm_architecture="v7EM"
       arm_core_type="Cortex-M7"
       arm_fp_abi="Hard"
@@ -373,16 +373,16 @@
       arm_linker_process_stack_size="0"
       arm_linker_stack_size="1024"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
-      arm_simulator_memory_simulation_parameter="STM32H745ZI_CM7;0x200000;0x100000"
+      arm_simulator_memory_simulation_parameter="STM32H747XI_CM7;0x200000;0x100000"
       arm_target_loader_applicable_loaders="Flash"
       arm_target_loader_default_loader="Flash"
       arm_target_trace_interface_type="None"
       c_preprocessor_definitions="CORE_CM7"
       c_user_include_directories="./CM7/Inc"
-      debug_register_definition_file="$(TargetsDir)/STM32/STM32H745_CM7_Peripherals.xml"
+      debug_register_definition_file="$(TargetsDir)/STM32/STM32H747_CM7_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/H74[57]_CM7_MemoryMap.xml"
       linker_section_placement_file="$(ProjectDir)/flash_placement_CM7.xml"
-      macros="DeviceVectorsFile=STM32H745xx.vec"
+      macros="DeviceVectorsFile=STM32H747xx.vec"
       project_directory=""
       project_type="Executable"
       property_groups_file_path="$(TargetsDir)/STM32/propertyGroups.xml"
@@ -461,7 +461,10 @@
     </folder>
     <folder Name="Drivers">
       <folder Name="BSP">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
       </folder>
       <folder Name="STM32H7xx_HAL_Driver">
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
@@ -672,8 +675,10 @@
   </project>
   <configuration
     Name="Common"
-    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H745xx;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
-    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/CPU"
+    arm_target_connect_with_reset="Yes"
+    arm_target_debug_interface_type="Default"
+    c_preprocessor_definitions="USE_HAL_DRIVER;STM32H747xx;STARTUP_FROM_RESET;USE_HAL_I2C_REGISTER_CALLBACKS=1;DO_RAM_PRESET ;RAM_PRESET_VALUE=0xDEADBEEF"
+    c_user_include_directories="../../common/inc;../common_h7/inc;../common_h7/eeprom-emul/core;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/Components/Common;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Middlewares/Third_Party/FreeRTOS/Source/include;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Log;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/Fonts;E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Utilities/CPU"
     environment_variables="KeksDir=E:/STM32H7/STM32Cube_FW_H7_V1.9.0"
     gcc_enable_all_warnings="Yes" />
 </solution>

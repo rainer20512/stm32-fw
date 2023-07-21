@@ -23,7 +23,8 @@
  * Board selection
  ********************************************************************************
  */ 
-#define STM32H745NUCLEO
+// #define STM32H745NUCLEO
+#define STM32H747IDISCO
 
 /*
  ********************************************************************************
@@ -118,6 +119,12 @@
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
+#endif
+#if defined(STM32H747IDISCO)
+    /* STM32H747I-DISCO has an external 25MHz Oscillator on board */
+    #undef  HW_HAS_HSE_CRYSTAL
+    #define  HW_HAS_HSE_BYPASS
+    #define  HW_HSE_FREQUENCY       25000000
 #endif
 
 /* Can we use an HSE Clock ? */
