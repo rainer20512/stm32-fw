@@ -245,7 +245,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM1_USE_TX_DMA) || defined(COM1_USE_RX_DMA) 
 
     #if defined(COM1_USE_TX_DMA)
@@ -265,7 +264,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-****004 ****/
 #endif
 
 #if defined(USART2) && defined(USE_USART2)
@@ -279,7 +277,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM2_USE_TX_DMA) || defined(COM2_USE_RX_DMA) 
 
     #if defined(COM2_USE_TX_DMA)
@@ -299,7 +296,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-****004 ****/
 #endif
 
 
@@ -315,7 +311,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM3_USE_TX_DMA) || defined(COM3_USE_RX_DMA) 
 
     #if defined(COM3_USE_TX_DMA)
@@ -335,7 +330,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-****004 ****/
 #endif
 
 #if defined(UART4) && defined(USE_UART4)
@@ -349,7 +343,6 @@ void DebugMon_Handler(void)
         ProfilerPop();
     }
 
-/**** 004 ****
   #if defined(COM4_USE_TX_DMA) || defined(COM4_USE_RX_DMA) 
 
     #if defined(COM4_USE_TX_DMA)
@@ -369,7 +362,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-****004 ****/
 #endif
 
 #if defined(UART5) && defined(USE_UART5)

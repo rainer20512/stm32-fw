@@ -18,7 +18,6 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-// #include "main.h"
 
 /* Standard includes. */
 #include "stdio.h"
@@ -38,6 +37,7 @@
 #include "dev/devices.h"
 #include "task/minitask.h"
 #include "debug_helper.h"
+#include "timer.h"
 
 #include "system/tm1637.h"
 #include "cmsis_os.h"
@@ -95,22 +95,24 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 /* Private functions ---------------------------------------------------------*/
 
 
-
-uint32_t LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
-{   uint32_t k = 0;
-    for ( uint32_t i = 0; i < num; i++ ) {
-        BSP_LED_Toggle(lednum);
-        for ( uint32_t j=0; j < duration * 2000; j++ ) {
-            k += j;
-            asm("nop");
-        }
-        BSP_LED_Toggle(lednum);
-        for ( uint32_t j=0; j < duration * 2000; j++ ) {
-            k += j;
-            asm("nop");
-        }
+static uint32_t _wait(uint32_t duration )
+{
+    uint32_t k=0;
+    for ( uint32_t j=0; j < duration * 2000; j++ ) {
+        k += j;
+        asm("nop");
     }
     return k;
+}
+
+void LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
+{  
+    for ( uint32_t i = 0; i < num; i++ ) {
+        BSP_LED_Toggle(lednum);
+        _wait(duration);
+        BSP_LED_Toggle(lednum);
+        (void)_wait(duration);
+    }
 }
 
 /******************************************************************************
@@ -119,13 +121,9 @@ uint32_t LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
  *****************************************************************************/
 void ErrorLed ( uint32_t duration )
 {
-    uint32_t k = 0;
     for ( ;; ) {
         BSP_LED_Toggle(LED_RED);
-        for ( uint32_t j=0; j < duration * 2000; j++ ) {
-            k += j;
-            asm("nop");
-        }
+        _wait(duration);
     }
 }
 
@@ -147,6 +145,7 @@ int main(void)
 {
 
 
+    DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C1->RSR >> 16  ); 
     int32_t timeout;
 
     /* 
@@ -164,6 +163,8 @@ int main(void)
         TM1637PinT dio = { GPIOF, 8 }; // Arduion Conn CN6/D3
     #endif
 
+    BSP_LED_Init(LED_RED); 
+
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  
 
@@ -178,7 +179,6 @@ int main(void)
     CPU_CACHE_Enable();
 
     BSP_LED_Init(LED2); 
-    BSP_LED_Init(LED_RED); 
     
     LedToggle(250,2,LED2);
     
@@ -187,29 +187,16 @@ int main(void)
     /* Init variables and structures for device handling */
     DevicesInit();
 
-    /* Wait until CPU2 boots and enters in stop mode or timeout*/
-    #if 0
-    timeout = 0xFFFFFF;
+
+    /* Wait until Core 2 enters stop mode or we run into timeout*/
+
+    timeout = 16000000;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
     if ( timeout < 0 )
     {
         ErrorLed( 500 );
         Error_Handler_XX(-1, __FILE__, __LINE__);
     }
-    #endif
-
-    /* STM32H7xx HAL library initialization:
-       - TIM6 timer is configured by default as source of HAL time base, but user
-         can eventually implement his proper time base source (another general purpose
-         timer for application or other time source), keeping in mind that Time base
-         duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and
-         handled in milliseconds basis.
-         This application uses FreeRTOS, the RTOS initializes the systick to generate an interrupt each 1ms. 
-         The systick is then used for FreeRTOS time base.
-       - Set NVIC Group Priority to 4
-       - Low Level Initialization
-    */
-
 
     #if USE_BASICTIMER > 0
         /* 
@@ -266,7 +253,8 @@ int main(void)
     Init_DumpAndClearResetSource();
     STATUS(4);
 
-#if 0
+    DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C1->RSR >> 16  ); 
+
     /* AIEC Common configuration: make CPU1 and CPU2 SWI line0
     sensitive to rising edge : Configured only once */
     HAL_EXTI_EdgeConfig(EXTI_LINE0 , EXTI_RISING_EDGE);
@@ -274,7 +262,7 @@ int main(void)
 
     HAL_NVIC_SetPriority(EXTI1_IRQn, 0xFU, 0U);
     HAL_NVIC_EnableIRQ(EXTI1_IRQn);
-#endif
+
     
     MPU_Dump();
     DEBUG_PRINTF("HSI    = %dMHz\n", HSI_VALUE/1000000 ); 

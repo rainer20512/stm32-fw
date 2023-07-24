@@ -59,7 +59,7 @@ void Init_OtherDevices(void)
       }
        
   #endif
-  #if defined(USE_USART2)
+  #if defined(USE_USART2) && !defined(USE_USART2_DEBUG)
       dev_idx = AddDevice(&HW_COM2, NULL, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init COM2-device");
@@ -68,7 +68,7 @@ void Init_OtherDevices(void)
       }
        
   #endif
-  #if defined(USE_USART1)
+  #if defined(USE_USART1) && !defined(USE_USART1_DEBUG)
       dev_idx = AddDevice(&HW_COM1, NULL, NULL );
       if ( dev_idx < 0 ) {
         DEBUG_PUTS("Failed to init USART-device");

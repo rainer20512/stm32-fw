@@ -312,26 +312,23 @@
     #define USART3_CLKSOURCE         RCC_USART3CLKSOURCE_HSI
  
     // Uart4 TX-PA0 and RX-PA1 are tied to arduino connector A2 and A3
-    #define USE_UART4             
+    //#define USE_UART4             
     // #define USE_UART4_ALTN1
     #define COM4_USE_TX_DMA
     // #define COM4_USE_RX_DMA
     #define UART4_CLKSOURCE          RCC_UART4CLKSOURCE_HSI
-    #define USE_UART4_DEBUG
+    //#define USE_UART4_DEBUG
+
 
 
     // UART8 TX-PJ8 and RX-PJ9 are tied to arduino connector Tx and RX, use these for CM4 debug output
-    // #define USE_UART8               
+    #define USE_UART8               
     #define USE_UART8_ALTN1
-    #define COM8_USE_TX_DMA
+    //#define COM8_USE_TX_DMA
     // #define COM2_USE_RX_DMA
     #define UART8_CLKSOURCE         RCC_UART8CLKSOURCE_HSI
-    //#define USE_UART8_DEBUG
+    #define USE_UART8_DEBUG
 
-    // #define USE_UART5  
-    #define COM5_USE_TX_DMA
-    #define COM5_USE_RX_DMA
-    #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
 
     // #define USE_SPI1

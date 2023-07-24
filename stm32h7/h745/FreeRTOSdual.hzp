@@ -53,11 +53,6 @@
       <file file_name="H74[57]_CM4_MemoryMap.xml" />
     </folder>
     <folder Name="Application">
-      <folder Name="EWARM">
-        <file file_name="$(ProjectDir)/startup_stm32h745xx.s">
-          <configuration Name="Common" build_exclude_from_build="Yes" />
-        </file>
-      </folder>
       <folder Name="src">
         <file file_name="$(ProjectDir)/CM4/Src/main_c4.c" />
         <file file_name="CM4/Src/hardfault.s" />
@@ -69,7 +64,6 @@
           <file file_name="CM4/Src/system/devices_cm4.c" />
           <file file_name="CM4/Src/system/clockconfig_cm4.c" />
         </folder>
-        <file file_name="CM4/Src/msg_direct_c4.c" />
       </folder>
       <folder Name="inc">
         <folder Name="system">
@@ -91,11 +85,6 @@
       </folder>
     </folder>
     <folder Name="Drivers">
-      <folder Name="BSP">
-        <folder Name="STM32H745I_Nucleo">
-          <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c" />
-        </folder>
-      </folder>
       <folder Name="CMSIS">
         <file file_name="../common_h7/Src/system_stm32h7xx.c" />
       </folder>
@@ -311,9 +300,6 @@
         <file file_name="../common_h7/Inc/version.h" />
       </folder>
       <folder Name="src">
-        <folder Name="task">
-          <file file_name="../common_h7/Src/task/minitask.c" />
-        </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
         <file file_name="../common_h7/Src/hardware.c" />
         <folder Name="system">
@@ -329,6 +315,16 @@
         <file file_name="../doc/Changes.txt" />
         <file file_name="../doc/Clues.txt" />
         <file file_name="../doc/NumeratedChanges.txt" />
+      </folder>
+      <folder Name="task">
+        <file file_name="../common_h7/Src/task/minitask.c" />
+      </folder>
+      <file file_name="CM4/Src/msg_direct_c4.c" />
+      <folder Name="BSP">
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
       </folder>
     </folder>
   </project>
@@ -422,9 +418,8 @@
         <file file_name="CM7/Src/interpreters.c" />
         <folder Name="system">
           <file file_name="CM7/Src/hardfault.s" />
-          <file file_name="CM7/Src/system/clockconfig.c" />
           <file file_name="../common_h7/Src/system/error.c" />
-          <file file_name="CM7/Src/system/devices_c7.c" />
+          <file file_name="../common_h7/Src/system/devices_c7.c" />
         </folder>
         <file file_name="CM7/Src/init_c7.c" />
         <file file_name="CM7/Src/msg_direct_c7.c" />
@@ -437,10 +432,8 @@
         <file file_name="CM7/Inc/FreeRTOSConfig.h" />
       </folder>
       <folder Name="inc">
-        <file file_name="CM7/Inc/main.h" />
         <folder Name="system">
           <file file_name="CM7/Inc/system/profiling.h" />
-          <file file_name="CM7/Inc/system/clockconfig.h" />
           <file file_name="CM7/Inc/system/ram_preset.inc" />
         </folder>
         <file file_name="CM7/Inc/debug.h" />
@@ -460,12 +453,6 @@
       </folder>
     </folder>
     <folder Name="Drivers">
-      <folder Name="BSP">
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
-      </folder>
       <folder Name="STM32H7xx_HAL_Driver">
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal.c" />
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_adc.c" />
@@ -519,6 +506,7 @@
           <file file_name="../common_h7/Src/system/hw_util.c" />
           <file file_name="../common_h7/Src/system/dma_handler.c" />
           <file file_name="../common_h7/Src/system/mpu.c" />
+          <file file_name="../common_h7/Src/system/clockconfig.c" />
         </folder>
         <file file_name="../common_h7/Src/debug_pwr_rcc.c" />
         <file file_name="../common_h7/Src/ipc.c" />
@@ -530,6 +518,7 @@
           <file file_name="../common_h7/Inc/system/hw_util.h" />
           <file file_name="../common_h7/Inc/system/dma_handler.h" />
           <file file_name="../common_h7/Inc/system/mpu.h" />
+          <file file_name="../common_h7/Inc/system/clockconfig.h" />
         </folder>
         <folder Name="task">
           <file file_name="../common_h7/Inc/task/minitask.h" />
@@ -553,6 +542,12 @@
       </folder>
       <folder Name="task">
         <file file_name="../common_h7/Src/task/minitask.c" />
+      </folder>
+      <folder Name="BSP">
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
       </folder>
     </folder>
     <folder Name="common">

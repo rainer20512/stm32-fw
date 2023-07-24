@@ -201,7 +201,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM1_USE_TX_DMA) || defined(COM1_USE_RX_DMA) 
 
     #if defined(COM1_USE_TX_DMA)
@@ -221,7 +220,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
 #endif
 
 #if defined(USART2) && defined(USE_USART2)
@@ -235,7 +233,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM2_USE_TX_DMA) || defined(COM2_USE_RX_DMA) 
 
     #if defined(COM2_USE_TX_DMA)
@@ -255,7 +252,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
 #endif
 
 
@@ -271,7 +267,6 @@ void DebugMon_Handler(void)
     ProfilerPop();
   }
 
-/**** 004 ****
   #if defined(COM3_USE_TX_DMA) || defined(COM3_USE_RX_DMA) 
 
     #if defined(COM3_USE_TX_DMA)
@@ -291,7 +286,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
 #endif
 
 #if defined(UART4) && defined(USE_UART4)
@@ -305,7 +299,6 @@ void DebugMon_Handler(void)
         ProfilerPop();
     }
 
-/**** 004 ****
   #if defined(COM4_USE_TX_DMA) || defined(COM4_USE_RX_DMA) 
 
     #if defined(COM4_USE_TX_DMA)
@@ -325,7 +318,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
 #endif
 
 #if defined(UART5) && defined(USE_UART5)
@@ -339,7 +331,6 @@ void DebugMon_Handler(void)
         ProfilerPop();
     }
 
-/**** 004 ****
   #if defined(COM5_USE_TX_DMA) || defined(COM5_USE_RX_DMA) 
 
     #if defined(COM5_USE_TX_DMA)
@@ -359,7 +350,38 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
+#endif
+
+#if defined(UART8) && defined(USE_UART8)
+    #if !defined(COM8_IRQHandler) 
+        #error "IRQ names not defined for UART8" 
+    #endif
+    void COM8_IRQHandler(void)
+    {
+        ProfilerPush(JOB_IRQ_UART);
+        UsartIRQHandler(&HandleCOM8);
+        ProfilerPop();
+    }
+
+  #if defined(COM8_USE_TX_DMA) || defined(COM8_USE_RX_DMA) 
+
+    #if defined(COM8_USE_TX_DMA)
+        void COM8_DMA_TX_IRQHandler(void) 
+        {
+            ProfilerPush(JOB_IRQ_UART);
+            HAL_DMA_IRQHandler(HandleCOM8.hTxDma);
+            ProfilerPop();
+        }
+    #endif
+    #if defined(COM8_USE_RX_DMA)
+        void COM8_DMA_RX_IRQHandler(void) 
+        {
+            ProfilerPush(JOB_IRQ_UART);
+            HAL_DMA_IRQHandler(HandleCOM8.hRxDma);
+            ProfilerPop();
+        }
+    #endif
+  #endif
 #endif
 
 #if defined(LPUART1) && defined(USE_LPUART1)
@@ -373,7 +395,6 @@ void DebugMon_Handler(void)
         ProfilerPop();
     }
 
-/**** 004 ****
   #if defined(COM9_USE_TX_DMA) || defined(COM9_USE_RX_DMA) 
     #if defined(COM9_USE_TX_DMA)
         void COM9_DMA_TX_IRQHandler(void) 
@@ -392,7 +413,6 @@ void DebugMon_Handler(void)
         }
     #endif
   #endif
-*/
 #endif
 
 /******************************************************************************

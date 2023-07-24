@@ -98,7 +98,7 @@ extern  AMP_Ctrl_ptr        AMPCtrl_Ptr;
 #if defined(CORE_CM4)
     #define INIT_RESTRICTED 1
     #define INIT_FULLY      0
-    void Ipc_CM4_Init ( uint32_t  bRestricted );   
+    bool Ipc_CM4_Init ( uint32_t  bRestricted );   
     void Ipc_CM4_SendDirect     ( void );
 #endif
 

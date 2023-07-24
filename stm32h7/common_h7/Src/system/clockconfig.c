@@ -738,7 +738,7 @@ static void SystemClock_PLL_xxxMHz_Vrange_Auto(uint32_t pll_khz, bool bUseHSE, b
   /* Set VOS range to 0 when ahb clock > 225 MHz */
   /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
   /* For lower frequencies, select scale 2, scake 1 only for high requencies */
-  #if defined(STM32H745xx)
+  #if defined(STM32H745xx) || defined(STM32H747xx)
       /* Set VOS range to 0 when ahb clock > 225 MHz */
       /* Since nucleo board has SMPS only support, VOS scale 0 is inibited */
       /* For lower frequencies, select scale 2, scake 1 only for high requencies */

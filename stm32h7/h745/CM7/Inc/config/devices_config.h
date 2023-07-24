@@ -299,17 +299,17 @@
     #define RTCTIMER_IRQn           LPTIM3_IRQn
     #define RTCTIMER_IRQHandler     LPTIM3_IRQHandler
 
-    //#define USE_USART1              // USART1-TX (PA9 ) and RX ( PA10 ) are tied to STLINK VCP
+    #define USE_USART1              // USART1-TX (PA9 ) and RX ( PA10 ) are tied to STLINK VCP
     #define USE_USART1_ALTN1
     #define COM1_USE_TX_DMA
     // #define COM1_USE_RX_DMA
     #define USART1_CLKSOURCE         RCC_USART1CLKSOURCE_HSI
-    // #define USE_USART1_DEBUG
+    #define USE_USART1_DEBUG
     
     //#define USE_USART2              // USART1-TX (PD5) and RX (PD6) are tied to STLINK PMOD-Connector Pin 2 and Pin 3
     // #define USE_USART2_ALTN1
-    #define COM1_USE_TX_DMA
-    // #define COM1_USE_RX_DMA
+    #define COM2_USE_TX_DMA
+    // #define COM2_USE_RX_DMA
     #define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
     //#define USE_USART2_DEBUG
 
@@ -330,12 +330,12 @@
     #define UART5_CLKSOURCE          RCC_UART5CLKSOURCE_HSI
 
     // UART8 TX-PJ8 and RX-PJ9 are tied to arduino connector Tx and RX, use these for CM4 debug output
-    #define USE_UART8               
+    // #define USE_UART8               
     #define USE_UART8_ALTN1
     #define COM8_USE_TX_DMA
     // #define COM2_USE_RX_DMA
     #define UART8_CLKSOURCE         RCC_UART8CLKSOURCE_HSI
-    #define USE_UART8_DEBUG
+    // #define USE_UART8_DEBUG
 
     //#define USE_LPUART1
     #define COM9_USE_TX_DMA

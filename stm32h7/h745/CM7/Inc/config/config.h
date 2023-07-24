@@ -70,18 +70,18 @@
 
 #define DEFAULT_STOP_MODE   2
 
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_08MHZ_0WS    /*   8 MHz, source HSI, VOSrange3, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_16MHZ_0WS    /*  16 MHz, source HSI, VOSrange3, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_32MHZ_0WS    /*  32 MHz, source HSI, VOSrange3, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG3_64MHZ_1WS    /*  64 MHz, source HSI, VOSrange3, 1 WS */
-#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_100MHZ_1WS   /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_200MHZ_2WS   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_300MHZ_2WS   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_400MHZ_3WS   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
-//#define USER_CLOCKCONFIG         CLK_PLL_VRNG0_480MHZ_4WS   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage */
-//#define USER_CLOCKCONFIG         CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
+//#define USER_CLOCKCONFIG         CLK_HSI_08MHZ    /*   8 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_16MHZ    /*  16 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_32MHZ    /*  32 MHz, source HSI, VOSrange3, 0 WS */
+//#define USER_CLOCKCONFIG         CLK_HSI_64MHZ    /*  64 MHz, source HSI, VOSrange3, 1 WS */
 
-
+//#define USER_CLOCKCONFIG         CLK_PLL_50MHZ     /*  50 MHz, source PLL with HSE, Vrange3, 1 WS */
+#define USER_CLOCKCONFIG          CLK_PLL_100MHZ     /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG          CLK_PLL_200MHZ   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG          CLK_PLL_300MHZ   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
+//#define USER_CLOCKCONFIG          CLK_PLL_400MHz   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
+//#define USER_CLOCKCONFIG          CLK_PLL_480MHZ   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage, requires LDO equipped */
+//#define USER_CLOCKCONFIG          CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
 
 
 /******************************************************************************

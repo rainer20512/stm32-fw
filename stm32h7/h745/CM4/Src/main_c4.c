@@ -77,21 +77,37 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 
-uint32_t LedToggle ( uint32_t duration, uint32_t num )
-{   uint32_t k = 0;
-    for ( uint32_t i = 0; i < num; i++ ) {
-        BSP_LED_Toggle(LED1);
-        for ( uint32_t j=0; j < duration * 1000; j++ ) {
-            k += j;
-            asm("nop");
-        }
-        BSP_LED_Toggle(LED1);
-        for ( uint32_t j=0; j < duration * 1000; j++ ) {
-            k += j;
-            asm("nop");
-        }
+static uint32_t _wait(uint32_t duration )
+{
+    uint32_t k=0;
+    for ( uint32_t j=0; j < duration * 2000; j++ ) {
+        k += j;
+        asm("nop");
     }
     return k;
+}
+
+static void BSP_LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
+{  
+    for ( uint32_t i = 0; i < num; i++ ) {
+        BSP_LED_Toggle(lednum);
+        _wait(duration);
+        BSP_LED_Toggle(lednum);
+        (void)_wait(duration);
+    }
+}
+
+
+/******************************************************************************
+ * Blink the red led forever as primitive error indicator
+ * duration = coarse interval in ms
+ *****************************************************************************/
+void ErrorLed ( uint32_t duration )
+{
+    for ( ;; ) {
+        BSP_LED_Toggle(LED1);
+        _wait(duration);
+    }
 }
 
 /**
@@ -104,8 +120,7 @@ int main(void)
 
     BaseType_t x;
     BSP_LED_Init(LED1);
-    LedToggle(250, 2);  
-    AMPCtrl_t *ref;
+    BSP_LedToggle(250, 2, LED1);  
 
     /* Activate wakeup from CM7 */
     Ipc_CM4_Init(INIT_RESTRICTED);
@@ -129,7 +144,7 @@ int main(void)
     */
 
     /* initialize the ipc communication */
-    Ipc_CM4_Init(INIT_FULLY);
+    if ( !Ipc_CM4_Init(INIT_FULLY) )ErrorLed(100);
 
 
     #if USE_BASICTIMER > 0
@@ -151,6 +166,7 @@ int main(void)
 
     /* Set neccessary peripheral clocks and initialize IO_DEV and debug u(s)art */
     BasicDevInit();
+    DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C2->RSR >> 16  ); 
     Init_DumpAndClearResetSource();
  
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 ); 

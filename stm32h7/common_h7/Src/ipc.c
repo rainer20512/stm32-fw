@@ -51,7 +51,9 @@ overhead of message buffers. */
     static IPCMEM uint8_t StorageBuffer_ctrl74 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
     static IPCMEM uint8_t StorageBuffer_ctrl47 [ CONTROL_MESSAGE_BUFFER_SIZE ] ;
     IPCMEM AMPDctBuf_t AMP_DirectBuffer;
-
+#else
+    /* CM4: Reference to control block */
+    AMPCtrl_t *ref;
 #endif
 
 
@@ -251,21 +253,24 @@ static void IPC_Signal( uint32_t HW_sem )
     /**************************************************************************
      * Check IPC block for proper initialization by CM7 core
      *************************************************************************/
-    void Ipc_CM4_Check(void)
+    bool Ipc_CM4_Check(void)
     {
         bool bNullPtr;
 
         if ( !AMPCtrl_Ptr ) {
             DEBUG_PUTS("AMP Control Block not assigned");
+            return false;
         }
 
         
         if ( AMPCtrl_Ptr->ID != AMP_ID ) {
             DEBUG_PUTS("AMP Control Block invalid");
+            return false;
         }
 
         if ( AMP_DctBuf_Ptr->id != DIRECTMSG_ID ) {
             DEBUG_PUTS("AMP direct message buffer invalid");
+            return false;
         }
 
         
@@ -273,16 +278,19 @@ static void IPC_Signal( uint32_t HW_sem )
         for ( uint32_t i = 0; i < AMPCtrl_Ptr->num_xfer_used; i++ ) {
             bNullPtr = bNullPtr || DataMessageBufferRef(i) == NULL || DataMessageSemRef(i) == NULL;
         }
-        if ( bNullPtr ) 
+        if ( bNullPtr )  {
             DEBUG_PUTS("One or more IPC message buffers could not be allocated");
+            return false;
+        }
 
+        return true;
     }
 
     /**************************************************************************
      * Initialize the IPC buffer and allocate the Control message buffer 
      * This is done by CM7 core
      *************************************************************************/
-    void Ipc_CM4_Init ( uint32_t uRestricted )
+    bool Ipc_CM4_Init ( uint32_t uRestricted )
     {
         /*HW semaphore Clock enable*/
         __HAL_RCC_HSEM_CLK_ENABLE();
@@ -293,8 +301,8 @@ static void IPC_Signal( uint32_t HW_sem )
         /* in first phase, only allow wakeup from CM7 */
         if ( uRestricted==INIT_RESTRICTED) {
             /* Activate notification on only Wakepu */
-            HSEM->C2IER = 1 << HSEM_CM7_to_CM4_Wkup;
-            return;
+            HSEM->C2IER = (1 << HSEM_CM7_to_CM4_Wkup);
+            return true;
         }
 
         /* 
@@ -307,10 +315,12 @@ static void IPC_Signal( uint32_t HW_sem )
         CTRL_HOOK_DISABLE_ACCESS();
 
         /* Check consitency of AMP control block */
-        Ipc_CM4_Check();
+        if ( !Ipc_CM4_Check() ) return false;
 
         /* finally activate notification on all messages from CM4 */
         HSEM->C2IER |= ( (1 << HSEM_CM7_to_CM4_Wkup) | (1 << HSEM_CM7_to_CM4_Send) | ( 1 << HSEM_CM7_to_CM4_Recvd) | (1 << HSEM_CM7_to_CM4_Msg) );
+
+        return true;
     }
 
 
