@@ -24,7 +24,8 @@
  ********************************************************************************
  */ 
 // #define STM32H745NUCLEO
-#define STM32H747IDISCO
+// #define STM32H747IDISCO
+#define PORTENTAH7
 
 /*
  ********************************************************************************
@@ -49,9 +50,9 @@
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
-#define USE_ETH                     1
+#define USE_ETH                     0
 #define USE_BDMA                    1      
-#define USE_LWIP                    1
+#define USE_LWIP                    0
 
 /* Choose one in case of USE_ETH == 1 
  * 
@@ -120,7 +121,7 @@
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
 #endif
-#if defined(STM32H747IDISCO)
+#if defined(STM32H747IDISCO) || defined(PORTENTAH7)
     /* STM32H747I-DISCO has an external 25MHz Oscillator on board */
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS

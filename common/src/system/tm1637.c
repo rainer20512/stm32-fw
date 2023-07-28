@@ -37,65 +37,12 @@
 
 #include "system/tm1637.h"
 #include "system/hw_util.h"
-
-/* for pinMode, digitalRead and digitalWrite wrappers */
-#define INPUT   1
-#define OUTPUT  0
-#define LOW     0
-#define HIGH    1
+#include "bsp/arduino_wrapper.h"
 
 /************definitions for TM1637*********************/
 #define ADDR_AUTO  0x40
 #define ADDR_FIXED 0x44
 #define STARTADDR  0xc0
-
-/* Arduino Framwork Wrappers for IO functions */
-
-static void pinInit ( TM1637PinT pin )
-{
-    HW_SetHWClock(pin.gpio, 1 );
-    GPIO_InitTypeDef Init;
-    Init.Pin = 1 << pin.pin;
-    Init.Speed = GPIO_SPEED_MEDIUM;
-    Init.Mode  = GPIO_MODE_OUTPUT_OD;
-    /* Display has PullUps mounted, so  */
-    Init.Pull  = GPIO_NOPULL;   
-    pin.gpio->BSRR = 1 << pin.pin;
-    HAL_GPIO_Init(pin.gpio, &Init);
-}
-
-void digitalWrite(TM1637PinT pin, uint32_t value)
-{
-    uint32_t pinmask = 1 << pin.pin;
-    if ( value == LOW ) pinmask <<= 16;
-    pin.gpio->BSRR = pinmask;
-}
-
-uint32_t digitalRead(TM1637PinT pin)
-{
-    uint32_t pinmask = 1 << pin.pin;
-    return ( pin.gpio->IDR & pinmask ) != 0;
-}
-
-// Set pin either input or output
-static void pinMode(TM1637PinT pin, uint32_t mode )
-{
-    uint32_t moder;
-    uint32_t mask = 0b11;
-    uint32_t work;
-
-    if ( mode == INPUT ) 
-        moder = 0b00;
-    else
-        moder = 0b01;
-    moder <<= (pin.pin * 2);
-    mask  <<= (pin.pin * 2);
-
-    work = pin.gpio->MODER;
-    work &= ~mask;
-    work |= moder;
-    pin.gpio->MODER = work;
-}
 
 
 #if 0
@@ -141,8 +88,8 @@ static uint8_t Cmd_SetData;
 static uint8_t Cmd_SetAddr;
 static uint8_t Cmd_DispCtrl;
 static uint16_t m_bitDelay;
-static TM1637PinT Clkpin;
-static TM1637PinT Datapin;
+static ARD_PinT Clkpin;
+static ARD_PinT Datapin;
 
 
 
@@ -190,7 +137,7 @@ const uint8_t digitToSegment[MAX_DIGIT+1] = {
 #define DISP_BLANK    0b00000000
 
 
-void TM1637_Init(TM1637PinT Clk, TM1637PinT Data, unsigned int bitDelay)
+void TM1637_Init(ARD_PinT Clk, ARD_PinT Data, unsigned int bitDelay)
 {
     // Copy the pin numbers, verify pin number range
     Clkpin = Clk;   Clkpin.pin &= 0x0f;
@@ -200,9 +147,9 @@ void TM1637_Init(TM1637PinT Clk, TM1637PinT Data, unsigned int bitDelay)
     //Init brightness
     Cmd_DispCtrl = 0x88 + BRIGHT_TYPICAL;
    
-    /* Init Pins to OD outputs */
-    pinInit(Clkpin);
-    pinInit(Datapin);
+    /* Init Pins to OD outputs, TM1637 has pullups on both lanes */
+    pinInitOd(Clkpin,NOPULL);
+    pinInitOd(Datapin, NOPULL );
 
     /*
      * Set the pin direction and default value.

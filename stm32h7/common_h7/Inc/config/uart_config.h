@@ -174,7 +174,7 @@
 
 /************************************************************************
  * Definition for UART4 clock resources
- * UART4  : TX:[PA0,PC10] RX:[PA1,PC11]
+ * UART4  : TX:[PA0,PB9,PA12,PC10,PD1,PH13,] RX:[PA1,PA11,PB8,PC11,PD0,PH14,PI9]
 
  */
 #ifdef USE_UART4
@@ -185,9 +185,10 @@
    * TX:[PA0,PC10] RX:[PA1,PC11]
    * ALTN1   TX:PC10 RX:PC11  AF8
    * ALTN2   TX:PA12 RX:PA11  AF6
-   *         TX:PB9  RX:PB8   AF8
-   *         TX:PD1  RX:PD0   AF8
-   *         TX:PH13 RX:PH14  AF8
+   * ALTN3   TX:PB9  RX:PB8   AF8
+   * ALTN4   TX:PD1  RX:PD0   AF8
+   * ALTN5   TX:PH13 RX:PH14  AF8
+   * ALTN6   TX:PA0  RX:PI9   AF8  ( Portenta H7 )
    * DEFAULT TX:PA0  RX:PA1   AF8
    */
   #if defined(USE_UART4_ALTN1)
@@ -195,9 +196,25 @@
     #define COM4_TX                        { GPIO_PIN_10, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
     #define COM4_RX                        { GPIO_PIN_11, GPIOC, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
   #elif defined(USE_UART4_ALTN2)
-    /* ALTN1 TX:PC10 RX:PC11 with AF8  */
+    /* ALTN2 TX:PC10 RX:PC11 with AF6  */
     #define COM4_TX                        { GPIO_PIN_12, GPIOA, GPIO_AF6_UART4, GPIO_PULLUP, "Uart4_Tx" }
     #define COM4_RX                        { GPIO_PIN_11, GPIOA, GPIO_AF6_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN3)
+    /* ALTN3 TX:PB9 RX:PB8 with AF8  */
+    #define COM4_TX                        { GPIO_PIN_9, GPIOB, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_8, GPIOB, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN4)
+    /* ALTN14 TX:PD1 RX:PD0 with AF8  */
+    #define COM4_TX                        { GPIO_PIN_1, GPIOD, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_0, GPIOD, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN5)
+    /* ALTN5 TX:PH13 RX:PH14 with AF8  */
+    #define COM4_TX                        { GPIO_PIN_13, GPIOH, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_14, GPIOH, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN6)
+    /* ALTN6 TX:PA0 RX:PI9 with AF8 - Arduino Portenta H7 */
+    #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_9, GPIOI, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
   #else
     /* DEFAULT TX:PA0  RX:PA1 with AF8 */
     #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
@@ -259,9 +276,8 @@
  
   /* Definition for COM6 Pins
    * Alternatives for USART6 : 
-   TX:[PA9, PB6] RX:[PA10, PB7]
    * ALTN1   TX:PG14  RX:PG9   AF7
-   * DEFAULT TX:PC7   RX:PC7   AF7
+   * DEFAULT TX:PC6   RX:PC7   AF7
    */
   #ifdef USE_USART6_ALTN1
     /* PG14/PG9 with AF7 */
@@ -388,7 +404,7 @@
 
 /************************************************************************
  * Definition for LPUART1 clock resources
- * LPUART1 : TX:[PB11,PC1,PG7] RX:[PB10,PC0,PG8]
+ * LPUART1 : TX:[PA9,PB6] RX:[PA10,PB7]
 
  */
 #ifdef USE_LPUART1

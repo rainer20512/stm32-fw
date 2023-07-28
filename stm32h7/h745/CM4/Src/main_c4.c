@@ -41,6 +41,8 @@
     #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
 #elif defined(STM32H747IDISCO)
     #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#elif defined(PORTENTAH7)
+    #include "bsp/portenta_h7.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,8 +121,8 @@ int main(void)
 {
 
     BaseType_t x;
-    BSP_LED_Init(LED1);
-    BSP_LedToggle(250, 2, LED1);  
+    BSP_LED_Init(LED_BLUE);
+    BSP_LedToggle(125, 2, LED_BLUE);  
 
     /* Activate wakeup from CM7 */
     Ipc_CM4_Init(INIT_RESTRICTED);
@@ -183,7 +185,9 @@ int main(void)
     
     TaskNotify(TASK_LOG);    
 
-    LwIP_Start();
+    #if USE_LWIP > 0
+        LwIP_Start();
+    #endif
 
     for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ ) {    
         /* 

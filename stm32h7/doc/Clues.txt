@@ -1,4 +1,4 @@
-Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
+Komische Dinge bei Rowley Crossworks und überhaupt                 08.11.211 RHB
 --------------------------------------------------------------------------------
 
 001. Wenn man als Target-Processor in den Project-Properties unter "Build" 
@@ -50,5 +50,8 @@ Komische Dinge bei Rowley Crossworks                               08.11.211 RHB
      Ein Zugriff über den AXISRAM-Adressbereich hier drauf führt zu einem HardFault.
      Abhilfe: Im MemoryMap-File die Größe des AXISRAM analog zur eingestellten Größe des ITCM
      verringern.
+
+005: Anpassungen für SM32H747I-Discovery board: im Auslieferungszustand ist Ethernet nicht nutzbar.
+     Dazu SB21 (0 Ohm, 0603) öffnen, SB8 Schließen. Dann geht Ethernet aber MEMS-Mikrophone nicht mehr.
      
 

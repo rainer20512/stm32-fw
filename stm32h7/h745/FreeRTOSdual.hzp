@@ -295,6 +295,7 @@
           <file file_name="../common_h7/Inc/config/spi_config.h" />
           <file file_name="../common_h7/Inc/config/timer_config.h" />
           <file file_name="../common_h7/Inc/config/uart_config.h" />
+          <file file_name="../common_h7/Inc/config/eth_config.h" />
         </folder>
         <file file_name="../common_h7/Inc/msg_direct.h" />
         <file file_name="../common_h7/Inc/version.h" />
@@ -324,7 +325,13 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
           <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         </file>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="../common_h7/Src/bsp/arduino_wrapper.c" />
+        <file file_name="../common_h7/Src/bsp/portenta_h7.c" />
+        <file file_name="../common_h7/Inc/bsp/arduino_wrapper.h" />
+        <file file_name="../common_h7/Inc/bsp/portenta_h7.h" />
       </folder>
     </folder>
   </project>
@@ -547,7 +554,14 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H7xx_Nucleo/stm32h7xx_nucleo.c">
           <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         </file>
-        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c" />
+        <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="../common_h7/Src/bsp/portenta_h7.c" />
+        <file file_name="../common_h7/Inc/bsp/portenta_h7.h" />
+        <file file_name="../common_h7/Src/bsp/arduino_wrapper.c" />
+        <file file_name="../common_h7/Inc/bsp/arduino_wrapper.h" />
+        <file file_name="../common_h7/Src/bsp/portenta_pmic.c" />
       </folder>
     </folder>
     <folder Name="common">

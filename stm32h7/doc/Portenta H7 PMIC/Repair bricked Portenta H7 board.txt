@@ -1,0 +1,23 @@
+HowTo repair a bricked Portenta H7 board                           RHB 26.07.23
+-------------------------------------------------------------------------------
+
+Portenta H7 board contains a programmable Power Controller ( NXP PM1550 )
+which controls nearly all Voltages on board. This controller has to be 
+programmed properly to get everything powered, including the STM32H747XI
+
+Normally, this is done by the Portenta bootloader, which resides 
+from 0x08000000-0x083ffffff.
+
+If your own code overwrites this, then your own code MUST contain the proper
+PMIC initialization code. If not, the portenta H7 board is bricked, which is 
+indicated by the orange "led" of death. 
+
+The only way to reaspire the board is to externally program the PMIC via I2C1.
+The required pins are accessible via the portenta breakout board, e.g.
+
+This folder contains a shell script for raspberry Pi which does the neccessary
+setup of the PMIC.
+
+After programming, press the blue "On" button on the breakout board and reprogram
+the bootloader with a STLINK or JLINK compatible programmer.
+

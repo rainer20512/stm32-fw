@@ -927,8 +927,11 @@ void LSEClockConfig(bool bLSEon, bool bUseAsRTCClock)
   /*Switch LSE on or OFF */
   RCC_OscInitStruct.OscillatorType =  RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+#if defined(HW_HAS_LSE_BYPASS)
+  RCC_OscInitStruct.LSEState = bLSEon ? RCC_LSE_BYPASS : RCC_LSE_OFF;
+#else
   RCC_OscInitStruct.LSEState = bLSEon ? RCC_LSE_ON : RCC_LSE_OFF;
-
+#endif
   if ( bLSEon ) __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
  
 

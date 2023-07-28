@@ -39,13 +39,17 @@
 #include "debug_helper.h"
 #include "timer.h"
 
+#include "bsp/arduino_wrapper.h"
 #include "system/tm1637.h"
+
 #include "cmsis_os.h"
 
 #if defined(STM32H745NUCLEO)
     #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
 #elif defined(STM32H747IDISCO)
     #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#elif defined(PORTENTAH7)
+    #include "bsp/portenta_h7.h"
 #endif
 
 #define INIT_STACK_SIZE 256
@@ -83,6 +87,9 @@ void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
 
+int I2C_PMIC_Setup(void);
+int I2C_PMIC_Initialize(void);
+int I2C_PMIC_DeInit(void);
 
 static void prvCheck2Task   ( void *pvParameters );
 static void prvCore1Task    ( void *pvParameters );
@@ -143,10 +150,16 @@ void PB_CB ( uint16_t u, uint16_t pinvalue, void * arg )
 #define STATUS(i)   TM1637_displayInteger(i,0,99)
 int main(void)
 {
+    int32_t timeout;
 
+    /* Program PMIC*/
+    timeout = I2C_PMIC_Setup();
+    if ( timeout != 0 ) timeout = I2C_PMIC_Initialize();
+    if ( timeout != 0 ) Error_Handler_XX(-1, __FILE__, __LINE__);
+    
+    I2C_PMIC_DeInit();
 
     DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C1->RSR >> 16  ); 
-    int32_t timeout;
 
     /* 
      * STM32H745 Nucleo does only support SMPS. So select once at startup 
@@ -156,11 +169,11 @@ int main(void)
     HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
 
     #if defined(STM32H745xx)
-        TM1637PinT clk = { GPIOA, 3 };
-        TM1637PinT dio = { GPIOC, 0 };
+        ARD_PinT clk = { GPIOA, 3 };
+        ARD_PinT dio = { GPIOC, 0 };
     #elif defined(STM32H747xx)
-        TM1637PinT clk = { GPIOJ, 3 }; // Arduion Conn CN6/D2
-        TM1637PinT dio = { GPIOF, 8 }; // Arduion Conn CN6/D3
+        ARD_PinT clk = { GPIOJ, 3 }; // Arduion Conn CN6/D2
+        ARD_PinT dio = { GPIOF, 8 }; // Arduion Conn CN6/D3
     #endif
 
     BSP_LED_Init(LED_RED); 
@@ -210,6 +223,8 @@ int main(void)
         QSPI_EarlyInit();
     #endif
     
+    /* Do board specific hardware initialization */
+    BSP_Board_Init();
 
     HAL_Init();
 

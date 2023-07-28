@@ -73,6 +73,18 @@ void vCore1SignalControlBufToSend( void * xUpdatedMessageBuffer );
 /* RHB added*/ 
 #define configSUPPORT_STATIC_ALLOCATION         1
 
+/**** 001 **** RHB Added 
+ * implementation of activity LED 
+ */
+#define configUSE_RTOS_ACTIVITY_LED             1
+ 
+/**** 001 **** RHB ADDED 
+ * Use gn LED as "activity LED" when using FreeRTOS
+ * LED number according to gpio_config.h"
+ * here LED0
+ */
+#define configACTIVITY_LED                      1           
+
 /* RHB added due to configGENERATE_RUN_TIME_STATS */
 /* FreeRTOS does not have to configure a timer    */
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS()

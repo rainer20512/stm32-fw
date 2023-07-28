@@ -37,12 +37,7 @@
 #include <inttypes.h>
 #include "config/config.h"
 #include "hardware.h"
-
-typedef struct {
-    GPIO_TypeDef *gpio;         //!< GPIO-Port ( GPIOA ... GPIOx )
-    uint32_t pin;               //!< Pin number 0 .. 15
-} TM1637PinT;
-
+#include "bsp/arduino_wrapper.h"
 
 /**************definitions for brightness***********************/
 #define  BRIGHT_DARKEST 0
@@ -51,7 +46,7 @@ typedef struct {
 
 #define DELAY_TYPICAL 50
 
-void TM1637_Init          (TM1637PinT Clk, TM1637PinT Data, unsigned int bitDelay);
+void TM1637_Init          (ARD_PinT Clk, ARD_PinT Data, unsigned int bitDelay);
 void TM1637_displayInteger(int32_t intdisplay, bool leading_zeros, uint32_t dpAt);
 void TM1637_displayHex    (uint32_t hexval,    bool leading_zeros, uint32_t dpAt);
 void TM1637_clearDisplay  (void);

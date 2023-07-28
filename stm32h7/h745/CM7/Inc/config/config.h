@@ -24,7 +24,8 @@
  ********************************************************************************
  */ 
 // #define STM32H745NUCLEO
-#define STM32H747IDISCO
+// #define STM32H747IDISCO
+#define PORTENTAH7
 /*
  ********************************************************************************
  * Application selection
@@ -116,7 +117,7 @@
     #define  HW_HSE_FREQUENCY       8000000
 #endif
 
-#if defined(STM32H747IDISCO)
+#if defined(STM32H747IDISCO)  || defined(PORTENTAH7)
     /* STM32H747I-DISCO has an external 25MHz Oscillator on board */
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS
@@ -128,6 +129,10 @@
 /* Can we use an HSE Clock ? */
 #if defined(HW_HAS_HSE_CRYSTAL) || defined(HW_HAS_HSE_BYPASS)
     #define HW_HAS_HSE
+#endif
+
+#if defined(PORTENTAH7)
+    #define HW_HAS_LSE_BYPASS
 #endif
 
 /******************************************************************************

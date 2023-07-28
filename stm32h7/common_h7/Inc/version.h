@@ -61,6 +61,8 @@ extern "C" {
     #define BOARD   "STM32H745NUCLEO"
 #elif defined(STM32H747IDISCO)
     #define BOARD   "STM32H747I-Discovery"
+#elif defined(PORTENTAH7)
+    #define BOARD   "Arduino Portenta H7"
 #elif defined(STM32H7_DEVEBOX)
     #define BOARD   "DevEBox STM32H7XX"
 #elif defined(STM32H7_OPENMV)
