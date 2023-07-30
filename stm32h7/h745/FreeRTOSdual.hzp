@@ -228,20 +228,18 @@
           <file file_name="../../common/src/debug_helper.c" />
           <file file_name="../../common/src/debug_outbuf.c" />
           <file file_name="../../common/src/debug_sram.c" />
-          <file file_name="../../common/src/dev/io_dev.c" />
         </folder>
         <folder Name="dev">
           <file file_name="../../common/src/dev/hw_device.c" />
           <file file_name="../../common/src/dev/timer_dev.c" />
           <file file_name="../../common/src/dev/uart_dev.c" />
-          <file file_name="../../common/src/dev/eth_dev.c">
-            <configuration Name="THUMB Debug" build_exclude_from_build="No" />
-          </file>
+          <file file_name="../../common/src/dev/eth_dev.c" />
           <file file_name="../../common/src/dev/bitbang_spi.c" />
           <file file_name="../../common/src/dev/common_spi.c" />
           <file file_name="../../common/src/dev/spi_dev.c" />
           <file file_name="../../common/src/dev/hw_spi.c" />
           <file file_name="../../common/src/dev/i2c_dev.c" />
+          <file file_name="../../common/src/dev/io_dev.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -678,7 +676,7 @@
           <file file_name="../../common/nextion/util/Utilities.c" />
           <file file_name="../../common/nextion/util/Utilities.h" />
         </folder>
-        <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
       </folder>
     </folder>
   </project>

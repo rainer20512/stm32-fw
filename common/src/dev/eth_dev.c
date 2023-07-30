@@ -119,8 +119,23 @@ bool ETH_InitDev(const HW_DeviceType *self)
     EthHandleT* me    = (EthHandleT*)self->devData;
     ETH_TypeDef *inst = (ETH_TypeDef *)self->devBase;
 
+#if defined(PORTENTAH7)
+    #include "dev/io_dev.h"
+    #include "config/gpio_config.h"
+    /* 
+     * LAN8742 nRST is tied to a dedicated GPIO pin ( PJ15 ) 
+     * nReset pulse has to be applied manually manually 
+     * minimal duration is 100 microsecs
+     */
+    IO_OutputLow(ETH_RESET);
+    HAL_Delay(1);
+    IO_OutputHigh(ETH_RESET);
+    HAL_Delay(1);
+#endif
+
     /* Initialize my handle to 'fresh' */
     Eth_ResetMyHandle(me);
+
 
     /* In the embedded Handle only set the Instance member */
     me->Instance = inst;

@@ -76,6 +76,7 @@ static const HW_Gpio_IO_Type *GetGpioFromLedIdx( uint8_t idx )
     return IO_GetGpio(&HW_IO, pinidx);
 }
 
+
 typedef enum { 
     InputPin  = 0,
     OutputPin = 1,
@@ -187,42 +188,60 @@ uint8_t IO_UseLedGetNum( void )
     return IO_GetAdditionalData(&HW_IO)->led_num;
 }
 
-void IO_OutputHigh( uint16_t pinnum )
+void IO_OutputHigh( uint32_t idx )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
-    #if DEBUG_MODE > 0 
-        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
-            DEBUG_PUTS("Error: Illegal Pin number");
+    #if DEBUG_MODE > 0
+        if ( idx >= (&HW_IO)->devGpioIO->num ) {
+            DEBUG_PUTS("ERROR: IO index too big");
             return;
         }
     #endif
-    assert(gpio);
+
+    const HW_Gpio_IO_Type *gpio = IO_GetGpio(&HW_IO, idx);
+    #if DEBUG_MODE > 0 
+        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
+            DEBUG_PUTS("Error: Not an output pin");
+            return;
+        }
+    #endif
     OutputHigh(gpio);
 }
 
-void IO_OutputLow ( uint16_t pinnum )
+void IO_OutputLow ( uint32_t idx )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
-    #if DEBUG_MODE > 0 
-        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
-            DEBUG_PUTS("Error: Illegal Pin number");
+    #if DEBUG_MODE > 0
+        if ( idx >= (&HW_IO)->devGpioIO->num ) {
+            DEBUG_PUTS("ERROR: IO index too big");
             return;
         }
     #endif
-    assert(gpio);
+
+    const HW_Gpio_IO_Type *gpio = IO_GetGpio(&HW_IO, idx);
+    #if DEBUG_MODE > 0 
+        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
+            DEBUG_PUTS("Error: Not an output pin");
+            return;
+        }
+    #endif
     OutputLow(gpio);
 }
 
-void IO_OutputToggle ( uint16_t pinnum )
+void IO_OutputToggle ( uint32_t idx )
 {
-    const HW_Gpio_IO_Type *gpio = IO_FindOutputPin(&HW_IO, pinnum);
-    #if DEBUG_MODE > 0 
-        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
-            DEBUG_PUTS("Error: Illegal Pin number");
+    #if DEBUG_MODE > 0
+        if ( idx >= (&HW_IO)->devGpioIO->num ) {
+            DEBUG_PUTS("ERROR: IO index too big");
             return;
         }
     #endif
-    assert(gpio);
+
+    const HW_Gpio_IO_Type *gpio = IO_GetGpio(&HW_IO, idx);
+    #if DEBUG_MODE > 0 
+        if ( !gpio || !HW_IsOutputMode ( gpio->gpio_mode ) ) {
+            DEBUG_PUTS("Error: Not an output pin");
+            return;
+        }
+    #endif
     OutputToggle(gpio);
 }
 

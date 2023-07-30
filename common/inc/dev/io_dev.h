@@ -29,9 +29,9 @@
 void IO_AssignInterrupt     (uint16_t pin, ExtIrqCB cb );
 
 uint8_t IO_UseLedGetNum     ( void );
-void IO_OutputHigh          ( uint16_t pinnum );
-void IO_OutputLow           ( uint16_t pinnum );
-void IO_OutputToggle        ( uint16_t pinnum );
+void IO_OutputHigh          ( uint32_t idx );
+void IO_OutputLow           ( uint32_t idx );
+void IO_OutputToggle        ( uint32_t idx );
 void IO_UserLedOn           ( uint8_t idx );
 void IO_UserLedOff          ( uint8_t idx );
 void IO_UserLedToggle       ( uint8_t idx );

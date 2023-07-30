@@ -43,6 +43,16 @@
 #define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_HSI
 //#define USART234578_CLKSOURCE     RCC_USART234578CLKSOURCE_LSE
 
+/* Clock source for LPUART1 */
+/* Choose one */
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK3
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL2Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL3Q
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_CSI
+#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
+//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_LSE
+
+
 /*******************************************************************************
  * Maximum config below 
  * choose suitable configs for your platform
@@ -53,11 +63,11 @@
 //#define COM1_USE_TX_DMA
 //#define COM1_USE_RX_DMA
 
-#define USE_USART2
+//#define USE_USART2
 //#define USE_USART2_ALTN1
-#define COM2_USE_TX_DMA
-// #define COM2_USE_RX_DMA
-#define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
+//#define COM2_USE_TX_DMA
+//#define COM2_USE_RX_DMA
+//#define USART2_CLKSOURCE         RCC_USART2CLKSOURCE_HSI
 //#define USE_USART2_DEBUG
 
 //#define USE_USART3
@@ -87,15 +97,6 @@
 /* Undefine, if RX or TX shall be done via DMA */
 //#define COM9_USE_TX_DMA
 //#define COM9_USE_RX_DMA
-/* Choose one */
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PCLK3
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL2Q
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_PLL3Q
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_CSI
-#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_HSI
-//#define LPUART1_CLKSOURCE    RCC_LPUART1CLKSOURCE_LSE
-
-
 
 
 //#define USE_SPI1
@@ -405,7 +406,7 @@
     #define USE_UART4_ALTN6
     // Clocksource is defined on top for all u(s)arts
     #define COM4_USE_TX_DMA
-    #define COM4_USE_RX_DMA
+    //#define COM4_USE_RX_DMA
     #define USE_UART4_DEBUG
 
     // Uart6 is connected to UART2 on breakout board, TX=PG14, RX=PG9

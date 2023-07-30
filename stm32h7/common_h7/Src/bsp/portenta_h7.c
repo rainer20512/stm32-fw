@@ -43,11 +43,34 @@ void BSP_LED_Init(uint32_t lednum)
 void BSP_LED_Toggle(uint32_t lednum)
 {
      if ( lednum < MAX_LED ) {
-    
         GPIO_TypeDef *g = myLeds[lednum].gpio;
         g->ODR ^= ( 1 << myLeds[lednum].pin );
      }
 }
+
+static void _onoff ( uint32_t lednum, uint32_t OnOffVal )
+{
+    /* be sure, that range of lednum has been checked */
+    GPIO_TypeDef *g = myLeds[lednum].gpio;
+
+    /* Set the corresponding Set- or Reset-Bit in BSRR */
+    uint32_t bitpos = (OnOffVal ? 1 : 1 << 16) << myLeds[lednum].pin;
+    g->BSRR = bitpos;
+}
+
+
+void BSP_LED_On(uint32_t lednum)
+{
+    if ( lednum >= MAX_LED ) return;
+    _onoff ( lednum, invertedLeds[lednum] ? 0 : 1 );    
+}
+
+void BSP_LED_Off(uint32_t lednum)
+{
+    if ( lednum >= MAX_LED ) return;
+    _onoff ( lednum, invertedLeds[lednum] ? 1 : 0 );    
+}
+
     
 const ARD_PinT oscOnOff = {GPIOH,1};
 

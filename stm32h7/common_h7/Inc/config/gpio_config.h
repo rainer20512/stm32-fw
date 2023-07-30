@@ -1,7 +1,20 @@
-/*
- *  SPI-PIN Definition for bitbanging SPI
- *  The SPI Data flow can be unidirectional, so there is no channel for MISO in that case
- */
+/**
+  ******************************************************************************
+  * @file    gpio_config.h
+  * @author  Rainer
+  * @brief   global definitions and configuration of all GPIO-Pins, that are 
+  *          directly set or read by ODR, IDR or BSRR registers,
+  *          
+  *          The mandatory sequence is
+  *          - first all user-LEDs
+  *          - thereafter all other GPIO outputs and inputs
+  *
+  * @note    This is common to CM7 and CM4. In a multicore environment both
+  *          cores may access these pins
+  * 
+  ******************************************************************************
+  */
+
 
 #pragma once 
 
@@ -52,14 +65,16 @@
 #endif
 #elif defined(PORTENTAH7)
   // LEDs  
-  #define IO_00                             { GPIO_PIN_5, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed r?" }
-  #define IO_01                             { GPIO_PIN_6, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed g?" }
-  #define IO_02                             { GPIO_PIN_7, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed b?" }
+  #define IO_00                             { GPIO_PIN_5, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed rd" }
+  #define IO_01                             { GPIO_PIN_6, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed gr" }
+  #define IO_02                             { GPIO_PIN_7, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed bl" }
 //  #define IO_01                             { GPIO_PIN_10, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
 //  #define IO_02                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
   #define USERLEDNUM                        3
   #define USERLEDS                          { 0, 1, 2 } 
-  #define IO_NUM                            3
+  #define IO_03                             { GPIO_PIN_15,GPIOJ, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_HIGH,   IO_NO_IRQ, "ETH nReset" }
+  #define ETH_RESET                         3
+  #define IO_NUM                            4
 #elif defined(STM32H7_DEVEBOX)
   // LEDs  
   #define IO_00                             { GPIO_PIN_1,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }

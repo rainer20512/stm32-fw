@@ -194,12 +194,6 @@ void SystemInit (void)
     /* Change  the switch matrix read issuing capability to 1 for the AXI SRAM target (Target 7) */
     *((__IO uint32_t*)0x51008108) = 0x000000001U;
   }
-
-  #if defined(STM32H745xx) || defined(STM32H747xx)
-      /* Wait for D2 becoming ready on dual core devices */
-      while ( !(RCC->CR & RCC_CR_D2CKRDY) );
-  #endif  
-
 #endif /* CORE_CM7*/
 
 #ifdef CORE_CM4

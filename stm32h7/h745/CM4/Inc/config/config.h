@@ -50,9 +50,10 @@
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
-#define USE_ETH                     0
+#define USE_ETH                     1
 #define USE_BDMA                    1      
-#define USE_LWIP                    0
+#define USE_LWIP                    1
+#define USE_NEXTION                 0            // must also enable compile of common/nextion 
 
 /* Choose one in case of USE_ETH == 1 
  * 
@@ -216,19 +217,20 @@
     MK_CONFIGSTR(USE_LWIP,13)
     MK_CONFIGSTR(USE_ETY_PHY_LAN8742,14)
     MK_CONFIGSTR(USE_ETH_PHY_ENC28J60,15)
+    MK_CONFIGSTR(USE_NEXTION,16)
 
-    #define MAX_CONFIGSTR   15
+    #define MAX_CONFIGSTR   16
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
-            ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, // ConfigStr16,
+            ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
             // ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
-            ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, // ConfigVal16,
+            ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
             // ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 

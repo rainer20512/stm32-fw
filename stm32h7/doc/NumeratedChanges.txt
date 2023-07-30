@@ -97,3 +97,7 @@ Within the sources, the changes are marked as **** <num> ****
 008 STM32H7 ADC's support any integral number of oversamples, not only power 
     of 2 values. We still use only power of 2 values in order to suit to the 
     ADC's right shift values
+
+009 io_dev: Changed the meaning of pinnum parameter in IO_OutputHigh, ...Low
+    and ...Toggle: Is now the index number of all defined gpio pins in 
+    gpio_config.h/io_dev.c

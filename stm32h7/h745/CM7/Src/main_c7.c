@@ -89,7 +89,8 @@ void Init_DefineTasks(void);
 
 int I2C_PMIC_Setup(void);
 int I2C_PMIC_Initialize(void);
-int I2C_PMIC_DeInit(void);
+int I2C_PMIC_Reset(void);
+void PMIC_OTP_Dump(void);
 
 static void prvCheck2Task   ( void *pvParameters );
 static void prvCore1Task    ( void *pvParameters );
@@ -122,15 +123,30 @@ void LedToggle ( uint32_t duration, uint32_t num, uint32_t lednum )
     }
 }
 
+#define SHORT 500
+#define LONG 1000
 /******************************************************************************
  * Blink the red led forever as primitive error indicator
  * duration = coarse interval in ms
  *****************************************************************************/
-void ErrorLed ( uint32_t duration )
+void ErrorLed ( uint32_t d1, uint32_t d2, uint32_t d3 )
 {
+    #define OFFTIME SHORT
     for ( ;; ) {
-        BSP_LED_Toggle(LED_RED);
-        _wait(duration);
+        BSP_LED_On(LED_RED);
+        _wait(d1);
+        BSP_LED_Off(LED_RED);
+        _wait(OFFTIME);
+
+        BSP_LED_On(LED_RED);
+        _wait(d2);
+        BSP_LED_Off(LED_RED);
+        _wait(OFFTIME);
+
+        BSP_LED_On(LED_RED);
+        _wait(d3);
+        BSP_LED_Off(LED_RED);
+        _wait(OFFTIME*4);
     }
 }
 
@@ -154,10 +170,10 @@ int main(void)
 
     /* Program PMIC*/
     timeout = I2C_PMIC_Setup();
-    if ( timeout != 0 ) timeout = I2C_PMIC_Initialize();
+    if ( timeout == 0 ) timeout = I2C_PMIC_Initialize();
     if ( timeout != 0 ) Error_Handler_XX(-1, __FILE__, __LINE__);
     
-    I2C_PMIC_DeInit();
+    I2C_PMIC_Reset();
 
     DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C1->RSR >> 16  ); 
 
@@ -166,8 +182,13 @@ int main(void)
      * and do not touch again. Due to this, VOS scale0 is inhibited and
      * max SYSCLK is 400MHZ.
      */
+#if defined(PORTENTAH7)
+    /* Portenta H7 uses internal SMPS to power internal LDO, which powers core */
+    HAL_PWREx_ConfigSupply(PWR_SMPS_2V5_SUPPLIES_LDO);
+   #else 
+    /* Nucleo boards use internal SMPS to power core */
     HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
-
+#endif
     #if defined(STM32H745xx)
         ARD_PinT clk = { GPIOA, 3 };
         ARD_PinT dio = { GPIOC, 0 };
@@ -200,15 +221,20 @@ int main(void)
     /* Init variables and structures for device handling */
     DevicesInit();
 
+    /* Assert that CM4 is available */
+    if ( (*((uint32_t *)(SYSCFG_BASE+0x100)) & (1 << 16)) == 0 ) ErrorLed( SHORT, SHORT, SHORT ); // Short, Short, Short = No CM4 core
 
-    /* Wait until Core 2 enters stop mode or we run into timeout*/
+    /* If CM4 is gated, start CM4 now */
+    if ( (SYSCFG->UR1 & SYSCFG_UR1_BCM4) == 0 ) {
+       // ErrorLed( SHORT, SHORT, LONG ); // Short, Short, Long = UNUSED
+       HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
+    }
 
-    timeout = 16000000;
+    timeout = 1600000;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
     if ( timeout < 0 )
     {
-        ErrorLed( 500 );
-        Error_Handler_XX(-1, __FILE__, __LINE__);
+        ErrorLed( SHORT, LONG, SHORT ); // Short, Long, Short = CM4 did not boot
     }
 
     #if USE_BASICTIMER > 0
@@ -285,6 +311,8 @@ int main(void)
     DEBUG_PRINTF("SYSCLK = %dMHz\n", HAL_RCC_GetSysClockFreq()/1000000 ); 
     DEBUG_PRINTF("AHBCLK = %dMHz\n", HAL_RCC_GetHCLKFreq()/1000000 );
     DEBUG_PRINTF("APBCLK = %dMHz\n", HAL_RCC_GetPCLK1Freq()/1000000 );
+    PMIC_OTP_Dump();
+
     Init_OtherDevices();
     STATUS(5);
 

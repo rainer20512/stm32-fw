@@ -22,8 +22,7 @@
 
 #include "hardware.h" 
 #include "stm32h7xx_hal_i2c.h"
-#include "cmsis_os.h"								//for osDelay()
-
+#include "debug_helper.h"
 
 #define PMIC_I2C_SLAVE_ADDR     (0x08 << 1)
 #define I2C_TIMEOUT		2000
@@ -48,9 +47,15 @@ static void I2C_PMIC_PinInit(void)
     GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    /* Peripheral clock enable */
-    __HAL_RCC_I2C1_CLK_ENABLE();
 }
+
+/* used during initialization */
+static void I2C_PMIC_PinDeInit(void)
+{
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_6|GPIO_PIN_7 );
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+}
+
 
 static int I2C_PMIC_Init(void)
 {
@@ -70,31 +75,37 @@ static int I2C_PMIC_Init(void)
   hi2cPMIC.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
   hi2cPMIC.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
   hi2cPMIC.Init.NoStretchMode = I2C_NOSTRETCH_ENABLE;
-  if (HAL_I2C_Init(&hi2cPMIC) != HAL_OK)
-  {
-	  return -1;					//ERROR
-  }
+
+  /* Peripheral clock enable */
+  __HAL_RCC_I2C1_CLK_ENABLE();
+
+  if (HAL_I2C_Init(&hi2cPMIC) != HAL_OK) return -1;					//ERROR
 
   /**
    * Configure filters
    */
   /* 100 KHz and 400 KHz */
   /**Configure Analog filter */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2cPMIC, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-  {
-	  return -1;					//ERROR
-  }
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2cPMIC, I2C_ANALOGFILTER_ENABLE) != HAL_OK) 
+    return -1;					//ERROR
   /**Configure Digital filter */
   //if (HAL_I2CEx_ConfigDigitalFilter(&hi2cPMIC, 0x10u) != HAL_OK)		//100 kHz
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2cPMIC, 0) != HAL_OK)			//400 KHz and 1000 KHz
-  {
-	  return -1;					//ERROR
-  }
+    return -1;					//ERROR
 
   /* if 1000 KHz */
   HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C1);				//1000 KHz
 
   return 0;		//OK
+}
+static int I2C_PMIC_DeInit(void)
+{
+  int ret=0;  
+  if (HAL_I2C_DeInit(&hi2cPMIC) != HAL_OK ) ret = -1;
+
+  __HAL_RCC_I2C1_CLK_DISABLE();
+
+  return ret;
 }
 
 int I2C_PMIC_Setup(void)
@@ -164,6 +175,114 @@ static int I2C_PMIC_MemRead(uint16_t slaveAddr, uint16_t regAddr, uint8_t *pData
         return i2cerr == HAL_OK ? 0 : -1;
 }
 
+#define SW1_VOLT        0x32
+#define SW1_STBY_VOLT   0x33
+#define SW1_SLP_VOLT    0x34
+#define SW1_CTRL        0x35
+#define SW1_CTRL1       0x36
+
+#define SW2_VOLT        0x38
+#define SW2_STBY_VOLT   0x39
+#define SW2_SLP_VOLT    0x3a
+#define SW2_CTRL        0x3b
+#define SW2_CTRL1       0x3c
+
+#define SW3_VOLT        0x3e
+#define SW3_STBY_VOLT   0x3f
+#define SW3_SLP_VOLT    0x40
+#define SW3_CTRL        0x41
+#define SW3_CTRL1       0x42
+
+/* Voltage settings for SW 3 */
+#define SW3_1V8    0
+#define SW3_1V9    1
+#define SW3_2V0    2
+#define SW3_2V1    3
+#define SW3_2V2    4
+#define SW3_2V3    5
+#define SW3_2V4    6
+#define SW3_2V5    7
+#define SW3_2V6    8
+#define SW3_2V7    9
+#define SW3_2V8    10
+#define SW3_2V9    11
+#define SW3_3V0    12
+#define SW3_3V1    13
+#define SW3_3V2    14
+#define SW3_3V3    15
+
+#define SWx_OFF     0
+
+
+#define LDO1_VOLT   0x4c
+#define LDO1_CTRL   0x4d
+#define LDO2_VOLT   0x4f
+#define LDO2_CTRL   0x50
+#define LDO3_VOLT   0x52
+#define LDO3_CTRL   0x52
+#define PWRCTRL0    0x58
+#define PWRCTRL1    0x59
+#define PWRCTRL2    0x5a
+#define PWRCTRL3    0x5b
+
+/* Voltage settings for LDO 2 */
+#define LDO2_1V8    0
+#define LDO2_1V9    1
+#define LDO2_2V0    2
+#define LDO2_2V1    3
+#define LDO2_2V2    4
+#define LDO2_2V3    5
+#define LDO2_2V4    6
+#define LDO2_2V5    7
+#define LDO2_2V6    8
+#define LDO2_2V7    9
+#define LDO2_2V8    10
+#define LDO2_2V9    11
+#define LDO2_3V0    12
+#define LDO2_3V1    13
+#define LDO2_3V2    14
+#define LDO2_3V3    15
+
+/* Voltage settings for LDO 1 and 3 */
+#define LDO13_0V75  0
+#define LDO13_0V80  1
+#define LDO13_0V85  2
+#define LDO13_0V90  3
+#define LDO13_0V95  4
+#define LDO13_1V00  5
+#define LDO13_1V05  6
+#define LDO13_1V10  7
+#define LDO13_1V15  8
+#define LDO13_1V20  9
+#define LDO13_1V25  10
+#define LDO13_1V30  11
+#define LDO13_1V35  12
+#define LDO13_1V40  13
+#define LDO13_1V45  14
+#define LDO13_1V50  15
+#define LDO13_1V80  16
+#define LDO13_1V90  17
+#define LDO13_2V00  18
+#define LDO13_2V10  19
+#define LDO13_2V20  20
+#define LDO13_2V30  21
+#define LDO13_2V40  22
+#define LDO13_2V50  23
+#define LDO13_2V60  24
+#define LDO13_2V70  25
+#define LDO13_2V80  26
+#define LDO13_2V90  27
+#define LDO13_3V00  28
+#define LDO13_3V10  29
+#define LDO13_3V20  30
+#define LDO13_3V30  31
+
+#define LDOx_EN         ( 1 << 0 )  // Enable for LDO1 .. LDO3
+#define LDOx_STBY_EN    ( 1 << 1 )  // Enable in Standby mode for LDO1 .. LDO3
+#define LDOx_OMODE      ( 1 << 2 )  // Enable in Sleep mode for LDO1 .. LDO3
+#define LDOx_LPWR       ( 1 << 3 )  // Forces LDO to low power mode during Stby and sleep
+#define LDOx_ALWAYS_ON  ( LDOx_EN | LDOx_STBY_EN | LDOx_OMODE | LDOx_LPWR )
+#define LDO13_LS_EN     ( 1 << 4 )  // Forces LDO1/LDO3 to switch mode ( ie Vout=Vin )
 
 
 static uint8_t pmic_init_sequence[] = {
@@ -174,14 +293,13 @@ static uint8_t pmic_init_sequence[] = {
  * pseudo address 0xff denotates the end of list
  */
     
-    0x4f, 0x00,         // LDO2 to 1.8V
-    0x4c, 0x05,         // LDO1 to 1.0V
-    0x4d, 0x03,
-//     0x4d 0x0f,
-    0x52, 0x09,         // LDO3 to 1.2V
-    0x53, 0x0f,
-    0x58, 0x01,
-//    0x58, 0x03,
+    LDO2_VOLT, LDO2_1V8,                // LDO2 to 1.8V, Range : 0=1.8V 0x0f =3.3V
+    LDO1_VOLT, LDO13_1V00,              // LDO1 to 1.0V
+    LDO1_CTRL, LDOx_EN|LDOx_STBY_EN,    // LDO1 on in normal and standby mode
+    LDO3_VOLT, LDO13_1V20,              // LDO3 to 1.2V
+    LDO3_CTRL, LDOx_ALWAYS_ON,
+    PWRCTRL0, 0x01,                     // Standby delay=1
+//    PWRCTRL0, 0x03,                     // Standby delay=2
     0xfe, 0,
     0x9c, 0x80,         // charger LED off - duty cycle
     0x9e, 0x20,         // Disable charger led
@@ -190,19 +308,19 @@ static uint8_t pmic_init_sequence[] = {
     0xfe, 0,
     0x94, 0xa0,         // Change VBUS INPUT CURRENT LIMIT to 1.5A
     0x38, 0x06,         // SW2 to 3.0V (SW2_VOLT) ; 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
-//    0x38, 0x07,           // SW2 to 3.3V 
+//    0x38, 0x07,         // SW2 to 3.3V 
     0x39, 0x06,         // this is the MCU VRef voltage: 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
 //    0x39, 0x05,
     0x3a, 0x06,
 //    0x3a, 0x05,
     0x3b, 0x0f,
-    0x32, 0x06,         // SW1 to 3.0V (SW1_VOLT) !!!
-//    0x32, 0x07,           // SW1 to 3.3V (SW1_VOLT) !!!
-    0x33, 0x06,
+    SW1_VOLT, 0x06,         // SW1 to 3.0V (SW1_VOLT) !!!
+//    SW1_VOLT, 0x07,         // SW1 to 3.3V (SW1_VOLT) !!!
+    SW1_STBY_VOLT, 0x06,
 //    0x33, 0x05,
-    0x34, 0x06,
+    SW1_SLP_VOLT, 0x06,
 //    0x34, 0x05,
-    0x35, 0x0f,
+    SW1_CTRL, SWx_OFF,
     0x3e, 0x0d,
 //    0x3e, 0x0f,
     0x3f, 0x0d,
@@ -229,6 +347,7 @@ int I2C_PMIC_Initialize(void)
         else if (data[0] != 0x7C)
 	    return -42;                           // unexpected PMIC type
 
+	err = I2C_PMIC_MemRead(PMIC_I2C_SLAVE_ADDR, 1, data, 1); // OTP-flavor
         /*
          * do the initialization
          */
@@ -241,6 +360,8 @@ int I2C_PMIC_Initialize(void)
                 I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, dataptr, 2);
             }
         }
+
+        I2C_PMIC_ReadOTP();
 
 #if 0
 	//initialize the PMIC registers:
@@ -407,10 +528,20 @@ int I2C_PMIC_Initialize(void)
 /*
  * revert all the PMIC init pins and devices to boot state
  */
-int I2C_PMIC_DeInit(void)
+int I2C_PMIC_Reset(void)
 {
+    /* DeInit I2C1 */
+    int ret = I2C_PMIC_DeInit();
 
-    return 0;
+    /* Assign Pclk to I2C1 - this is the boot default */
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = { 0 };
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+    PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
+    HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+    
+    I2C_PMIC_PinDeInit();
+
+    return ret;
 }
 
 
@@ -441,7 +572,17 @@ void I2C_PMIC_HighVoltage(void)
 	I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 }
 
-#if 0
+static uint32_t _wait(uint32_t duration )
+{
+    uint32_t k=0;
+    for ( uint32_t j=0; j < duration * 2000; j++ ) {
+        k += j;
+        asm("nop");
+    }
+    return k;
+}
+
+static uint8_t pmic_otp[0x36];
 void I2C_PMIC_ReadOTP(void)
 {
 
@@ -473,15 +614,20 @@ void I2C_PMIC_ReadOTP(void)
 		data[1]=(uint8_t)i;
 		I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 		//we have to wait a bit for the doing read and result ready
-		osDelay(2);
+		_wait(500);
 
 		I2C_PMIC_MemRead(PMIC_I2C_SLAVE_ADDR, 0xC5, data, 1);	//read from FRMDATA
 
-		if ((i % 16) == 0)
-			print_log(UART_OUT, "\r\n");
-		print_log(UART_OUT, "%02x ", data[0]);
-
+                pmic_otp[i] = *data;
 	}
-	print_log(UART_OUT, "\r\n");
 }
-#endif
+
+void PMIC_OTP_Dump(void)
+{
+    DEBUG_PRINTF("PMIC OTP dump:");
+    for ( int i=0x1c; i < 0x36; i++ ) {
+        if ( (i&0b11) == 0 ) DEBUG_PRINTF("\n0x%02x",i);
+        DEBUG_PRINTF(" 0x%02x", pmic_otp[i]);
+    }
+    DEBUG_PRINTF("\n");
+}

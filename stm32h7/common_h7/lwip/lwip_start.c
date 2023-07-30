@@ -77,11 +77,11 @@ static void StartThread(void const * argument)
   /* Initialize webserver demo */
   http_server_netconn_init();
 
-  for( ;; )
-  {
-    /* Delete the Init Thread */
-    osThreadTerminate(NULL);
-  }
+  /* Delete the Init Thread */
+  osThreadTerminate(NULL);
+
+  /* should never reach this due to previous termination */
+  for( ;; );
 }
 
   /* just schedule the Init thread for later activation */

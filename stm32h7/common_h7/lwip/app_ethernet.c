@@ -24,6 +24,8 @@
     #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
 #elif defined(STM32H747IDISCO)
     #include "STM32H747I-DISCO/stm32h747i_discovery.h"
+#elif defined(PORTENTAH7)
+    #include "bsp/portenta_h7.h"
 #endif
 
 #if LWIP_DHCP

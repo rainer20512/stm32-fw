@@ -120,9 +120,7 @@ l   */
 int main(void)
 {
 
-    BaseType_t x;
-    BSP_LED_Init(LED_BLUE);
-    BSP_LedToggle(125, 2, LED_BLUE);  
+    /*System clock, voltage scaling configuration done only once by Cortex-M7*/
 
     /* Activate wakeup from CM7 */
     Ipc_CM4_Init(INIT_RESTRICTED);
@@ -144,6 +142,10 @@ int main(void)
         - Set NVIC Group Priority to 4
         - Low Level Initialization
     */
+
+    BaseType_t x;
+    BSP_LED_Init(LED_BLUE);
+    BSP_LedToggle(125, 2, LED_BLUE);  
 
     /* initialize the ipc communication */
     if ( !Ipc_CM4_Init(INIT_FULLY) )ErrorLed(100);

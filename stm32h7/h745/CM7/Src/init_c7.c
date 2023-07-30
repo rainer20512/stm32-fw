@@ -200,8 +200,9 @@ static StackType_t rmtStack[RMT_STACK_SIZE];
 #if USE_QSPI > 0
     static StackType_t qspStack[QSP_STACK_SIZE];
 #endif
-static StackType_t sinStack[SER_STACK_SIZE];
-
+#if USE_NEXTION > 0
+    static StackType_t sinStack[SER_STACK_SIZE];
+#endif
 
 /******************************************************************************
  * Initially put all tasks to task list. 
@@ -219,7 +220,9 @@ void Init_DefineTasks(void)
   TaskRegisterTask(NULL,            CM7_handle_remote,TASK_REMOTE_CM7,JOB_TASK_REMOTE,   rmtStack, RMT_STACK_SIZE, "CM4 remote task");
   TaskRegisterTask(NULL,            task_periodic,    TASK_PERIODIC,   JOB_TASK_PERIODIC, perStack, PER_STACK_SIZE, "periodic task");
   TaskRegisterTask(task_init_adc,   task_handle_adc,  TASK_ADC,        JOB_ADC,           adcStack, ADC_STACK_SIZE, "ADC task");
+#if USE_NEXTION > 0
   TaskRegisterTask(task_init_ser_in,task_handle_serin,TASK_SERIN,      JOB_SER,           sinStack, SER_STACK_SIZE, "Display in task");
+#endif
 #if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
   TaskRegisterTask(CMD_Init,        task_handle_com,  TASK_COM,        JOB_TASK_DBGIO,    cmdStack, CMD_STACK_SIZE, "Debug input");
   TaskRegisterTask(NULL,            task_handle_out,  TASK_LOG,        JOB_TASK_DBGIO,    outStack, OUT_STACK_SIZE, "Debug output");  

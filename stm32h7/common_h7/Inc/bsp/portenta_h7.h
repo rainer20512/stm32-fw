@@ -28,6 +28,8 @@
 void BSP_Board_Init     (void);
 void BSP_LED_Init       (uint32_t lednum);
 void BSP_LED_Toggle     (uint32_t lednum);
+void BSP_LED_On         (uint32_t lednum);
+void BSP_LED_Off        (uint32_t lednum);
 
 
 #endif  //__PORTENTA_H7_H 
