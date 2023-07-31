@@ -19,7 +19,7 @@
 
 #include "config/config.h"
 
-#if USE_ETY_PHY_LAN8742 == 1 
+#if USE_ETH_PHY_LAN8742 == 1 
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
@@ -753,4 +753,4 @@ void ethernetif_statistic ( void )
    }
 }
 
-#endif /* USE_ETY_PHY_LAN8742 == 1  */
+#endif /* USE_ETH_PHY_LAN8742 == 1  */

@@ -64,9 +64,11 @@ static int I2C_PMIC_Init(void)
   /* 100 KHz */
   //hi2cPMIC.Init.Timing = 0x10709D9D;			//HSI: 99.661 KHz
   /* 400 KHz - FAST MODE */
-  //hi2cPMIC.Init.Timing = 0x00604545;			//HSI: 400.641 KHz
+  //hi2cPMIC.Init.Timing = 0x00602173;			//HSI: 400.641 KHz
+  /* 100 KHz - FAST MODE */
+  hi2cPMIC.Init.Timing = 0x10303aff;			//HSI: 400.641 KHz
   /* 1000 KHz - FAST MODE PLUS */
-  hi2cPMIC.Init.Timing =  0x00301313;			//HSI: 1.048 MHz
+  //hi2cPMIC.Init.Timing =  0x00301313;			//HSI: 1.048 MHz
 
   hi2cPMIC.Init.OwnAddress1 = 0;
   hi2cPMIC.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -94,7 +96,7 @@ static int I2C_PMIC_Init(void)
     return -1;					//ERROR
 
   /* if 1000 KHz */
-  HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C1);				//1000 KHz
+  //HAL_I2CEx_EnableFastModePlus(I2C_FASTMODEPLUS_I2C1);				//1000 KHz
 
   return 0;		//OK
 }
@@ -193,6 +195,17 @@ static int I2C_PMIC_MemRead(uint16_t slaveAddr, uint16_t regAddr, uint8_t *pData
 #define SW3_CTRL        0x41
 #define SW3_CTRL1       0x42
 
+/* Voltage settings for SW 1 and 2, DWS disabled */
+
+#define SW12_DIS_1V1     0
+#define SW12_DIS_1V2     1
+#define SW12_DIS_1V35    2
+#define SW12_DIS_1V5     3
+#define SW12_DIS_1V8     4
+#define SW12_DIS_2V5     5
+#define SW12_DIS_3V0     6
+#define SW12_DIS_3V3     7
+
 /* Voltage settings for SW 3 */
 #define SW3_1V8    0
 #define SW3_1V9    1
@@ -212,14 +225,14 @@ static int I2C_PMIC_MemRead(uint16_t slaveAddr, uint16_t regAddr, uint8_t *pData
 #define SW3_3V3    15
 
 #define SWx_OFF     0
-
+#define SWx_ALWAYS_ON     0x0f
 
 #define LDO1_VOLT   0x4c
 #define LDO1_CTRL   0x4d
 #define LDO2_VOLT   0x4f
 #define LDO2_CTRL   0x50
 #define LDO3_VOLT   0x52
-#define LDO3_CTRL   0x52
+#define LDO3_CTRL   0x53
 #define PWRCTRL0    0x58
 #define PWRCTRL1    0x59
 #define PWRCTRL2    0x5a
@@ -284,7 +297,33 @@ static int I2C_PMIC_MemRead(uint16_t slaveAddr, uint16_t regAddr, uint8_t *pData
 #define LDOx_ALWAYS_ON  ( LDOx_EN | LDOx_STBY_EN | LDOx_OMODE | LDOx_LPWR )
 #define LDO13_LS_EN     ( 1 << 4 )  // Forces LDO1/LDO3 to switch mode ( ie Vout=Vin )
 
+static uint8_t pmic_init_sequence[] = {
+/*
+ * The init sequence consists of two-byte pairs consisting
+ * of register address and register content
+ * pseudo address 0xfe means: wait n ms, n is the second parameter
+ * pseudo address 0xff denotates the end of list
+ */
+    
+    LDO2_VOLT, LDO2_1V8,                // 0x4f, 0x00 LDO2 to 1.8V, Range : 0=1.8V 0x0f =3.3V
+    LDO2_CTRL, LDOx_ALWAYS_ON,          // 0x50, 0x0f LDO2 on in all modes
+    LDO1_VOLT, LDO13_1V00,              // 0x4c, 0x05 LDO1 to 1.0V
+    LDO1_CTRL, LDOx_EN|LDOx_STBY_EN,    // 0x4d, 0x03 LDO1 on in normal and standby mode
+    LDO3_VOLT, LDO13_1V20,              // 0x52, 0x0f LDO3 to 1.2V
+    LDO3_CTRL, LDOx_ALWAYS_ON,          // 0x53, 0x0f LDO3 on in all modes
+    0xfe, 10,                           // Delay 10ms
+    0x9c, 0x80,                         // charger LED off - duty cycle
+    0x9e, 0x20,                         // Disable charger led
+    0xfe, 10,                           // Delay 10ms   
+    0x42, 0x02,                         // SW3: set 2A as current limit - helps to keep the rail up at wifi startup
+    0xfe, 10,                           // Delay 10ms   
+    0x94, 0xa0,                         // Change VBUS INPUT CURRENT LIMIT to 1.5A
+    SW1_CTRL, SWx_ALWAYS_ON,
+    SW2_CTRL, SWx_ALWAYS_ON,
+    0xff, 0xff // Delimiter
+};
 
+#if 0 
 static uint8_t pmic_init_sequence[] = {
 /*
  * The init sequence consists of two-byte pairs consisting
@@ -293,7 +332,7 @@ static uint8_t pmic_init_sequence[] = {
  * pseudo address 0xff denotates the end of list
  */
     
-    LDO2_VOLT, LDO2_1V8,                // LDO2 to 1.8V, Range : 0=1.8V 0x0f =3.3V
+    LDO2_VOLT, LDO2_1V8,                // 0x4f, 0x00 LDO2 to 1.8V, Range : 0=1.8V 0x0f =3.3V
     LDO1_VOLT, LDO13_1V00,              // LDO1 to 1.0V
     LDO1_CTRL, LDOx_EN|LDOx_STBY_EN,    // LDO1 on in normal and standby mode
     LDO3_VOLT, LDO13_1V20,              // LDO3 to 1.2V
@@ -307,15 +346,15 @@ static uint8_t pmic_init_sequence[] = {
     0x42, 0x02,         // SW3: set 2A as current limit - helps to keep the rail up at wifi startup
     0xfe, 0,
     0x94, 0xa0,         // Change VBUS INPUT CURRENT LIMIT to 1.5A
-    0x38, 0x06,         // SW2 to 3.0V (SW2_VOLT) ; 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
-//    0x38, 0x07,         // SW2 to 3.3V 
-    0x39, 0x06,         // this is the MCU VRef voltage: 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
+//    SW2_VOLT, SW12_DIS_3V0,         // SW2 to 3.0V (SW2_VOLT) ; 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
+    SW2_VOLT, SW12_DIS_3V3,         // SW2 to 3.3V 
+    SW2_STBY_VOLT, SW12_DIS_3V3,         // this is the MCU VRef voltage: 7 = 3.3V, 0x6 = 3.0V, 0x5 = 2.5V
 //    0x39, 0x05,
-    0x3a, 0x06,
+    SW2_SLP_VOLT, SW12_DIS_3V3,
 //    0x3a, 0x05,
-    0x3b, 0x0f,
-    SW1_VOLT, 0x06,         // SW1 to 3.0V (SW1_VOLT) !!!
-//    SW1_VOLT, 0x07,         // SW1 to 3.3V (SW1_VOLT) !!!
+    SW2_CTRL, 0x0f,
+    SW1_VOLT, SW12_DIS_3V0,         // SW1 to 3.0V (SW1_VOLT) !!!
+//    SW1_VOLT, SW12_DIS_3V3,         // SW1 to 3.3V (SW1_VOLT) !!!
     SW1_STBY_VOLT, 0x06,
 //    0x33, 0x05,
     SW1_SLP_VOLT, 0x06,
@@ -333,6 +372,7 @@ static uint8_t pmic_init_sequence[] = {
     0x50, 0x0f,
     0xff, 0xff // Delimiter
 };
+#endif
 
 int I2C_PMIC_Initialize(void)
 {
@@ -353,7 +393,8 @@ int I2C_PMIC_Initialize(void)
          */
         for ( uint8_t *dataptr = pmic_init_sequence; *dataptr != 0xff; dataptr+=2  ) {
             if ( *dataptr == 0xfe ) {
-                for (i = 0; i < 100000; i++) { 
+                /* 2500 ~ 1ms at 64MHz HSI */
+                for (i = 0; i < 2500 * *(dataptr+1); i++) { 
                     __NOP(); 
                 }
             } else {

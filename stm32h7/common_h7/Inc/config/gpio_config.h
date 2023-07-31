@@ -72,9 +72,7 @@
 //  #define IO_02                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
   #define USERLEDNUM                        3
   #define USERLEDS                          { 0, 1, 2 } 
-  #define IO_03                             { GPIO_PIN_15,GPIOJ, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_HIGH,   IO_NO_IRQ, "ETH nReset" }
-  #define ETH_RESET                         3
-  #define IO_NUM                            4
+  #define IO_NUM                            3
 #elif defined(STM32H7_DEVEBOX)
   // LEDs  
   #define IO_00                             { GPIO_PIN_1,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, IO_NO_IRQ, "UserLed gn" }

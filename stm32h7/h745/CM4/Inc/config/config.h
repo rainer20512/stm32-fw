@@ -64,7 +64,7 @@
  *  #define CHECKSUM_GEN_TCP                1 
  * on the ofher hand, when builtin ETH module is used, these three options MUST be set to 0
  */
-#define USE_ETY_PHY_LAN8742         1
+#define USE_ETH_PHY_LAN8742         1
 #define USE_ETH_PHY_ENC28J60        0
 
 
@@ -137,7 +137,7 @@
 
 /* Exactly one eth phy defined ? */
 #if USE_ETH > 0
-    #if USE_ETY_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 == 0 || USE_ETY_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 > 1
+    #if USE_ETH_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 == 0 || USE_ETH_PHY_LAN8742 + USE_ETH_PHY_ENC28J60 > 1
         #error "must define exactly one Eth Phy!"
     #endif
 #endif
@@ -215,7 +215,7 @@
     MK_CONFIGSTR(USE_ETH,11)
     MK_CONFIGSTR(USE_BDMA,12)
     MK_CONFIGSTR(USE_LWIP,13)
-    MK_CONFIGSTR(USE_ETY_PHY_LAN8742,14)
+    MK_CONFIGSTR(USE_ETH_PHY_LAN8742,14)
     MK_CONFIGSTR(USE_ETH_PHY_ENC28J60,15)
     MK_CONFIGSTR(USE_NEXTION,16)
 

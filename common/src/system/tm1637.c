@@ -148,8 +148,8 @@ void TM1637_Init(ARD_PinT Clk, ARD_PinT Data, unsigned int bitDelay)
     Cmd_DispCtrl = 0x88 + BRIGHT_TYPICAL;
    
     /* Init Pins to OD outputs, TM1637 has pullups on both lanes */
-    pinInitOd(Clkpin,NOPULL);
-    pinInitOd(Datapin, NOPULL );
+    pinInitOd(Clkpin,NOPULL,UNDEF);
+    pinInitOd(Datapin, NOPULL,UNDEF );
 
     /*
      * Set the pin direction and default value.

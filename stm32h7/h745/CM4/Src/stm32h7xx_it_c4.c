@@ -677,7 +677,7 @@ void DebugMon_Handler(void)
     #endif
 #endif
 
-#if USE_ETH > 0 && USE_ETY_PHY_LAN8742 > 0 
+#if USE_ETH > 0 && USE_ETH_PHY_LAN8742 > 0 
 extern ETH_HandleTypeDef EthHandle;
 /**
   * @brief  This function handles Ethernet interrupt request.

@@ -11,7 +11,7 @@
 
 #include "config/devices_config.h"
 
-#if USE_ETH > 0 && USE_ETY_PHY_LAN8742 > 0
+#if USE_ETH > 0 && USE_ETH_PHY_LAN8742 > 0
 
 #if DEBUG_MODE > 0
     #define DEBUG_ETH               1
@@ -119,29 +119,14 @@ bool ETH_InitDev(const HW_DeviceType *self)
     EthHandleT* me    = (EthHandleT*)self->devData;
     ETH_TypeDef *inst = (ETH_TypeDef *)self->devBase;
 
-#if defined(PORTENTAH7)
-    #include "dev/io_dev.h"
-    #include "config/gpio_config.h"
-    /* 
-     * LAN8742 nRST is tied to a dedicated GPIO pin ( PJ15 ) 
-     * nReset pulse has to be applied manually manually 
-     * minimal duration is 100 microsecs
-     */
-    IO_OutputLow(ETH_RESET);
-    HAL_Delay(1);
-    IO_OutputHigh(ETH_RESET);
-    HAL_Delay(1);
-#endif
-
     /* Initialize my handle to 'fresh' */
     Eth_ResetMyHandle(me);
 
+    /* Init GPIO and clocks */
+    Eth_GPIO_Init(self);
 
     /* In the embedded Handle only set the Instance member */
     me->Instance = inst;
-
-    /* Init GPIO and Clocks */
-    Eth_GPIO_Init(self);
 
     /* Configure the NVIC, enable interrupts */
     if ( self->devIrqList) HW_SetAllIRQs(self->devIrqList, true);

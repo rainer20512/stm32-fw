@@ -56,10 +56,20 @@
 
 
   #if defined(ETH_USE_RMII)
-    #define ETH_REF_CLK             { GPIO_PIN_1  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Ref Clk" }
-    #define ETH_RX0                 { GPIO_PIN_4  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx0"     }
-    #define ETH_RX1                 { GPIO_PIN_5  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "Rx1"     }
-    #define ETH_CRS_DV              { GPIO_PIN_7  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "Crs/Dv"  }
+    /* 
+     * The follwoing pin is used for bootstrapping the nINTSEL/RefClockOut mode
+     * Most designs use The RefClockOut mode to Clock the external MAC
+     * That requires nINTSEL being Low at Reset.
+     * So Pulldown, if not done by hardware 
+     */
+    #define ETH_REF_CLK             { GPIO_PIN_1  ,GPIOA, GPIO_AF11_ETH, GPIO_PULLDOWN, "Ref Clk" }
+    /* 
+     * The follwoing three are used for bootstrapping the MODE[2:0) bits. 
+     * So Pullup, if not done by hardware 
+     */
+    #define ETH_RX0                 { GPIO_PIN_4  ,GPIOC, GPIO_AF11_ETH, GPIO_PULLUP, "Rx0"     }  
+    #define ETH_RX1                 { GPIO_PIN_5  ,GPIOC, GPIO_AF11_ETH, GPIO_PULLUP, "Rx1"     }
+    #define ETH_CRS_DV              { GPIO_PIN_7  ,GPIOA, GPIO_AF11_ETH, GPIO_PULLUP, "Crs/Dv"  }
     #define ETH_MDC                 { GPIO_PIN_1  ,GPIOC, GPIO_AF11_ETH, GPIO_NOPULL, "MDc"     }
     #define ETH_MDIO                { GPIO_PIN_2  ,GPIOA, GPIO_AF11_ETH, GPIO_NOPULL, "MDio"    }
     #if defined(STM32H745NUCLEO)

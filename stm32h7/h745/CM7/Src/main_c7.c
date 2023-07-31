@@ -103,7 +103,7 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_
 /* Private functions ---------------------------------------------------------*/
 
 
-static uint32_t _wait(uint32_t duration )
+uint32_t _wait(uint32_t duration )
 {
     uint32_t k=0;
     for ( uint32_t j=0; j < duration * 2000; j++ ) {
@@ -168,6 +168,9 @@ int main(void)
 {
     int32_t timeout;
 
+    /* Do board specific hardware initialization */
+    BSP_Board_Init();
+
     /* Program PMIC*/
     timeout = I2C_PMIC_Setup();
     if ( timeout == 0 ) timeout = I2C_PMIC_Initialize();
@@ -222,6 +225,11 @@ int main(void)
     DevicesInit();
 
     /* Assert that CM4 is available */
+    timeout = __HAL_RCC_SYSCFG_IS_CLK_DISABLED();
+    /* Enable SYSCFG clock temporarily for I/O Compensation Cell */
+    __HAL_RCC_SYSCFG_CLK_ENABLE() ;
+
+
     if ( (*((uint32_t *)(SYSCFG_BASE+0x100)) & (1 << 16)) == 0 ) ErrorLed( SHORT, SHORT, SHORT ); // Short, Short, Short = No CM4 core
 
     /* If CM4 is gated, start CM4 now */
@@ -229,6 +237,9 @@ int main(void)
        // ErrorLed( SHORT, SHORT, LONG ); // Short, Short, Long = UNUSED
        HAL_RCCEx_EnableBootCore(RCC_BOOT_C2);
     }
+
+    /* Switch of SYSCFG clock agian, if it was off before */
+    if ( timeout )   __HAL_RCC_SYSCFG_CLK_DISABLE() ;
 
     timeout = 1600000;
     while((__HAL_RCC_GET_FLAG(RCC_FLAG_D2CKRDY) != RESET) && (timeout-- > 0));
@@ -249,8 +260,6 @@ int main(void)
         QSPI_EarlyInit();
     #endif
     
-    /* Do board specific hardware initialization */
-    BSP_Board_Init();
 
     HAL_Init();
 
@@ -347,7 +356,7 @@ int main(void)
     STATUS(7);
 
     /* Start scheduler */
-    vTaskStartScheduler();
+        vTaskStartScheduler();
     /* We should never get here as control is now taken by the scheduler */
     for (;;);
 }

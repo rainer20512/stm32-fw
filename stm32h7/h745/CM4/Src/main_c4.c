@@ -147,6 +147,10 @@ int main(void)
     BSP_LED_Init(LED_BLUE);
     BSP_LedToggle(125, 2, LED_BLUE);  
 
+#if USE_ETH > 0 && USE_ETH_PHY_LAN8742
+    BSP_LAN7842_Bootstrap();
+#endif
+
     /* initialize the ipc communication */
     if ( !Ipc_CM4_Init(INIT_FULLY) )ErrorLed(100);
 
