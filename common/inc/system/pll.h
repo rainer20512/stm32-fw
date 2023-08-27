@@ -36,16 +36,16 @@
 
 
 /* PLL config return values */
-#define PLL_CONFIG_OK               0             /* success */
-#define PLL_CONFIG_ERROR            (-1)          /* An unspecific error */
-#define PLL_CONFIG_VIOLATION_N      (-2)          /* Violation of N stage output frequency restriction  */
-#define PLL_CONFIG_VIOLATION_M      (-3)          /* Violation of M stage output frequency restriction  */
-#define PLL_CONFIG_VIOLATION_PQR    (-4)          /* Violation of P,Q or R output frequency restriction */
-#define PLL_CONFIG_INUSE            (-5)          /* PLL to configure is in use                         */
-#define PLL_CONFIG_PARAM_ERROR      (-6)          /* invalid Parameter                                  */
-#define PLL_CONFIG_NOTSET           (-7)          /* queried parameter is not set                       */
-#define PLL_CONFIG_TIMEOUT          (-8)          /* timeout when polling for certain events            */
-#define PLL_CONFIG_UNABLE           (-9)          /* output value not settable due to already set M or N*/
+#define PLL_CONFIG_OK               0             /* success                                             */
+#define PLL_CONFIG_ERROR            (-1)          /* An unspecific error                                 */
+#define PLL_CONFIG_VIOLATION_N      (-2)          /* Violation of N stage output frequency restriction   */
+#define PLL_CONFIG_VIOLATION_M      (-3)          /* Violation of M stage output frequency restriction   */
+#define PLL_CONFIG_VIOLATION_PQR    (-4)          /* Violation of P,Q or R output frequency restriction  */
+#define PLL_CONFIG_INUSE            (-5)          /* PLL to configure is in use                          */
+#define PLL_CONFIG_PARAM_ERROR      (-6)          /* invalid Parameter                                   */
+#define PLL_CONFIG_NOTSET           (-7)          /* queried parameter is not set                        */
+#define PLL_CONFIG_TIMEOUT          (-8)          /* timeout when polling for certain events             */
+#define PLL_CONFIG_UNABLE           (-9)          /* output value not settable due to already set M or N */
 
 uint32_t PLL_InUse( uint32_t pllnum );
 int32_t  PLL_Set ( RCC_PLLInitTypeDef *PLL, uint32_t pllnum );

@@ -245,6 +245,7 @@
           <file file_name="../../common/src/system/periodic.c" />
           <file file_name="../../common/src/system/exti_handler.c" />
           <file file_name="../../common/src/system/profiling.c" />
+          <file file_name="../../common/src/system/arduino_wrapper.c" />
         </folder>
         <file file_name="../../common/src/log.c" />
       </folder>
@@ -268,6 +269,7 @@
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />
+          <file file_name="../../common/inc/system/arduino_wrapper.h" />
         </folder>
         <file file_name="../../common/inc/log.h" />
       </folder>
@@ -326,9 +328,7 @@
         <file file_name="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery.c">
           <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         </file>
-        <file file_name="../common_h7/Src/bsp/arduino_wrapper.c" />
         <file file_name="../common_h7/Src/bsp/portenta_h7.c" />
-        <file file_name="../common_h7/Inc/bsp/arduino_wrapper.h" />
         <file file_name="../common_h7/Inc/bsp/portenta_h7.h" />
       </folder>
     </folder>
@@ -557,9 +557,8 @@
         </file>
         <file file_name="../common_h7/Src/bsp/portenta_h7.c" />
         <file file_name="../common_h7/Inc/bsp/portenta_h7.h" />
-        <file file_name="../common_h7/Src/bsp/arduino_wrapper.c" />
-        <file file_name="../common_h7/Inc/bsp/arduino_wrapper.h" />
         <file file_name="../common_h7/Src/bsp/portenta_pmic.c" />
+        <file file_name="../common_h7/Inc/bsp/portenta_pmic.h" />
       </folder>
     </folder>
     <folder Name="common">
@@ -578,11 +577,9 @@
           <file file_name="../../common/src/dev/spi_dev.c" />
           <file file_name="../../common/src/dev/timer_dev.c" />
           <file file_name="../../common/src/dev/uart_dev.c" />
-          <folder Name="qspi">
-            <file file_name="../../common/src/dev/qspi/mx25r6435f.c">
-              <configuration Name="Common" build_exclude_from_build="Yes" />
-            </file>
-            <file file_name="../../common/src/dev/qspi/mx25r6435f.h" />
+          <folder Name="xspi">
+            <file file_name="../../common/src/dev/xspi/mx25r6435f.c" />
+            <file file_name="../../common/src/dev/xspi/mx25r6435f.h" />
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
           <file file_name="../../common/src/dev/xspi_dev.c" />
@@ -594,6 +591,7 @@
           <file file_name="../../common/src/system/timer_handler.c" />
           <file file_name="../../common/src/system/profiling.c" />
           <file file_name="../../common/src/system/pll.c" />
+          <file file_name="../../common/src/system/arduino_wrapper.c" />
         </folder>
         <file file_name="../../common/src/rtc.c" />
         <file file_name="../../common/src/timer.c" />
@@ -619,12 +617,15 @@
           <file file_name="../../common/inc/dev/io_dev.h" />
           <file file_name="../../common/inc/dev/lcd.h" />
           <file file_name="../../common/inc/dev/qencode.h" />
-          <file file_name="../../common/inc/dev/qspi_dev.h" />
           <file file_name="../../common/inc/dev/spi.h" />
           <file file_name="../../common/inc/dev/spi_dev.h" />
           <file file_name="../../common/inc/dev/timer_dev.h" />
           <file file_name="../../common/inc/dev/uart_dev.h" />
           <file file_name="../../common/inc/dev/eth_dev.h" />
+          <file file_name="../../common/inc/dev/xspi_dev.h" />
+          <folder Name="xspi">
+            <file file_name="../../common/inc/dev/xspi/xspi_specific.h" />
+          </folder>
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />
@@ -632,6 +633,7 @@
           <file file_name="../../common/inc/system/tm1637.h" />
           <file file_name="../../common/inc/system/timer_handler.h" />
           <file file_name="../../common/inc/system/pll.h" />
+          <file file_name="../../common/inc/system/arduino_wrapper.h" />
         </folder>
         <file file_name="../../common/inc/rtc.h" />
         <file file_name="../../common/inc/timer.h" />

@@ -456,12 +456,16 @@
   #endif
 
   #if USE_QSPI > 0
-      #define QSPI_DEV          HW_QSPI1
+      #define XSPI_DEV          HW_QSPI1
       #define QSPI_HND          QSpi1Handle
       #define USE_QSPI1
-      #define QSPI1_CLKSPEED    300000       // Use low clk rates on breadboard
+      #define QSPI1_CLKSPEED    100000000 
+      #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_D1HCLK           
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_PLL           // PLL1Q
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_PLL2          // PLL2R
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_CLKP
       #define QSPI1_HAS_LP_MODE
-      #define USE_QSPI1_ALTN4
+      #define USE_QSPI1_ALTN5
       #define QSPI1_USE_IRQ
 
       // #define QSPI1_USE_DMA Not implemented yet 

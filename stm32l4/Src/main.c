@@ -52,8 +52,8 @@
 
 #include "system/tm1637.h"
 #define  STATUS(i)          TM1637_displayInteger(i,0,99)
-TM1637PinT clk = { GPIOB, 0 };
-TM1637PinT dio = { GPIOB, 1 };
+ARD_PinT clk = { GPIOB, 0 };
+ARD_PinT dio = { GPIOB, 1 };
 
 
 /* Private typedef -----------------------------------------------------------*/

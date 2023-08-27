@@ -116,12 +116,12 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_QSPI > 0 && USE_EEPROM_EMUL == 0 
-      dev_idx = AddDevice(&QSPI_DEV, NULL, NULL);
+  #if USE_QSPI > 0 || USE_OSPI > 0
+      dev_idx = AddDevice(&XSPI_DEV, NULL, NULL);
       if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init QuadSpi device %s\n", QSPI_DEV.devName );
+        DEBUG_PRINTF("Failed to init Quad/OctoSpi device %s\n", XSPI_DEV.devName );
       } else {
-        /* Init QuadSpi device */
+        /* Init XSpi device */
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
@@ -171,7 +171,7 @@ void Init_OtherDevices(void)
 #endif
 
 void task_handle_out  (uint32_t);
-void task_handle_qspi (uint32_t);
+void task_handle_xspi (uint32_t);
 void task_handle_ser  (uint32_t);
 void CM7_handle_remote(uint32_t);
 void task_init_ser_in (void);
@@ -213,7 +213,7 @@ void Init_DefineTasks(void)
 {
   /* The priority is defined by the sequence: The higher in the list, the higher the priority */
 #if USE_QSPI > 0
-  TaskRegisterTask(NULL,            task_handle_qspi, TASK_QSPI,      JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
+  TaskRegisterTask(NULL,            task_handle_xspi, TASK_XSPI,      JOB_TASK_QSPI,     qspStack, QSP_STACK_SIZE, "QSPI task");
 #endif
   TaskRegisterTask(task_init_rtc,   task_handle_tmr,  TASK_TMR,        JOB_TASK_TMR,      tmrStack, TMR_STACK_SIZE, "Timer task");
   TaskRegisterTask(NULL,            task_handle_rtc,  TASK_RTC,        JOB_TASK_RTC,      rtcStack, RTC_STACK_SIZE, "RTC task");

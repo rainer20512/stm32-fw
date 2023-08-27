@@ -11,7 +11,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "config/config.h"
 
-#if USE_XSPI_MX25 > 0
+#if USE_XSPI_MX25 > 0 && ( USE_QSPI > 0 ||  USE_OSPI > 0 )
 
 /* Set >0 to generate DEBUG output */
 #define DEBUG_XSPI              2
@@ -33,7 +33,7 @@
         #define     XSpiStr                         "OSPI2"
     #endif
 #else
-    #define     XSpiStr                         "QSPI"
+        #define     XSpiStr                         "QSPI"
 #endif
 
 
@@ -100,7 +100,7 @@ bool XSpecific_HPerfMode ( XXSPI_HandleTypeDef *hxspi, bool bHPerf )
         
         switch(typNdens) {
             case 0x2817: txt = "MX25R6435F"; break;
-            case 0x2018: txt = "MX25L12835F"; break;
+            case 0x2018: txt = "MX25L1283xF"; break;
             default:     txt = "Unknown Chip";
         }
         

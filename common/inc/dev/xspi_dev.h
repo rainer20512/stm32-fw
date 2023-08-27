@@ -28,7 +28,7 @@
     #define     HAL_XSPI_AutoPolling            HAL_OSPI_AutoPolling
     #define     HAL_XSPI_AutoPolling_IT         HAL_OSPI_AutoPolling_IT
     #define     HAL_XSPI_Transmit               HAL_OSPI_Transmit
-#else
+#elif USE_QSPI > 0
     #define     XXSPI_HandleTypeDef             QSPI_HandleTypeDef
     #define     XSPI_CommandTypeDef             QSPI_CommandTypeDef
     #define     XSPI_AutoPollingTypeDef         QSPI_AutoPollingTypeDef
@@ -112,7 +112,7 @@ bool XSpi_Abort                 (XSpiHandleT *myHandle);
 bool QSpecific_EnterDeepPowerDown    (XSpiHandleT *myHandle);
 bool XSpi_LeaveDeepPowerDown    (XSpiHandleT *myHandle);
 bool QSpecific_EnableMemoryMappedMode(XSpiHandleT *myHandle);
-bool XSpi_SetSpeed              (XSpiHandleT *myHandle, uint32_t new_clkspeed);
+bool XSpi_SetSpeed              (const HW_DeviceType *self, uint32_t new_clkspeed);
 bool XSpi_IsInitialized         (XSpiHandleT *myHandle);
 
 bool XSpi_ReadWait              (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);

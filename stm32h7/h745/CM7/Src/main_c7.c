@@ -39,7 +39,7 @@
 #include "debug_helper.h"
 #include "timer.h"
 
-#include "bsp/arduino_wrapper.h"
+#include "system/arduino_wrapper.h"
 #include "system/tm1637.h"
 
 #include "cmsis_os.h"
@@ -171,25 +171,23 @@ int main(void)
     /* Do board specific hardware initialization */
     BSP_Board_Init();
 
-    /* Program PMIC*/
-    timeout = I2C_PMIC_Setup();
-    if ( timeout == 0 ) timeout = I2C_PMIC_Initialize();
-    if ( timeout != 0 ) Error_Handler_XX(-1, __FILE__, __LINE__);
-    
-    I2C_PMIC_Reset();
 
     DEBUG_PRINTF("RCC->RSR= 0x%04x\n", RCC_C1->RSR >> 16  ); 
 
     /* 
-     * STM32H745 Nucleo does only support SMPS. So select once at startup 
-     * and do not touch again. Due to this, VOS scale0 is inhibited and
-     * max SYSCLK is 400MHZ.
+     * Select once at startup the Power supply scheme, 
+     * and do not touch again. 
      */
 #if defined(PORTENTAH7)
     /* Portenta H7 uses internal SMPS to power internal LDO, which powers core */
     HAL_PWREx_ConfigSupply(PWR_SMPS_2V5_SUPPLIES_LDO);
    #else 
     /* Nucleo boards use internal SMPS to power core */
+    /* 
+     * STM32H745 Nucleo does only support SMPS. So select once at startup 
+     * and do not touch again. Due to this, VOS scale0 is inhibited and
+     * max SYSCLK is 400MHZ.
+     */
     HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
 #endif
     #if defined(STM32H745xx)

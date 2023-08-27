@@ -442,6 +442,15 @@
       #define QSPI1_USE_DMA
   #endif
 
+  #if USE_OSPI1 > 0
+      #define XSPI_DEV          HW_OSPI1
+      #define OSPI1_CLKSPEED    500000
+      #define USE_OSPI1_ALTN1
+      #define OSPI1_USE_IRQ
+      #define OSPI1_USE_DMA
+      #define OSPI1_MODE_QUAD
+  #endif
+
   #if USE_CAN > 0
     #define USE_CAN1
     #define USE_CANDEV1_ALTN1  /* PB8/PB9 for Can Rx/Tx */

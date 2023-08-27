@@ -359,6 +359,7 @@
           <file file_name="../common/src/system/tm1637.c" />
           <file file_name="../common/src/system/timer_handler.c" />
           <file file_name="../common/src/system/pll.c" />
+          <file file_name="../common/src/system/arduino_wrapper.c" />
         </folder>
         <file file_name="../common/src/timer.c" />
         <file file_name="../common/src/eeprom.c" />
@@ -399,6 +400,7 @@
           <file file_name="../common/inc/system/periodic.h" />
           <file file_name="../common/inc/system/tm1637.h" />
           <file file_name="../common/inc/system/timer_handler.h" />
+          <file file_name="../common/inc/system/arduino_wrapper.h" />
         </folder>
         <file file_name="../common/inc/rtc.h" />
         <file file_name="../common/inc/timer.h" />

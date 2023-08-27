@@ -1087,7 +1087,7 @@ void ADC_MeasureVdda ( void *arg )
  *****************************************************************************/
 void task_init_adc(void)
 {
-    // AtSecond ( 56, ADC_MeasureVdda, (void *)&USER_ADC, "Measure Vdda");
+    AtSecond ( 56, ADC_MeasureVdda, (void *)&USER_ADC, "Measure Vdda");
 }
 
 /******************************************************************************

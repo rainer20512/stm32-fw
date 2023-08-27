@@ -52,7 +52,7 @@
      * - P Stage output max 480 MHz
     */
     #define PLLN1_MIN       192000
-    #define PLLN1_MAX       836000
+    #define PLLN1_MAX       960000
     #define PLLP1_MAX       480000
 
 

@@ -405,7 +405,6 @@ static uint32_t getactive(uint32_t reg, uint32_t enP, uint32_t enQ, uint32_t enR
  * @param mask   - Bitmask of bits to keep ( mask and value will be AND'ed )
  * @param rshift - number of bits the AND'ed result will be right shifted
  * @returns ( value & mask ) >> rshift
- * @returns Error value ( < 0 ) if pllnum is invalid
  *****************************************************************************/
 static uint32_t maskout(uint32_t value, uint32_t mask, uint32_t rshift )
 {

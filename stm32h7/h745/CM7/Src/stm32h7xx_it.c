@@ -688,7 +688,7 @@ void DebugMon_Handler(void)
         #endif
         void QSPI1_IRQHandler ( void ) 
         {
-            HAL_QSPI_IRQHandler(&QSpi1Handle.hqspi);
+            HAL_QSPI_IRQHandler(&QSpi1Handle.hxspi);
         }
     #endif
 
@@ -699,6 +699,41 @@ void DebugMon_Handler(void)
         }
     #endif
 ****004 ****/
+#elif USE_OSPI > 0 
+    #if USE_OSPI1> 0 && defined(OSPI1_USE_IRQ)
+        #if !defined(OSPI1_IRQHandler)
+            #error "OSPI1_IRQHandler undefined!"
+        #endif
+        void OSPI1_IRQHandler ( void ) 
+        {
+            HAL_OSPI_IRQHandler(&OSpi1Handle.hxspi);
+        }
+    #endif
+
+/**** 004 ***
+    #if defined(OSPI1_USE_DMA)
+        void OSPI1_DMA_IRQHandler ( void ) 
+        {
+        }
+    #endif
+*/
+    #if USE_OSPI2 > 0 && defined(OSPI2_USE_IRQ)
+        #if !defined(OSPI2_IRQHandler)
+            #error "OSPI2_IRQHandler undefined!"
+        #endif
+        void OSPI2_IRQHandler ( void ) 
+        {
+            HAL_OSPI_IRQHandler(&OSpi2Handle.hxspi);
+        }
+    #endif
+
+/**** 004 ***
+    #if defined(OSPI2_USE_DMA)
+        void OSPI2_DMA_IRQHandler ( void ) 
+        {
+        }
+    #endif
+*/
 #endif
 
 /******************************************************************************

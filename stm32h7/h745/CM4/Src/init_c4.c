@@ -122,7 +122,7 @@ void Init_OtherDevices(void)
 #endif
 
 void task_handle_out  (uint32_t);
-void task_handle_qspi (uint32_t);
+void task_handle_xspi (uint32_t);
 
 /* Stack sizes are in 32bit words */
 #define TMR_STACK_SIZE  256

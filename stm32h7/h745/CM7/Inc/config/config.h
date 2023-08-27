@@ -36,6 +36,14 @@
 
 /*
  ********************************************************************************
+ * Code Versioning
+ ********************************************************************************
+ */ 
+#define MAJOR_VERSION   1
+#define MINOR_VERSION   01
+
+/*
+ ********************************************************************************
  * Application tayloring
  ********************************************************************************
  */ 
@@ -46,7 +54,7 @@
 #define USE_SECONDTIMER             1
 #define USE_PWMTIMER                0
 #define USE_BASICTIMER              1
-#define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
 #define USE_BDMA                    0
 #define USE_PERIPHTIMER             1
@@ -77,12 +85,20 @@
 //#define USER_CLOCKCONFIG         CLK_HSI_64MHZ    /*  64 MHz, source HSI, VOSrange3, 1 WS */
 
 //#define USER_CLOCKCONFIG         CLK_PLL_50MHZ     /*  50 MHz, source PLL with HSE, Vrange3, 1 WS */
-#define USER_CLOCKCONFIG          CLK_PLL_100MHZ     /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
+//#define USER_CLOCKCONFIG          CLK_PLL_100MHZ     /* 100 MHz, source PLL with HSE, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG          CLK_PLL_200MHZ   /* 200 MHz, source PLL with HSE, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG          CLK_PLL_300MHZ   /* 300 MHz, source PLL with HSE, Vrange1, 2 WS */
-//#define USER_CLOCKCONFIG          CLK_PLL_400MHz   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
+#define USER_CLOCKCONFIG          CLK_PLL_400MHZ   /* 400 MHz, source PLL with HSE, Vrange1, 3 WS */
 //#define USER_CLOCKCONFIG          CLK_PLL_480MHZ   /* 480 MHz, source PLL with HSE, Vrange0, 4 WS, not recommended for long term useage, requires LDO equipped */
 //#define USER_CLOCKCONFIG          CLK_HSE_VRNG3_xxMHZ_0WS    /* 8-45MHz, source HSE, VOSrange3, 0 WS, depends on HSE crystal, only available if HSE crystal is mounted */
+
+
+/******************************************************************************
+ * Choose one in case of USE_QSPI == 1 
+******************************************************************************
+ */
+#define USE_XSPI_MX25               1
+#define USE_XSPI_MT25Q              0
 
 
 /******************************************************************************

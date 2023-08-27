@@ -45,6 +45,9 @@
 #define MX25R6435F_DUMMY_CYCLES_2READ        4
 #define MX25R6435F_DUMMY_CYCLES_4READ        6
 
+#define MX25R6435F_ALT_BYTES_PE_MODE         0xA5
+#define MX25R6435F_ALT_BYTES_NO_PE_MODE      0xAA
+
 /** 
   * @brief  MX25L12835F Flash geometry  
   */  
@@ -62,15 +65,36 @@
 /*
  * dummy cycles for 80 MHz
  */
-#define MX25L12835F_DUMMY_CYCLES_READ         8
-#define MX25L12835F_DUMMY_CYCLES_READ_DUAL    4
-#define MX25L12835F_DUMMY_CYCLES_READ_QUAD    6
-#define MX25L12835F_DUMMY_CYCLES_2READ        8
-#define MX25L12835F_DUMMY_CYCLES_4READ        8
+#define MX25L12833F_DUMMY_CYCLES_READ         8
+#define MX25L12833F_DUMMY_CYCLES_READ_DUAL    4
+#define MX25L12833F_DUMMY_CYCLES_READ_QUAD    6
+#define MX25L12833F_DUMMY_CYCLES_2READ        8
+#define MX25L12833F_DUMMY_CYCLES_4READ        8
+
+/** 
+  * @brief  MX25L12833F Flash geometry  
+  */  
+#define MX25L12833F_FLASH_SIZE                0x1000000 /* 128 MBits => 16MBytes */
+#define MX25L12833F_BLOCK_SIZE                0x10000   /* 256 blocks of 64KBytes */
+#define MX25L12833F_SUBBLOCK_SIZE             0x8000    /* 512 blocks of 32KBytes */
+#define MX25L12833F_SECTOR_SIZE               0x1000    /* 4096 sectors of 4kBytes */
+#define MX25L12833F_PAGE_SIZE                 0x100     /* 65536 pages of 256 bytes */
+
+#define MX25L12833F_CHIP_ERASE_MAX_TIME       60000     /* these times are [ms] */
+#define MX25L12833F_BLOCK_ERASE_MAX_TIME      650
+#define MX25L12833F_SUBBLOCK_ERASE_MAX_TIME   650
+#define MX25L12833F_SECTOR_ERASE_MAX_TIME     120
+
+/*
+ * dummy cycles for 80 MHz
+ */
+#define MX25L12833F_DUMMY_CYCLES_READ         6
+#define MX25L12833F_DUMMY_CYCLES_READ_DUAL    4
+#define MX25L12833F_DUMMY_CYCLES_READ_QUAD    6
+#define MX25L12833F_DUMMY_CYCLES_2READ        6
+#define MX25L12833F_DUMMY_CYCLES_4READ        6
 
 
-#define MX25R6435F_ALT_BYTES_PE_MODE         0xA5
-#define MX25R6435F_ALT_BYTES_NO_PE_MODE      0xAA
 
 
 /** 

@@ -1325,7 +1325,7 @@ ADD_SUBMODULE(Test);
 
 #if USE_QSPI > 0
 
-    #include "dev/qspi_dev.h"
+    #include "dev/xspi_dev.h"
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
      *         
@@ -1338,17 +1338,17 @@ ADD_SUBMODULE(Test);
     static uint8_t PageBuffer[PGSIZE];
 #if defined(QSPI1_USE_IRQ)
 
-    void rddoneCB(QSpiHandleT *hnd )
+    void rddoneCB(XSpiHandleT *hnd )
     {
         UNUSED(hnd);
         DEBUG_PRINTTS("read terminated ok\n");
     }
-    void wrdoneCB(QSpiHandleT *hnd )
+    void wrdoneCB(XSpiHandleT *hnd )
     {
         UNUSED(hnd);
         DEBUG_PRINTTS("write/erase terminated ok\n");
     }
-    void errorCB(QSpiHandleT *hnd )
+    void errorCB(XSpiHandleT *hnd )
     {
         UNUSED(hnd);
         DEBUG_PRINTTS("Async Op terminated with error\n");
@@ -1366,7 +1366,7 @@ ADD_SUBMODULE(Test);
       
       UNUSED(cmdline);UNUSED(len);
 #if defined(QSPI1_USE_IRQ)
-      QSpi_SetAsyncCallbacks(&QSpi1Handle, rddoneCB, wrdoneCB, errorCB);
+      XSpi_SetAsyncCallbacks(&QSpi1Handle, rddoneCB, wrdoneCB, errorCB);
 #endif
 
       switch((uint32_t)arg) {
@@ -1393,7 +1393,7 @@ ADD_SUBMODULE(Test);
             }
             addr =  QSpi1Handle.geometry.EraseSectorSize * num;
             printf("Erase sector %d (startaddr=0x%08x) plus %d follwing sectors ", num, addr,cnt );
-            ret = QSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
+            ret = XSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
@@ -1418,7 +1418,7 @@ ADD_SUBMODULE(Test);
                 for ( j  = 0; j < QSpi1Handle.geometry.ProgPageSize; j++ )
                     PageBuffer[j]=i+j;
                 printf("Write page %d (startaddr=0x%08x) - ", num+i, addr );
-                ret = QSpi_WriteWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize );
+                ret = XSpi_WriteWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize );
                 printf ( "%s\n", ret ? "ok": "fail");
                 addr += QSpi1Handle.geometry.ProgPageSize;
             }
@@ -1444,9 +1444,9 @@ ADD_SUBMODULE(Test);
             for ( i=0; i <=cnt; i++ ) {
                 printf("compare page %d (startaddr=0x%08x) - Read ", num+i, addr );
                 #if defined(QSPI1_USE_IRQ)
-                    ret = QSpi_ReadIT(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadIT(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
                 #else
-                    ret = QSpi_ReadWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
                 #endif
                 printf ( "%s\n", ret ? "ok": "fail");
                 #if defined(QSPI1_USE_IRQ)
@@ -1497,7 +1497,7 @@ ADD_SUBMODULE(Test);
                     */
                     ret = true;
                 } else {
-                    ret = QSpi_ReadWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
+                    ret = XSpi_ReadWait(&QSpi1Handle, PageBuffer, addr, QSpi1Handle.geometry.ProgPageSize);
                 }
                 printf ( "%s\n", ret ? "ok": "fail");
                 for ( j  = 0; j < QSpi1Handle.geometry.ProgPageSize; j++ ) {
@@ -1510,26 +1510,26 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = QSpi_EnableMemoryMappedMode(&QSpi1Handle);
+            ret = XSpecific_EnableMemoryMappedMode(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
             printf("Abort operation - ");
-            ret = QSpi_Abort(&QSpi1Handle);
+            ret = XSpi_Abort(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 7:
             printf("Read Status");
-            QSpi_DumpStatus(&QSpi1Handle);
+            XSpi_DumpStatus(&QSpi1Handle);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = QSpi_EnterDeepPowerDown(&QSpi1Handle);
+            ret = XSpecific_EnterDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = QSpi_LeaveDeepPowerDown(&QSpi1Handle);
+            ret = XSpecific_LeaveDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:
@@ -1552,9 +1552,9 @@ ADD_SUBMODULE(Test);
             printf("Write %d bytes from addr 0x%08x\n", cnt, addr );
              
             if ( (uint32_t)arg == 11 )
-                ret = QSpi_WriteDMA(&QSpi1Handle, PageBuffer, addr, cnt );
+                ret = XSpi_WriteDMA(&QSpi1Handle, PageBuffer, addr, cnt );
             else
-                ret = QSpi_WriteIT(&QSpi1Handle, PageBuffer, addr, cnt );
+                ret = XSpi_WriteIT(&QSpi1Handle, PageBuffer, addr, cnt );
             printf ( "%s\n", ret ? "ok": "fail");
 
             DEBUG_PRINTTS("Waiting for Async op to be done\n");
@@ -1568,12 +1568,12 @@ ADD_SUBMODULE(Test);
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d MHz",  addr );
              
-                ret = Qspi_SetSpeed(&QSpi1Handle, addr * 1000 );
+                ret = XSpi_SetSpeed(&HW_QSPI1, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 13:
             printf("QSPI chip reset - ");
-            ret = QSpi_ResetMemory(&QSpi1Handle);
+            ret = XSpecific_ResetMemory(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:

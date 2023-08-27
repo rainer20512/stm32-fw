@@ -297,7 +297,7 @@ static bool Devices_Menu ( char *cmdline, size_t len, const void * arg )
   size_t wordlen;
   uint8_t idx;
   uint32_t initarg;
-  TM1637PinT dio, clk;
+  ARD_PinT dio, clk;
     
   UNUSED(cmdline);UNUSED(len);
 
@@ -1699,18 +1699,21 @@ ADD_SUBMODULE(Test);
 
 #if USE_QSPI > 0 || USE_OSPI > 0
 
-    #if   USE_OSPI1 > 0
+    #if   USE_OSPI > 0
         #define XSpi1Handle         OSpi1Handle
         #define XSPI1_USE_IRQ       OSPI1_USE_IRQ
         #define XSPI_BASE           OCTOSPI1_BASE
+        #define XSPI_HW             HW_OSPI1
     #elif USE_OSPI2 > 0
         #define XSpi1Handle         OSpi2Handle
         #define XSPI1_USE_IRQ       OSPI2_USE_IRQ
         #define XSPI_BASE           OCTOSPI2_BASE
+        #define XSPI_HW             HW_OSPI2
     #else
         #define XSpi1Handle         QSpi1Handle
         #define XSPI1_USE_IRQ       QSPI1_USE_IRQ
         #define XSPI_BASE           QSPI_BASE
+        #define XSPI_HW             HW_QSPI1
     #endif
     #include "dev/xspi_dev.h"
     #include "dev/xspi/xspi_specific.h"
@@ -1957,7 +1960,7 @@ ADD_SUBMODULE(Test);
             addr = CMD_to_number ( word, wordlen );
             printf("Set Qspi Clock speed to %d kHz",  addr );
              
-                ret = XSpi_SetSpeed(&XSpi1Handle, addr * 1000 );
+                ret = XSpi_SetSpeed(&XSPI_HW, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:

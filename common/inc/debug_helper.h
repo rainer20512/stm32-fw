@@ -4,9 +4,6 @@
   * @author  Rainer
   * @brief   Miscellaneous functions for debugging
   ******************************************************************************
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/

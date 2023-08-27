@@ -37,7 +37,7 @@
 #include <inttypes.h>
 #include "config/config.h"
 #include "hardware.h"
-#include "bsp/arduino_wrapper.h"
+#include "system/arduino_wrapper.h"
 
 /**************definitions for brightness***********************/
 #define  BRIGHT_DARKEST 0

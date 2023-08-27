@@ -544,7 +544,9 @@ void DBG_dump_rcc_ahbenr(uint32_t reg1, uint32_t reg2, uint32_t reg3, uint32_t b
 
 #if defined(STM32L4PLUS_FAMILY)
   DBG_dump_onoffvalue  ("SDMMC1 Clock",  reg2, RCC_AHB2ENR_SDMMC1EN);  
-  DBG_dump_onoffvalue  ("SDMMC2 Clock",  reg2, RCC_AHB2ENR_SDMMC2EN);  
+  #if defined(RCC_AHB2ENR_SDMMC2EN)
+    DBG_dump_onoffvalue  ("SDMMC2 Clock",  reg2, RCC_AHB2ENR_SDMMC2EN);  
+  #endif
   DBG_dump_onoffvalue  ("OSPIMgr Clock", reg2, RCC_AHB2ENR_OSPIMEN);  
 #endif
   DBG_dump_onoffvalue  ("RNG Clock",  reg2, RCC_AHB2ENR_RNGEN);  

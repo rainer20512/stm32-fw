@@ -10,8 +10,9 @@
   */
 
 #include "config/config.h"
-#include "bsp/arduino_wrapper.h"
+#include "system/arduino_wrapper.h"
 #include "bsp/portenta_h7.h"
+#include "bsp/portenta_pmic.h"
 #include "hardware.h"
 
 static const ARD_PinT myLeds [MAX_LED]= {
@@ -103,10 +104,10 @@ void BSP_LED_Off(uint32_t lednum)
 const ARD_PinT oscOnOff = {GPIOH, 1, HIGH};
 void BSP_Start_25MHz_Osc(void)
 {
-/* 25 MHz Oscillator must be started by setting PH1 to 1 */
+    /* 25 MHz Oscillator must be started by setting PH1 to 1 */
     pinInitPp(oscOnOff, NOPULL, HIGH);
-    /* Wait for osciallator to stabilize */
-    _wait(250);
+    /* wait for oscillator to stabilize */
+    _wait(10);
 }
 
 /* 
@@ -157,10 +158,37 @@ static void PMIC_ModeInit(void)
 {
     pinInitPp( pmicModePin, NOPULL, pmicModePin.initVal );
 }
+
+/******************************************************************************
+ * Board specific initialization for Portenta H7 Board:
+ * 1) Program the PMIC
+ * 2) Activate the 25MHz oscillator
+******************************************************************************/
 void BSP_Board_Init ( void )
 {
-    BSP_Start_25MHz_Osc();
-    /* Set PMIC Mode to "Run" */
-    PMIC_ModeInit();
+    uint32_t ret;
+
+    /* 
+     * Program PMIC.
+     * Do this first, or PMIC will go to PowerSave mode, which will switch of core voltage 
+     */
+    ret = I2C_PMIC_Setup();
+    if ( ret == 0 ) ret = I2C_PMIC_Initialize();
+    if ( ret != 0 ) Error_Handler_XX(-1, __FILE__, __LINE__);
+
+    /* Reset I2C interface to "reset" state */
+    I2C_PMIC_Reset();
+
+    /* 
+     * Init PMIC Standby Pin ( PJ0 ) and set PMIC Mode to "Run" by pulling Pin to 0 
+     * Note: This is actually not neccessary, run and standby mode behaviour are 
+     * programmed identically
+     */
+
+    // PMIC_ModeInit();
+
+    /* Start th 25MHz oscillator */
+    BSP_Start_25MHz_Osc();    
+
 }
 

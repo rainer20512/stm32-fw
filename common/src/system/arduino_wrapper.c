@@ -9,7 +9,7 @@
   */
 
 #include "config/config.h"
-#include "bsp/arduino_wrapper.h"
+#include "system/arduino_wrapper.h"
 #include "system/hw_util.h"
 
 static void _pinOutput  ( const ARD_PinT pin, const ARD_PinPullT pp, const ARD_PinValueT initVal, uint32_t OutDrive )

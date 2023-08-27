@@ -22,7 +22,6 @@
 
 #include "hardware.h" 
 #include "stm32h7xx_hal_i2c.h"
-#include "debug_helper.h"
 
 #define PMIC_I2C_SLAVE_ADDR     (0x08 << 1)
 #define I2C_TIMEOUT		2000
@@ -394,15 +393,13 @@ int I2C_PMIC_Initialize(void)
         for ( uint8_t *dataptr = pmic_init_sequence; *dataptr != 0xff; dataptr+=2  ) {
             if ( *dataptr == 0xfe ) {
                 /* 2500 ~ 1ms at 64MHz HSI */
-                for (i = 0; i < 2500 * *(dataptr+1); i++) { 
+                for (i = 0; i < 250 * *(dataptr+1); i++) { 
                     __NOP(); 
                 }
             } else {
                 I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, dataptr, 2);
             }
         }
-
-        I2C_PMIC_ReadOTP();
 
 #if 0
 	//initialize the PMIC registers:
@@ -563,7 +560,13 @@ int I2C_PMIC_Initialize(void)
 	   * We need a power cycle of the board to make changes done here effective!
 	   */
 #endif
-	  return 0;		//OK
+
+        #if DEBUG_MODE > 0
+            void I2C_PMIC_ReadOTP(void);
+            I2C_PMIC_ReadOTP();
+        #endif
+
+        return 0;		// 0 = OK
 }
 
 /*
@@ -623,52 +626,57 @@ static uint32_t _wait(uint32_t duration )
     return k;
 }
 
-static uint8_t pmic_otp[0x36];
-void I2C_PMIC_ReadOTP(void)
-{
+#if DEBUG_MODE > 0
 
-	uint8_t data[2];
-	int i;
+    #include "debug_helper.h"
 
-	//enable OTP reading:
-	data[0]=0x6F;				//KEY1
-	data[1]=0x15;
-	I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
+    static uint8_t pmic_otp[0x36];
+    void I2C_PMIC_ReadOTP(void)
+    {
 
-	data[0]=0x9F;				//KEY2
-	data[1]=0x50;
-	I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
+            uint8_t data[2];
+            int i;
 
-	data[0]=0xDF;				//TEST_REG_KEY3
-	data[1]=0xAB;
-	I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
+            //enable OTP reading:
+            data[0]=0x6F;				//KEY1
+            data[1]=0x15;
+            I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 
-	data[0]=0x6B;				//RC REQ 16MHz
-	data[1]=0x01;
-	I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
+            data[0]=0x9F;				//KEY2
+            data[1]=0x50;
+            I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 
-	//OTP is indirect read, via register 0xC4 = FMRADDR and 0xC5 = FRMDATA
-	//OTP is register address 0x1C...0x36
-	for (i = 0x1C; i < 0x36; i++)	//OTP register address 0x1C...0x36
-	{
-		data[0]=0xC4;				//FMRADDR
-		data[1]=(uint8_t)i;
-		I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
-		//we have to wait a bit for the doing read and result ready
-		_wait(500);
+            data[0]=0xDF;				//TEST_REG_KEY3
+            data[1]=0xAB;
+            I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 
-		I2C_PMIC_MemRead(PMIC_I2C_SLAVE_ADDR, 0xC5, data, 1);	//read from FRMDATA
+            data[0]=0x6B;				//RC REQ 16MHz
+            data[1]=0x01;
+            I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
 
-                pmic_otp[i] = *data;
-	}
-}
+            //OTP is indirect read, via register 0xC4 = FMRADDR and 0xC5 = FRMDATA
+            //OTP is register address 0x1C...0x36
+            for (i = 0x1C; i < 0x36; i++)	//OTP register address 0x1C...0x36
+            {
+                    data[0]=0xC4;				//FMRADDR
+                    data[1]=(uint8_t)i;
+                    I2C_PMIC_Write(PMIC_I2C_SLAVE_ADDR, data, sizeof(data));
+                    //we have to wait a bit for the doing read and result ready
+                    _wait(10);
 
-void PMIC_OTP_Dump(void)
-{
-    DEBUG_PRINTF("PMIC OTP dump:");
-    for ( int i=0x1c; i < 0x36; i++ ) {
-        if ( (i&0b11) == 0 ) DEBUG_PRINTF("\n0x%02x",i);
-        DEBUG_PRINTF(" 0x%02x", pmic_otp[i]);
+                    I2C_PMIC_MemRead(PMIC_I2C_SLAVE_ADDR, 0xC5, data, 1);	//read from FRMDATA
+
+                    pmic_otp[i] = *data;
+            }
     }
-    DEBUG_PRINTF("\n");
-}
+
+    void PMIC_OTP_Dump(void)
+    {
+        DEBUG_PRINTF("PMIC OTP dump:");
+        for ( int i=0x1c; i < 0x36; i++ ) {
+            if ( (i&0b11) == 0 ) DEBUG_PRINTF("\n0x%02x",i);
+            DEBUG_PRINTF(" 0x%02x", pmic_otp[i]);
+        }
+        DEBUG_PRINTF("\n");
+    }
+#endif

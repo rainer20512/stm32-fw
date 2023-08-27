@@ -37,7 +37,7 @@
 
 #include "system/tm1637.h"
 #include "system/hw_util.h"
-#include "bsp/arduino_wrapper.h"
+#include "system/arduino_wrapper.h"
 
 /************definitions for TM1637*********************/
 #define ADDR_AUTO  0x40

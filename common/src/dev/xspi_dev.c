@@ -1,6 +1,6 @@
 /*
  ******************************************************************************
- * @file    qspi_dev.c
+ * @file    xspi_dev.c
  * @author  Rainer
  * @brief   QUADSPI or OCTOSPI hardware wrapped into HW_Device
  *
@@ -30,6 +30,7 @@
 #include "system/hw_util.h"
 #include "system/dma_handler.h" /**** 004 ****/
 #include "system/clockconfig.h"
+#include "system/pll.h"
 #include "dev/hw_device.h"
 #include "dev/devices.h"
 
@@ -77,7 +78,10 @@ typedef enum XSpiDmaDirectionEnum {
 
 typedef struct {
     XSpiHandleT         *myXSpiHandle;   /* my associated handle */
-    uint32_t            default_speed;   /* default speed in MHz */
+    uint32_t            defaultSpeed;    /* default speed in MHz */
+#if defined(STM32H7_FAMILY) || defined(STM32L4PLUS_FAMILY)           
+    uint32_t            clkSource;      /* clock source as defined in stm32h7xx_hal_rcc.h */
+#endif
     XSpiDeepSleepT      *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
 #if USE_OSPI > 0
     OSpiSizeEnumType    ospiMode;        /* currently QUADSPI and OCTOSPI mode are impelemted */
@@ -158,17 +162,16 @@ static void XSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 #if defined(STM32L476xx) || defined(STM32L496xx)
     /* STM32L4xx has no clock mux for QUADSPI device */
     #define XSpiSetClockSource(a)           (true)
-    #define XSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
-#elif defined(STM32H7_FAMILY) || defined(STM32L4PLUS_FAMILY)
-    static bool XSpiSetClockSource(const void *hw)
+    #define XSpiGetClockSpeed(a)             HAL_RCC_GetHCLKFreq()
+
+
+#elif defined(STM32H7_FAMILY)
+    static bool XSpiSetClockSource(const HW_DeviceType *self)
     {
-      UNUSED(hw);
       RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
       /* QSPI/OSPI has to be operaterd with HCLK. Routines, which will set */
       /* qspi/ospi speed, rely on HCLK as Clock source                     */
-
-
       #if defined(STM32L4PLUS_FAMILY)
           /* STM32L4S devices */
           PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_OSPI; 
@@ -176,7 +179,7 @@ static void XSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
       #else
           /* STM32H7 devices */
           PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
-          PeriphClkInit.QspiClockSelection   = RCC_QSPICLKSOURCE_D1HCLK;        
+          PeriphClkInit.QspiClockSelection   = XSpi_GetAdditionalData(self)->clkSource;
       #endif
       if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
         LOG_FATAL("failed to set CLK source for %s", XSpiStr);
@@ -185,9 +188,76 @@ static void XSpiGpioInitAF(uint32_t devIdx, const HW_GpioList_AF *gpioaf)
 
       return true;
     }
-    //#include "hardware.h"
-    //#define  XSpiGetClockSpeed()            GetPerClkFrequency()
-    #define XSpiGetClockSpeed()             HAL_RCC_GetHCLKFreq()
+    static uint32_t XSpiGetClockSpeed(const HW_DeviceType *self)
+    {
+        switch (XSpi_GetAdditionalData(self)->clkSource) 
+        {
+            case RCC_QSPICLKSOURCE_D1HCLK:
+                return HAL_RCC_GetHCLKFreq();
+            case RCC_QSPICLKSOURCE_PLL:
+                /* PLL1Q */
+                return PLL_GetOutFrq(SYS_PLL1, PLL_LINE_Q)*1000;
+#if defined(RCC_QSPICLKSOURCE_PLL2)
+            case RCC_QSPICLKSOURCE_PLL2:
+                /* PLL2R H7-devices*/
+                return PLL_GetOutFrq(SYS_PLL2, PLL_LINE_R)*1000;
+#endif
+#if defined(RCC_QSPICLKSOURCE_CLKP)
+            case RCC_QSPICLKSOURCE_CLKP:
+                /* peripheral Clock, H7 devices */
+                return GetPerClkFrequency();
+#endif
+#if defined(RCC_QSPICLKSOURCE_MSI)
+            case RCC_QSPICLKSOURCE_MSI:
+                /* MSI , L4+ devices */
+                return HAL_RCC_MSI_Freq();
+#endif
+            default:
+                LOG_FATAL("failed to retrieve CLK source for %s", XSpiStr);
+                return 0;
+       }
+    }
+#elif defined(STM32L4PLUS_FAMILY)
+    static bool XSpiSetClockSource(const HW_DeviceType *self)
+    {
+      RCC_PeriphCLKInitTypeDef PeriphClkInit;
+
+      /* QSPI/OSPI has to be operaterd with HCLK. Routines, which will set */
+      /* qspi/ospi speed, rely on HCLK as Clock source                     */
+      #if defined(STM32L4PLUS_FAMILY)
+          /* STM32L4S devices */
+          PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_OSPI; 
+          PeriphClkInit.OspiClockSelection   = RCC_OSPICLKSOURCE_SYSCLK;
+      #else
+          /* STM32H7 devices */
+          PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_QSPI; 
+          PeriphClkInit.QspiClockSelection   = XSpi_GetAdditionalData(self)->clkSource;
+      #endif
+      if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+        LOG_FATAL("failed to set CLK source for %s", XSpiStr);
+        return false;
+      }
+
+      return true;
+    }
+
+    static uint32_t XSpiGetClockSpeed(const HW_DeviceType *self)
+    {
+        switch (XSpi_GetAdditionalData(self)->clkSource) 
+        {
+            case RCC_OSPICLKSOURCE_SYSCLK:
+                return HAL_RCC_GetHCLKFreq();
+            case RCC_OSPICLKSOURCE_PLL:
+                /* PLL1Q */
+                return PLL_GetOutFrq(SYS_PLL1, PLL_LINE_Q)*1000;
+            case RCC_OSPICLKSOURCE_MSI:
+                /* MSI , L4+ devices */
+                return MSI_VALUE;
+            default:
+                LOG_FATAL("failed to retrieve CLK source for %s", XSpiStr);
+                return 0;
+       }
+    }
 #else 
     #error "No xspi clock assignment defined"
 #endif
@@ -288,9 +358,10 @@ void XSpi_GetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *pInfo)
 /**************************************************************************************
  * Change the Qspi clock speed on the fly                                             *
  *************************************************************************************/
-bool XSpi_SetSpeed (XSpiHandleT *myHandle, uint32_t new_clkspeed)
+bool XSpi_SetSpeed (const HW_DeviceType *self, uint32_t new_clkspeed)
 {
-    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), new_clkspeed, myHandle->geometry.FlashSize, false);
+    XSpiHandleT *myHandle = XSpi_GetAdditionalData(self)->myXSpiHandle;  
+    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(self), new_clkspeed, myHandle->geometry.FlashSize, false);
 }
 
 /**************************************************************************************
@@ -1070,7 +1141,7 @@ void XSpi_DeInit(const HW_DeviceType *self)
 
 #if USE_OSPI > 0
     /**************************************************************************************
-     * Incase of OSIP being used, configure the OSPIM IP                                  *  
+     * In case of OSPI being used, configure the OSPIM IP                                 *  
      * The initialization is always done on that way, that there is no pin swapping       *
      * I.e. OCTOSPI1 uses the dedicated OCTOSPI1-Pins, OCTOSPI2 uses the OCTOSPI2-Pins    * 
      * consumption. So, to use the device, it has to be activated first                   *
@@ -1139,7 +1210,7 @@ bool XSpi_Init(const HW_DeviceType *self)
     myHandle->bAsyncBusy            = false;
     myHandle->bIsMemoryMapped       = false;
     myHandle->bIsInitialized        = false;
-    myHandle->clkspeed              = adt->default_speed;
+    myHandle->clkspeed              = adt->defaultSpeed;
 
     XSpiClockInit(self, true);
 
@@ -1160,7 +1231,7 @@ bool XSpi_Init(const HW_DeviceType *self)
         HAL_QSPI_DeInit(hxspi);
     #endif
 
-    ret = XSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed() );
+    ret = XSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed(self) );
     
     #if USE_OSPI > 0
         if (ret) ret = OSPI_Configure_OSPIM(self);
@@ -1259,7 +1330,7 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(), adt->default_speed, myHandle->geometry.FlashSize, false );
+    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(self), adt->defaultSpeed, myHandle->geometry.FlashSize, false );
 
 }
 
@@ -1298,7 +1369,14 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
 
     static const XSpi_AdditionalDataType additional_qspi1 = {
         .myXSpiHandle       = &QSpi1Handle,
-        .default_speed      = QSPI1_CLKSPEED,                 
+        .defaultSpeed       = QSPI1_CLKSPEED,     
+        #if defined(STM32H7_FAMILY)
+            #if defined(QSPI1_CLKSOURCE)
+                .clkSource  = QSPI1_CLKSOURCE,
+            #else 
+                .clkSource  = RCC_QSPICLKSOURCE_D1HCLK,
+            #endif
+        #endif
         .myDsInfo           =
             #if defined(QSPI1_HAS_DS_MODE)
                 &ds_qspi1,
@@ -1347,7 +1425,7 @@ const HW_DeviceType HW_QSPI1 = {
 #endif /* defined(QUADSPI) && USE_QSPI > 0 */
 
 
-#if defined(OCTOSPI) && USE_OSPI1 > 0
+#if defined(OCTOSPI1) && USE_OSPI1 > 0
     XSpiHandleT OSpi1Handle;
 
     #if defined(OSPI1_HAS_DS_MODE)
@@ -1390,7 +1468,7 @@ const HW_DeviceType HW_QSPI1 = {
 
     static const XSpi_AdditionalDataType additional_ospi1 = {
         .myXSpiHandle       = &OSpi1Handle,
-        .default_speed      = OSPI1_CLKSPEED,                 
+        .defaultSpeed      = OSPI1_CLKSPEED,                 
         .myDsInfo           =
             #if defined(OSPI1_HAS_DS_MODE)
                 &ds_ospi1,
@@ -1407,7 +1485,7 @@ const HW_DeviceType HW_QSPI1 = {
         .ospiMode =
             #if defined(OSPI1_MODE_OCTO)
                 OSPI_OCTO,
-            #elif defined((OSPI1_MODE_QUAD)
+            #elif defined(OSPI1_MODE_QUAD)
                 OSPI_QUAD,
             #else
                 error "Operating mode for OCTOSPI1 not set"
@@ -1462,7 +1540,7 @@ const HW_DeviceType HW_OSPI1 = {
 };
 #endif /* ( defined(QUADSPI) && defined(USE_QSPI) ) || ( defined(OCTOSPI) && defined(USE_OSPI1) ) */
 
-#if defined(OCTOSPI2) && defined(USE_OSPI2) 
+#if defined(OCTOSPI2) && USE_OSPI2 > 0
     XSpiHandleT OSpi2Handle;
 
     #if defined(OSPI2_HAS_DS_MODE)
@@ -1505,7 +1583,7 @@ const HW_DeviceType HW_OSPI1 = {
 
     static const XSpi_AdditionalDataType additional_ospi2 = {
         .myXSpiHandle       = &OSpi2Handle,
-        .default_speed      = OSPI2_CLKSPEED,                 
+        .defaultSpeed      = OSPI2_CLKSPEED,                 
         .myDsInfo           =
             #if defined(OSPI2_HAS_DS_MODE)
                 &ds_ospi2,
