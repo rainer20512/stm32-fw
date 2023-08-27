@@ -781,6 +781,19 @@
   #endif
 
   #define DEFAULT_STOP_MODE                2
+#elif defined(T61)
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM1
+    #define RTCTIMER_IRQn           LPTIM1_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
+
+    #if USE_CAN > 0
+        /* CAN with Tx=PA12, Rx=PA11 */
+        #define USE_CAN1
+        #define CAN1_USE_IRQ
+
+    #endif
 
 #else
   #error "No valid device configuration in devices_config.h"

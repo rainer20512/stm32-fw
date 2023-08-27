@@ -39,8 +39,9 @@
 #define TASK_PERIODIC         7
 #define TASK_EPD              8
 #define TASK_ADC              9
-#define TASK_XSPI             10
-#define TASK_LCD              11
+#define TASK_STDIN            10
+#define TASK_XSPI             11
+#define TASK_LCD              12
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30

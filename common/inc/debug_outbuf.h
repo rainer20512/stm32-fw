@@ -15,6 +15,7 @@
 
 #if DEBUG_DEBUGIO > 0
   #include <debugio.h>
+  #include "debug_stdin.h"
 #endif
 
 #include <stdio.h>
@@ -27,11 +28,13 @@
 
 #if DEBUG_FEATURES > 0
   #if DEBUG_DEBUGIO > 0
+    extern LinBuffT dbg_inbuf;
     #define DEBUG_PRINTF(...)     debug_printf (__VA_ARGS__ )
     #define DEBUG_PUTS(a)         debug_puts(a)
     #define DEBUG_PUTC(a)         debug_putchar(a)
     #define DEBUG_VPRINTF(...)    debug_vprintf (__VA_ARGS__ )
     #define DEBUG_TX_ACTIVE()     1
+    #define DEBUG_RXBUF_GET()     ( &stdin_line )
   #else
     #define DEBUG_PRINTF(...)     printf (__VA_ARGS__ )
     #define DEBUG_PUTS(a)         puts(a)

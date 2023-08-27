@@ -18,7 +18,6 @@
 #include "debug.h"
 #include "task/minitask.h"
 
-#if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
 
 #include "hardware.h"
 
@@ -27,8 +26,12 @@
 #include <string.h>
 
 #include "debug_helper.h"
-#include "dev/devices.h"
 #include "debug_outbuf.h"
+
+#if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
+
+
+#include "dev/devices.h"
 #include "circbuf.h"
 
 #include "dev/uart_dev.h"
@@ -181,53 +184,6 @@ int __putchar(int ch, __printf_tag_ptr uu) {
   return ch;
 }
 
-/*----------------------------------------------------------------------------*
- * logger functions
- *---------------------------------------------------------------------------*/
-
-
-#if LOGTO_CONSOLE > 0
-    /******************************************************************************
-     * Write data of lenght <len> to LogFile, no CRLF appended 
-     * true is returned on success,
-     * false is returned on any failure
-     *****************************************************************************/
-    uint8_t Console_Write(const char *data, uint32_t len )
-    {
-        /* write ti buffer and start transfer, if full */
-        if ( CircBuff_PutStr(&o, (uint8_t *)data, len ) < len )
-            TaskNotify(TASK_LOG);
-
-        return true;
-    }
-
-
-
-    /******************************************************************************
-     * Write NULL-terminated string to LogFile, append CRLF and start write to file 
-     *****************************************************************************/
-    uint8_t Console_Write_CRLF(const char *data, uint32_t len)
-    {
-        uint8_t ret = Console_Write(data, len);
-        if ( ret ) Console_CRLF();
-        return ret;
-
-    }
-
-
-    /******************************************************************************
-     * Write CRLF and transfer to file
-     *****************************************************************************/
-    void Console_CRLF(void)
-    {
-        if ( bExpandCrToCrlf ) CircBuff_Put(&o, '\r');
-        CircBuff_Put(&o, '\n');
-        TaskNotify(TASK_LOG);
-    }
-#endif
-
-
-
 void DebugAssignUart(const HW_DeviceType *dev, void *arg)
 { 
     UsartHandleT *uart = USART_GetHandleFromDev(dev);
@@ -315,6 +271,90 @@ void dbg_printf( const char* format, ... ) {
 }
 
 #endif // #if DEBUG_FEATURES > 0 && DEBUG_DEBUGIO == 0
+
+/*----------------------------------------------------------------------------*
+ * logger functions
+ *---------------------------------------------------------------------------*/
+
+
+#if DEBUG_FEATURES > 0 && LOGTO_CONSOLE > 0
+    #if DEBUG_DEBUGIO == 0
+        /******************************************************************************
+         * Write data of lenght <len> to LogFile, no CRLF appended 
+         * true is returned on success,
+         * false is returned on any failure
+         *****************************************************************************/
+        uint8_t Console_Write(const char *data, uint32_t len )
+        {
+            /* write ti buffer and start transfer, if full */
+            if ( CircBuff_PutStr(&o, (uint8_t *)data, len ) < len )
+                TaskNotify(TASK_LOG);
+
+            return true;
+        }
+
+
+
+        /******************************************************************************
+         * Write NULL-terminated string to LogFile, append CRLF and start write to file 
+         *****************************************************************************/
+        uint8_t Console_Write_CRLF(const char *data, uint32_t len)
+        {
+            uint8_t ret = Console_Write(data, len);
+            if ( ret ) Console_CRLF();
+            return ret;
+
+        }
+
+
+        /******************************************************************************
+         * Write CRLF and transfer to file
+         *****************************************************************************/
+        void Console_CRLF(void)
+        {
+            if ( bExpandCrToCrlf ) CircBuff_Put(&o, '\r');
+            CircBuff_Put(&o, '\n');
+            TaskNotify(TASK_LOG);
+        }
+     #else
+        /******************************************************************************
+         * Write data of lenght <len> to LogFile, no CRLF appended 
+         * true is returned on success,
+         * false is returned on any failure
+         *****************************************************************************/
+        uint8_t Console_Write(const char *data, uint32_t len )
+        {
+            for ( ;len > 0; len-- ) {
+                DEBUG_PUTC(*(data++));
+            }
+
+            return true;
+        }
+
+
+
+        /******************************************************************************
+         * Write NULL-terminated string to LogFile, append CRLF and start write to file 
+         *****************************************************************************/
+        uint8_t Console_Write_CRLF(const char *data, uint32_t len)
+        {
+            uint8_t ret = Console_Write(data, len);
+            if ( ret ) Console_CRLF();
+            return ret;
+
+        }
+
+
+        /******************************************************************************
+         * Write CRLF and transfer to file
+         *****************************************************************************/
+        void Console_CRLF(void)
+        {
+            CRLF();
+        }
+     #endif
+#endif
+
 
 
 /**

@@ -38,6 +38,11 @@
     #include "dev/usb_dev.h"
 #endif
 
+#if USE_CAN > 0
+    #include "dev/can_dev.h"
+#endif
+
+
 
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx
@@ -259,6 +264,11 @@ void Init_OtherDevices(void)
     void U2U_RunTask(uint32_t arg);
 #endif
 
+#if DEBUG_FEATURES > 0 && DEBUG_DEBUGIO > 0
+    void stdin_Init ( void );
+    void task_handle_in( uint32_t arg );
+#endif
+
 void task_handle_out  (uint32_t);
 void task_handle_xspi (uint32_t);
 
@@ -274,9 +284,13 @@ void Init_DefineTasks(void)
 #if USE_USB > 0
   TaskRegisterTask(U2U_InitTask,  U2U_RunTask,     TASK_USBD,     JOB_TASK_USBD,     "U2U Traffic");
 #endif
-#if DEBUG_FEATURES > 0  && DEBUG_DEBUGIO == 0
+#if DEBUG_FEATURES > 0  
   TaskRegisterTask(CMD_Init,      task_handle_com, TASK_COM,      JOB_TASK_DBGIO,    "Debug input");
-  TaskRegisterTask(NULL,          task_handle_out, TASK_LOG,      JOB_TASK_DBGIO,    "Debug output");  
+  #if DEBUG_DEBUGIO == 0
+      TaskRegisterTask(NULL,      task_handle_out, TASK_LOG,      JOB_TASK_DBGIO,    "Debug output");  
+ #else
+      TaskRegisterTask(stdin_Init,task_handle_in,  TASK_STDIN,    JOB_TASK_DBGIO,    "Std input watch");  
+ #endif
 #endif
   TaskRegisterTask(NULL,          task_periodic,   TASK_PERIODIC, JOB_TASK_PERIODIC, "periodic task");
 

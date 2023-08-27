@@ -808,7 +808,7 @@ CanTxMboxNum CAN_Transmit( CanHandleT *me, CanTxRxDataT *tx )
     uint32_t txmbx;
 
     /* Check availability of Tx mailbox */
-    if (!CAN_IsTxMboxFree(inst) ) return 0;
+    if (!CAN_IsTxMboxFree(me) ) return 0;
 
     /* Select an empty transmit mailbox */
     txmbx = (inst->TSR & CAN_TSR_CODE) >> CAN_TSR_CODE_Pos;

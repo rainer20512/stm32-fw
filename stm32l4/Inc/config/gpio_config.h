@@ -114,6 +114,15 @@
 
   #define IO_NUM                            3
 
+#elif defined(T61)
+
+  // LEDs  
+  #define IO_01                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP, GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, GPIO_NO_IRQ, "UserLed1" }
+  #define IO_02                             { GPIO_PIN_10, GPIOC, GPIO_MODE_OUTPUT_PP, GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH, GPIO_NO_IRQ, "UserLed2" }
+  #define USERLEDNUM                        2
+  #define USERLEDS                          { 0, 1 } 
+  #define IO_NUM                            2
+
 #else
   #error "No valid GPIO configuration in gpio_config.h"
 #endif

@@ -494,11 +494,6 @@ int32_t GetDevIdx ( const HW_DeviceType *dev)
 }
 
 
-
-#ifndef HW_DEBUG_UART
-    #error "DEBUG_UART is not defined!"
-#endif
-
 /******************************************************************************
  * DO the init of the mandatory devices: IO and debug uart
  ******************************************************************************/
@@ -513,6 +508,10 @@ void BasicDevInit(void)
 
   /* Init debug u(s)art ) */
   #if DEBUG_FEATURES > 0 && DEBUG_DEBUGIO == 0
+      #ifndef HW_DEBUG_UART
+          #error "DEBUG_UART is not defined!"
+      #endif
+
      dev_idx = AddDevice(&HW_DEBUG_UART, DebugAssignUart, DebugDeAssignUart);
      DeviceInitByIdx(dev_idx, (void *)1);
   #endif

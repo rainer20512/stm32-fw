@@ -54,6 +54,8 @@ extern "C" {
     #define BOARD   "STM32L476 Eval"
 #elif defined(STM32L476BAREMETAL)
     #define BOARD   "STM32L476 bare metal"
+#elif defined(T61)
+    #define BOARD   "T61 HW V3.1"
 #else
     #define BOARD   "Unknown Board"
 #endif

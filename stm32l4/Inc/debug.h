@@ -44,7 +44,7 @@
 
 #define DEBUG_STARTUP       0
 #define DEBUG_FEATURES      1
-#define DEBUG_DEBUGIO       0
+#define DEBUG_DEBUGIO       1
 #define DEBUG_DUMP_RFM      0
 #define DEBUG_DUMP_KEYS     0
 #define DEBUG_RFM_STATUS    0
