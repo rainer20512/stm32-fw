@@ -130,8 +130,8 @@ int main(void)
      * ie max core clock at this point is 200Mhz / AHB clk 100MHz
      */
 
-    TM1637PinT clk = { GPIOA, 3 };
-    TM1637PinT dio = { GPIOC, 3 };
+    ARD_PinT clk = { GPIOA, 3 };
+    ARD_PinT dio = { GPIOC, 3 };
 
     /* configure SWDIO and SWCLK pins, configure DBG and clear software reset flag in RCC */
     HW_InitJtagDebug();  

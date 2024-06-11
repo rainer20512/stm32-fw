@@ -28,11 +28,12 @@
 
 /* Private define ------------------------------------------------------------*/
 #define INBUF_SIZE  64                                /* Size of input buffer */
-#define STDIN_SCAN_INTERVAL_MS  500                  /* scan stdin every 50 ms */
+#define STDIN_SCAN_INTERVAL_MS  500                /* scan stdin every 500 ms */
 
 /* Private variables ---------------------------------------------------------*/
 static uint8_t inbuf[INBUF_SIZE];
 static uint8_t stdinTimer;
+
 /* public variables */
 LinBuffT stdin_line;       /* buffer to collect characters until CRLF is read */
 
@@ -79,7 +80,6 @@ void task_handle_in( uint32_t arg )
 
 /******************************************************************************
  * @brief callback for the std input timer: Just notify the reader task 
- *        characters on stdin
  *****************************************************************************/
 void stdin_timer( uint32_t arg )
 {

@@ -1034,6 +1034,7 @@ bool CAN_InitDev(const HW_DeviceType *self)
     /* Init to default baudrate and to normal busmode*/
     CAN_ChangeBaudrate(me, CAN_DEFAULT_BAUDRATE);
     CAN_SetBusMode(me, CanBusModeNormal);
+    // for test purposes only: CAN_SetBusMode(me, CanBusModeLoopback);
 
     /* Set Error Interrupt Flags */
     inst->IER = CAN_IER_ERRIE | CAN_IER_EWGIE | CAN_IER_EPVIE | CAN_IER_BOFIE | CAN_IER_LECIE | CAN_IER_FOVIE0 | CAN_IER_FOVIE1;
