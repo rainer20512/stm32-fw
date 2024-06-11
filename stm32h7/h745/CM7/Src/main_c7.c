@@ -44,6 +44,8 @@
 
 #include "cmsis_os.h"
 
+#undef TESTTASKS
+
 #if defined(STM32H745NUCLEO)
     #include "STM32H7xx_Nucleo/stm32h7xx_nucleo.h"
 #elif defined(STM32H747IDISCO)
@@ -79,7 +81,15 @@ uint32_t gflags;
 /* Private function prototypes -----------------------------------------------*/
 static void CPU_CACHE_Enable(void);
 static void MPU_Setup(void);
+static void prvCore1InitTask( void *pvParameters );
 
+#if defined(TESTTASKS)
+    static void prvCheck2Task   ( void *pvParameters );
+    static void prvCore1Task    ( void *pvParameters );
+    static void prvCheckTask    ( void *pvParameters );
+    static void prvCore1ModifiedTask( void *pvParameters );
+    static BaseType_t xAreMessageBufferAMPTasksStillRunning( void );
+#endif
 
 /* Forward declarations for external initialization functions -----------------*/
 void HW_InitJtagDebug(void);
@@ -92,13 +102,7 @@ int I2C_PMIC_Initialize(void);
 int I2C_PMIC_Reset(void);
 void PMIC_OTP_Dump(void);
 
-static void prvCheck2Task   ( void *pvParameters );
-static void prvCore1Task    ( void *pvParameters );
-static void prvCheckTask    ( void *pvParameters );
-static void prvCore1InitTask( void *pvParameters );
-static void prvCore1ModifiedTask( void *pvParameters );
 
-static BaseType_t xAreMessageBufferAMPTasksStillRunning( void );
 void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, uint32_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 /* Private functions ---------------------------------------------------------*/
 
@@ -194,8 +198,8 @@ int main(void)
         ARD_PinT clk = { GPIOA, 3 };
         ARD_PinT dio = { GPIOC, 0 };
     #elif defined(STM32H747xx)
-        ARD_PinT clk = { GPIOJ, 3 }; // Arduion Conn CN6/D2
-        ARD_PinT dio = { GPIOF, 8 }; // Arduion Conn CN6/D3
+        ARD_PinT clk = { GPIOJ, 3, UNDEF }; // Arduion Conn CN6/D2
+        ARD_PinT dio = { GPIOF, 8, UNDEF }; // Arduion Conn CN6/D3
     #endif
 
     BSP_LED_Init(LED_RED); 
@@ -394,7 +398,8 @@ static void prvCore1InitTask( void *pvParameters )
     /* Wake up CM4 from initial stop */
     Ipc_CM7_WakeUp_CM4 ();
 
-#if 0
+#if defined(TESTTASKS)
+
     /* Start the check task */
     xTaskCreate( prvCheckTask, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
 
@@ -413,75 +418,27 @@ static void prvCore1InitTask( void *pvParameters )
     /* Terminate initialization task */ 
     vTaskDelete(NULL);
 }
-/* This task will periodically send data to tasks running on Core 2
-   via message buffers. */
-static void prvCore1Task( void *pvParameters )
-{
-  BaseType_t x;
-  uint32_t ulNextValue = 0;
-  const TickType_t xDelay = pdMS_TO_TICKS( 250 );
-  char cString[ 15 ];
-  
-  /* Remove warning about unused parameters. */
-  ( void ) pvParameters;
 
-  for( ;; )
-  {
-    /* Create the next string to send.  The value is incremented on each
-    loop iteration, and the length of the string changes as the number of
-    digits in the value increases. */
-    sprintf( cString, "%lu", ( unsigned long ) ulNextValue );
-
-    /* Send the value from this Core to the tasks on the Core 2 via the message 
-    buffers.  This will result in sbSEND_COMPLETED()
-    being executed, which in turn will write the handle of the message
-    buffer written to into xControlMessageBuffer then generate an interrupt
-    in core 2. */
-    for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
+#if defined(TESTTASKS)
+    /* This task will periodically send data to tasks running on Core 2
+       via message buffers. */
+    static void prvCore1Task( void *pvParameters )
     {
-      DEBUG_PRINTF("Send %d on task#%d\n", ulNextValue, x);
-      if ( xSemaphoreTake(DataMessageSem(x), pdMS_TO_TICKS(100000)) == pdTRUE ) {
-          xMessageBufferSend( DataMessageBuffer(x), 
-                             ( void * ) cString,
-                             strlen( cString ),
-                             mbaDONT_BLOCK );
-          xSemaphoreGive(DataMessageSem(x));
-      } else {
-          DEBUG_PRINTF("Failed to obtain DataSemaphore %d\n", x );
-      }
-      /* Delay before repeating */
-      vTaskDelay( xDelay );
-    }
-
-    ulNextValue++;
-    DEBUG_PRINTF("Send packet %d\n", ulNextValue);
-  }
-}
-
-
-/* This task will periodically send data to tasks running on Core 2
-   via message buffers. */
-static void prvCore1ModifiedTask( void *pvParameters )
-{
-  BaseType_t x;
-  uint32_t ulNextValue = 0;
-  char cString[ 15 ];
+      BaseType_t x;
+      uint32_t ulNextValue = 0;
+      const TickType_t xDelay = pdMS_TO_TICKS( 250 );
+      char cString[ 15 ];
   
-  /* Remove warning about unused parameters. */
-  ( void ) pvParameters;
+      /* Remove warning about unused parameters. */
+      ( void ) pvParameters;
 
-  while(1) {
-      if ( osSemaphoreWait(osSemaphore , 100000) != osOK ) {
-        DEBUG_PUTS("Giving up waiting for semaphore");
-        vTaskDelete(NULL);
-      }
-      for( uint32_t loops = 0; loops < 40 ; loops++ )
+      for( ;; )
       {
         /* Create the next string to send.  The value is incremented on each
         loop iteration, and the length of the string changes as the number of
         digits in the value increases. */
         sprintf( cString, "%lu", ( unsigned long ) ulNextValue );
-    
+
         /* Send the value from this Core to the tasks on the Core 2 via the message 
         buffers.  This will result in sbSEND_COMPLETED()
         being executed, which in turn will write the handle of the message
@@ -489,6 +446,7 @@ static void prvCore1ModifiedTask( void *pvParameters )
         in core 2. */
         for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
         {
+          DEBUG_PRINTF("Send %u on task#%ld\n", ulNextValue, x);
           if ( xSemaphoreTake(DataMessageSem(x), pdMS_TO_TICKS(100000)) == pdTRUE ) {
               xMessageBufferSend( DataMessageBuffer(x), 
                                  ( void * ) cString,
@@ -496,110 +454,159 @@ static void prvCore1ModifiedTask( void *pvParameters )
                                  mbaDONT_BLOCK );
               xSemaphoreGive(DataMessageSem(x));
           } else {
-              DEBUG_PRINTF("Failed to obtain DataSemaphore %d\n", x );
+              DEBUG_PRINTF("Failed to obtain DataSemaphore %ld\n", x );
           }
           /* Delay before repeating */
-          // vTaskDelay( xDelay );
+          vTaskDelay( xDelay );
         }
 
         ulNextValue++;
         DEBUG_PRINTF("Send packet %d\n", ulNextValue);
       }
-  }
-}
+    }
 
 
-/* 
-  Check if the application still running
-*/
-static uint32_t ulLastCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] = { 0 };
-static BaseType_t xAreMessageBufferAMPTasksStillRunning( void )
-{
-  BaseType_t xDemoStatus = pdPASS;
-  BaseType_t x;
-  
-  /* Called by the check task to determine the health status of the tasks
-  implemented in this demo. */
-  for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
-  {
-    if( ulLastCycleCounters[ x ] == ulCycleCounters[ x ] )
+    /* This task will periodically send data to tasks running on Core 2
+       via message buffers. */
+    static void prvCore1ModifiedTask( void *pvParameters )
     {
-      xDemoStatus = pdFAIL;
-    }
-    else
-    {
-      ulLastCycleCounters[ x ] = ulCycleCounters[ x ];
-    }
-  }
+      BaseType_t x;
+      uint32_t ulNextValue = 0;
+      char cString[ 15 ];
   
-  return xDemoStatus;
-}
-static void prvCheck2Task( void *pvParameters )
-{
-  BaseType_t x;
-  uint32_t val;
-  uint32_t xReceivedBytes;
-  
-  /* The index into the xDataMessageBuffers and ulLoopCounter arrays is
-  passed into this task using the task's parameter. */
-  x = ( BaseType_t ) pvParameters;
-  for( ;; )
-  {
-    xReceivedBytes = xMessageBufferReceive( DataMessageBuffer( x ),
-                                            &val,
-                                            sizeof( uint32_t ),
-                                            portMAX_DELAY );
+      /* Remove warning about unused parameters. */
+      ( void ) pvParameters;
+
+      while(1) {
+          if ( osSemaphoreWait(osSemaphore , 100000) != osOK ) {
+            DEBUG_PUTS("Giving up waiting for semaphore");
+            vTaskDelete(NULL);
+          }
+          for( uint32_t loops = 0; loops < 40 ; loops++ )
+          {
+            /* Create the next string to send.  The value is incremented on each
+            loop iteration, and the length of the string changes as the number of
+            digits in the value increases. */
+            sprintf( cString, "%lu", ( unsigned long ) ulNextValue );
     
-    /* Check the number of bytes received was as expected. */
-    if (xReceivedBytes != sizeof(uint32_t) ) {
-        DEBUG_PRINTF("Check2: Unexpected number of bytes received:%d vs %d\n", xReceivedBytes, sizeof(uint32_t));
-    } else {
-        /* If the received string matches that expected then increment the loop
-        counter so the check task knows this task is still running. */
-        if( val == 42 || val == 43  ) {
-           ulLastCycleCounters[ val-42 ] ++; 
-        } else {
-          DEBUG_PRINTF("Checker got wrong return value %d\n",val);
+            /* Send the value from this Core to the tasks on the Core 2 via the message 
+            buffers.  This will result in sbSEND_COMPLETED()
+            being executed, which in turn will write the handle of the message
+            buffer written to into xControlMessageBuffer then generate an interrupt
+            in core 2. */
+            for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
+            {
+              if ( xSemaphoreTake(DataMessageSem(x), pdMS_TO_TICKS(100000)) == pdTRUE ) {
+                  xMessageBufferSend( DataMessageBuffer(x), 
+                                     ( void * ) cString,
+                                     strlen( cString ),
+                                     mbaDONT_BLOCK );
+                  xSemaphoreGive(DataMessageSem(x));
+              } else {
+                  DEBUG_PRINTF("Failed to obtain DataSemaphore %ld\n", x );
+              }
+              /* Delay before repeating */
+              // vTaskDelay( xDelay );
+            }
+
+            ulNextValue++;
+            DEBUG_PRINTF("Send packet %d\n", ulNextValue);
+          }
+      }
+    }
+
+
+    /* 
+      Check if the application still running
+    */
+    static uint32_t ulLastCycleCounters[ mbaNUMBER_OF_CORE_2_TASKS ] = { 0 };
+    static BaseType_t xAreMessageBufferAMPTasksStillRunning( void )
+    {
+      BaseType_t xDemoStatus = pdPASS;
+      BaseType_t x;
+  
+      /* Called by the check task to determine the health status of the tasks
+      implemented in this demo. */
+      for( x = 0; x < mbaNUMBER_OF_CORE_2_TASKS; x++ )
+      {
+        if( ulLastCycleCounters[ x ] == ulCycleCounters[ x ] )
+        {
+          xDemoStatus = pdFAIL;
         }
+        else
+        {
+          ulLastCycleCounters[ x ] = ulCycleCounters[ x ];
+        }
+      }
+  
+      return xDemoStatus;
     }
-    /* Expect the next string in sequence the next time around. */
-  }
-}
+    static void prvCheck2Task( void *pvParameters )
+    {
+      BaseType_t x;
+      uint32_t val;
+      uint32_t xReceivedBytes;
+  
+      /* The index into the xDataMessageBuffers and ulLoopCounter arrays is
+      passed into this task using the task's parameter. */
+      x = ( BaseType_t ) pvParameters;
+      for( ;; )
+      {
+        xReceivedBytes = xMessageBufferReceive( DataMessageBuffer( x ),
+                                                &val,
+                                                sizeof( uint32_t ),
+                                                portMAX_DELAY );
+    
+        /* Check the number of bytes received was as expected. */
+        if (xReceivedBytes != sizeof(uint32_t) ) {
+            DEBUG_PRINTF("Check2: Unexpected number of bytes received:%d vs %d\n", xReceivedBytes, sizeof(uint32_t));
+        } else {
+            /* If the received string matches that expected then increment the loop
+            counter so the check task knows this task is still running. */
+            if( val == 42 || val == 43  ) {
+               ulLastCycleCounters[ val-42 ] ++; 
+            } else {
+              DEBUG_PRINTF("Checker got wrong return value %d\n",val);
+            }
+        }
+        /* Expect the next string in sequence the next time around. */
+      }
+    }
 
-/* Check task fonction 
-   */
-static void prvCheckTask( void *pvParameters )
-{
-  TickType_t xNextWakeTime;
-  const TickType_t xCycleFrequency = pdMS_TO_TICKS( 2000UL );
+    /* Check task fonction 
+       */
+    static void prvCheckTask( void *pvParameters )
+    {
+      TickType_t xNextWakeTime;
+      const TickType_t xCycleFrequency = pdMS_TO_TICKS( 2000UL );
   
-  /* Just to remove compiler warning. */
-  ( void ) pvParameters;
+      /* Just to remove compiler warning. */
+      ( void ) pvParameters;
   
-  /* Initialise xNextWakeTime - this only needs to be done once. */
-  xNextWakeTime = xTaskGetTickCount();
+      /* Initialise xNextWakeTime - this only needs to be done once. */
+      xNextWakeTime = xTaskGetTickCount();
   
-  for( ;; )
-  {
-    /* Place this task in the blocked state until it is time to run again. */
-    vTaskDelayUntil( &xNextWakeTime, xCycleFrequency );
+      for( ;; )
+      {
+        /* Place this task in the blocked state until it is time to run again. */
+        vTaskDelayUntil( &xNextWakeTime, xCycleFrequency );
 
     
-    if( xAreMessageBufferAMPTasksStillRunning() != pdPASS )
-    {
-      /* Application fail */
-      BSP_LED_Off(LED1);
-      BSP_LED_On(LED2);
+        if( xAreMessageBufferAMPTasksStillRunning() != pdPASS )
+        {
+          /* Application fail */
+          BSP_LED_Off(LED1);
+          BSP_LED_On(LED2);
+        }
+        else
+        {
+          /* Application still running */
+          BSP_LED_Off(LED2);
+          BSP_LED_Toggle(LED1);
+        }
+      }
     }
-    else
-    {
-      /* Application still running */
-      BSP_LED_Off(LED2);
-      BSP_LED_Toggle(LED1);
-    }
-  }
-}
-
+#endif /* TESTTASKS */
 
 /* configUSE_STATIC_ALLOCATION is set to 1, so the application must provide an
 implementation of vApplicationGetIdleTaskMemory() to provide the memory that is
