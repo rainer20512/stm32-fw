@@ -490,7 +490,7 @@ int32_t GetDevIdx ( const HW_DeviceType *dev)
         if ( devices[i] == dev ) return i;
     }
     DEBUG_PUTS("Error: GetDevIdx: Device not found");
-    return -1;
+    return DEV_NOTFOUND;
 }
 
 

@@ -6,7 +6,7 @@
 
 #include "config/config.h"
 
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
     #define USE_LCD_BACKLIGHT           1
 #endif
 

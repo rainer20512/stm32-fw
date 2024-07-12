@@ -246,10 +246,10 @@
     #define RTCTIMER_IRQn           LPTIM1_IRQn
     #define RTCTIMER_IRQHandler     LPTIM1_IRQHandler
 
-    #if USE_PWMTIMER > 0
+    #if USE_HW_PWMTIMER > 0
         #define USE_TIM3
         #define USE_TIM3_ALTN2
-        #define PWM_FREQUENCY 20000
+        #define HW_PWM_FREQUENCY 20000
         #define HW_PWMTIMER HW_TIM3
         #define LCD_BKLGHT_CH         1
     #endif
@@ -425,13 +425,22 @@
       #define USE_TIM15_ALTN1
   #endif   
 
-  #if USE_PWMTIMER > 0
+  #define HW_PWM_FREQUENCY 20000
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
+      #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
   #endif
+
+  #if USE_USER_PWMTIMER > 0
+      #define USE_TIM5
+      #define USE_TIM5_ALTN1
+      #define USER_PWM_CHANNELS { &HW_TIM5, 3, 0, 1 }, { &HW_TIM5, 4, 0, 1 }, 
+  #endif
+
+  #define ALL_PWM_CHANNELS  { HW_PWM_CHANNELS USER_PWM_CHANNELS }
 
   #if USE_QSPI > 0
       #define XSPI_DEV          HW_QSPI1
@@ -557,10 +566,10 @@
     #define ADC1_USE_DMA 
     #define USER_ADC      HW_ADC1
   
-    #if USE_PWMTIMER > 0
+    #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
+      #define HW_PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
     #endif
@@ -691,10 +700,10 @@
     #define ADC1_USE_DMA 
     #define USER_ADC      HW_ADC1
   
-    #if USE_PWMTIMER > 0
+    #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
+      #define HW_PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
     #endif

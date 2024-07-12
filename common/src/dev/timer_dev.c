@@ -1,6 +1,6 @@
 /*
  ******************************************************************************
- * @file    timer_dev.h 
+ * @file    timer_dev.c 
  * @author  Rainer
  * @brief   timer device, only device functions, nothing else 
  *
@@ -13,7 +13,7 @@
 
 #include "config/config.h"
 
-#if USE_PWMTIMER > 0 || USE_BASICTIMER > 0 || USE_PERIPH_TIMER > 0
+#if USE_HW_PWMTIMER > 0 || USE_BASICTIMER > 0 || USE_PERIPH_TIMER > 0 || USE_USER_PWMTIMER > 0
 
 #include "hardware.h"
 #include "error.h"
@@ -30,15 +30,18 @@
  * Additional data that will be stored to timer type hardware devices
  ******************************************************************************************/
 
-static uint32_t idxToTimCh[6] = 
-    { TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3,
-      TIM_CHANNEL_4, TIM_CHANNEL_5, TIM_CHANNEL_6, 
-    };
+typedef struct TUPC {
+  uint8_t num;                         /* number of PWM channels used, 0...n */
+  uint8_t chn_idx[];                   /* channel idx of used channel        */
+} TmrUsdPwmChnls;
 
 typedef struct {
-    TimerHandleT    *myTmrHandle;   /* My associated Spi-handle */
-    uint32_t        base_frq;       /* Timer Base Frequency */
+    TimerHandleT    *myTmrHandle;     /* My associated Timer-handle */
+    uint32_t        base_frq;         /* Timer Base Frequency       */
+    uint32_t        pwm_frq;          /* default pwm frequency      */
+    const TmrUsdPwmChnls* pwm_used;   /* list of used pwm channels  */
 } TMR_AdditionalDataType;
+
 
 static TMR_AdditionalDataType * TMR_GetAdditionalData(const HW_DeviceType *self)
 {
@@ -50,11 +53,17 @@ TimerHandleT * TMR_GetHandleFromDev(const HW_DeviceType *self)
     return TMR_GetAdditionalData(self)->myTmrHandle;
 }
 
+void TMR_GetBaseAndPwmFrq(const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq)
+{
+    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
+    *base_frq = adt->base_frq;
+    *pwm_frq  = adt->pwm_frq;
+}
 
 /******************************************************************************
  * Returns true, if any PWM channel is active
  *****************************************************************************/
-static bool IsAnyChnActive( const HW_DeviceType *self)
+bool TMR_IsAnyChnActive( const HW_DeviceType *self)
 {
     TIM_TypeDef *htim   = (TIM_TypeDef *)self->devBase;
         
@@ -239,17 +248,25 @@ static void TmrHandleDeInit (TimerHandleT *hnd)
  *****************************************************************************/
 static void TmrHandleInit (TimerHandleT *hnd, const HW_DeviceType *self)
 {    
-    UNUSED(self);
+    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
+    uint8_t ch;
     TmrHandleDeInit(hnd);
-    hnd->use_chX[0]         = 0;
-    hnd->use_chX[1]         = 0;
-    hnd->use_chX[2]         = 0;
-    hnd->use_chX[3]         = 0; 
-    hnd->reference_cnt      = 0;
+
+    /* Set the flags for all used pwm channels */
+    if ( self->devGpioAF && adt->pwm_used ) {
+        for ( int i=0; i < adt->pwm_used->num; i++ ) {
+            ch = adt->pwm_used->chn_idx[i];    
+            if ( ch > 0 && ch < 5 ) {
+                hnd->use_chX[ ch ] = 1;
+            } else { 
+                DEBUG_PRINTF("Illegal PWM channel %d for %s\n", ch, self->devName);
+            }
+        }
+    }
+
     hnd->MicroCountHigh     = 0;
     hnd->bTicksEnabled      = 1; /* Only ues, if basetimer is also system tick generator */
 }
-
 
 
 /****************************************************************************** 
@@ -298,7 +315,7 @@ uint32_t TmrGetClockFrq ( TIM_TypeDef *tim )
  * false is reported, if sysclk frq is too low to achieve this or
  * if sysclk is not dividable to achieve base frq when bExactMatch = true
  *****************************************************************************/
-static bool SetBaseFrq( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc, bool bExactMatch )
+bool TMR_SetBaseFrq( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc, bool bExactMatch )
 {
     bool ret            = true;
     uint32_t new_TmrClk =  TmrGetClockFrq(htim);
@@ -317,6 +334,15 @@ static bool SetBaseFrq( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc,
     }
     *new_psc = prediv-1;
     return ret;
+}
+
+/******************************************************************************
+ * Returns the current counter frequency, ie system clock divided by prescaler+1
+ *****************************************************************************/
+uint32_t TMR_GetBaseFrq(const HW_DeviceType *self )
+{
+    TIM_TypeDef *htim       = (TIM_TypeDef *)self->devBase;
+    return TmrGetClockFrq(htim) / (htim->PSC+1);
 }
 
 /******************************************************************************
@@ -339,18 +365,6 @@ bool TMR_Init(const HW_DeviceType *self)
     /* Set base frequency */
     myHnd->Instance = htim;
 
-#if USE_PWMTIMER > 0
-    if ( self->devType == HW_DEVICE_PWMTIMER ) {
-        SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, false);
-        /* default as configured */
-        myHnd->Init.Period            = adt->base_frq / PWM_FREQUENCY;  
-        myHnd->Init.ClockDivision     = 0;
-        myHnd->Init.CounterMode       = TIM_COUNTERMODE_UP;
-        myHnd->Init.RepetitionCounter = 0;
-        return HAL_TIM_PWM_Init(myHnd) == HAL_OK;
-    }
-#endif
-
 #if USE_PERIPHTIMER > 0 || USE_BASICTIMER > 0
     if ( self->devType == HW_DEVICE_BASETIMER || self->devType == HW_DEVICE_PERIPHTIMER ) {
         /* Initialize TIMx peripheral as follows:
@@ -370,7 +384,7 @@ bool TMR_Init(const HW_DeviceType *self)
                 myHnd->Init.Period            = 50000-1;
         }
 
-        if (!SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
+        if (!TMR_SetBaseFrq(htim, adt->base_frq, &myHnd->Init.Prescaler, true) ) return false;
 
         /* Init Timer */
         htim->PSC = myHnd->Init.Prescaler;      // Set prescaler
@@ -389,7 +403,7 @@ bool TMR_Init(const HW_DeviceType *self)
         return true;
    }
 #endif
-    return false;
+    return true;
 }
 
 
@@ -416,143 +430,6 @@ void TMR_DeInit(const HW_DeviceType *self)
 
 }
 
-/******************************************************************************
- * Set the PWM frequency 
- * an error is returned, if the PWM frq is greater than Base Frq / 20 
- * this is due to shrinking duty cycle options
- *****************************************************************************/
-bool TMR_SetPWMFrq (const HW_DeviceType *self, uint32_t frq ) 
-{
-    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
-    bool ret = true;
-     
-    if ( frq > adt->base_frq/2 ) {
-        DEBUG_PRINTF("Error: TMR PWM frq must not be greater than %d, no change\n", adt->base_frq/2 );
-        return false;
-    }
-
- 
-    uint32_t arr = adt->base_frq / frq;
-    #if DEBUG_MODE > 0
-        if (arr < 20 ) {
-            DEBUG_PRINTF("Warning: TMR PWM frq allows only %d Duty cycle steps\n", arr);
-        }
-    #endif
-
-    ((TIM_TypeDef *)self->devBase)->ARR = arr-1;
-    return ret;
-}
-
-
-/******************************************************************************
- * Init one PWM channel by call of the corresponding HAL function
- * seemed easier to implement than grabbing together all bits by hand 
- *****************************************************************************/
-bool TMR_InitPWMCh(const HW_DeviceType *self, uint32_t ch, bool invert )
-{
-    if ( ch < 1 || ch > 4 ) return false;
-
-    uint32_t devIdx = GetDevIdx(self);
-
-   /* configure/enable the corresponding gpio */
-    GPIO_InitTypeDef  Init;
-    Init.Mode  = GPIO_MODE_AF_PP;
-    Init.Speed = GPIO_SPEED_FREQ_HIGH;   
-    GpioAFInitOne(devIdx, &self->devGpioAF->gpio[ch-1], &Init );
-
-    TIM_OC_InitTypeDef sConfig;
-    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self); 
-    TIM_TypeDef *inst = (TIM_TypeDef *)adt->myTmrHandle->myHalHnd.Instance;
-
-    sConfig.OCMode       = TIM_OCMODE_PWM1;
-    sConfig.OCPolarity   = ( invert ? TIM_OCPOLARITY_LOW : TIM_OCPOLARITY_HIGH );
-    sConfig.OCFastMode   = TIM_OCFAST_DISABLE;
-    sConfig.OCNPolarity  = TIM_OCNPOLARITY_HIGH;
-    sConfig.OCNIdleState = TIM_OCNIDLESTATE_RESET;
-    sConfig.OCIdleState  = TIM_OCIDLESTATE_RESET;
-    /* PWM initially to 50% ( PWM is not started yet! ) */
-    sConfig.Pulse        = inst->ARR / 2;
-    
-    return HAL_TIM_PWM_ConfigChannel(&adt->myTmrHandle->myHalHnd, &sConfig, idxToTimCh[ch-1]) == HAL_OK;
-
-}
-
-/******************************************************************************
- * Start the PWM with an absolute value for the channels CCR
- * the allowed value for CCR is [ 0 .. ARR ]
- *****************************************************************************/
-static void StartPWMAbs( TIM_HandleTypeDef *htim, uint32_t ch, uint32_t absval)
-{
-    TIM_TypeDef *inst = htim->Instance;
-
-    __IO uint32_t *ccr_reg = &inst->CCR1;
-    *(ccr_reg+ch-1) = absval;
-
-    HAL_TIM_PWM_Start( htim, idxToTimCh[ch-1]);
-}
-
-
-/******************************************************************************
- * Start the PWM with a duty cycle of promille
- *****************************************************************************/
-void TMR_StartPWMChPromille(const HW_DeviceType *self, uint32_t ch, uint32_t promille)
-{
-    if ( promille > 1000 )  return;
-    if ( ch < 1 || ch > 4 ) return;
-  
-    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self); 
-    TIM_HandleTypeDef *hnd = &adt->myTmrHandle->myHalHnd;
-    TIM_TypeDef *inst = (TIM_TypeDef *)hnd->Instance;
-
-    uint32_t abs = (inst->ARR+1) * promille;
-    /* Round before division */
-    abs =  (abs+500) /1000 ;
-    if ( abs > 0 ) abs--;
-    /* for 100% on, CCR must be greater than ARR */
-    if ( promille == 1000 ) abs = (inst->ARR+1);
-    StartPWMAbs(hnd, ch, abs );
-}
-
-/******************************************************************************
- * Start the PWM with a duty cycle of s256/256
- *****************************************************************************/
-void TMR_StartPWMChS256(const HW_DeviceType *self, uint32_t ch, uint32_t s256 )
-{
-    if ( s256 > 256 ) return;
-    if ( ch < 1 || ch > 4 ) return;
-
-    const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self); 
-    TIM_HandleTypeDef *hnd = &adt->myTmrHandle->myHalHnd;
-    TIM_TypeDef *inst = (TIM_TypeDef *)hnd->Instance;
-
-    uint32_t abs = (inst->ARR+1) * s256;
-    /* Round before division */
-    abs =  (abs+128) /256 ;
-    if ( abs > 0 ) abs--;
-    /* for 100% on, CCR must be greater than ARR */
-    if ( s256 == 256 ) abs = (inst->ARR+1);
-
-    StartPWMAbs(hnd, ch, abs );
-}
-
-/******************************************************************************
- * Stop one PWM channel and deactivate the GPIO
- *****************************************************************************/
-void TMR_StopPWMCh(const HW_DeviceType *self, uint32_t ch)
-{
-    if ( ch < 1 || ch > 4 ) return;
-
-    uint32_t devIdx = GetDevIdx(self);
-    TIM_HandleTypeDef *htim = &TMR_GetAdditionalData(self)->myTmrHandle->myHalHnd;
-
-    HAL_TIM_PWM_Stop(htim, idxToTimCh[ch-1]);
-
-    /* Deactivate GPIO */
-    GpioAFDeInitOne(devIdx, &self->devGpioAF->gpio[ch-1]);
-
-    /* If no other PWM channel is active, disable TMR */
-    if ( !IsAnyChnActive(self) ) CLEAR_BIT( htim->Instance->CR1, TIM_CR1_CEN );
-}
 
 /******************************************************************************
  * Check, whether the system may enter Stop 2 mode. 
@@ -564,7 +441,7 @@ bool TMR_AllowStop(const HW_DeviceType *self)
         const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
         return adt->myTmrHandle->reference_cnt == 0;
     } else
-        return (!IsAnyChnActive(self));
+        return (!TMR_IsAnyChnActive(self));
 }
 
 
@@ -581,10 +458,11 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     TIM_HandleTypeDef *hnd = &adt->myTmrHandle->myHalHnd;
     TIM_TypeDef *inst = (TIM_TypeDef *)hnd->Instance;
 
-    ret = SetBaseFrq(inst, adt->base_frq, &new_psc, self->devType==HW_DEVICE_BASETIMER);
+    ret = TMR_SetBaseFrq(inst, adt->base_frq, &new_psc, self->devType==HW_DEVICE_BASETIMER);
     if ( ret ) inst->PSC = new_psc;
     return ret;
 }
+
 
 #if defined(USE_TIM6) && defined(TIM6)
     /**************************************************************************
@@ -595,7 +473,8 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 
     static const TMR_AdditionalDataType additional_tim6 = {
         .myTmrHandle = &TIM6Handle,
-        .base_frq   = 1000000,          // Base Timers always run with 1MHz
+        .base_frq    = 1000000,          // Base Timers always run with 1MHz
+        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     const HW_IrqList irq_tim6 = {
@@ -631,7 +510,8 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 
     static const TMR_AdditionalDataType additional_tim7 = {
         .myTmrHandle = &TIM7Handle,
-        .base_frq   = 1000000,          // Base Timers always run with 1MHz
+        .base_frq    = 1000000,          // Base Timers always run with 1MHz
+        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     const HW_IrqList irq_tim7 = {
@@ -662,7 +542,7 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     TimerHandleT         TIM1Handle;
 
     static const HW_GpioList_AF gpio_tim1 = {
-        /* CH1 .. CH4 must be specified, will only be initialized when used */
+        /* CH1 .. CH4 must be specified, even if not used for pwm*/
         .gpio = { 
              TIM1_CH1,
              TIM1_CH2,
@@ -674,7 +554,8 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 
     static const TMR_AdditionalDataType additional_tim1 = {
         .myTmrHandle = &TIM1Handle,
-        .base_frq   = 8000000,
+        .base_frq    = 8000000,
+        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     const HW_DeviceType HW_TIM1 = {
@@ -700,14 +581,12 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     TimerHandleT         TIM2Handle;
 
     static const HW_GpioList_AF gpio_tim2 = {
-        /* CH1 .. CH4 must be specified, will only be initialized when used */
-        .gpio = {{NULL}},
-/*
-        {
-             TIM2_CH1,
-             TIM2_CH2,
-             TIM2_CH3,
-             TIM2_CH4,
+        /* CH1 .. CH4 must be specified, even if not used for pwm*/
+        .gpio = {
+             NULL,
+             NULL,
+             NULL,
+             NULL,
         },
 */
         .num = 0, 
@@ -716,7 +595,8 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 
     static const TMR_AdditionalDataType additional_tim2 = {
         .myTmrHandle = &TIM2Handle,
-        .base_frq   = 1000000,
+        .base_frq    = 1000000,
+        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     static const HW_IrqList irq_tim2 = {
@@ -746,8 +626,7 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 #if defined(USE_TIM3) && defined(TIM3)
     TimerHandleT         TIM3Handle;
 
-    static const HW_GpioList_AF gpio_tim1 = {
-        /* CH1 .. CH4 must be specified, will only be initialized when used */
+    static const HW_GpioList_AF gpio_tim3 = {
         .gpio = { 
              TIM3_CH1,
              TIM3_CH2,
@@ -757,18 +636,25 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
         .num = 4, 
     };
 
-    static const TMR_AdditionalDataType additional_tim1 = {
+    static const TmrUsdPwmChnls chUsed3 = {
+        .chn_idx = { LCD_BKLGHT_CH, },   /* specify channel numbers here [1 ..4] ! */
+        .num     = 1,
+    };
+
+    static const TMR_AdditionalDataType additional_tim3 = {
         .myTmrHandle = &TIM3Handle,
-        .base_frq   = 8000000,
+        .base_frq    = 8000000,
+        .pwm_frq     = HW_PWM_FREQUENCY,
+        .pwm_used    = &chUsed3,
     };
 
     const HW_DeviceType HW_TIM3 = {
         .devName        = "TIM3",
         .devBase        = TIM3,
-        .devGpioAF      = &gpio_tim1,
+        .devGpioAF      = &gpio_tim3,
         .devGpioIO      = NULL,
         .devType        = HW_DEVICE_PWMTIMER,
-        .devData        = &additional_tim1,
+        .devData        = &additional_tim3,
         .devIrqList     = NULL,
         .devDmaTx       = NULL,
         .devDmaRx       = NULL,
@@ -781,11 +667,56 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     };
 #endif /* TIM3 */
 
+#if defined(USE_TIM5) && defined(TIM5)
+    TimerHandleT         TIM5Handle;
+
+    static const HW_GpioList_AF gpio_tim5 = {
+        /* CH1 .. CH4 must be specified, even if not used for pwm*/
+        .gpio = { 
+             TIM5_CH1,
+             TIM5_CH2,
+             TIM5_CH3,
+             TIM5_CH4,
+        },
+        .num = 4, 
+    };
+
+    static const TmrUsdPwmChnls chUsed5 = {
+        .chn_idx = { 3, 4, },   /* specify channel numbers here [1 ..4] ! */
+        .num     = 2,
+    };
+
+    static const TMR_AdditionalDataType additional_tim5 = {
+        .myTmrHandle = &TIM5Handle,
+        .base_frq    = 8000000,
+        .pwm_frq     = HW_PWM_FREQUENCY,
+        .pwm_used    = &chUsed5,
+    };
+
+    const HW_DeviceType HW_TIM5 = {
+        .devName        = "TIM5",
+        .devBase        = TIM5,
+        .devGpioAF      = &gpio_tim5,
+        .devGpioIO      = NULL,
+        .devType        = HW_DEVICE_PWMTIMER,
+        .devData        = &additional_tim5,
+        .devIrqList     = NULL,
+        .devDmaTx       = NULL,
+        .devDmaRx       = NULL,
+        .Init           = TMR_Init,
+        .DeInit         = TMR_DeInit,
+        .OnFrqChange    = TMR_OnFrqChange,
+        .AllowStop      = TMR_AllowStop,
+        .OnSleep        = NULL,
+        .OnWakeUp       = NULL,
+    };
+#endif /* TIM5 */
+
 #if defined(USE_TIM15) && defined(TIM15)
     TimerHandleT         TIM15Handle;
 
     static const HW_GpioList_AF gpio_tim15 = {
-        /* CH1, CH2, CH1N must be specified, will only be initialized when used */
+        /* CH1, CH2, CH1N must be specified, set NULL if not used for PWM */
         .gpio = { 
              TIM15_CH1,
              TIM15_CH2,
@@ -796,7 +727,8 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
 
     static const TMR_AdditionalDataType additional_tim15 = {
         .myTmrHandle = &TIM15Handle,
-        .base_frq   = 8000000,
+        .base_frq    = 8000000,
+        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     const HW_DeviceType HW_TIM15 = {
@@ -884,7 +816,7 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     }
 #endif /* USE_PERIPHTIMER > 0 */ 
 
-#endif /* USE_PWMTIMER > 0 || USE_BASICTIMER > 0 */
+#endif /* USE_HW_PWMTIMER > 0 || USE_BASICTIMER > 0 || USE_PERIPH_TIMER > 0 || USE_USER_PWMTIMER > 0 */
 /**
   * @}
   */

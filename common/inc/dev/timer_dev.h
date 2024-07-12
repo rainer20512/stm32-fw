@@ -31,7 +31,7 @@ typedef struct TimerHandleType {
     int32_t             reference_cnt;        /* counter for active references of BaseTimer */
     uint32_t            bTicksEnabled;        /* If Bastimer is also tick generator, this flag may inhibit tick generation */
     uint8_t             use_chX[4];           /* flag for "ChannelX is used"       */
-    uint8_t             bIs32bit;             /* true, if timer is 32bit wide */
+    uint8_t             bIs32bit;             /* true, if timer is 32bit wide      */
 } TimerHandleT;
 
 /* Public typedef ---------------------------------------------------------------*/
@@ -48,7 +48,17 @@ typedef struct TimerHandleType {
 
 #if defined(TIM3) && defined(USE_TIM3)
     extern const HW_DeviceType  HW_TIM3;
-    extern TimerHandleT         TIM13Handle;
+    extern TimerHandleT         TIM3Handle;
+#endif
+
+#if defined(TIM4) && defined(USE_TIM4)
+    extern const HW_DeviceType  HW_TIM4;
+    extern TimerHandleT         TIM14Handle;
+#endif
+
+#if defined(TIM5) && defined(USE_TIM5)
+    extern const HW_DeviceType  HW_TIM5;
+    extern TimerHandleT         TIM5Handle;
 #endif
 
 /* Base Timers -----------------------------------------------------------------*/
@@ -68,12 +78,17 @@ typedef struct TimerHandleType {
 #endif
 
 /* Public functions for all types of Timers ------------------------------------*/
-void        TMR_Aquire              (TimerHandleT *hnd);
-void        TMR_Release             (TimerHandleT *hnd);
-void        TMR_Start               (const HW_DeviceType *dev, bool bIntEnable);
-void        TMR_Stop                (const HW_DeviceType *dev);
-int32_t     TmrGetClockPrescaler    ( TIM_TypeDef *tim );
-uint32_t    TmrGetClockFrq          ( TIM_TypeDef *tim );
+void            TMR_Aquire              (TimerHandleT *hnd);
+void            TMR_Release             (TimerHandleT *hnd);
+void            TMR_Start               (const HW_DeviceType *dev, bool bIntEnable);
+void            TMR_Stop                (const HW_DeviceType *dev);
+int32_t         TmrGetClockPrescaler    ( TIM_TypeDef *tim );
+uint32_t        TmrGetClockFrq          ( TIM_TypeDef *tim );
+void            TMR_GetBaseAndPwmFrq    (const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq);
+TimerHandleT*   TMR_GetHandleFromDev    (const HW_DeviceType *self);
+bool            TMR_SetBaseFrq          ( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc, bool bExactMatch );
+uint32_t        TMR_GetBaseFrq          (const HW_DeviceType *self );
+bool            TMR_IsAnyChnActive      ( const HW_DeviceType *self);
 
 /* Public functions for BasicTimers --------------------------------------------*/
 void        BASTMR_IrqHandler       ( volatile uint32_t *CntHigh, TIM_TypeDef *htim);
@@ -82,12 +97,6 @@ uint16_t    BASTMR_GetRawValue      (TimerHandleT *hnd);
 void        BASTMR_EarlyInit        (void);
 void        BASTMR_DelayUs          (uint32_t delta_us );
 
-/* Public functions for PWM Timers ---------------------------------------------*/
-bool TMR_SetPWMFrq          (const HW_DeviceType *self, uint32_t frq );
-bool TMR_InitPWMCh          (const HW_DeviceType *self, uint32_t ch, bool invert );
-void TMR_StartPWMChPromille (const HW_DeviceType *self, uint32_t ch, uint32_t promille);
-void TMR_StartPWMChS256     (const HW_DeviceType *self, uint32_t ch, uint32_t s256 );
-void TMR_StopPWMCh          (const HW_DeviceType *self, uint32_t ch);
 
 void PeriphTimer_StartStop(uint32_t bStart);
 

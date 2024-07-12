@@ -89,7 +89,7 @@ void COM_print_debug(bool rfm_transmit)
         DEBUG_PRINTF(" Z:%05d%03d.%c" countervalueHi,countervalue/10, '0'+countervalue%10);
     #endif
 
-    #if defined(TX18LISTENER) || defined(UNIVERSAL) 
+    #if defined(TX18LISTENER) || defined(UNIVERSAL) || defined(PWM_DEVICE) 
         #if USE_THPSENSOR > 0
             DEBUG_PRINTF(" P:%04d", THPSENSOR_GetP_MSL()/10);
         #endif
@@ -168,7 +168,7 @@ void COM_print_debug(bool rfm_transmit)
 
     /* 08 */wireless_putchar(time_sync_tmo);
 
-    #if defined(TX18LISTENER) || defined(UNIVERSAL)
+    #if defined(TX18LISTENER) || defined(UNIVERSAL) || defined(PWM_DEVICE)
         /* 09 */wireless_putchar(EXT_TYPE_OUTDOOR); // Outdoor Frame type
         #if USE_THPSENSOR > 0
             { 

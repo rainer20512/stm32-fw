@@ -11,6 +11,7 @@
 #include "config/config.h"
 #include "config/devices_config.h"
 #include "system/profiling.h"
+#include "debug_helper.h"
 
 #if DEBUG_MODE > 0
     #include "debug_helper.h"
@@ -22,7 +23,7 @@
     #include "rfm/rfm.h"
 #endif
 
-#if USE_DISPLAY > 0 || USE_PWMTIMER > 0
+#if USE_DISPLAY > 0 || USE_HW_PWMTIMER > 0
     #include "ui/lcd.h"
 #endif
 
@@ -42,6 +43,7 @@
     #include "dev/can_dev.h"
 #endif
 
+#include "dev/pwm_timer.h"
 
 
 /******************************************************************************
@@ -71,6 +73,36 @@ void Init_DumpAndClearResetSource(void)
   }
 }
 
+/******************************************************************************
+ * Initialize all PWM timers and start them
+ * debug uart ). This code portion is heavily contaminated by #ifdef's
+ * if you add addtional devices, THIS is the place to add the initialization
+ * code 
+ *****************************************************************************/
+static void Init_AllTimers ( void )
+{
+  const PwmChannelT* act;  
+  int32_t dev_idx;
+  
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) {
+   
+    /* First check, whether Timer device is already registered */
+    /* due to more than one PWM channel per timer              */
+    if ( GetDevIdx(act->tmr) == DEV_NOTFOUND ) {
+        /* Not in device List so far, so register */
+       dev_idx = AddDevice(act->tmr, PWM_CH_InitTimer, NULL);
+       if ( dev_idx < 0 ) {
+           DEBUG_PRINTF("Failed to init Timer-device %s\n",act->tmr->devName );
+       } else {
+           DeviceInitByIdx(dev_idx, NULL );
+       }
+    }
+
+    /* Next, initialize all PWM channels and start all that are marked as autostart */
+    PWM_CH_Init(act);
+
+  } /* for */
+}
 /******************************************************************************
  * Init all other devices except those, that are initialized early ( IODEV and
  * debug uart ). This code portion is heavily contaminated by #ifdef's
@@ -136,20 +168,15 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_PWMTIMER > 0
-      /* Do this before Display Init */  
-     dev_idx = AddDevice(&HW_PWMTIMER, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init Timer-device %s\n",HW_PWMTIMER.devName );
-      } else {
-        DeviceInitByIdx(dev_idx, NULL );
-      }
-      #if USE_DISPLAY > 0
-          /* Assign PWM device and channel to LCD */
-          LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
-      #endif
-  #endif
+
+  Init_AllTimers();
+
+
   #if USE_DISPLAY > 0
+      /* Assign PWM device and channel to LCD */
+      LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
+
+      /* Add output device */
       dev_idx = AddDevice(&EPAPER_DEV, LCD_PostInit, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PRINTF("Failed to init LCD-device %s\n", EPAPER_DEV.devName );

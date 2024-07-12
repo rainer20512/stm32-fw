@@ -378,13 +378,14 @@ void task_handle_lcd ( uint32_t arg )
 
 #if USE_LCD_BACKLIGHT > 0
 
-    #include "dev/timer_dev.h"
+    #include "dev/pwm_timer.h"
 
-    /* My associated quadrature encoder */
+    /* My associated PWM channrl */
     static const HW_DeviceType *myPWM       = NULL;
     static uint8_t              myPWMCh;
     static uint8_t              old_pwm_idx = 0;
 
+    /* PWM width to subjective lightness, from dark to bright */
     const uint8_t pwmtable_832[32]  =
     {
         0,  1,  1,  2,  3,  3,  4,  5,  6,  7,   8,   9,  10,  12,  14, 16, 
@@ -406,9 +407,10 @@ void task_handle_lcd ( uint32_t arg )
         if ( pwm_idx == old_pwm_idx ) return;
 
         if ( pwm_idx == 0 ) {
-            TMR_StopPWMCh(myPWM, myPWMCh);
+            PWM_CH_StopPWMCh(myPWM, myPWMCh);
         } else {
-            if ( old_pwm_idx == 0 ) TMR_InitPWMCh(myPWM, myPWMCh, false);
+            PwmChannelT pwmch= {myPWM, myPWMCh, 0, 0 };
+            if ( old_pwm_idx == 0 ) PWM_CH_Init(&pwmch);
             uint32_t work = pwmtable_832[pwm_idx];
 
             /* Instead of 99,5% duy cycle, switch permanent on */
@@ -416,7 +418,7 @@ void task_handle_lcd ( uint32_t arg )
             #if DEBUG_MODE > 0 && DEBUG_LCD > 0
                     DEBUG_PRINTF("PWM=");print_decXX(work);CRLF();
             #endif 
-            TMR_StartPWMChS256(myPWM, myPWMCh,work);
+            PWM_CH_StartPWMChS256(myPWM, myPWMCh,work);
         }
 
         old_pwm_idx = pwm_idx;

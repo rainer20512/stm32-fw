@@ -81,7 +81,13 @@
         #define TIM3_CH2                         { GPIO_PIN_5,  GPIOB, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch2" }
         #define TIM3_CH3                         { GPIO_PIN_0,  GPIOB, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch3" }
         #define TIM3_CH4                         { GPIO_PIN_1,  GPIOB, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch4" }
-    #else
+
+    #elif defined(USE_TIM3_ALTN4)
+        /* CH1..CH4 : PC6, PC9 */
+        #define TIM3_CH1                         { GPIO_PIN_6,  GPIOC, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch1" }
+        #define TIM3_CH2                         { GPIO_PIN_7,  GPIOC, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch2" }
+        #define TIM3_CH3                         { GPIO_PIN_8,  GPIOC, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch3" }
+        #define TIM3_CH4                         { GPIO_PIN_9,  GPIOC, GPIO_AF2_TIM3, GPIO_PULLDOWN, "Tim3_Ch4" }    #else
         #error("No config for TIM3 found");
     #endif 
 #endif /* TIM3 */

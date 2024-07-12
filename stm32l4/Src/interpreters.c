@@ -48,13 +48,16 @@
     #include "disp/dogm-graphic.h"
     #include "disp/fonts/lcd_fonts.h"
 #endif
-#if USE_QENCODER
+#if USE_QENCODER > 0
     #include "dev/qencode.h"
 #endif
 #if USE_THPSENSOR > 0
     #include "sensors/thp_sensor.h"
 #endif
 
+#if USE_HW_PWMTIMER > 0
+    #include "dev/pwm_timer.h"
+#endif
 /** @addtogroup CmdLine
   * @{
   */ 
@@ -1271,7 +1274,7 @@ ADD_SUBMODULE(Test);
             break;
         case 2:
             ADC_MeasureChipTemp(&HW_ADC1);
-            printf("Chip Temp = %d°C\n", ADC1Handle.chiptemp); 
+            printf("Chip Temp = %dC\n", ADC1Handle.chiptemp); 
             break;
         case 3:
             if ( CMD_argc() < 1 ) {
@@ -1458,7 +1461,7 @@ ADD_SUBMODULE(Test);
                 argnum--;
            }
 	   break;
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
         case 7:
             argnum = CMD_argc();
             if ( argnum < 2 ) {
@@ -1471,9 +1474,9 @@ ADD_SUBMODULE(Test);
             argnum = CMD_to_number ( word, wordlen );
   	    printf("PWM on Ch %d to %d\n", ch, argnum); 
             if ( argnum > 0 )
-                TMR_StartPWMChS256(&HW_PWMTIMER, ch, argnum);
+                PWM_CH_StartPWMChS256(&HW_PWMTIMER, ch, argnum);
             else
-                TMR_StopPWMCh(&HW_PWMTIMER, ch);
+                PWM_CH_StopPWMCh(&HW_PWMTIMER, ch);
             break;
 #endif
         default:
@@ -1497,7 +1500,7 @@ ADD_SUBMODULE(Test);
         { "Prop16 invert",          ctype_fn, .exec.fn = Dogm_Menu,VOID(4), "chars in Prop16 font, inverted" },
         { "Dig24",                  ctype_fn, .exec.fn = Dogm_Menu,VOID(5), "Digits in 24pt" },
         { "Dig32",                  ctype_fn, .exec.fn = Dogm_Menu,VOID(6), "Digits in 32pt" },
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
         { "PWM <ch> <val>",         ctype_fn, .exec.fn = Dogm_Menu,VOID(7), "Digits in 32pt" },
 #endif
     };
@@ -1599,7 +1602,7 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(18X20);
 #endif
 
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
     /*********************************************************************************
       * @brief  Submenu for PWM 
       *         
@@ -1614,7 +1617,6 @@ ADD_SUBMODULE(Test);
       uint32_t num;
       uint32_t ch;
       bool ret;
-      
       UNUSED(cmdline);UNUSED(len);
 
       switch((uint32_t)arg) {
@@ -1625,7 +1627,7 @@ ADD_SUBMODULE(Test);
             }
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            ret = TMR_SetPWMFrq(&HW_PWMTIMER, num );
+            ret = PWM_TMR_SetPWMFrq(&HW_PWMTIMER, num );
             DEBUG_PRINTF("Setting PWM frq to %d - %s\n", num, ret ? "ok" : "fail");
             break;
         case 1:
@@ -1637,7 +1639,8 @@ ADD_SUBMODULE(Test);
             ch = CMD_to_number ( word, wordlen );
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            ret = TMR_InitPWMCh(&HW_PWMTIMER, ch, num!=0); 
+            PwmChannelT work= {&HW_PWMTIMER, ch, num!=0, 0 };
+            ret = PWM_CH_Init(&work); 
             DEBUG_PRINTF("Init PWM ch %d - %s\n", ch, ret ? "ok" : "fail");
             break;
         case 2:
@@ -1649,7 +1652,7 @@ ADD_SUBMODULE(Test);
             ch = CMD_to_number ( word, wordlen );
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChPromille (&HW_PWMTIMER, ch, num); 
+            PWM_CH_StartPWMChPromille (&HW_PWMTIMER, ch, num); 
             DEBUG_PRINTF("Start PWM ch %d w. %d/1000\n", ch, num);
             break;
         case 3:
@@ -1661,7 +1664,7 @@ ADD_SUBMODULE(Test);
             ch = CMD_to_number ( word, wordlen );
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChS256(&HW_PWMTIMER, ch, num); 
+            PWM_CH_StartPWMChS256(&HW_PWMTIMER, ch, num); 
             DEBUG_PRINTF("Start PWM ch %d w. %d/256\n", ch, num);
             break;
         case 4:
@@ -1671,7 +1674,8 @@ ADD_SUBMODULE(Test);
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
-            TMR_StopPWMCh(&HW_PWMTIMER, ch); 
+            PwmChannelT* chn =  PWM_CH_GetCh(ch);
+            PWM_CH_StopPWMCh(chn->tmr, chn->channel); 
             DEBUG_PRINTF("Stop PWM ch %d\n", ch);
             break;
         default:
@@ -2571,7 +2575,7 @@ static const CommandSetT cmdBasic[] = {
 #if USE_DOGM132 > 0
   { "DOGM132"    ,     ctype_sub, .exec.sub = &mdlDogm,        0,       "DOGM132 submenu" },
 #endif
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
   { "PWM"    ,         ctype_sub, .exec.sub = &mdlPWM,         0,       "PWM Timer submenu" },
 #endif
 #if USE_DS18X20 > 0
