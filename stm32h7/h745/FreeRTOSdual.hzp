@@ -583,6 +583,7 @@
           </folder>
           <file file_name="../../common/src/dev/eth_dev.c" />
           <file file_name="../../common/src/dev/xspi_dev.c" />
+          <file file_name="../../common/src/dev/pwm_timer.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -626,6 +627,7 @@
           <folder Name="xspi">
             <file file_name="../../common/inc/dev/xspi/xspi_specific.h" />
           </folder>
+          <file file_name="../../common/inc/dev/pwm_timer.h" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />

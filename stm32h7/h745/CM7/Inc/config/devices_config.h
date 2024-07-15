@@ -252,13 +252,14 @@
       #define USE_TIM15_ALTN1
   #endif   
 
-  #if USE_PWMTIMER > 0
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
-  #endif
+                           /* HW_Timer, PWM channel [1..4], inverted?, autostart ? */
+      #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
+   #endif
 
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
@@ -365,13 +366,14 @@
       #define USE_TIM15_ALTN1
   #endif   
 
-  #if USE_PWMTIMER > 0
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
-  #endif
+                           /* HW_Timer, PWM channel [1..4], inverted?, autostart ? */
+      #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
+   #endif
 
   #if USE_QSPI > 0
       #define QSPI_DEV          HW_QSPI1
@@ -447,13 +449,15 @@
       #define USE_TIM15_ALTN1
   #endif   
 
-  #if USE_PWMTIMER > 0
+
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
-  #endif
+                           /* HW_Timer, PWM channel [1..4], inverted?, autostart ? */
+      #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
+   #endif
 
   #if USE_QSPI > 0
       #define XSPI_DEV          HW_QSPI1

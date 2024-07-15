@@ -53,6 +53,10 @@
     #include "dev/sdmmc_dev.h"
 #endif
 
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+    #include "dev/pwm_timer.h"
+#endif
+
 /** @addtogroup CmdLine
   * @{
   */ 
@@ -1251,7 +1255,7 @@ ADD_SUBMODULE(Test);
     ADD_SUBMODULE(18X20);
 #endif
 
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
     /*********************************************************************************
       * @brief  Submenu for PWM 
       *         
@@ -1265,65 +1269,86 @@ ADD_SUBMODULE(Test);
       size_t wordlen;
       uint32_t num;
       uint32_t ch;
+      const PwmChannelT* chn;     
       bool ret;
       
       UNUSED(cmdline);UNUSED(len);
 
       switch((uint32_t)arg) {
         case 0:
-            if ( CMD_argc() < 1 ) {
-              printf("Usage: 'Frequency  <frq>\n");
-              return false;
+            len=0;
+            DEBUG_PRINTF("List of all PWM channels\n");
+            DEBUG_PRINTF("  No. Timer Chn Inv Auto  Basefrq  PWMfrq Duty Active?\n"); 
+            for ( chn=PWM_CH_IterateBegin(); chn; chn=PWM_CH_IterateNext(), len++ ) {
+                TMR_GetActualBaseAndPwmFrq(chn->tmr, &num, &ch);
+                ret = PWM_CH_GetPWMPromille(chn->tmr, chn->channel);
+                DEBUG_PRINTF("  %2d: %s   %d   %d   %d   %8d %6d  %3d%% %s\n",
+                              len, chn->tmr->devName, chn->channel, chn->bInvert, chn->bAutostart, 
+                              num, ch, (ret+5)/10,
+                              TMR_IsChnActive(chn->tmr, chn->channel) ? "Y" : "N" );
             }
-            CMD_get_one_word( &word, &wordlen );
-            num = CMD_to_number ( word, wordlen );
-            ret = TMR_SetPWMFrq(&HW_PWMTIMER, num );
-            DEBUG_PRINTF("Setting PWM frq to %d - %s\n", num, ret ? "ok" : "fail");
             break;
         case 1:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: 'Frequency <ch> <frq>\n");
+              return false;
+            }
+            ch = CMD_to_number ( word, wordlen );
+            chn =  PWM_CH_GetCh(ch);
+            CMD_get_one_word( &word, &wordlen );
+            num = CMD_to_number ( word, wordlen );
+            ret = PWM_TMR_SetPWMFrq(chn->tmr, num );
+            DEBUG_PRINTF("Setting PWM frq to %d - %s\n", num, ret ? "ok" : "fail");
+            break;
+        case 2:
             if ( CMD_argc() < 2 ) {
               printf("Usage: 'Init <ch> <mode>\n");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
+            chn =  PWM_CH_GetCh(ch);
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            ret = TMR_InitPWMCh(&HW_PWMTIMER, ch, num!=0); 
+            PwmChannelT work= {chn->tmr, chn->channel, num!=0, 0 };
+            ret = PWM_CH_Init(&work); 
             DEBUG_PRINTF("Init PWM ch %d - %s\n", ch, ret ? "ok" : "fail");
             break;
-        case 2:
+        case 3:
             if ( CMD_argc() < 2 ) {
               printf("Usage: 'Start Promille <ch> <promille>");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
+            chn =  PWM_CH_GetCh(ch);
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChPromille (&HW_PWMTIMER, ch, num); 
+            PWM_CH_StartPWMChPromille (chn->tmr, chn->channel, num); 
             DEBUG_PRINTF("Start PWM ch %d w. %d/1000\n", ch, num);
             break;
-        case 3:
+        case 4:
             if ( CMD_argc() < 2 ) {
               printf("Usage: 'Start S256 <ch> <s256>");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
+            chn =  PWM_CH_GetCh(ch);
             CMD_get_one_word( &word, &wordlen );
             num = CMD_to_number ( word, wordlen );
-            TMR_StartPWMChS256(&HW_PWMTIMER, ch, num); 
+            PWM_CH_StartPWMChS256(chn->tmr, chn->channel, num); 
             DEBUG_PRINTF("Start PWM ch %d w. %d/256\n", ch, num);
             break;
-        case 4:
+        case 5:
             if ( CMD_argc() < 1) {
               printf("Usage: 'Stop PWM <ch>");
               return false;
             }
             CMD_get_one_word( &word, &wordlen );
             ch = CMD_to_number ( word, wordlen );
-            TMR_StopPWMCh(&HW_PWMTIMER, ch); 
+            chn =  PWM_CH_GetCh(ch);
+            PWM_CH_StopPWMCh(chn->tmr, chn->channel); 
             DEBUG_PRINTF("Stop PWM ch %d\n", ch);
             break;
         default:
@@ -1340,11 +1365,12 @@ ADD_SUBMODULE(Test);
 
 
     static const CommandSetT cmdPWM[] = {
-        { "Frequency",              ctype_fn, .exec.fn = PWM_Menu,VOID(0), "Set PWM frequency" },
-        { "Init PWM Ch",            ctype_fn, .exec.fn = PWM_Menu,VOID(1), "Init PWM Ch <x> to normal/invert (0|1)" },
-        { "Start Promille",         ctype_fn, .exec.fn = PWM_Menu,VOID(2), "Start PWM Ch <x> w. duty cycle of <y>/1000" },
-        { "Start S256",             ctype_fn, .exec.fn = PWM_Menu,VOID(3), "Start PWM Ch <x> w. duty cycle of <y>/256" },
-        { "Stop PWM ch",            ctype_fn, .exec.fn = PWM_Menu,VOID(4), "Stop PWM ch <x>" },
+        { "PWM Channel List",       ctype_fn, .exec.fn = PWM_Menu,VOID(0), "Show list of all PWM channels defined" },
+        { "Frequency <ch> <frq>",   ctype_fn, .exec.fn = PWM_Menu,VOID(1), "Set PWM frequency of channel <ch> to <frq>" },
+        { "Init <Ch> <mode>",       ctype_fn, .exec.fn = PWM_Menu,VOID(2), "Init PWM Ch <x> to normal/invert (0|1)" },
+        { "Start <ch> Promille",    ctype_fn, .exec.fn = PWM_Menu,VOID(3), "Start PWM Ch <x> w. duty cycle of <y>/1000" },
+        { "Start <ch> S256",        ctype_fn, .exec.fn = PWM_Menu,VOID(4), "Start PWM Ch <x> w. duty cycle of <y>/256" },
+        { "Stop <ch>",              ctype_fn, .exec.fn = PWM_Menu,VOID(5), "Stop PWM ch <x>" },
     };
     ADD_SUBMODULE(PWM);
 #endif
@@ -2531,7 +2557,7 @@ static const CommandSetT cmdBasic[] = {
 #if defined(USE_ADC3)
   { "ADC"    ,         ctype_sub, .exec.sub = &mdlADC,         0,       "ADC submenu" },
 #endif
-#if USE_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0
   { "PWM"    ,         ctype_sub, .exec.sub = &mdlPWM,         0,       "PWM Timer submenu" },
 #endif
 #if USE_DS18X20 > 0

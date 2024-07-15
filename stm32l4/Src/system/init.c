@@ -43,8 +43,48 @@
     #include "dev/can_dev.h"
 #endif
 
-#include "dev/pwm_timer.h"
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+    #include "dev/pwm_timer.h"
+#endif
 
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+
+    #include "eeprom.h"
+
+    /******************************************************************************
+     * Overwrite the Hardcoded presets of PWM Timers for base and PWM frequency
+     * Parameters IN
+     *   self - Timer Device
+     *   ch   - PWM channel [1..4], may also be 0, which means: ignore
+     * Parameters IN/OUT
+     *   base_frq - Timer base frequency, ie input frequency to counters in Hz
+     *   pwm_frq    PWM freqency in HZ
+     *   duty_cycle PWM duty cycle in %
+     * Any of the IN/OUT parameters may be NULL, in wich case theyy are ignored 
+     *****************************************************************************/
+    void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle)
+    {
+        UNUSED(base_frq);
+        if ( self == &HW_TIM5 ) {
+            if (pwm_frq) *pwm_frq = config.pwm_frq *100;
+            if ( ch ) switch (ch) {
+                case 1:
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    if (duty_cycle) *duty_cycle = config.pwm_duty1;
+                    break;
+                case 4:
+                    if (duty_cycle) *duty_cycle = config.pwm_duty2;
+                    break;
+            } /* switch, if */
+         
+        } else if ( self == &HW_TIM3 ) {
+
+        }
+    }
+#endif
 
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx

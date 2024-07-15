@@ -42,6 +42,11 @@ typedef struct {
     const TmrUsdPwmChnls* pwm_used;   /* list of used pwm channels  */
 } TMR_AdditionalDataType;
 
+uint32_t idxToTimCh[6] = 
+    { TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3,
+      TIM_CHANNEL_4, TIM_CHANNEL_5, TIM_CHANNEL_6, 
+    };
+
 
 static TMR_AdditionalDataType * TMR_GetAdditionalData(const HW_DeviceType *self)
 {
@@ -53,11 +58,26 @@ TimerHandleT * TMR_GetHandleFromDev(const HW_DeviceType *self)
     return TMR_GetAdditionalData(self)->myTmrHandle;
 }
 
-void TMR_GetBaseAndPwmFrq(const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq)
+/******************************************************************************
+ * Returns the predefined values for base and pwm frq from eeprom
+ *****************************************************************************/
+void TMR_GetPredefBaseAndPwmFrq(const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq)
 {
     const TMR_AdditionalDataType *adt = TMR_GetAdditionalData(self);
     *base_frq = adt->base_frq;
     *pwm_frq  = adt->pwm_frq;
+}
+
+/******************************************************************************
+ * Returns the actual values for base and pwm frq for Timer "self"
+ *****************************************************************************/
+void TMR_GetActualBaseAndPwmFrq(const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq)
+{
+    TIM_TypeDef *htim = (TIM_TypeDef *)self->devBase;
+    uint32_t inp_clk = TmrGetClockFrq(htim);
+    *base_frq = inp_clk / (htim->PSC +1);
+    uint32_t arr = htim->ARR;
+    *pwm_frq = arr ? *base_frq / arr : 0;
 }
 
 /******************************************************************************
@@ -69,7 +89,32 @@ bool TMR_IsAnyChnActive( const HW_DeviceType *self)
         
     /* Check, if any of the enable bits in CCER are set */
     return htim->CCER & ( TIM_CCER_CC1E | TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E | TIM_CCER_CC5E | TIM_CCER_CC6E );
-}     
+}    
+
+/******************************************************************************
+ * Returns true, if "ch" is a valid channel number[1..4}] 
+ * AND channel is configured for use 
+ *****************************************************************************/
+bool TMR_CheckValidChn( const HW_DeviceType *self, uint32_t ch )
+{
+    if ( ch < 1 || ch > 4 ) return false;
+
+    return TMR_GetHandleFromDev(self)->use_chX[ch];
+    
+}
+
+/******************************************************************************
+ * Returns a value ! 0, if channel "ch" is active
+ *****************************************************************************/
+bool TMR_IsChnActive( const HW_DeviceType *self, uint32_t ch )
+{
+    if (!TMR_CheckValidChn(self, ch)) return false;
+
+    TIM_TypeDef *inst = TMR_GetHandleFromDev(self)->myHalHnd.Instance;
+
+    return inst->CCER & (TIM_CCER_CC1E << (idxToTimCh[ch-1] & 0x1FU));
+}
+
 
 /**********************************************************************************
  * Aquire a timer instance
@@ -511,7 +556,6 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     static const TMR_AdditionalDataType additional_tim7 = {
         .myTmrHandle = &TIM7Handle,
         .base_frq    = 1000000,          // Base Timers always run with 1MHz
-        .pwm_frq     = HW_PWM_FREQUENCY,
     };
 
     const HW_IrqList irq_tim7 = {

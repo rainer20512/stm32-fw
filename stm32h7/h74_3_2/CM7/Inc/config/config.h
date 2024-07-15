@@ -21,11 +21,11 @@
  ********************************************************************************
  */ 
 
-//#define STM32H742REF
+#define STM32H742REF
 //#define STM32H743EVAL2
 //#define STM32H7_DEVEBOX
 //#define STM32H7_OPENMV
-#define STM32H725_WIOLITEAI
+//#define STM32H725_WIOLITEAI
 /*
  ********************************************************************************
  * Application selection
@@ -53,7 +53,7 @@
 #define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
-#define USE_PWMTIMER                0
+#define USE_HW_PWMTIMER                1
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI                    0            
@@ -308,7 +308,7 @@
     MK_CONFIGSTR(USE_EEPROM_EMUL,3)
     MK_CONFIGSTR(USE_QENCODER,4)
     MK_CONFIGSTR(USE_SECONDTIMER,5)
-    MK_CONFIGSTR(USE_PWMTIMER,6)
+    MK_CONFIGSTR(USE_HW_PWMTIMER,6)
     MK_CONFIGSTR(USE_BASICTIMER,7)
     MK_CONFIGSTR(USE_QSPI,8)
     MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,9)

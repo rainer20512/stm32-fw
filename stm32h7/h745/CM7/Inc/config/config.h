@@ -52,7 +52,7 @@
 #define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
-#define USE_PWMTIMER                0
+#define USE_HW_PWMTIMER             1
 #define USE_BASICTIMER              1
 #define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
@@ -63,6 +63,7 @@
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
 #define DEBUG_BAUDRATE      38400        // When waking up from stop, the max baudrate is about 45kBaud
+#define HW_PWM_FREQUENCY    20000
 
 #define DEBUG_IRQ_PRIO      0x0f         // Give the debug uart the lowest priority
 #define USART_IRQ_PRIO      0x0e         // Give the other uarts the next lowest priority
@@ -214,7 +215,7 @@
     MK_CONFIGSTR(USE_EEPROM_EMUL,3)
     MK_CONFIGSTR(USE_QENCODER,4)
     MK_CONFIGSTR(USE_SECONDTIMER,5)
-    MK_CONFIGSTR(USE_PWMTIMER,6)
+    MK_CONFIGSTR(USE_HW_PWMTIMER,6)
     MK_CONFIGSTR(USE_BASICTIMER,7)
     MK_CONFIGSTR(USE_QSPI,8)
     MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,9)
@@ -249,7 +250,7 @@
     PPCAT_E(USE_EEPROM_EMUL)      \
     PPCAT_E(USE_QENCODER)  \
     PPCAT_E(USE_SECONDTIMER)  \
-    PPCAT_E(USE_PWMTIMER)  \
+    PPCAT_E(USE_HW_PWMTIMER)  \
     PPCAT_E(USE_BASICTIMER)  \
     PPCAT_E(USE_QSPI)  \
     PPCAT_E(USE_BASICTIMER_FOR_TICKS)  \

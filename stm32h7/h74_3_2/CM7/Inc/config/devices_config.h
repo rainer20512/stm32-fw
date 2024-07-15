@@ -308,7 +308,7 @@
   #define ADC3_USE_DMA 
   #define USER_ADC      HW_ADC3
 
-  #if USE_PWMTIMER > 0
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
       #define PWM_FREQUENCY 20000
@@ -432,15 +432,27 @@
   #define ADC3_USE_DMA 
   #define USER_ADC      HW_ADC3
 
-  #if USE_PWMTIMER > 0
+  #define HW_PWM_FREQUENCY 20000
+
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
-      #define PWM_FREQUENCY 20000
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
+                            /* HW_Timer, PWM channel [1..4], inverted?, autostart ? */
+      #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
   #endif
 
-  #if USE_QSPI > 0
+
+  
+  #if USE_PERIPHTIMER > 0
+      #define PERIPH_TIMER          HW_TIM15
+      #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
+      #define USE_TIM15
+      #define USE_TIM15_ALTN1
+  #endif   
+
+#if USE_QSPI > 0
       #define XSPI_DEV          HW_QSPI1
       #define QSPI_HND          QSpi1Handle
       #define USE_QSPI1
@@ -565,7 +577,7 @@
   #define ADC3_USE_DMA 
   #define USER_ADC      HW_ADC3
 
-  #if USE_PWMTIMER > 0
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
       #define PWM_FREQUENCY 20000
@@ -848,7 +860,7 @@
   #define ADC3_USE_DMA 
   #define USER_ADC      HW_ADC3
 
-  #if USE_PWMTIMER > 0
+  #if USE_HW_PWMTIMER > 0
       #define USE_TIM3
       #define USE_TIM3_ALTN2
       #define PWM_FREQUENCY 20000

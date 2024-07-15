@@ -20,6 +20,33 @@
     #include "onewire.h"
 #endif
 
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+    #include "dev/pwm_timer.h"
+#endif
+
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+
+    /******************************************************************************
+     * Overwrite the Hardcoded presets of PWM Timers for base and PWM frequency
+     * Parameters IN
+     *   self - Timer Device
+     *   ch   - PWM channel [1..4], may also be 0, which means: ignore
+     * Parameters IN/OUT
+     *   base_frq - Timer base frequency, ie input frequency to counters in Hz
+     *   pwm_frq    PWM freqency in HZ
+     *   duty_cycle PWM duty cycle in %
+     * Any of the IN/OUT parameters may be NULL, in wich case theyy are ignored 
+     *****************************************************************************/
+    void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle)
+    {
+        UNUSED(base_frq);
+        if ( self == &HW_TIM15 ) {
+        } else if ( self == &HW_TIM3 ) {
+        }
+    }
+#endif
+
+
 
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx
@@ -37,6 +64,37 @@ void Init_DumpAndClearResetSource(void)
         DEBUG_PUTS("Restart from Standby");
     #endif
   }
+}
+
+/******************************************************************************
+ * Initialize all PWM timers and start them
+ * debug uart ). This code portion is heavily contaminated by #ifdef's
+ * if you add addtional devices, THIS is the place to add the initialization
+ * code 
+ *****************************************************************************/
+static void Init_AllTimers ( void )
+{
+  const PwmChannelT* act;  
+  int32_t dev_idx;
+  
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) {
+   
+    /* First check, whether Timer device is already registered */
+    /* due to more than one PWM channel per timer              */
+    if ( GetDevIdx(act->tmr) == DEV_NOTFOUND ) {
+        /* Not in device List so far, so register */
+       dev_idx = AddDevice(act->tmr, PWM_CH_InitTimer, NULL);
+       if ( dev_idx < 0 ) {
+           DEBUG_PRINTF("Failed to init Timer-device %s\n",act->tmr->devName );
+       } else {
+           DeviceInitByIdx(dev_idx, NULL );
+       }
+    }
+
+    /* Next, initialize all PWM channels and start all that are marked as autostart */
+    PWM_CH_Init(act);
+
+  } /* for */
 }
 
 /******************************************************************************
@@ -83,17 +141,9 @@ void Init_OtherDevices(void)
         DeviceInitByIdx(dev_idx, NULL );
       }
   #endif
-  #if USE_PWMTIMER > 0
-      /* Do this before Display Init */  
-     dev_idx = AddDevice(&HW_PWMTIMER, NULL, NULL);
-      if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init Timer-device %s\n",HW_PWMTIMER.devName );
-      } else {
-        DeviceInitByIdx(dev_idx, NULL );
-      }
-      /* Assign PWM device and channel to LCD */
-      LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
-  #endif
+
+  Init_AllTimers();
+
   #if USE_DISPLAY > 0
       dev_idx = AddDevice(&EPAPER_DEV, LCD_PostInit, NULL);
       if ( dev_idx < 0 ) {

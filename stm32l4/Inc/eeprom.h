@@ -80,8 +80,8 @@ extern const EE_LimitsT eelimits[];
     /* 0d */ {               115,  80, 160, EEType_Uint8_Dec,   "threshold for battery\nLOW [unit 0.02V]" },                
 #if   defined(PWM_DEVICE)
     #define EELIMITS0E EELIMITS03 \
-    /* 0e */ {                50,   0, 100, EEType_Uint8_Dec,   "PWM1 duty cycle" },                                       \
-    /* 0f */ {               200,   1, 255, EEType_Uint8_Dec,   "PWM1 frequency [Hz*100]" },               
+    /* 0e */ {                40,   0, 100, EEType_Uint8_Dec,   "PWM1 duty cycle[%]" },                                       \
+    /* 0f */ {                60,   0, 100, EEType_Uint8_Dec,   "PWM2 duty cycle[%]" },               
 #elif defined(TX18LISTENER)
     #define EELIMITS0E EELIMITS03 \
     /* 0e */ {    TX18_SKIP_INIT,   0,  32, EEType_Uint8_Dec,   "OOK-Skips in init mode" },                                \
@@ -106,22 +106,19 @@ extern const EE_LimitsT eelimits[];
     /* 1b */ {                 0,   0,   1, EEType_YesNo,       "Allow StopMode\n(0=no, 1=yes)" },                         \
     /* 1c */ { DEFAULT_STOP_MODE,   0,   2, EEType_Uint8_Dec,   "StopMode to enter on stop" },                             \
     /* 1d */ { USER_CLOCKCONFIG,    0,  25, EEType_Uint8_Dec,   "Clock configuration to use" },                            
-#if defined(PWM_DEVICE)
-    #define EELIMITS1F EELIMITS10 \
-    /* 1e */ {                50,   0, 100, EEType_Uint8_Dec,   "PWM2 duty cycle" },                                       \
-    /* 1f */ {               200,   1, 255, EEType_Uint8_Dec,   "PWM2 frequency [Hz*100]" },               
+#if defined(TX18LISTENER)
+    #define EELIMITS1E EELIMITS10 \
+    /* 1e */ {         TX_OOK_FRQ,   0,  1, EEType_Uint8_Dec,   "OOK-Frequency\n0=434.000, 1=433.850" },                    
+#elif defined(PWM_DEVICE)
+    #define EELIMITS1E EELIMITS10 \
+   /* 1e */ {                100,    2, 255, EEType_Uint8_Dec,   "PWM frequency[Hz*100]" },               
 #else
-    #if defined(TX18LISTENER)
-        #define EELIMITS1E EELIMITS10 \
-        /* 1e */ {        TX_OOK_FRQ,   0,  1, EEType_Uint8_Dec,   "OOK-Frequency\n0=434.000, 1=433.850" },                    
-    #else
-        #define EELIMITS1E EELIMITS10 \
-        /* 1e */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1e" },                                             
-    #endif
-
-    #define EELIMITS1F EELIMITS1E \
-        /* 1f */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1f" },   
+    #define EELIMITS1E EELIMITS10 \
+    /* 1e */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1e" },                                             
 #endif
+
+#define EELIMITS1F EELIMITS1E \
+    /* 1f */ {                 0,   0, 255, EEType_Uint8_Dec,   "Unused 1f" },   
 
 #define EELIMITS { EELIMITS1F }
 
@@ -157,7 +154,7 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 0f */ uint8_t tx18_skip_norm;      //!< how many transmissions will be skipped in normal phase
 #elif defined(PWM_DEVICE)
     /* 0e */ uint8_t pwm_duty1;           //!< PWM1 duty cycle
-    /* 0f */ uint8_t pwm_frq1;            //!< PWM1 frequency in Hz*100 
+    /* 0f */ uint8_t pwm_duty2;           //!< PWM2 duty cycle
 #else
     /* 0e */ uint8_t unused_0e;           //!< Unused
     /* 0f */ uint8_t unused_0f;           //!< Unused
@@ -169,17 +166,14 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1b */ uint8_t allow_Stop;          //!< Allow Stop-Mode
     /* 1c */ uint8_t StopMode;            //!< Stop Mode to enter on stop 
     /* 1d */ uint8_t clk_config;          //!< clock configuration to use
-#if defined(PWM_DEVICE)
-    /* 1e */ uint8_t pwm_duty2;           //!< PWM2 duty cycle
-    /* 1f */ uint8_t pwm_frq2;            //!< PWM2 frequency in Hz*100
-#else
     #if defined(TX18LISTENER)
         /* 1e */ uint8_t ook_frq;             //!< ook frequency select
+    #elif defined(PWM_DEVICE)
+       /* 1e */ uint8_t pwm_frq;              //!< user PWM frequency in Hz*100
     #else
         /* 1e */ uint8_t unused_1e;           //!< Unused
     #endif
-        /* 1f */ uint8_t unused_1f;           //!< Unused
-#endif
+    /* 1f */ uint8_t unused_1f;           //!< Unused
 } EE_ConfigT;
 
 

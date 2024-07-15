@@ -400,6 +400,7 @@
           <file file_name="../../common/src/dev/xspi_dev.c" />
           <file file_name="../../common/src/dev/ltdc_dev.c" />
           <file file_name="../../common/src/dev/sdmmc_dev.c" />
+          <file file_name="../../common/src/dev/pwm_timer.c" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/src/system/periodic.c" />
@@ -448,6 +449,7 @@
           <file file_name="../../common/inc/dev/xspi_dev.h" />
           <file file_name="../../common/inc/dev/ltdc_dev.h" />
           <file file_name="../../common/inc/dev/sdmmc_dev.h" />
+          <file file_name="../../common/inc/dev/pwm_timer.h" />
         </folder>
         <folder Name="system">
           <file file_name="../../common/inc/system/periodic.h" />

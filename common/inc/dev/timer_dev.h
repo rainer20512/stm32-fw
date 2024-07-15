@@ -34,6 +34,8 @@ typedef struct TimerHandleType {
     uint8_t             bIs32bit;             /* true, if timer is 32bit wide      */
 } TimerHandleT;
 
+extern uint32_t idxToTimCh[]; 
+
 /* Public typedef ---------------------------------------------------------------*/
 
 #if defined(TIM1) && defined(USE_TIM1)
@@ -78,17 +80,20 @@ typedef struct TimerHandleType {
 #endif
 
 /* Public functions for all types of Timers ------------------------------------*/
-void            TMR_Aquire              (TimerHandleT *hnd);
-void            TMR_Release             (TimerHandleT *hnd);
-void            TMR_Start               (const HW_DeviceType *dev, bool bIntEnable);
-void            TMR_Stop                (const HW_DeviceType *dev);
-int32_t         TmrGetClockPrescaler    ( TIM_TypeDef *tim );
-uint32_t        TmrGetClockFrq          ( TIM_TypeDef *tim );
-void            TMR_GetBaseAndPwmFrq    (const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq);
-TimerHandleT*   TMR_GetHandleFromDev    (const HW_DeviceType *self);
-bool            TMR_SetBaseFrq          ( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc, bool bExactMatch );
-uint32_t        TMR_GetBaseFrq          (const HW_DeviceType *self );
-bool            TMR_IsAnyChnActive      ( const HW_DeviceType *self);
+void            TMR_Aquire                  (TimerHandleT *hnd);
+void            TMR_Release                 (TimerHandleT *hnd);
+void            TMR_Start                   (const HW_DeviceType *dev, bool bIntEnable);
+void            TMR_Stop                    (const HW_DeviceType *dev);
+int32_t         TmrGetClockPrescaler        ( TIM_TypeDef *tim );
+uint32_t        TmrGetClockFrq              ( TIM_TypeDef *tim );
+void            TMR_GetPredefBaseAndPwmFrq  (const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq);
+void            TMR_GetActualBaseAndPwmFrq  (const HW_DeviceType *self, uint32_t *base_frq, uint32_t *pwm_frq);
+TimerHandleT*   TMR_GetHandleFromDev        (const HW_DeviceType *self);
+bool            TMR_SetBaseFrq              ( TIM_TypeDef *htim, uint32_t base_frq, uint32_t *new_psc, bool bExactMatch );
+uint32_t        TMR_GetBaseFrq              (const HW_DeviceType *self );
+bool            TMR_IsAnyChnActive          (const HW_DeviceType *self);
+bool            TMR_CheckValidChn           (const HW_DeviceType *self, uint32_t ch);
+bool            TMR_IsChnActive             (const HW_DeviceType *self, uint32_t ch);
 
 /* Public functions for BasicTimers --------------------------------------------*/
 void        BASTMR_IrqHandler       ( volatile uint32_t *CntHigh, TIM_TypeDef *htim);

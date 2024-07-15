@@ -20,49 +20,29 @@
 
 #if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
 
-static uint32_t idxToTimCh[6] = 
-    { TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3,
-      TIM_CHANNEL_4, TIM_CHANNEL_5, TIM_CHANNEL_6, 
-    };
+#if  !defined(HW_PWM_CHANNELS) && !defined(USER_PWM_CHANNELS)
+    #error "NO PWM channels defined"
+#endif
+/* Collect all kinds of PWM channels */
+#if !defined(HW_PWM_CHANNELS)
+    #define HW_PWM_CHANNELS
+#endif
+#if !defined(USER_PWM_CHANNELS)
+    #define USER_PWM_CHANNELS
+#endif
 
+#define ALL_PWM_CHANNELS      { HW_PWM_CHANNELS USER_PWM_CHANNELS }
 
-static const PwmChannelT PwmChannelList[] =  ALL_PWM_CHANNELS;
+static const PwmChannelT PwmChannelList[] = ALL_PWM_CHANNELS;
 static uint32_t bChnListIterator;
 
+/* Forward declarations----------------------------------------------------- */
+/* 
+ * Updater callback to overwrite the flash stores presets fro PWM base and PWM
+ * frequencies
+ */
+void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle);
 
-/******************************************************************************
- * Overwrite the Hardcoded presets of PWM Timers for base and PWM frequency
- * Parameters IN
- *   self - Timer Device
- *   ch   - PWM channel [1..4], may also be 0, which means: ignore
- * Parameters IN/OUT
- *   base_frq - Timer base frequency, ie input frequency to counters in Hz
- *   pwm_frq    PWM freqency in HZ
- *   duty_cycle PWM duty cycle in %
- * Any of the IN/OUT parameters may be NULL, in wich case theyy are ignored 
- *****************************************************************************/
-void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle)
-{
-    UNUSED(base_frq);
-    if ( self == &HW_TIM5 ) {
-        if (pwm_frq) *pwm_frq = 10000;
-        if ( ch ) switch (ch) {
-            case 1:
-                break;
-            case 2:
-                break;
-            case 3:
-                if (duty_cycle) *duty_cycle = 25;
-                break;
-            case 4:
-                if (duty_cycle) *duty_cycle = 25;
-                break;
-        } /* switch, if */
-         
-    } else if ( self == &HW_TIM3 ) {
-
-    }
-}
 
 /******************************************************************************
  * Returns the index in PwmChannelList, if "dev" is a PWM-Timer
@@ -160,7 +140,7 @@ void PWM_CH_InitTimer ( const HW_DeviceType *self, void *args)
     }
 
     /* Get presets for timer base frequency and pwm frequeny from additional data record */
-    TMR_GetBaseAndPwmFrq(self, &base_frq, &pwm_frq);
+    TMR_GetPredefBaseAndPwmFrq(self, &base_frq, &pwm_frq);
     
     /* Update with program specific settings */
     Pwm_Ch_UpdatePresets(self, 0, &base_frq, &pwm_frq, NULL);
@@ -182,13 +162,6 @@ void PWM_CH_InitTimer ( const HW_DeviceType *self, void *args)
     
 }
 
-static bool TmrCheckValidChn( const HW_DeviceType *self, uint32_t ch )
-{
-    if ( ch < 1 || ch > 4 ) return false;
-
-    return TMR_GetHandleFromDev(self)->use_chX[ch];
-    
-}
 
 
 /******************************************************************************
@@ -198,7 +171,7 @@ bool PWM_CH_Init(const PwmChannelT *pwmch)
 {
     const HW_DeviceType *self = pwmch->tmr;
     /* Check for valid channel */
-    if (!TmrCheckValidChn(self, pwmch->channel) ) return false;
+    if (!TMR_CheckValidChn(self, pwmch->channel) ) return false;
 
     uint32_t devIdx = GetDevIdx(self);
 
@@ -223,7 +196,7 @@ bool PWM_CH_Init(const PwmChannelT *pwmch)
     if ( HAL_TIM_PWM_ConfigChannel(&TMR_GetHandleFromDev(self)->myHalHnd, &sConfig, idxToTimCh[pwmch->channel-1]) != HAL_OK ) return false;
 
     /* if autostart is set, then start the PWM channel immediately */
-    if ( pwmch->bautostart ) {
+    if ( pwmch->bAutostart ) {
         /* if no other assignments are made, set a default duty cycle of 50% */
         uint8_t duty = 50;
         /* Update presets */
@@ -252,6 +225,24 @@ static void Pwm_Tmr_StartPWMAbs( TIM_HandleTypeDef *htim, uint32_t ch, uint32_t 
     HAL_TIM_PWM_Start( htim, idxToTimCh[ch-1]);
 }
 
+/******************************************************************************
+ * Get the current Duty Cylce of PWM channel "ch" of Timer Device"self"
+ * the allowed value for CCR is [ 0 .. ARR ]
+ *****************************************************************************/
+uint32_t PWM_CH_GetPWMPromille( const HW_DeviceType *self, uint32_t ch)
+{
+    /* check for valid pwm channel */
+    if (!TMR_CheckValidChn(self, ch) ) return 0;
+
+    TIM_TypeDef *inst = TMR_GetHandleFromDev(self)->myHalHnd.Instance;
+
+    __IO uint32_t *ccr_reg = &inst->CCR1;
+    uint32_t absval = *(ccr_reg+ch-1);
+    
+    return absval * 1000 / inst->ARR;
+
+}
+
 
 /******************************************************************************
  * Start the PWM with a duty cycle of promille
@@ -261,7 +252,7 @@ void PWM_CH_StartPWMChPromille(const HW_DeviceType *self, uint32_t ch, uint32_t 
     if ( promille > 1000 )  return;
 
     /* check for valid pwm channel */
-    if (!TmrCheckValidChn(self, ch) ) return;
+    if (!TMR_CheckValidChn(self, ch) ) return;
     
 
     TIM_HandleTypeDef *hnd = &TMR_GetHandleFromDev(self)->myHalHnd;
@@ -285,7 +276,7 @@ void PWM_CH_StartPWMChS256(const HW_DeviceType *self, uint32_t ch, uint32_t s256
     if ( s256 > 256 ) return;
 
     /* check for valid pwm channel */
-    if (!TmrCheckValidChn(self, ch) ) return;
+    if (!TMR_CheckValidChn(self, ch) ) return;
 
     TIM_HandleTypeDef *hnd = &TMR_GetHandleFromDev(self)->myHalHnd;
     TIM_TypeDef *inst = (TIM_TypeDef *)hnd->Instance;
@@ -306,7 +297,7 @@ void PWM_CH_StartPWMChS256(const HW_DeviceType *self, uint32_t ch, uint32_t s256
 void PWM_CH_StopPWMCh(const HW_DeviceType *self, uint32_t ch)
 {
     /* check for valid pwm channel */
-    if (!TmrCheckValidChn(self, ch) ) return;
+    if (!TMR_CheckValidChn(self, ch) ) return;
 
     uint32_t devIdx = GetDevIdx(self);
     TIM_HandleTypeDef *htim = &TMR_GetHandleFromDev(self)->myHalHnd;

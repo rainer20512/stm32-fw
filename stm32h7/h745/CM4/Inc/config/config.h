@@ -54,7 +54,8 @@
 #define USE_QENCODER                0
 #define USE_DISPLAY                 0
 #define USE_SECONDTIMER             1
-#define USE_PWMTIMER                0
+#define USE_HW_PWMTIMER             0
+#define USE_USER_PWMTIMER           0
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
@@ -79,6 +80,7 @@
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
 #define DEBUG_BAUDRATE      38400        // When waking up from stop, the max baudrate is about 45kBaud
+#define HW_PWM_FREQUENCY    20000
 
 #define DEBUG_IRQ_PRIO      0x0f         // Give the debug uart the lowest priority
 #define USART_IRQ_PRIO      0x0e         // Give the other uarts the next lowest priority
@@ -222,30 +224,31 @@
     MK_CONFIGSTR(USE_QENCODER,4)
     MK_CONFIGSTR(USE_DISPLAY,5)
     MK_CONFIGSTR(USE_SECONDTIMER,6)
-    MK_CONFIGSTR(USE_PWMTIMER,7)
-    MK_CONFIGSTR(USE_BASICTIMER,8)
-    MK_CONFIGSTR(USE_QSPI,9)
-    MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,10)
-    MK_CONFIGSTR(USE_ETH,11)
-    MK_CONFIGSTR(USE_BDMA,12)
-    MK_CONFIGSTR(USE_LWIP,13)
-    MK_CONFIGSTR(USE_ETH_PHY_LAN8742,14)
-    MK_CONFIGSTR(USE_ETH_PHY_ENC28J60,15)
-    MK_CONFIGSTR(USE_NEXTION,16)
+    MK_CONFIGSTR(USE_HW_PWMTIMER,7)
+    MK_CONFIGSTR(USE_USER_PWMTIMER,8)
+    MK_CONFIGSTR(USE_BASICTIMER,9)
+    MK_CONFIGSTR(USE_QSPI,10)
+    MK_CONFIGSTR(USE_BASICTIMER_FOR_TICKS,11)
+    MK_CONFIGSTR(USE_ETH,12)
+    MK_CONFIGSTR(USE_BDMA,13)
+    MK_CONFIGSTR(USE_LWIP,14)
+    MK_CONFIGSTR(USE_ETH_PHY_LAN8742,15)
+    MK_CONFIGSTR(USE_ETH_PHY_ENC28J60,16)
+    MK_CONFIGSTR(USE_NEXTION,17)
 
-    #define MAX_CONFIGSTR   16
+    #define MAX_CONFIGSTR   17
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
-            // ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr17, // ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
-            // ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
+            ConfigVal17, // ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, //ConfigVal23, ConfigVal24,
         };
 
 

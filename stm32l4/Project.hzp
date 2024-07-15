@@ -86,7 +86,6 @@
         <folder Name="debug">
           <file file_name="../common/inc/debug_gpio_exti.h" />
           <file file_name="../common/inc/debug_helper.h" />
-          <file file_name="../common/inc/debug_outbuf.h" />
           <file file_name="../common/inc/debug_sram.h" />
           <file file_name="../common/inc/debug_stdin.h" />
           <file file_name="../common/inc/log.h" />
@@ -181,6 +180,7 @@
         <file file_name="../common/src/rtc.c" />
         <file file_name="../common/src/timer.c" />
       </folder>
+      <file file_name="../common/inc/debug_outbuf.h" />
     </folder>
     <folder Name="Doc">
       <file file_name="Doc/Changes.txt" />

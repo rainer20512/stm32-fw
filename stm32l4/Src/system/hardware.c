@@ -83,8 +83,10 @@ uint32_t GetAPB1TimerFrequency(void)
 {
   uint32_t uPclk1 =  HAL_RCC_GetPCLK1Freq();
   uint32_t uPclk1Prescale = GetAPB1TimerPrescaler();
+  /*
   DEBUG_PRINTF("APB1 clock .........=%d\n", uPclk1);
   DEBUG_PRINTF("APB1 clock prescaler=%d\n", uPclk1Prescale);
+  */
   return uPclk1/uPclk1Prescale;
 }
 
@@ -92,8 +94,10 @@ uint32_t GetAPB2TimerFrequency(void)
 {
   uint32_t uPclk2 =  HAL_RCC_GetPCLK2Freq();
   uint32_t uPclk2Prescale = GetAPB2TimerPrescaler();
+  /*
   DEBUG_PRINTF("APB2 clock .........=%d\n", uPclk2);
   DEBUG_PRINTF("APB2 clock prescaler=%d\n", uPclk2Prescale);
+  */
   return uPclk2/uPclk2Prescale;
 }
 
