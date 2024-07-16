@@ -23,7 +23,7 @@ typedef struct UPC {                   /* One User PWM channel specification, co
   const HW_DeviceType *tmr;            /* Associated Timer                                  */
   uint8_t channel;                     /* Associated Timer channel [1...n]                  */
   uint8_t bInvert;                     /* Output polarity normal or inverted                */
-  uint8_t bAutostart;                  /* Start PWM when initializing automatically         */
+  uint8_t bUserByte;                   /* Any Information provided by user                  */   
 } PwmChannelT;
 
 int                 PWM_CH_GetIdx(const HW_DeviceType *dev);

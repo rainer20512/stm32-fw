@@ -37,3 +37,9 @@ where <nnn> is the threeed igit number from below
 008 Uart_Dev: Check, whether CircBuff or LinBuf is used oer whether simple array is assigned as transfer buffer
 
 009 New Device type EXT_TYPE_MULTITEMP for multiple DS18X20 temperature sensor tied to one device
+
+010 Removed all PWM specific items from timer-dev. New device PWM Timer in pwm_timer.c: PWM Timer and Channel
+    settings have to be defined in Macros HW_PWM_CHANNELS and USER_PWM_CHANNLS
+    Made all Projects (STM32L476, STM32H742, STM32H7 dual ) compileable after changes 
+    Removed Autostart-Item from PWM channels: PWM Outputs will have to be started manually in any case
+    Added field "bUserByt" ins PWM channel struct to do whatever user wants 

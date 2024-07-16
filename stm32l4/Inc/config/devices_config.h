@@ -431,7 +431,7 @@
       #define USE_TIM3_ALTN2
       #define HW_PWMTIMER HW_TIM3
       #define LCD_BKLGHT_CH         1
-                            /* HW_Timer, PWM channel [1..4], inverted?, autostart ? */
+                            /* HW_Timer, PWM channel [1..4], inverted? */
       #define HW_PWM_CHANNELS { &HW_PWMTIMER, LCD_BKLGHT_CH, 0, 0 }, 
   #endif
 

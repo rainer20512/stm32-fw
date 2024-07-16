@@ -2,20 +2,23 @@
 #define __LCD_VALUEEDIT_H
 
 #include "ui/lcd.h"
+#include "eeprom.h"
 
 #define LCD_EDIT_ITEM_HELP		(1<<0) 				// One Menu item's help text
 #define LCD_EDIT_ITEM_VALUE		(1<<1) 				// One Menu item's value
 #define LCD_EDIT_ITEM_NAME		(1<<2) 				// One Menu item's Name
 #define LCD_EDIT_ALL 			( LCD_EDIT_ITEM_HELP | LCD_EDIT_ITEM_VALUE | LCD_EDIT_ITEM_NAME )
 
+typedef void (*UpdateCB) ( uint32_t, uint32_t );
 typedef struct MenuEdit_t {
 	char* itemText;			// Pointer to Item text ( RAM-ptr ), must not be NULL
 	const char *itemHelpText;	// Pointer to Item help text ( EEPROM-ptr ), may be NULL
-	uint8_t actual;			// actual value					
+	uint8_t actual; 		// actual value					
 	uint8_t initial;		// initial value when edit started
-	uint8_t minval;			// minimum of allowed range
-	uint8_t maxval;			// maximum of allowed range
-	uint8_t bAsHex;			// Display as Hex or as Decimal value ?
+	uint8_t minval;                 // minimum of allowed range
+	uint8_t maxval;                 // maximum of allowed range
+	uint8_t bAsHex;                 // Display as Hex or as Decimal value ?
+        EEUpdCB OnUpdate;               // Callback when changing a value 
 } MenuEdit;
 
 /******************************************************************************

@@ -36,13 +36,6 @@
 static const PwmChannelT PwmChannelList[] = ALL_PWM_CHANNELS;
 static uint32_t bChnListIterator;
 
-/* Forward declarations----------------------------------------------------- */
-/* 
- * Updater callback to overwrite the flash stores presets fro PWM base and PWM
- * frequencies
- */
-void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle);
-
 
 /******************************************************************************
  * Returns the index in PwmChannelList, if "dev" is a PWM-Timer
@@ -142,9 +135,6 @@ void PWM_CH_InitTimer ( const HW_DeviceType *self, void *args)
     /* Get presets for timer base frequency and pwm frequeny from additional data record */
     TMR_GetPredefBaseAndPwmFrq(self, &base_frq, &pwm_frq);
     
-    /* Update with program specific settings */
-    Pwm_Ch_UpdatePresets(self, 0, &base_frq, &pwm_frq, NULL);
-
     /* Check validity */
     if ( !Pwm_Ch_CheckPwmFrq(base_frq, pwm_frq, NULL) ) return;
 
@@ -193,17 +183,7 @@ bool PWM_CH_Init(const PwmChannelT *pwmch)
     /* PWM initially to 50% ( PWM is not started yet! ) */
     sConfig.Pulse        = inst->ARR / 2;
     
-    if ( HAL_TIM_PWM_ConfigChannel(&TMR_GetHandleFromDev(self)->myHalHnd, &sConfig, idxToTimCh[pwmch->channel-1]) != HAL_OK ) return false;
-
-    /* if autostart is set, then start the PWM channel immediately */
-    if ( pwmch->bAutostart ) {
-        /* if no other assignments are made, set a default duty cycle of 50% */
-        uint8_t duty = 50;
-        /* Update presets */
-        Pwm_Ch_UpdatePresets(self, pwmch->channel, NULL, NULL, &duty);
-
-        PWM_CH_StartPWMChPromille(self, pwmch->channel, ((uint32_t)(duty)) * 10);
-    }
+    return HAL_TIM_PWM_ConfigChannel(&TMR_GetHandleFromDev(self)->myHalHnd, &sConfig, idxToTimCh[pwmch->channel-1]) == HAL_OK;
 
     return true;
 }
@@ -317,15 +297,32 @@ void PWM_CH_StopPWMCh(const HW_DeviceType *self, uint32_t ch)
  * an error is returned, if the PWM frq is greater than Base Frq / 20 
  * this is due to shrinking duty cycle options
  * NOTE: This setting affects ALL PWM outputs!
+ * Care should be taken when repeatedly changing PWM frq while PWM chnls active
+ * due to integer rounding, the duty cycle will change 
  *****************************************************************************/
 bool PWM_TMR_SetPWMFrq (const HW_DeviceType *self, uint32_t pwm_frq ) 
 {
     bool ret = true;
-    uint32_t arr;
-    
-    if (!Pwm_Ch_CheckPwmFrq(TMR_GetBaseFrq(self), pwm_frq, &arr) ) return false;
+    uint32_t arr, ccr, work;
+    TIM_TypeDef *inst = (TIM_TypeDef *)self->devBase;
+    __IO uint32_t *ccr_reg = &inst->CCR1;
 
-    ((TIM_TypeDef *)self->devBase)->ARR = arr-1;
+    if (!Pwm_Ch_CheckPwmFrq(TMR_GetBaseFrq(self), pwm_frq, &arr) ) return false;
+    /* If PWM channel is active, CCR has to be adapted, too */
+    if ( TMR_IsAnyChnActive(self) ) {
+        for ( uint32_t i = 0; i < 4; i++ ) if ( TMR_IsChnActive(self,i+1) ) {
+            /* change ccr proportional to arr change */
+            ccr_reg = &inst->CCR1;
+            ccr = *(ccr_reg+i);
+            work = ( arr*ccr + inst->ARR/2 ) / inst->ARR;
+            *(ccr_reg+i) = work;
+            DEBUG_PRINTF("PWMch=%d, Old ccr=%d, old arr=%d, new ccr=%d\n", i+1, ccr, inst->ARR, work);
+        } 
+        
+    }
+    inst->ARR = arr;
+    DEBUG_PRINTF("new arr=%d\n", arr);
+
     return ret;
 }
 

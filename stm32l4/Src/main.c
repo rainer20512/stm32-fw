@@ -91,6 +91,9 @@ void HW_InitJtagDebug(void);
 void Init_DumpAndClearResetSource(void);
 void Init_OtherDevices(void);
 void Init_DefineTasks(void);
+#if USE_USER_PWMTIMER > 0
+    void Init_StartUserPWM(void);
+#endif
 
 
 #if DEBUG_STARTUP > 0
@@ -334,9 +337,15 @@ int main(void)
 
     Init_DefineTasks();
 
-   ProfilerSwitchTo(JOB_TASK_MAIN);  
+    ProfilerSwitchTo(JOB_TASK_MAIN);  
 
     TaskInitAll();
+
+    #if USE_USER_PWMTIMER > 0
+        void Init_StartUserPWM(void);
+        Init_StartUserPWM();
+    #endif
+
 
     /* Run forever */
     while(1) { 

@@ -188,13 +188,20 @@ void OnRotary(int32_t delta)
     if ( delta ) {
         if ( bEditValue ) {
             work = editItem.actual + delta;
-            if ( work > editItem.maxval ) work = editItem.minval + work - editItem.maxval - 1;
-            if ( work < editItem.minval ) work = editItem.maxval - ( editItem.minval - work - 1);
-            editItem.actual = (uint8_t)work;
-            #if DEBUG_LCD_MENU > 0
-                    DEBUG_PRINTF("NewValue=%d\n", work);
-            #endif
+
+            /* Changed the rollover behaviour: When at limit, stay at limit */
+            /* if ( work > editItem.maxval ) work = editItem.minval + work - editItem.maxval - 1;
+            if ( work < editItem.minval ) work = editItem.maxval - ( editItem.minval - work - 1); */
+            if ( work > editItem.maxval ) work = editItem.maxval;
+            if ( work < editItem.minval ) work = editItem.minval;
+            if ( editItem.actual != work ) {
+                editItem.actual = (uint8_t)work;
+                if ( editItem.OnUpdate ) editItem.OnUpdate( (uint32_t) work );
+                #if DEBUG_LCD_MENU > 0
+                        DEBUG_PRINTF("NewValue=%d\n", work);
+                #endif
             LCD_DisplayValueEdit( LCD_EDIT_ITEM_VALUE );
+            }
         } else {
             // Scroll Mode : Call Feeder to update edit data and display
             feeder->Scroll(delta);

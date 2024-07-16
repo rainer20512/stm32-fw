@@ -61,12 +61,16 @@
      *   pwm_frq    PWM freqency in HZ
      *   duty_cycle PWM duty cycle in %
      * Any of the IN/OUT parameters may be NULL, in wich case theyy are ignored 
+     * function returns TRUE, if a preset has been changed
      *****************************************************************************/
-    void Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *base_frq, uint32_t *pwm_frq, uint8_t *duty_cycle)
+    static bool Pwm_Ch_UpdatePresets(const HW_DeviceType *self, uint8_t ch, uint32_t *pwm_frq, uint32_t *duty_cycle)
     {
-        UNUSED(base_frq);
+        bool ret = false;
         if ( self == &HW_TIM5 ) {
-            if (pwm_frq) *pwm_frq = config.pwm_frq *100;
+            if (pwm_frq) {
+                *pwm_frq = config.pwm_frq *100;
+                ret = true;
+            } 
             if ( ch ) switch (ch) {
                 case 1:
                     break;
@@ -74,16 +78,38 @@
                     break;
                 case 3:
                     if (duty_cycle) *duty_cycle = config.pwm_duty1;
+                    ret = true;
                     break;
                 case 4:
                     if (duty_cycle) *duty_cycle = config.pwm_duty2;
+                    ret = true;
                     break;
             } /* switch, if */
          
         } else if ( self == &HW_TIM3 ) {
 
         }
+
+      return ret;
     }
+
+void OnUpd_PWM1_duty( uint32_t newval)
+{
+    DEBUG_PRINTF("Upd PWM1 duty to %d\n", newval);
+    PWM_CH_StartPWMChPromille(&HW_TIM5, 3, newval*10 );
+}
+void OnUpd_PWM2_duty( uint32_t newval )
+{
+    DEBUG_PRINTF("Upd PWM2 duty to %d\n", newval);
+    PWM_CH_StartPWMChPromille(&HW_TIM5, 4, newval*10 );
+}
+
+void OnUpd_PWM_frq( uint32_t newval )
+{
+    DEBUG_PRINTF("Upd PWM frq to %d\n", newval*100);
+    PWM_TMR_SetPWMFrq(&HW_TIM5, newval*100);     
+}
+
 #endif
 
 /******************************************************************************
@@ -111,6 +137,35 @@ void Init_DumpAndClearResetSource(void)
       __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WUF1);
     }
   }
+}
+
+/******************************************************************************
+ * Handle all user PWM timers initially
+ * get initialization parameters and start, eg
+ *****************************************************************************/
+void Init_StartUserPWM ( void )
+{
+  const PwmChannelT* act;  
+  uint32_t pwm;
+  
+  /* 
+   * Iterate thru all PWM channels and only handle user timers, 
+   * step 1: Change PWM frq if desired 
+   */
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
+    if ( Pwm_Ch_UpdatePresets(act->tmr, 0, &pwm, NULL ) ) PWM_TMR_SetPWMFrq(act->tmr, pwm);     
+  } /* for, if */
+
+  /* 
+   * Iterate thru all PWM channels and only handle user timers, 
+   * step 2: Set Duty cycle and Start PWM channel
+   */
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
+    /* If there is no, preset, start user channel with 50% duty cycle */
+    pwm = 50;
+    Pwm_Ch_UpdatePresets(act->tmr, act->channel, NULL, &pwm );
+    PWM_CH_StartPWMChPromille(act->tmr, act->channel, pwm*10 );
+  } /* for, if */
 }
 
 /******************************************************************************

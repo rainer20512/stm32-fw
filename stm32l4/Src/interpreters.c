@@ -55,7 +55,7 @@
     #include "sensors/thp_sensor.h"
 #endif
 
-#if USE_HW_PWMTIMER > 0
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
     #include "dev/pwm_timer.h"
 #endif
 /** @addtogroup CmdLine
@@ -1624,12 +1624,12 @@ ADD_SUBMODULE(Test);
         case 0:
             len=0;
             DEBUG_PRINTF("List of all PWM channels\n");
-            DEBUG_PRINTF("  No. Timer Chn Inv Auto  Basefrq  PWMfrq Duty Active?\n"); 
+            DEBUG_PRINTF("  No. Timer Chn Inv User Basefrq PWMfrq Duty Active?\n"); 
             for ( chn=PWM_CH_IterateBegin(); chn; chn=PWM_CH_IterateNext(), len++ ) {
                 TMR_GetActualBaseAndPwmFrq(chn->tmr, &num, &ch);
                 ret = PWM_CH_GetPWMPromille(chn->tmr, chn->channel);
-                DEBUG_PRINTF("  %2d: %s   %d   %d   %d   %8d %6d  %3d%% %s\n",
-                              len, chn->tmr->devName, chn->channel, chn->bInvert, chn->bAutostart, 
+                DEBUG_PRINTF("  %2d: %s   %d   %d  %3d %8d %6d %3d%% %s\n",
+                              len, chn->tmr->devName, chn->channel, chn->bInvert,  chn->bUserByte,
                               num, ch, (ret+5)/10,
                               TMR_IsChnActive(chn->tmr, chn->channel) ? "Y" : "N" );
             }

@@ -49,7 +49,8 @@ static void LCD_MenuSetup(uint8_t item)
 	editItem.initial		= editItem.actual = Config_GetVal(item);
 	editItem.maxval			= eelimits[item].max;
 	editItem.minval			= eelimits[item].min;
-	editItem.bAsHex			= true;
+        editItem.OnUpdate               = eelimits[item].cb;
+	editItem.bAsHex			= IS_HEXVAL(eelimits[item].type);
 	editItem.itemText		= itemText;
 	editItem.itemHelpText           = eelimits[item].help;
 	#if DEBUG_LCD_MENU > 2
