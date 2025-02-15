@@ -35,6 +35,11 @@
     #include "onewire.h"
 #endif
 
+#if USE_RFM12 > 0 || USE_RFM69 > 0
+    #include "rfm/rfm.h"
+#endif
+
+
 /** @addtogroup COM
   * @{
   */ 
@@ -139,18 +144,23 @@ void COM_print_debug(bool rfm_transmit)
                 t = 10*DS18X20_GetTemp(0);
             #else
                 /***** 009 ***** Otherwise read the first one in the list of sensors */
-                t = 10*DS18X20_GetOneTemp();
+                /***** 013 ***** if no DS18X20 sensor is found, then use BME280      */
+                if (  DS18X20_Found() ) 
+                    t = 10*DS18X20_GetOneTemp();
+                else 
+                    t = abstemp;
             #endif
-            /* 04 */wireless_putchar(t >> 8); // current temp
-            /* 05 */wireless_putchar(t & 0xff);
         #else
-            /* 04 */wireless_putchar(abstemp >> 8); // current temp or Sensor0 temp
-            /* 05 */wireless_putchar(abstemp & 0xff);
+            /* TX18LISTENER or BME280 w/o DS18X20 */
+            t = abstemp;
         #endif
     #else 
-        /* 04 */wireless_putchar(0); 
-        /* 05 */wireless_putchar(0);
+        /* No temp sensor at all */
+        t = 0;
     #endif
+
+    /* 04 */wireless_putchar(t >> 8); // current temp
+    /* 05 */wireless_putchar(t & 0xff);
     
     #if defined(GASSENSOR)
         /* 06 */wireless_putchar(pa7_average >> 7); // Vin * 2 
@@ -297,6 +307,9 @@ void COM_print_version(bool bToWireless)
 {
     COM_print_vstring(APP_STRING, bToWireless, ' ');
     COM_print_vstring(MCU, bToWireless, ' ');
+#if USE_RFM12 > 0 || USE_RFM69 > 0
+    COM_print_vstring(rfm->name, bToWireless, ' ');
+#endif
     /* '\n' is mandatory as last character when transmitting wireless, so append in any case */
     COM_print_vstring(BUILD_STRING, bToWireless,'\n');
 }

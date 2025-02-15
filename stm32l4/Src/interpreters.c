@@ -433,11 +433,11 @@ ADD_SUBMODULE(Devices);
           break;
         case 1:
           DEBUG_PUTS("RFM Init");
-          rfmXX_init();
+          rfm->rfmXX_Init();
           break;
     #if DEBUG_RFM_STATUS > 0 || DEBUG_MODE > 0
         case 2:
-          rfmXX_dump_status();
+          rfm->rfmXX_Dump_status();
           break;
     #endif
         case 3:
@@ -664,10 +664,10 @@ static bool FM24_Menu ( char *cmdline, size_t len, const void * arg )
       }
       break;
     case 1:
-      if ( e->GetID(buffer, &actlen, 255 ) != EEPROM_OK ) {
+      if ( e->GetID(buffer, &chnlen, 255 ) != EEPROM_OK ) {
         puts("EEPROM Read ID failed");
       } else {
-          for ( i=0; i< actlen; i++) 
+          for ( i=0; i< chnlen; i++) 
              printf("%02x", buffer[i]);
           printf("\n");
       }
@@ -721,9 +721,9 @@ static bool FM24_Menu ( char *cmdline, size_t len, const void * arg )
      size = CMD_to_number ( word, wordlen );
      if ( size > MAX_BUFSIZE ) size = MAX_BUFSIZE;
      CMD_get_one_word( &word, &wordlen );
-     actlen = CMD_to_number ( word, wordlen );
+     chnlen = CMD_to_number ( word, wordlen );
 
-      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)actlen;  
+      for(i=0; i <size; i++ ) buffer[i] = (uint8_t)chnlen;  
       if ( e->WriteBuffer(addr, buffer, size ) != EEPROM_OK ) {
         puts("EEPROM  Fill failed");
       }
@@ -2236,7 +2236,7 @@ ADD_SUBMODULE(Test);
             break;
         case 3:
             num = THPSENSOR_Measure(ALL_SENSOR_CHANNELS);
-            printf("THP Sensor Measure %\n", num == THPSENSOR_OK ? "ok" :  "err"  );
+            printf("THP Sensor Measure %s\n", num == THPSENSOR_OK ? "ok" :  "err"  );
             break;
         case 4:
             num = THPSENSOR_GetCapability();

@@ -47,23 +47,23 @@ static const uint8_t rfm_header[4] = {
 
 
 /* Status read Command */
-#define RFM_READ_STATUS()                               rfm_spi16_ret(0x0000)
+#define RFM12_READ_STATUS()                               rfm12_spi16_ret(0x0000)
 
 
-uint8_t  rfmXX_device_present(void)
+uint8_t  rfm12_Device_present(void)
 {
-     return RFM_READ_STATUS() != 0xFFFF;
+     return RFM12_READ_STATUS() != 0xFFFF;
 }
 
 /******************************************************************************
  * Initialize RF module for normal FSK-Mode ( HR20-like )
  *****************************************************************************/
-void rfmXX_init(void)
+void rfm12_Init(void)
 {
-	RFM_READ_STATUS();
+	RFM12_READ_STATUS();
 
 	// 1. Configuration Setting Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_CONFIG_EL           |
 		RFM_CONFIG_EF           |
 		RFM_CONFIG_BAND_433     |
@@ -71,12 +71,12 @@ void rfmXX_init(void)
 	 );
 
 	// 2. Power Management Command 
-	//rfm_spi16(
+	//rfm12_spi16(
 	//	 RFM_POWER_MANAGEMENT     // switch all off
 	//	 );
 
 	// 3. Frequency Setting Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_FREQUENCY            | 
 		/**** Chng 056 ****/
 		RFM_FREQ_433Band(FSK_CARRIER_FREQUENCY)
@@ -84,15 +84,15 @@ void rfmXX_init(void)
 
 	// 4. Data Rate Command
 #if ( RFM_BAUD_RATE == 19200 )
-	rfm_spi16(RFM_DATA_RATE_19200);
+	rfm12_spi16(RFM_DATA_RATE_19200);
 #else
 	#error "This Baudrate has no predefined setting, pls add" 
 #endif
 //  RFM_SET_DATARATE produces another value than the predefined for 19200
-//	rfm_spi16(RFM_SET_DATARATE(RFM_BAUD_RATE));
+//	rfm12_spi16(RFM_SET_DATARATE(RFM_BAUD_RATE));
 
 	// 5. Receiver Control Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_RX_CONTROL_P20_VDI  | 
 		RFM_RX_CONTROL_VDI_FAST |
 		RFM_RX_CONTROL_BW(RFM_BAUD_RATE) |
@@ -101,7 +101,7 @@ void rfmXX_init(void)
 	 );
 
 	// 6. Data Filter Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_DATA_FILTER         |
 		RFM_DATA_FILTER_AL      |
 		RFM_DATA_FILTER_ML      |
@@ -109,7 +109,7 @@ void rfmXX_init(void)
 	 );
 
 	// 7. FIFO and Reset Mode Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_FIFO_IT(8) |
 		RFM_FIFO_DR
 	 );
@@ -117,7 +117,7 @@ void rfmXX_init(void)
 	// 8. Receiver FIFO Read
 
 	// 9. AFC Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_AFC_AUTO_VDI        |
 		RFM_AFC_RANGE_LIMIT_7_8 |
 		RFM_AFC_EN              |
@@ -126,7 +126,7 @@ void rfmXX_init(void)
 	 );
 
 	// 10. TX Configuration Control Command
-	rfm_spi16(
+	rfm12_spi16(
 		RFM_TX_CONTROL_MOD(RFM_BAUD_RATE) |
 		RFM_TX_CONTROL_POW_0
 	 );
@@ -139,7 +139,7 @@ void rfmXX_init(void)
 
 	// 14. Low Battery Detector Command
 
-	//rfm_spi16(
+	//rfm12_spi16(
 	//	 RFM_LOW_BATT_DETECT |
 	//	 3      // 2.2V + v * 0.1V
 	//	 );
@@ -151,10 +151,10 @@ void rfmXX_init(void)
  *******************************************************************************
  * Switch off the RFM12 transceiver to the lowest possible mode
  ******************************************************************************/
-void rfmXX_OFF(void)
+void rfm12_OFF(void)
 {
-    RFM_RXTX_OFF();
-    RFM_SPI_DESELECT();
+    RFM12_RXTX_OFF();
+    RFMxx_SPI_DESELECT();
 }
 
 /*-----------------------------------------------------------------------------
@@ -165,10 +165,10 @@ void rfmXX_OFF(void)
  * Neccessary to initialize the RFM12 receiver correctly
  * sequence found by trial and error
  ******************************************************************************/
-void rfm12_prepare_recv( void )
+static void rfm12_prepare_recv( void )
 {
-	rfm_spi16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
-	rfm_spi16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
+	rfm12_spi16(RFM_FIFO_IT(8) |               RFM_FIFO_DR);
+	rfm12_spi16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR);
 }
 
 /*!
@@ -180,18 +180,18 @@ void rfm12_do_receive(void)
 {
         // The follwing sequnce will clear FFIT/RGIT RGUR/FFOV to avoid junk being received
         // by wrong status readout
-        RFM_WRITE(0xAA);
-        (void)RFM_READ_FIFO();
-        RFM_RX_ON();    //re-enable RX
+        RFM12_WRITE(0xAA);
+        (void)RFM12_READ_FIFO();
+        RFM12_RX_ON();    //re-enable RX
 
-        RFM_INT_EN(); // enable RFM interrupt
+        RFM12_INT_EN(); // enable RFM interrupt
 }
 
 /*!
  *******************************************************************************
  * RFM chip dependant implementation of Receive-routine
  ******************************************************************************/
-void rfmXX_receiveBody(void)
+void rfm12_ReceiveBody(void)
 {	
     // DEBUG_PUTS("Recv:");
     // 
@@ -201,7 +201,7 @@ void rfmXX_receiveBody(void)
     // do re-init only if receive after sleep/idle
     if ( ! bTxThenRx ) {
         RFM_Abort(0);
-        rfmXX_init();
+        rfm12_Init();
     }
 
 
@@ -222,17 +222,17 @@ void rfmXX_receiveBody(void)
  * Start the RFM12 transmitter. 
  * The follwing code sequence has been found by trial and error
  * The transmitter will come up faster, if it is is prepared with
- * "rfmXX_HeatUpTransmitter" shortly before transmission will start
+ * "rfm12_HeatUpTransmitter" shortly before transmission will start
  ******************************************************************************/
-void rfm12_start_transmit(void) {
+static void rfm12_start_transmit(void) {
         // The follwing sequnce will clear FFIT/RGIT RGUR/FFOV to avoid junk being received
         // by wrong status readout
-        RFM_WRITE(0xAA);
-        (void)RFM_READ_FIFO();
+        RFM12_WRITE(0xAA);
+        (void)RFM12_READ_FIFO();
 
-        RFM_TX_ON();
-        RFM_SPI_SELECT(); // set nSEL low: from this moment SDO indicate FFIT or RGIT
-        RFM_INT_EN(); // enable RFM interrupt
+        RFM12_TX_ON();
+        RFMxx_SPI_SELECT(); // set nSEL low: from this moment SDO indicate FFIT or RGIT
+        RFM12_INT_EN(); // enable RFM interrupt
 }
 
 /*!
@@ -241,15 +241,15 @@ void rfm12_start_transmit(void) {
  * doing this prior to transmission will shorten the latency time when
  * transmitter is enabled
  ******************************************************************************/
-void rfmXX_HeatUpTransmitter(void) {
-	RFM_TX_ON_PRE();
+void rfm12_HeatUpTransmitter(void) {
+	RFM12_TX_ON_PRE();
 }
 
 /*!
  *******************************************************************************
  * The RFM chip specific part for transmission of data
  ******************************************************************************/
-void rfmXX_TransmitBody(void)
+void rfm12_TransmitBody(void)
 {
 	// DEBUG_PUTS("Xmit:");
 	// 
@@ -258,7 +258,7 @@ void rfmXX_TransmitBody(void)
 
 	RFM_Abort(0);
 
-	rfmXX_init();
+	rfm12_Init();
 
 	// Prepare Receiver for FSK-Mode
 	rfm_basemode = rfm_basemode_tx;
@@ -400,21 +400,21 @@ uint8_t rfm_ReceiveChar ( unsigned char rxchar)
  * Pinchange Interupt for MISO pin
  * This routine is executed in exti - interrupt context, so keep it short! 
  ******************************************************************************/
-void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
+void HandleFSKInterrupt_RFM12(uint16_t pin, uint16_t pinvalue, void *arg)
 {
   UNUSED(pin); UNUSED(pinvalue); UNUSED(arg);
 
   register uint16_t work;
 
   // RFM module interupt
-  RFM_INT_DIS();
-  while (RFM_MISO_GET()) {
+  RFM12_INT_DIS();
+  while (RFM12_MISO_GET()) {
 	switch ( rfm_basemode )
 	{
 		case rfm_basemode_tx:
 			work = rfm_GetTransmitChar();
 			if ( work != RFM_TX_NOMOREDATA ) {
-                            RFM_WRITE((uint8_t)work);
+                            RFM12_WRITE((uint8_t)work);
 			} else {
                             RFM_SwitchOff();
                             rfm_basemode = rfm_basemode_txdone;
@@ -424,7 +424,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 			break;
 		case rfm_basemode_rx:
 			/* The whole processing is done in "rfm_ReceiveChar", because stub will call it too in stub-mode */
-			if ( !rfm_ReceiveChar(RFM_READ_FIFO()) ) {
+			if ( !rfm_ReceiveChar(RFM12_READ_FIFO()) ) {
                             RFM_SwitchOff();
                             rfm_basemode = rfm_basemode_rxdone;
                             TaskNotify(TASK_RFM); // inform the rfm task about end of transmition
@@ -440,8 +440,8 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 	 } // switch	
   }  // while 
 
-  RFM_INT_CLR();   // RHB Clear any pendign interrupts due to  PinChanges during shift
-  RFM_INT_EN();  // enable RFM interrupt
+  RFM12_INT_CLR();   // RHB Clear any pending interrupts due to  PinChanges during shift
+  RFM12_INT_EN();  // enable RFM interrupt
 }
 
 
@@ -452,7 +452,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 	/******************************************************************************
 	 *
 	 *****************************************************************************/
-	void RFM_OOK_init(void)
+	void rfm12_OOK_init(void)
 	{
 
 		RFM_READ_STATUS();
@@ -466,7 +466,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;Select 12 pF crystal load capacitor
 		8017
 	*/
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_CONFIG_BAND_433     |
 			RFM_CONFIG_X_12_0pf  
 		 );
@@ -484,7 +484,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;dc : Disable clock output = 0
 		82D8
 		*/
-		// RFM_RX_ON(); Activation of receiver is done later
+		// RFM12_RX_ON(); Activation of receiver is done later
 
 		// 3. Frequency Setting Command
 		/*
@@ -492,7 +492,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;Set center frequency to 433.92 MHz
 		A608 --- A604 RHB
 		*/
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_FREQUENCY            | 
 			/**** Chng 056 ****/
 			RFM_FREQ_433Band(config.ook_frq > 0 ? OOK_CARRIER_FREQUENCY1 : OOK_CARRIER_FREQUENCY0)
@@ -500,7 +500,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 
 		// 4. Data Rate Command
 		// 4. Data Rate Command
-		rfm_spi16(RFM_DATA_RATE_9600);
+		rfm12_spi16(RFM_DATA_RATE_9600);
 
 
 
@@ -515,7 +515,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		94C1 
 		*/
 
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_RX_CONTROL_P20_VDI  | 
 			RFM_RX_CONTROL_BW_67 	|
 			RFM_RX_CONTROL_GAIN_0   |
@@ -531,7 +531,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;DQD threshold = 0
 		C220
 		*/
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_DATA_FILTER_UNDOC   |
 			RFM_DATA_FILTER_DIG     |
 			RFM_DATA_FILTER_DQD(0)             
@@ -547,7 +547,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;FIFO IT level = 0
 		CA00
 		*/
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_FIFO
 		 );
 
@@ -565,7 +565,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;Max. Deviation = +7.5 kHz to -10 kHz
 		C431
 		*/
-		rfm_spi16( 
+		rfm12_spi16( 
 			RFM_AFC_RANGE_LIMIT_3_4 |
 			RFM_AFC_EN            
 		 );
@@ -580,7 +580,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		;Select PLL bandwidth for max. 256 kbps
 		CC67
 		*/
-		rfm_spi16(
+		rfm12_spi16(
 			RFM_PLL_OB_5_10			 |
 			RFM_PLL_DDIT			 |
 			RFM_PLL_BW0
@@ -588,25 +588,25 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 
 	}
 
-	void RFM_OOK_on(void)
+	void rfm12_OOK_on(void)
 	{
 		// Prepare for OOK-Modus
-		rfmXX_OFF();
+		rfm12_OFF();
 		RFM_OOK_init();
 	
 		// Enable RFM12 Receiver
-		RFM_RX_ON();
-		RFM_SPI_DESELECT(); // RHB ***0001***
+		RFM12_RX_ON();
+		RFMxx_SPI_DESELECT(); // RHB ***0001***
 
 		// Enable Int0-Interrupte
                 OOK_DATA_IRQ_CLEAR();
 		OOK_DATA_IRQ_ENABLE();
 	}		
 
-	void RFM_OOK_off(void)
+	void rfm12_OOK_off(void)
 	{
 		// Stop RFM12 Receiver
-		rfmXX_OFF();
+		rfm12_OFF();
 
 		// Disable Int0-Interrupte
 		OOK_DATA_IRQ_DISABLE();
@@ -637,9 +637,9 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 
 	const char *const status_text[]  = {e15, e14, e13, e12, e11, e10, e09, e08, e07, e06,e05 };
 
-	void rfmXX_dump_status( void )
+	void rfm12_Dump_status( void )
 	{
-                uint16_t status = RFM_READ_STATUS();
+                uint16_t status = RFM12_READ_STATUS();
 		DEBUG_PRINTF("RFM-status=%04x\n", status);
 		uint16_t work;
 		unsigned char i;
@@ -655,7 +655,31 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
 		CRLF();
 
 	}
-#endif
+#endif /* #if DEBUG_RFM_STATUS > 0 || DEBUG_MODE > 0 */
+
+const RFM_DeviceType rfm12_driver = {
+    /* ------ Presence check ------*/
+    .rfmXX_Device_present = rfm12_Device_present,
+    /* ------ FSK functions ------*/
+    .rfmXX_OFF                  = rfm12_OFF,
+    .rfmXX_Init                 = rfm12_Init,
+    .rfmXX_ReceiveBody          = rfm12_ReceiveBody, 
+    .rfmXX_TransmitBody         = rfm12_TransmitBody,
+    .rfmXX_HeatUpTransmitter    = rfm12_HeatUpTransmitter,
+    .HandleFSKInterrupt_RFMXX   = HandleFSKInterrupt_RFM12,
+    /* ------ OOK functions ------*/
+    #ifdef USE_RFM_OOK
+        .rfmXX_OOK_init         = rfm12_OOK_Init,
+        .rfmXX__OOK_on          = rfm12_OOK_On,
+        .rfmXX__OOK_off)        = rfm12_OOK_Off.
+    #endif
+    /* ------ Debug ------*/    
+    #if DEBUG_RFM_STATUS > 0 || DEBUG_MODE > 0
+        .rfmXX_Dump_status      = rfm12_Dump_status,
+    #endif
+    .rfmID                      = RFM12_ID,
+    .name                       = "RFM12",
+};
 
 
 #endif /* if USE_RFM12 > 0 */

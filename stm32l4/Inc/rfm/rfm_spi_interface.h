@@ -30,17 +30,18 @@
 
 #include "dev/spi.h"
 #include "dev/devices.h"
+#include "rfm/rfm_specific.h"
 
-void SetSPIDevice           ( const HW_DeviceType *dev);
-void SetFskDataAvailableCB  (pFnIrqCB cb);
+void SetSPIDevice           (const HW_DeviceType *dev);
+void SetFskDataAvailableCB  (RFM_DeviceType *rfm, pFnIrqCB cb);
 
 #if USE_RFM12 > 0
-    uint16_t rfm_spi16_ret  (uint16_t outval);
-    #define  rfm_spi16(a)   (void)(rfm_spi16_ret(a))
+    uint16_t rfm12_spi16_ret  (uint16_t outval);
+    #define  rfm12_spi16(a)   (void)(rfm12_spi16_ret(a))
 
-    #define RFM_INT_DIS()           MISO_IRQ_Disable(rfmSpi);
-    #define RFM_INT_EN()            MISO_IRQ_Enable(rfmSpi)
-    #define RFM_INT_CLR()           MISO_IRQ_Clear(rfmSpi)
+    #define RFM12_INT_DIS()           MISO_IRQ_Disable(rfmSpi);
+    #define RFM12_INT_EN()            MISO_IRQ_Enable(rfmSpi)
+    #define RFM12_INT_CLR()           MISO_IRQ_Clear(rfmSpi)
 #endif
 #if USE_RFM69 > 0
     void     rfm_spi_write8     (uint8_t addr, uint8_t val8);
@@ -49,9 +50,9 @@ void SetFskDataAvailableCB  (pFnIrqCB cb);
     void     rfm_spi_write_bulk (uint8_t addr, uint8_t *data, uint8_t size);
     uint8_t  rfm_spi_read8      (uint8_t addr);
     uint16_t rfm_spi_read16     (uint8_t addr);
-    #define RFM_INT_DIS()           BUSY_IRQ_Disable(rfmSpi);
-    #define RFM_INT_EN()            BUSY_IRQ_Enable(rfmSpi)
-    #define RFM_INT_CLR()           BUSY_IRQ_Clear(rfmSpi)
+    #define RFM69_INT_DIS()           BUSY_IRQ_Disable(rfmSpi);
+    #define RFM69_INT_EN()            BUSY_IRQ_Enable(rfmSpi)
+    #define RFM69_INT_CLR()           BUSY_IRQ_Clear(rfmSpi)
 #endif
 
 #if USE_RFM_OOK > 0
@@ -64,8 +65,10 @@ void SetFskDataAvailableCB  (pFnIrqCB cb);
 
 /* Controlling/Checking SPI-Interface ---------------------------------------*/
 extern SpiHandleT *rfmSpi;
-#define RFM_SPI_SELECT()        SpiNSelLow(rfmSpi)
-#define RFM_SPI_DESELECT()      SpiNSelHigh(rfmSpi)
-#define RFM_MISO_GET()          SpiMisoGet(rfmSpi)
+#define RFMxx_SPI_SELECT()        SpiNSelLow(rfmSpi)
+#define RFMxx_SPI_DESELECT()      SpiNSelHigh(rfmSpi)
+#if USE_RFM12 > 0
+    #define RFM12_MISO_GET()          SpiMisoGet(rfmSpi)
+#endif
 
 #endif /* __RFM_SPI_INTERFACE_H */

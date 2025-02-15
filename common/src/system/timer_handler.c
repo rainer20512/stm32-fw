@@ -127,6 +127,6 @@ bool    Tim_Has_CaptureCB           ( void *hwBase )
         /* execute callback, if found */
         tmr_capture_handlers[idx].captureCB(htim);
     } else {
-        DEBUG_PRINTF("No Capture Callback for Timer @%08x\n", htim->Instance);
+        DEBUG_PRINTF("No Capture Callback for Timer @%08x\n", (uint32_t)htim->Instance);
     }
  }

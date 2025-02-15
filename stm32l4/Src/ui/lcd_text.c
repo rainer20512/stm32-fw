@@ -14,6 +14,8 @@
 #include "ui/lcd.h"
 #include "ui/lcd_text.h"
 
+#include "rfm/rfm.h"
+
 #if DEBUG_LCD_MENU > 0
 	#include "debug_helper.h"
 #endif
@@ -34,16 +36,26 @@ static uint8_t LDC_Display_EEPROM_useage(uint8_t redraw_bits)
     #if USE_25X512_EEPROM > 0 || USE_FM24V10 > 0
             char *text;
     #endif
-    const char *ptext;
+    #define PLEN    40
+    char ptext[PLEN];
     
     if ( redraw_bits & LCD_TEXT_LINE0 ) {
-        ptext = APP_STRING;
+        strncpy(ptext, APP_STRING, PLEN);
+        if ( rfm ) {
+            /* Append rfm name to app string */
+            pixlen = strlen(ptext);
+            ptext[pixlen++] = ' ';
+            ptext[pixlen]   = '\0';
+            strncat(ptext, rfm->name, PLEN );
+            /* Just in case add terminating \0 */
+            ptext[PLEN-1] = '\0';
+        }
         pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, ptext);
         dogm_moveto_xy(0,(131-pixlen)/2);
         lcd_put_string(FONT_PROP_8, NORMAL, ptext);
         redraw_bits &= ~LCD_TEXT_LINE0;
     } else if ( redraw_bits & LCD_TEXT_LINE1 ) {
-        ptext = BUILD_STRING;
+        strncpy(ptext, BUILD_STRING, PLEN);
         pixlen = lcd_get_strlen(FONT_PROP_8, NORMAL, ptext);
         dogm_moveto_xy(1,(131-pixlen)/2);
         lcd_put_string(FONT_PROP_8, NORMAL, ptext);

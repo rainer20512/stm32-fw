@@ -18,14 +18,6 @@
 #include "dev/spi.h"
 #include "rfm/rfm_specific.h"
 
-#if defined(USE_RFM12)
-	#include "rfm/rfm12.h"
-#elif defined(USE_RFM69)
-	#include "rfm/rfm69.h"
-#else
-	#error "No RFM chip driver"
-#endif
-
 
 /* Macro to check presence/operability of RFM   module */
 #define RFM_OPERABLE()     ( !(CTL_error & ERR_RFM_INOP) )

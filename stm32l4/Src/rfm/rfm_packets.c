@@ -120,8 +120,11 @@ static uint8_t pkt_CheckPacketLength(void)
  *******************************************************************************/
 static uint8_t pkt_CheckAndSetMode(pkt_PacketModeType mode, uint8_t buflen)
 {
-    /* check buflen for being in allowable range */
-    if ( buflen > PKT_USEFUL_SIZE ) {
+    /* *** 011 ***
+     * check buflen for being in allowable range, length bytes are already included here 
+     * erroneous version used PKT_USEFUL_SIZE 
+     */
+    if ( buflen > PKT_MAXSIZE ) {
         DEBUG_PUTS("PKT_Check: packet too large!");
         return 0;
     }

@@ -42,4 +42,16 @@ where <nnn> is the threeed igit number from below
     settings have to be defined in Macros HW_PWM_CHANNELS and USER_PWM_CHANNLS
     Made all Projects (STM32L476, STM32H742, STM32H7 dual ) compileable after changes 
     Removed Autostart-Item from PWM channels: PWM Outputs will have to be started manually in any case
-    Added field "bUserByt" ins PWM channel struct to do whatever user wants 
+    Added field "bUserByte" ins PWM channel struct to do whatever user wants 
+
+011 Corrected an error in rfm_pacekts.c/pkt_CheckAndSetMode which used a too short maximum length constraint
+
+*** 22.07.24 Version V1.07  
+
+012 implemented a hardware independent driver interface for RFM driver. 
+    Also, RFM chip type can be determined at runtime. currently RFM12 and RFM69 are supported
+
+013 when both BMP180/BME280 and DS18X20 are configured, first temp source is DS18X20, when none is
+    found, only then BME280/BMP180 are used as temp source
+
+*** 14.02.25 Version V1.08  

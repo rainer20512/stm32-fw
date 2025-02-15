@@ -27,17 +27,22 @@
 #include "debug_helper.h"
 
 /* Status read Command */
-#define RFM_READ_STATUS()                               rfm_spi_read8( REG_OPMODE )
+#define RFM69_READ_STATUS()                               rfm_spi_read8( REG_OPMODE )
 
-uint8_t  rfmXX_device_present(void)
+
+/******************************************************************************
+ * We assume, that a RFM69 is present, whenever Register TESTPA1 reads a 
+ * value of 0x55, which is the default/por value for that reg
+ *****************************************************************************/
+uint8_t  rfm69_Device_present(void)
 {
-     return RFM_READ_STATUS() != 0xFF;
+    return rfm_spi_read8(REG_TESTPA1) == 0x55;
 }
 
 /******************************************************************************
  * Initialize RF module for normal FSK-Mode ( HR20-like )
  *****************************************************************************/
-void rfmXX_init(void)
+void rfm69_Init(void)
 {
 	// Sequencer on .listenmode off, transceiver in stdby mode  ( default after powerup )
 	rfm_spi_write8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY );
@@ -93,7 +98,7 @@ void rfmXX_init(void)
 	rfm_spi_write8( REG_PACKETCONFIG1, RF_PACKET_FORMAT_VARIABLE | RF_PACKET_DCFREE_OFF
 	| RF_PACKET_CRC_OFF | RF_PACKET_CRCAUTOCLEAR_ON | RF_PACKET_ADRSFILTERING_OFF );
 
-	// 40 Bytes payload
+	// 64 Bytes payload
 	rfm_spi_write8( REG_PAYLOADLENGTH, 0x40 );
 
 	// CLKCOUT
@@ -108,7 +113,7 @@ void rfmXX_init(void)
  *******************************************************************************
  * Switch RFM12 to "Off" stat and disable further interrupts
  ******************************************************************************/
-void rfmXX_OFF(void)
+void rfm69_OFF(void)
 {
 /* Debug
     switch ( rfm_basemode) {
@@ -123,8 +128,8 @@ void rfmXX_OFF(void)
             break;
     }
 Debug */
-    RFM_RXTX_OFF();
-    RFM_SPI_DESELECT();
+    RFM69_RXTX_OFF();
+    RFMxx_SPI_DESELECT();
 }
 
 /*-----------------------------------------------------------------------------
@@ -138,14 +143,14 @@ Debug */
 static inline __attribute__((always_inline))
 void rfm69_do_receive(void)
 {
-    RFM_RX_ON();    //re-enable RX
-    RFM_INT_EN();   // enable RFM interrupt
+    RFM69_RX_ON();    //re-enable RX
+    RFM69_INT_EN();   // enable RFM interrupt
 }
 
 /*******************************************************************************
  * The common part of all receive routines
  ******************************************************************************/
-void rfmXX_receiveBody(void)
+void rfm69_ReceiveBody(void)
 {	
     // DBG_PUTS_PP("Recv:");
     // DBG_CRLF();
@@ -156,7 +161,7 @@ void rfmXX_receiveBody(void)
     if ( ! bTxThenRx ) {
         /* Prepare Receiver for FSK-Mode */
         RFM_Abort(0);
-        rfmXX_init();
+        rfm69_Init();
     }
 
     rfm_basemode = rfm_basemode_rx;
@@ -178,9 +183,9 @@ void rfmXX_receiveBody(void)
 static inline __attribute__((always_inline))
 void rfm69_start_transmit(void) 
 {
-    RFM_TX_ON(); // enable Transmitter
-    RFM_SPI_SELECT(); // set nSEL low: from this moment SDO indicate FFIT or RGIT
-    RFM_INT_EN(); // enable interrupt on DIO0
+    RFM69_TX_ON(); // enable Transmitter
+    RFMxx_SPI_SELECT(); // set nSEL low: from this moment SDO indicate FFIT or RGIT
+    RFM69_INT_EN(); // enable interrupt on DIO0
 }
 
 /*!
@@ -189,9 +194,9 @@ void rfm69_start_transmit(void)
  * doing this prior to transmission will shorten the latency time when
  * transmitter is enabled
  ******************************************************************************/
-void rfmXX_HeatUpTransmitter(void)
+void rfm69_HeatUpTransmitter(void)
 {
-    RFM_TX_ON_PRE();
+    RFM69_TX_ON_PRE();
 }
 
 /*******************************************************************************
@@ -203,7 +208,7 @@ void rfmXX_HeatUpTransmitter(void)
  * byte specifies. If more bytes are deployed, the RFM69 chip will treat the
  * next byte again as length byte and transmit arbitrary junk!!
  ******************************************************************************/
-void rfmXX_TransmitBody(void)
+void rfm69_TransmitBody(void)
 {
 
 	uint8_t TotalTxCount;	/* Number of all transmit bytes fetched so far */
@@ -319,7 +324,7 @@ uint8_t rfm_ReceiveChar ( unsigned char rxchar)
  * Fifo will be empty, on exit of this function
  * Note: This function is executed in Interrupt context!
  ******************************************************************************/
- void rfm_DeliverRxBytes(void)
+ static void rfm_DeliverRxBytes(void)
 { 
 #if DEBUG_MODE > 0
     uint8_t dropCount=0;
@@ -351,11 +356,11 @@ uint8_t rfm_ReceiveChar ( unsigned char rxchar)
  * Pinchange Interupt for MISO pin
  * This routine is executed in exti - interrupt context, so keep it short! 
  ******************************************************************************/
-void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
+void HandleFSKInterrupt_RFM69(uint16_t pin, uint16_t pinvalue, void *arg)
 {
     UNUSED(pin); UNUSED(pinvalue); UNUSED(arg);
     // COM_print_time('i',1);
-    // DBG_PUTC('i');
+    // DEBUG_PUTC('i');
 
     switch ( rfm_basemode ) {
     case rfm_basemode_tx:
@@ -373,7 +378,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
         return;
     case rfm_basemode_rxook:
         // Not tested!
-        // RFM_INT_DIS_OOK(); RHB commented out: need this?
+        // RFM69_INT_DIS_OOK(); RHB commented out: need this?
         while ( rfm_spi_read8(REG_IRQFLAGS2) & RF_IRQFLAGS2_FIFONOTEMPTY ) {};
         if ( !rfm_ReceiveChar(rfm_spi_read8(REG_FIFO)) ) {
                 /* Only Switch off to keep the basemode */
@@ -406,7 +411,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
      * Initialise RF module for OOK receiver mode
      ******************************************************************************
      */
-    void RFM_OOK_init(void)
+    void rfm69_OOK_Init(void)
     {
             // Sequencer on .listenmode off, transceiver in stdby mode  ( default after powerup )
             rfm_spi_write8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY );
@@ -414,7 +419,7 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
             // Packet Mode, FSK, no Shapening  ( default after powerup )
             rfm_spi_write8( REG_DATAMODUL, RF_DATAMODUL_DATAMODE_PACKET | RF_DATAMODUL_MODULATIONTYPE_OOK | RF_DATAMODUL_MODULATIONSHAPING_01 );
 	
-            // Datarate 5000 Bd, for 200µs bit length
+            // Datarate 5000 Bd, for 200s bit length
             // For FS20 this means: 1 = 111000 0 = 1100
             rfm_spi_write16( REG_BITRATE, RFM69_DATARATE(9600) );
 
@@ -489,10 +494,10 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
      * Switch on OOK Receiver
      ******************************************************************************
      */
-    void RFM_OOK_on(void)
+    void rfm69_OOK_On(void)
     {
 
-        RFM_INT_DIS();
+        RFM69_INT_DIS();
 
         rfm_basemode = rfm_basemode_rxook;
 
@@ -508,9 +513,9 @@ void HandleFSKInterrupt_RFMXX(uint16_t pin, uint16_t pinvalue, void *arg)
      * Switch off OOK Receiver
      ******************************************************************************
      */
-    void RFM_OOK_off(void)
+    void rfm69_OOK_Off(void)
     {
-        rfmXX_OFF();
+        rfm69_OFF();
         /* Disable Data-Interrupts */
         OOK_DATA_IRQ_DISABLE();
 
@@ -705,7 +710,7 @@ static void rfm69_decode_diomapping ( uint16_t map )
 
 	fclk = (uint8_t)(map & 0x07 );
 
-	for ( i = 6; i; i-- ) {
+	for ( i += 6; i; i-- ) {
 		work = (uint8_t)( map >> 14 );
 		map <<= 2;
 		DEBUG_PUTC(work+'0');
@@ -790,7 +795,7 @@ static void rfm_dump_irq_status( void )
 	DBG_CRLF();
 }
 
-void rfmXX_dump_status ( void )
+void rfm69_Dump_status ( void )
 {
 	uint8_t ret8;
 	uint16_t ret16;
@@ -980,6 +985,30 @@ void rfmXX_dump_status ( void )
 	DBG_CRLF();
 
 }
-#endif
+#endif /* #if DEBUG_RFM_STATUS > 0 || DEBUG_MODE > 0 */
+
+const RFM_DeviceType rfm69_driver = {
+    /* ------ Presence check ------*/
+    .rfmXX_Device_present = rfm69_Device_present,
+    /* ------ FSK functions ------*/
+    .rfmXX_OFF                  = rfm69_OFF,
+    .rfmXX_Init                 = rfm69_Init,
+    .rfmXX_ReceiveBody          = rfm69_ReceiveBody, 
+    .rfmXX_TransmitBody         = rfm69_TransmitBody,
+    .rfmXX_HeatUpTransmitter    = rfm69_HeatUpTransmitter,
+    .HandleFSKInterrupt_RFMXX   = HandleFSKInterrupt_RFM69,
+    /* ------ OOK functions ------*/
+    #ifdef USE_RFM_OOK
+        .rfmXX_OOK_init         = rfm69_OOK_Init,
+        .rfmXX__OOK_on          = rfm69_OOK_On,
+        .rfmXX__OOK_off)        = rfm69_OOK_Off.
+    #endif
+    /* ------ Debug ------*/    
+    #if DEBUG_RFM_STATUS > 0 || DEBUG_MODE > 0
+        .rfmXX_Dump_status      = rfm69_Dump_status,
+    #endif
+    .rfmID                      = RFM69_ID,
+    .name                       = "RFM69",
+};
 
 #endif /* #if USE_RFM69 > 0 */

@@ -62,7 +62,6 @@ extern "C" {
     #define BOARD   "Unknown Board"
 #endif
 
-
 /*-----------------------------------------------------------------------------
  * Don't change below
  *-----------------------------------------------------------------------------
@@ -76,7 +75,7 @@ extern "C" {
 
 #define BOARD_STRING    "on board " BOARD
 
-#define BUILD_STRING    "Built " __DATE__ " " __TIME__ 
+#define BUILD_STRING    "@" __DATE__ " " __TIME__ 
 
 extern const char VersionString[];
 void        Dump_VersionInfo(void);

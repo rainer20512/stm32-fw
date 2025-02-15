@@ -647,14 +647,14 @@
 
 #define SPI_WRITE8(reg,data)                            rfm_spi_write8(reg,data)
 							// Enable Oscillator and 
-#define RFM_TX_ON_PRE()                                 SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_SYNTHESIZER )   
+#define RFM69_TX_ON_PRE()                                 SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_SYNTHESIZER )   
 
 							// Enable Transmitter and Enable PacketSent-Interrupt
-#define RFM_TX_ON()                                     do{ SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_TRANSMITTER );\
+#define RFM69_TX_ON()                                     do{ SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_TRANSMITTER );\
 							  SPI_WRITE8( REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_00 ); } while (0)
 
                                                         // Enable Receiver and Enable Payload Ready Interrupt
-#define RFM_RX_ON()                                     do { SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_RECEIVER );\
+#define RFM69_RX_ON()                                     do { SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_RECEIVER );\
 							  SPI_WRITE8( REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01); } while(0)
   	
 							// Enable Receiver, DIO0=Payload Ready, DIO1=FifoNotEmpty, DIO2=DataOutput, DIO3=SyncAddress
@@ -663,8 +663,8 @@
 							  SPI_WRITE8( REG_DIOMAPPING1, RF_DIOMAPPING1_DIO0_01  | RF_DIOMAPPING1_DIO1_10 | RF_DIOMAPPING1_DIO2_01 | RF_DIOMAPPING1_DIO3_10); } while (0)
 
 #if RFM_CLK_OUTPUT > 0
-    #define RFM_OFF()                                   SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY )
+    #define RFM69_RXTX_OFF()                                   SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_STANDBY )
 #else
-    #define RFM_RXTX_OFF()                              SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_SLEEP ) 
+    #define RFM69_RXTX_OFF()                              SPI_WRITE8( REG_OPMODE, RF_OPMODE_SEQUENCER_ON | RF_OPMODE_LISTEN_OFF | RF_OPMODE_SLEEP ) 
 #endif
 

@@ -10,10 +10,14 @@
 
 #include "config/config.h"
 
+#include "rfm/rfm_specific.h"
+#include <stddef.h>
+
+RFM_DeviceType *rfm=NULL;
+
 #if USE_RFM12 > 0 || USE_RFM69 > 0
 
 #include "rfm/rfm_spi_interface.h"
-#include "rfm/rfm_specific.h"
 #include "rfm/rfm.h"
 #include "eeprom.h"
 #include "debug_helper.h"
@@ -80,12 +84,28 @@ static uint8_t xmit_period=0;   /* downcounter for FSK sync period, will be decr
  ******************************************************************************/
 void RFM_SwitchOff(void)
 {
+    if ( !rfm ) return;
     /* 
      * Disable MISO interrupts first. Otherwise echoing MOSI on the MISO line
      * Would generate sensless interrupts
      */
-    RFM_INT_DIS();
-    rfmXX_OFF();
+     switch(rfm->rfmID) {
+#if USE_RFM12 > 0
+        case RFM12_ID:
+            RFM12_INT_DIS();
+            break;
+#endif
+#if USE_RFM69 > 0
+        case RFM69_ID:
+            RFM69_INT_DIS();
+            break;
+#endif
+        default:
+            DEBUG_PRINTF("RFM_SwitchOff: Unknown RFM ID %d\n",rfm->rfmID);
+            
+     } 
+
+     rfm->rfmXX_OFF();
 }
 
 /******************************************************************************
@@ -131,9 +151,9 @@ void RFM_Abort(uint8_t bSleep)
  ******************************************************************************/
 void RFM_SetBuffer ( uint8_t *buf, uint8_t maxtxlen, uint8_t maxrxlen )
 {
-    BufPtr			 = buf;
-    TxBufLen		 = maxtxlen;
-    RxBufLen		 = maxrxlen;
+    BufPtr	= buf;
+    TxBufLen	= maxtxlen;
+    RxBufLen	= maxrxlen;
 }
 
 /*******************************************************************************
@@ -142,7 +162,7 @@ void RFM_SetBuffer ( uint8_t *buf, uint8_t maxtxlen, uint8_t maxrxlen )
  ******************************************************************************/
 void RFM_SetRxLen( uint8_t maxrxlen )
 {
-    RxBufLen		 = maxrxlen;
+    RxBufLen	= maxrxlen;
 }
 
 /*******************************************************************************
@@ -212,7 +232,7 @@ void RFM_Receive(uint8_t *buf, uint8_t maxlen, RFM_RxByteCB rxCB, RFM_DoneCB don
     RFM_SetBuffer(buf, 0, maxlen);
     RFM_SetDoneCB(doneCB);
 
-    rfmXX_receiveBody();
+    rfm->rfmXX_ReceiveBody();
 
     // Set FSK-Transceiver-running-bit
     SetFlagBit(gflags, GFLAG_FSK_BIT);
@@ -248,7 +268,7 @@ void RFM_Transmit(uint8_t *buf, uint8_t maxlen, RFM_TxByteFetchCB txCB, RFM_Done
 	RFM_SetDoneCB(doneCB);
 	RFM_SetRxAfterTx(NULL);
 
-	rfmXX_TransmitBody();
+	rfm->rfmXX_TransmitBody();
 
 	// Set FSK-Transceiver-running-bit
 	SetFlagBit(gflags, GFLAG_FSK_BIT);
@@ -280,18 +300,47 @@ void RFM_TxThenRx(uint8_t *buf, uint8_t maxtxlen, uint8_t maxrxlen, RFM_TxByteFe
 	RFM_SetRxCB(cbRxByte);
 	RFM_SetDoneCB(allDoneCB);
 
-	rfmXX_TransmitBody();
+	rfm->rfmXX_TransmitBody();
 
 	// Set FSK-Transceiver-running-bit
 	SetFlagBit(gflags, GFLAG_FSK_BIT);
 }
 
+/******************************************************************************
+ * test all compiled rfm drivers for presence of driver chip
+ * use the driver with mist specific determination method first,
+ * use that with the least specific method last ( RFM12 )
+ * 
+ * a ptr to correct driver is returned.
+ * if no device is found, NULL will be returned
+ *****************************************************************************/
+static RFM_DeviceType *rfm_assign_driver(void)
+{
+    #if USE_RFM69 > 0
+        if ( rfm69_driver.rfmXX_Device_present() )  return (RFM_DeviceType *)&rfm69_driver;
+    #endif
+    #if USE_RFM12 > 0
+        if ( rfm12_driver.rfmXX_Device_present() )  return (RFM_DeviceType *)&rfm12_driver;
+    #endif
+    return NULL;
+
+}
+
 void RFM_PostInit(const HW_DeviceType *dev, void *arg)
 {
     UNUSED(arg);
+
     /* Assign the selected SPI Device ( may be BB or HW SPI */
     SetSPIDevice(dev);
-    SetFskDataAvailableCB(HandleFSKInterrupt_RFMXX);
+
+    /* Assign correct rfm chip driver by calling devices' "Device_present" method */
+    rfm = rfm_assign_driver();
+    if ( rfm ) {
+        SetFskDataAvailableCB(rfm, rfm->HandleFSKInterrupt_RFMXX);
+    } else {
+        CTL_error |= ERR_RFM_INOP;
+        SetFSKStatus(FSK_STATUS_NORFM,false);
+    }
 
     #if USE_RFM_OOK > 0
         SetOokDataAvailableCB(HandleOOKInterrupt);
@@ -302,7 +351,7 @@ void RFM_PostInit(const HW_DeviceType *dev, void *arg)
 void RFM_PreDeInit(const HW_DeviceType *dev)
 {
     UNUSED(dev);
-    SetFskDataAvailableCB( NULL );
+    if ( rfm ) SetFskDataAvailableCB( rfm, NULL );
     RFM_Abort(1);
     CTL_error |= ERR_RFM_INOP;
     SetFSKStatus(FSK_STATUS_NORFM,false);
@@ -318,7 +367,10 @@ void RFM_PreDeInit(const HW_DeviceType *dev)
  *****************************************************************************/
 bool RFM_IsPresent(void)
 {
-  bool ret = rfmXX_device_present();
+  
+  if ( !rfm ) return false;
+
+  bool ret = rfm->rfmXX_Device_present();
 
   if ( ret ) {
     CTL_error &= ~ERR_RFM_INOP;
@@ -352,7 +404,7 @@ void task_handle_rfm(uint32_t arg)
                 // Notify via callback
                 if(cbTxDone) cbTxDone();
                 // keep all settings about buffers and callbacks and start receiving
-                rfmXX_receiveBody();
+                rfm->rfmXX_ReceiveBody();
 
                 // Set FSK-Transceiver-running-bit
                 SetFlagBit(gflags, GFLAG_FSK_BIT);
@@ -487,5 +539,4 @@ void task_init_rfm( void )
     EverySecond(rfm_every_second, (void *)0, "RFM every second");
     AtSecond(0, rfm_at_0, (void *)0, "RFM time sync check");
 }
-
 #endif /* if USE_RFM12 > 0 || USE_RFM69 > 0 */

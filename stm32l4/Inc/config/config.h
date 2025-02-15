@@ -37,11 +37,11 @@
  ********************************************************************************
  */ 
 //#define NOEXTENSION 
-//#define UNIVERSAL 
+#define UNIVERSAL 
 //#define MULTITEMP
 //#define ENVIRONMENTAL
 //#define TX18LISTENER
-#define PWM_DEVICE        
+//#define PWM_DEVICE        
 
 
 /*
@@ -50,17 +50,17 @@
  ********************************************************************************
  */ 
 #define MAJOR_VERSION   1
-#define MINOR_VERSION   06
+#define MINOR_VERSION   08
 
 /*
  ********************************************************************************
  * Application tayloring
  ********************************************************************************
  */ 
-#define USE_RFM12           0
-#define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_RFM12           1
+#define USE_RFM69           1           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
-#define USE_BME280          0
+#define USE_BME280          1
 #define USE_CCS811          0
 #define USE_EPAPER          0
 #define USE_ONEWIRE         1
@@ -80,7 +80,7 @@
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
-#define USE_USER_PWMTIMER   1
+#define USE_USER_PWMTIMER   0
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -107,8 +107,8 @@
 //#define USER_CLOCKCONFIG         CLK_HSE_VRNG1         /*  8 MHz, source HSE, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
 //#define USER_CLOCKCONFIG         CLK_HSI_VRNG1_16MHZ   /* 16 MHz, source HSI16, Vrange1, 0 WS */
-//#define USER_CLOCKCONFIG         CLK_HSI_VRNG2_16MHZ   /* 16 MHz, source HSI16, Vrange2, 2 WS */
-#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
+#define USER_CLOCKCONFIG         CLK_HSI_VRNG2_16MHZ   /* 16 MHz, source HSI16, Vrange2, 2 WS */
+//#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_24MHZ   /* 24 MHz, source MSI, Vrange1, 1 WS */
 //#define USER_CLOCKCONFIG         CLK_MSI_VRNG1_48MHZ   /* 48 MHz, source MSI, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_48MHZ   /* 48 MHz, source PLL, Vrange1, 2 WS */
 //#define USER_CLOCKCONFIG         CLK_PLL_VRNG1_64MHZ   /* 64 MHz, source PLL, Vrange1, 3 WS */

@@ -1068,7 +1068,7 @@ static void Adc_Handle(AdcHandleT *myHandle)
 
     ADC_ShowStatus(&USER_ADC);
     for ( uint32_t i = 0; i<myHandle->seqLen; i++ )
-        printf("Ch %d:Raw %d is %dmV\n", i, myHandle->seqResultPtr[i], __HAL_ADC_CALC_DATA_TO_VOLTAGE(myHandle->vdda,myHandle->seqResultPtr[i], myHandle->hAdc.Init.Resolution) );
+        printf("Ch %d:Raw %d is %lumV\n", i, myHandle->seqResultPtr[i], __HAL_ADC_CALC_DATA_TO_VOLTAGE(myHandle->vdda,myHandle->seqResultPtr[i], myHandle->hAdc.Init.Resolution) );
     puts("");
 }
 

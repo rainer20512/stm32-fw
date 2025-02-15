@@ -47,7 +47,7 @@
     #include "dev/pwm_timer.h"
 #endif
 
-#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+#if defined(PWM_DEVICE)
 
     #include "eeprom.h"
 
@@ -110,6 +110,35 @@ void OnUpd_PWM_frq( uint32_t newval )
     PWM_TMR_SetPWMFrq(&HW_TIM5, newval*100);     
 }
 
+ /******************************************************************************
+ * Handle all user PWM timers initially
+ * get initialization parameters and start, eg
+ *****************************************************************************/
+void Init_StartUserPWM ( void )
+{
+  const PwmChannelT* act;  
+  uint32_t pwm;
+
+  /* 
+   * Iterate thru all PWM channels and only handle user timers, 
+   * step 1: Change PWM frq if desired 
+   */
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
+    if ( Pwm_Ch_UpdatePresets(act->tmr, 0, &pwm, NULL ) ) PWM_TMR_SetPWMFrq(act->tmr, pwm);     
+  } /* for, if */
+
+  /* 
+   * Iterate thru all PWM channels and only handle user timers, 
+   * step 2: Set Duty cycle and Start PWM channel
+   */
+  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
+    /* If there is no, preset, start user channel with 50% duty cycle */
+    pwm = 50;
+    Pwm_Ch_UpdatePresets(act->tmr, act->channel, NULL, &pwm );
+    PWM_CH_StartPWMChPromille(act->tmr, act->channel, pwm*10 );
+  } /* for, if */
+}
+
 #endif
 
 /******************************************************************************
@@ -139,34 +168,6 @@ void Init_DumpAndClearResetSource(void)
   }
 }
 
-/******************************************************************************
- * Handle all user PWM timers initially
- * get initialization parameters and start, eg
- *****************************************************************************/
-void Init_StartUserPWM ( void )
-{
-  const PwmChannelT* act;  
-  uint32_t pwm;
-  
-  /* 
-   * Iterate thru all PWM channels and only handle user timers, 
-   * step 1: Change PWM frq if desired 
-   */
-  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
-    if ( Pwm_Ch_UpdatePresets(act->tmr, 0, &pwm, NULL ) ) PWM_TMR_SetPWMFrq(act->tmr, pwm);     
-  } /* for, if */
-
-  /* 
-   * Iterate thru all PWM channels and only handle user timers, 
-   * step 2: Set Duty cycle and Start PWM channel
-   */
-  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) if ( act->bUserByte > 0 ) {
-    /* If there is no, preset, start user channel with 50% duty cycle */
-    pwm = 50;
-    Pwm_Ch_UpdatePresets(act->tmr, act->channel, NULL, &pwm );
-    PWM_CH_StartPWMChPromille(act->tmr, act->channel, pwm*10 );
-  } /* for, if */
-}
 
 /******************************************************************************
  * Initialize all PWM timers and start them
@@ -235,9 +236,9 @@ void Init_OtherDevices(void)
   #endif
   #if USE_RFM12 > 0 || USE_RFM69 > 0
       #include "rfm/rfm.h"
-      dev_idx = AddDevice(&RFM12_DEV, RFM_PostInit, RFM_PreDeInit);
+      dev_idx = AddDevice(&RFM_DEV, RFM_PostInit, RFM_PreDeInit);
       if ( dev_idx < 0 ) {
-        DEBUG_PRINTF("Failed to init RFM-device %s\n", RFM12_DEV.devName );
+        DEBUG_PRINTF("Failed to init RFM-device %s\n", RFM_DEV.devName );
       } else {
         DeviceInitByIdx(dev_idx, NULL);
         /* If no RFM device is found, DeInit again to reduce power consumption */

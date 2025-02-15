@@ -843,7 +843,7 @@ void RTC_SetDateTime(uint8_t dd, uint8_t mm, uint8_t yy, uint8_t hr, uint8_t mi,
  * string is written here in
  */
 
-static char rtcbuf[25];
+static char rtcbuf[30];
 
 char* RTC_GetStrDateTimeMillis(uint32_t *retlen)
 {

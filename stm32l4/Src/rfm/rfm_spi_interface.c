@@ -42,14 +42,19 @@ void SetSPIDevice( const HW_DeviceType *dev) {
  *  Assign a callback function when the MISO line changes its level
  *  \note this indicates "data available" in FSK mode
  ******************************************************************************/
-void SetFskDataAvailableCB(pFnIrqCB cb) {
-    #if USE_RFM12 > 0
-        SpiSetMisoCB(rfmSpi, cb );
-    #elif USE_RFM69 > 0 
-        SpiSetBusyCB(rfmSpi, cb );
-    #else
-        #error "No DataAvail-Interrupt configuration!"
-    #endif
+void SetFskDataAvailableCB(RFM_DeviceType *rfm, pFnIrqCB cb) {
+    switch ( rfm->rfmID ) {
+        #if USE_RFM12 > 0
+            case RFM12_ID:
+                SpiSetMisoCB(rfmSpi, cb );
+                break;
+        #endif
+        # if USE_RFM69 > 0 
+            case RFM69_ID:
+                SpiSetBusyCB(rfmSpi, cb );
+                break;
+        #endif
+    }
 }
 #if USE_RFM_OOK
     /*!
@@ -70,7 +75,7 @@ void SetFskDataAvailableCB(pFnIrqCB cb) {
  *  \returns the value that is clocked in from the RFM
  *   
  ******************************************************************************/
-uint16_t rfm_spi16_ret(uint16_t outval)
+uint16_t rfm12_spi16_ret(uint16_t outval)
 {
   // uint8_t i;
   uint16_t ret; // =0; <- not needeed will be shifted out
@@ -79,12 +84,12 @@ uint16_t rfm_spi16_ret(uint16_t outval)
     rfm_xbuf_put(xbuf_uint16_out, outval);
   #endif
   
-  RFM_SPI_SELECT();
+  RFMxx_SPI_SELECT();
  
   ret = Spi16TxRx(rfmSpi, outval );
 
-  RFM_SPI_DESELECT();
-  RFM_SPI_SELECT();		// nSEL back to Low to enable RFM12 to signal pending data on MISO-Line ( SDO on RFM12 )
+  RFMxx_SPI_DESELECT();
+  RFMxx_SPI_SELECT();		// nSEL back to Low to enable RFM12 to signal pending data on MISO-Line ( SDO on RFM12 )
 
   #if ( DEBUG_DUMP_RFM > 0 && DEBUG_RFM_HARDCORE > 0 )
     rfm_xbuf_put(xbuf_uint16_in, ret);
@@ -121,9 +126,9 @@ void rfm_spi_write8(uint8_t addr, uint8_t val8)
     vector[0] = addr | 0x80 ;
     vector[1] = val8;
 
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     Spi8TxRxVector(rfmSpi, vector, NULL, 2);			
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
 }
 
 /*!
@@ -147,9 +152,9 @@ void rfm_spi_write16(uint8_t addr, uint16_t val16)
     vector[1] = val16  >> 8;
     vector[2] = val16 & 0xff;
 
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     Spi8TxRxVector(rfmSpi, vector, NULL, 3);			
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
 }
 
 /*!
@@ -174,9 +179,9 @@ void rfm_spi_write24(uint8_t addr, uint32_t val24)
     vector[2] = val24 >> 8;
     vector[3] = val24 & 0xff;
 
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     Spi8TxRxVector(rfmSpi, vector, NULL, 4);			
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
 }
 
 /*!
@@ -195,11 +200,11 @@ void rfm_spi_write_bulk(uint8_t addr, uint8_t *data, uint8_t size)
         rfm_xbuf_put( xbuf_uint8_out, ((uint16_t)addr) << 8 );
     #endif
   
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     // MSB to 1 for write access
     Spi8TxByte(rfmSpi, addr | 0x80);
     Spi8TxVector(rfmSpi, data, size);
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
 }
 
 
@@ -214,11 +219,11 @@ void rfm_spi_write_bulk(uint8_t addr, uint8_t *data, uint8_t size)
 uint8_t rfm_spi_read8(uint8_t addr)
 {
     uint8_t ret;
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     // MSB to 0 for read access
     Spi8TxByte(rfmSpi, addr & 0x7f);
     ret = Spi8TxRxByte(rfmSpi, 0) ;
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
 
     #if ( DEBUG_DUMP_RFM > 0 && DEBUG_RFM_HARDCORE > 0 )
         rfm_xbuf_put( xbuf_uint88_in, ((uint16_t)addr)<<8 | ret  );
@@ -238,11 +243,11 @@ uint16_t rfm_spi_read16(uint8_t addr)
 {
     uint16_t ret;
 
-    RFM_SPI_SELECT();
+    RFMxx_SPI_SELECT();
     // MSB to 0 for read access
     Spi8TxByte(rfmSpi, addr & 0x7f);
     ret = Spi16TxRx(rfmSpi, 0) ;
-    RFM_SPI_DESELECT();
+    RFMxx_SPI_DESELECT();
             
 
     #if ( DEBUG_DUMP_RFM > 0 && DEBUG_RFM_HARDCORE > 0 )

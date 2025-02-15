@@ -171,7 +171,7 @@ static void wirelessSendPacket(uint8_t *buf, uint8_t bufsize)
 
     COM_print_time('S', false);
 
-    rfmXX_HeatUpTransmitter();
+    rfm->rfmXX_HeatUpTransmitter();
 
     PKT_Userdata_idx = 0;
 	

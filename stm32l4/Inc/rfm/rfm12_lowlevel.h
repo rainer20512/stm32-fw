@@ -5,7 +5,7 @@
 // RFM Low level routines - to be included by RFM.h
 //
 
-#define RFM_SPI_16(OUTVAL)              rfm_spi16_ret(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
+#define RFM12_SPI_16(OUTVAL)              rfm12_spi16_ret(OUTVAL) //<! a function that gets a uint16_t (clocked out value) and returns a uint16_t (clocked in value)
 
 ///////////////////////////////////////////////////////////////////////////////
 // RFM status bits
@@ -99,36 +99,36 @@
     #error RFM_CLK_OUTPUT must be defined to 0 or 1
 #endif
 #if RFM_CLK_OUTPUT
-    #define RFM_TX_ON_PRE() RFM_SPI_16( \
+    #define RFM12_TX_ON_PRE() RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_TX_ON()     RFM_SPI_16( \
+    #define RFM12_TX_ON()     RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ET | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_RX_ON()     RFM_SPI_16( \
+    #define RFM12_RX_ON()     RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_ER | \
                                 RFM_POWER_MANAGEMENT_EBB | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )
-    #define RFM_RXTX_OFF()      RFM_SPI_16(RFM_POWER_MANAGEMENT_EX )
+    #define RFM12_RXTX_OFF()      RFM12_SPI_16(RFM_POWER_MANAGEMENT_EX )
 #else
-    #define RFM_TX_ON_PRE() RFM_SPI_16( \
+    #define RFM12_TX_ON_PRE() RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_DC | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_TX_ON()     RFM_SPI_16( \
+    #define RFM12_TX_ON()     RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_DC | \
                                 RFM_POWER_MANAGEMENT_ET | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )    
-    #define RFM_RX_ON()     RFM_SPI_16( \
+    #define RFM12_RX_ON()     RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_DC  | \
                                 RFM_POWER_MANAGEMENT_ER | \
                                 RFM_POWER_MANAGEMENT_EBB | \
                                 RFM_POWER_MANAGEMENT_ES | \
                                 RFM_POWER_MANAGEMENT_EX )
-    #define RFM_RXTX_OFF()  RFM_SPI_16( \
+    #define RFM12_RXTX_OFF()  RFM12_SPI_16( \
                                 RFM_POWER_MANAGEMENT_DC )
 #endif
 ///////////////////////////////////////////////////////////////////////////////
@@ -236,8 +236,8 @@
 #define RFM_FIFO_DR              0xCA01 // Disable hi sens reset mode
 #define RFM_FIFO_IT(level)       (RFM_FIFO | (( (level) & 0xF)<<4))
 
-#define RFM_FIFO_OFF()            RFM_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR)
-#define RFM_FIFO_ON()             RFM_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR)
+#define RFM_FIFO_OFF()            RFM12_SPI_16(RFM_FIFO_IT(8) |               RFM_FIFO_DR)
+#define RFM_FIFO_ON()             RFM12_SPI_16(RFM_FIFO_IT(8) | RFM_FIFO_FF | RFM_FIFO_DR)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -245,8 +245,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#define RFM_READ_FIFO()             (RFM_SPI_16(0xB000) & 0xFF)
-// #define RFM_READ_FIFO_NO_RESELECT() (RFM_SPI_16_NO_RESELECT(0xB000) & 0xFF)
+#define RFM12_READ_FIFO()             (RFM12_SPI_16(0xB000) & 0xFF)
+// #define RFM12_READ_FIFO_NO_RESELECT() (RFM12_SPI_16_NO_RESELECT(0xB000) & 0xFF)
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -348,8 +348,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-//#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | ((byte) & 0xFF))
-#define RFM_WRITE(byte)  RFM_SPI_16(0xB800 | (byte) )
+#define RFM12_WRITE(byte)  RFM12_SPI_16(0xB800 | (byte) )
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -358,7 +357,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define RFM_WAKEUP_TIMER         0xE000 
-#define RFM_WAKEUP_SET(time)     RFM_SPI_16(RFM_WAKEUP_TIMER | (time))
+#define RFM_WAKEUP_SET(time)     RFM12_SPI_16(RFM_WAKEUP_TIMER | (time))
 
 #define RFM_WAKEUP_480s          (RFM_WAKEUP_TIMER |(11 << 8)| 234)
 #define RFM_WAKEUP_240s          (RFM_WAKEUP_TIMER |(10 << 8)| 234)
@@ -417,13 +416,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#define RFM_READ_STATUS_FFIT()  SPI_1 (0x00)
-#define RFM_READ_STATUS_RGIT    RFM_READ_STATUS_FFIT
+#define RFM12_READ_STATUS_FFIT()  SPI_1 (0x00)
+#define RFM12_READ_STATUS_RGIT    RFM12_READ_STATUS_FFIT
 
 // RHB added
 // Check work working RFM module. If torn off, the PIN is permanent high,
 // resulting in only ONE's being read
-#define RFM_STATUS_OK()			(RFM_READ_STATUS() != 0xFFFF)
+// kann weg ? #define RFM12_STATUS_OK()			(RFM12_READ_STATUS() != 0xFFFF)
 
 ///////////////////////////////////////////////////////////////////////////////
 

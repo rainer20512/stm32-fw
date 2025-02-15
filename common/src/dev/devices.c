@@ -71,7 +71,7 @@ static uint8_t              gpios[MAX_PORTS][16]; /* hold the using device for e
  *****************************************************************************/
 void DevicesInit(void )
 {
-    memset(gpios,sizeof(gpios), 0);
+    memset(gpios,0, sizeof(gpios));
     act_devices = 0;
 }
 

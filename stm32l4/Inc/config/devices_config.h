@@ -292,12 +292,13 @@
     #if USE_RFM12 > 0 || USE_RFM69 > 0
         #define USE_BBSPI2
         // #define USE_SPI2
-        #define RFM12_DEV SPIDEV2_DEV
+        #define RFM_DEV SPIDEV2_DEV
         #define USE_SPI2_ALTN1
         #define SPI2_USE_MISO
         #if USE_RFM12 > 0
             #define SPI2_USE_MISO_IRQ
-        #else
+        #endif
+        #if USE_RFM69 > 0
             /* "Abuse" Busy-Pin for DIO0-Interrupt */
             #define SPI2_USE_BUSY
             #define SPI2_USE_BUSY_IRQ
@@ -419,6 +420,7 @@
   #define USER_ADC              HW_ADC1
 
   #if USE_PERIPHTIMER > 0
+      #define PERIPH_TMR_FREQUENCY  1000000    
       #define PERIPH_TIMER          HW_TIM15
       #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
       #define USE_TIM15
@@ -723,12 +725,13 @@
     #if USE_RFM12 > 0 || USE_RFM69 > 0
         #define USE_BBSPI2
         // #define USE_SPI2
-        #define RFM12_DEV SPIDEV2_DEV
+        #define RFM_DEV SPIDEV2_DEV
         #define USE_SPI2_ALTN1
         #define SPI2_USE_MISO
         #if USE_RFM12 > 0
             #define SPI2_USE_MISO_IRQ
-        #else
+        #endif
+        #if USE_RFM69 > 0
             /* "Abuse" Busy-Pin for DIO0-Interrupt */
             #define SPI2_USE_BUSY
             #define SPI2_USE_BUSY_IRQ

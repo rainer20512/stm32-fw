@@ -756,11 +756,13 @@ bool TMR_OnFrqChange(const HW_DeviceType *self)
     };
 #endif /* TIM5 */
 
+
 #if defined(USE_TIM15) && defined(TIM15)
+    /* if defined, TIM15 is usually used as PWM timer, ie external trigger for ADC conversion */
     TimerHandleT         TIM15Handle;
 
     static const HW_GpioList_AF gpio_tim15 = {
-        /* CH1, CH2, CH1N must be specified, set NULL if not used for PWM */
+        /* CH1, CH2, CH1N must be specified, even if not used for PWM */
         .gpio = { 
              TIM15_CH1,
              TIM15_CH2,
