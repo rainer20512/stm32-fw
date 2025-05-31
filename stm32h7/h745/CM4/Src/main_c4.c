@@ -43,6 +43,8 @@
     #include "STM32H747I-DISCO/stm32h747i_discovery.h"
 #elif defined(PORTENTAH7)
     #include "bsp/portenta_h7.h"
+#elif defined(ARDUINO_GIGA_R1)
+    #include "bsp/arduino_giga.h"
 #endif
 
 /* Private typedef -----------------------------------------------------------*/

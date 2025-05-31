@@ -65,6 +65,16 @@
 #endif
 #elif defined(PORTENTAH7)
   // LEDs  
+  #define IO_00                             { GPIO_PIN_12, GPIOI, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed rd" }
+  #define IO_01                             { GPIO_PIN_13, GPIOJ, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed gr" }
+  #define IO_02                             { GPIO_PIN_3,  GPIOE, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed bl" }
+//  #define IO_01                             { GPIO_PIN_10, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
+//  #define IO_02                             { GPIO_PIN_11, GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ }
+  #define USERLEDNUM                        3
+  #define USERLEDS                          { 0, 1, 2 } 
+  #define IO_NUM                            3
+#elif defined(ARDUINO_GIGA_R1)
+  // LEDs  
   #define IO_00                             { GPIO_PIN_5, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed rd" }
   #define IO_01                             { GPIO_PIN_6, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed gr" }
   #define IO_02                             { GPIO_PIN_7, GPIOK, GPIO_MODE_OUTPUT_PP,  GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_INVERTED, HW_OUTPUT_HIGH,   IO_NO_IRQ, "UserLed bl" }

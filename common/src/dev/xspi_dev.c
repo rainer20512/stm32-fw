@@ -36,7 +36,18 @@
 
 #include "log.h"
 
-#include "dev/xspi/xspi_specific.h"
+#include "dev/xspi/flash_interface.h"
+#include "dev/xspi/xspi_lowlevel.h"
+#include "dev/xspi/xspi_helper.h"
+
+extern  NOR_FlashT flash_interface;
+
+#if DEBUG_MODE > 0
+    char* XSpecific_GetChipTypeText(uint8_t *idbuf, char *retbuf, const uint32_t bufsize);
+    void  XSpecific_DumpStatusInternal(XSpiHandleT *myHandle);
+#endif
+
+
 
 #if USE_OSPI > 0
     /* Currently the driver cannot handle both OCTOSPI devices in parallel */
@@ -80,14 +91,13 @@ typedef struct {
     XSpiHandleT         *myXSpiHandle;   /* my associated handle */
     uint32_t            defaultSpeed;    /* default speed in MHz */
 #if defined(STM32H7_FAMILY) || defined(STM32L4PLUS_FAMILY)           
-    uint32_t            clkSource;      /* clock source as defined in stm32h7xx_hal_rcc.h */
+    uint32_t            clkSource;       /* clock source as defined in stm32h7xx_hal_rcc.h */
 #endif
-    XSpiDeepSleepT      *myDsInfo;       /* ptr to dsInfo iff deep sleep is supported, else NULL */
-#if USE_OSPI > 0
+    NOR_FlashT          *interface;      /* my flash chip interface */
+#if USE_OSPI > 0 
     OSpiSizeEnumType    ospiMode;        /* currently QUADSPI and OCTOSPI mode are impelemted */
     uint8_t             bUseDQS;         /* true, iff DQS signal is active/used  */       
 #endif
-    uint8_t             bHasLPMode;      /* != 0, if device supports low power mode */
 } XSpi_AdditionalDataType;
 
 
@@ -269,39 +279,12 @@ static bool XSpiClockInit(const HW_DeviceType *self, bool bDoInit)
 {
     /* Select clock source on init*/
     if ( bDoInit ) {
-        if ( !XSpiSetClockSource( (const void *)self->devBase ) ) return false;
+        if ( !XSpiSetClockSource(self) ) return false;
     }
 
     /* Enable/Disable clock */
     HW_SetHWClock(( void *)self->devBase, bDoInit);
     return true;
-}
-
-/**************************************************************************************
- * Initialize the flash memories specific geometry data                               *
- *************************************************************************************/
-void XSpi_SetGeometry ( XSpiGeometryT *geometry, uint32_t flash_size, uint32_t page_size, uint32_t sector_size )
-{
-    
-   #if DEBUG_MODE > 0
-        /* Check validity */
-        #define PWROF2(a)   ( (a & (a-1)) == 0 ) 
-        if ( !PWROF2(flash_size) ) {
-            LOG_WARN("Flash size 0x%x is not a power of 2, sure?", flash_size);
-        }
-        if ( !PWROF2(page_size) ) {
-            LOG_WARN("Page size 0x%x is not a power of 2, sure?", page_size);
-        }
-        if ( !PWROF2(sector_size) ) {
-            LOG_WARN("Sector size 0x%x is not a power of 2, sure?", sector_size);
-        }
-   #endif
-
-   geometry->FlashSize          = flash_size;
-   geometry->ProgPageSize       = page_size;
-   geometry->EraseSectorSize    = sector_size;
-   geometry->ProgPagesNumber    = flash_size/page_size;
-   geometry->EraseSectorsNumber = flash_size/sector_size;
 }
 
 
@@ -314,54 +297,13 @@ void XSpi_GetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *pInfo)
 }
 
 
-#if DEBUG_MODE >  0
-    /**************************************************************************************
-     * Return the Manufacturer Name as string                                             *
-     *************************************************************************************/
-    const char *XSpi_GetChipManufacturer(uint8_t mf_id )
-    {
-        switch(mf_id) {
-            case 0x20: return "Micron"; 
-            case 0xc2: return "Macronix"; 
-            default:
-                return "Unknown Manufacturer";
-        }
-    }
-
-
-
-    /**************************************************************************************
-     * Read the chip ID and print chip info. Can be used to set chip specific parameters  *
-     * automatically later. Now just chip info is dumped                                  *
-     *************************************************************************************/
-    static void XSpi_DumpChipInfo(uint8_t *idbuf)
-    {
-        char type[25];
-        const char *mf   =  XSpi_GetChipManufacturer(idbuf[0] );
-        XSpecific_GetChipTypeText(idbuf, type, 25);
-        LOG_INFO("%s: Found %s %s", XSpiStr, mf, type);
-    }
-
-    /**************************************************************************************
-     * Dump the geometry data  *
-     * automatically later. Now just chip info is dumped                                  *
-     *************************************************************************************/
-    static void XSpi_DumpGeometry(XSpiGeometryT *geo)
-    {
-        LOG_INFO("%s: Flash size is %dkiB", XSpiStr, geo->FlashSize>>10);
-        LOG_INFO("%s: %d write pages with %d bytes", XSpiStr, geo->ProgPagesNumber, geo->ProgPageSize);
-        LOG_INFO("%s: %d erase sectors with %d bytes", XSpiStr, geo->EraseSectorsNumber, geo->EraseSectorSize);
-    }
-
-#endif
-
 /**************************************************************************************
  * Change the Qspi clock speed on the fly                                             *
  *************************************************************************************/
 bool XSpi_SetSpeed (const HW_DeviceType *self, uint32_t new_clkspeed)
 {
     XSpiHandleT *myHandle = XSpi_GetAdditionalData(self)->myXSpiHandle;  
-    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(self), new_clkspeed, myHandle->geometry.FlashSize, false);
+    return XSpiLL_ClockInit(myHandle, XSpiGetClockSpeed(self), new_clkspeed, myHandle->geometry.FlashSize);
 }
 
 /**************************************************************************************
@@ -378,9 +320,9 @@ bool XSpi_IsInitialized(XSpiHandleT *myHandle)
  *************************************************************************************/
 void XSpi_DumpStatus(XSpiHandleT *myHandle)
 {
-    bool sleep = myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep;
+    bool sleep = myHandle->bInDeepPwrDown;
     /* Wake up device, if in deep sleep */
-    if ( sleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) {
+    if ( sleep && XSpi_LeaveDeepPowerDown(myHandle)==0 ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOG_ERROR("XSpi_DumpStatus - Error: Cannot wake up flash device");
         #endif
@@ -389,7 +331,7 @@ void XSpi_DumpStatus(XSpiHandleT *myHandle)
 
     XSpecific_DumpStatusInternal(myHandle);
     
-    if ( sleep ) XSpecific_EnterDeepPowerDown(myHandle);
+    if ( sleep ) XSpi_EnterDeepPowerDown(myHandle);
 }
 
 /**************************************************************************************
@@ -417,14 +359,14 @@ bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     bool ret;
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && !XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
 
     #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("%s read, area: 0x%08x ... 0x%08x", XSpiStr, ReadAddr, ReadAddr+Size-1);
     #endif
 
     /* Send the read command */
-    if ( !XSpecific_ReadCMD(hxspi, ReadAddr, Size) ) return false;
+    if ( !XSpiLL_ReadCMD(myHandle, ReadAddr, Size) ) return false;
     
     switch ( opmode ) {
         case XSPI_MODE_POLL:
@@ -512,6 +454,7 @@ typedef union {
         uint32_t erOpmode;             // operation mode of erase op
         uint32_t erState;              // current state of erase state machine
         XSpiHandleT *erHandle;         // current XSpi handle for erase op
+        const NOR_FlashCmdT *ecmd;     // associated erase command
         XSpi_SM_Fn erSM;               // currently used Statemachine for erase
         uint32_t currEraseAddr;        // current erase address
         uint32_t EraseAddrInc;         // Address Increment for next erase item
@@ -524,8 +467,9 @@ static Qspi_SM_DataT smData;
 static XSpi_SM_Fn wrSM;               // currently used Statemachine for write
 static XSpi_SM_Fn erSM;               // currently used Statemachine for erase
 
-#define GETWRHANDLE()                   (&(smData.wrHandle->hxspi))
-#define GETERHANDLE()                   (&(smData.erHandle->hxspi))
+#define GETWRDEVHANDLE()                   (smData.wrHandle)
+#define GETWRHALHANDLE()                   (&(smData.wrHandle->hxspi))
+#define GETERDEVHANDLE()                   (smData.erHandle)
 
 /*-----------------------------------------------------------------------------
  * Write - Write - Write - Write - Write - Write - Write - Write - Write - Writ
@@ -545,7 +489,7 @@ static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     if ( opmode != XSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
             #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
-                LOGU_ERROR("WriteWait - Error: Another Async Op is active");
+                LOGU_ERROR("WriteInit - Error: Another Async Op is active");
             #endif
             return false;
         }
@@ -555,7 +499,7 @@ static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     /* check for positive size */
     if ( Size == 0 ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
-            LOGU_WARN("WriteWait - Writing 0 bytes not allowed");
+            LOGU_WARN("WriteInit - Writing 0 bytes not allowed");
         #endif
         return false;
     }
@@ -581,7 +525,7 @@ static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
 
     return true;
 }
@@ -611,7 +555,7 @@ static bool WriteBlock (void )
     LOGU_VERBOSE("First Bytes (hex)= %02x, %02x, %02x, %02x, ...", 
                   smData.WriteSource[0], smData.WriteSource[1], smData.WriteSource[2], smData.WriteSource[3]);
     /* Enable write and send write command */
-    // if ( !XSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
+    // if ( !XSpecific_SetupWrite(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) return false;
 
     switch ( smData.wrOpmode ) {
         case XSPI_MODE_POLL:
@@ -619,23 +563,23 @@ static bool WriteBlock (void )
             #if USE_OSPI > 0
                 ret = HAL_OSPI_Transmit(GETWRHANDLE(), smData.WriteSource, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
             #else
-                ret = HAL_QSPI_Transmit(GETWRHANDLE(), smData.WriteSource, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+                ret = HAL_QSPI_Transmit(GETWRHALHANDLE(), smData.WriteSource, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
             #endif
             break;
         case XSPI_MODE_IRQ:
             /* Transmission of the data in irq mode*/
             #if USE_OSPI > 0
-                ret = HAL_OSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+                ret = HAL_OSPI_Transmit_IT(GETWRHALHANDLE(), smData.WriteSource) == HAL_OK;
             #else
-                ret = HAL_QSPI_Transmit_IT(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+                ret = HAL_QSPI_Transmit_IT(GETWRHALHANDLE(), smData.WriteSource) == HAL_OK;
             #endif
             break;
         case XSPI_MODE_DMA:
             /* Transmission of the data in irq mode*/
             #if USE_OSPI > 0
-                ret = HAL_OSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+                ret = HAL_OSPI_Transmit_DMA(GETWRHALHANDLE(), smData.WriteSource) == HAL_OK;
             #else
-                ret = HAL_QSPI_Transmit_DMA(GETWRHANDLE(), smData.WriteSource) == HAL_OK;
+                ret = HAL_QSPI_Transmit_DMA(GETWRHALHANDLE(), smData.WriteSource) == HAL_OK;
             #endif
             break;
         default:
@@ -661,9 +605,9 @@ static bool WaitForWriteDone(void)
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
     if ( smData.wrOpmode == XSPI_MODE_POLL ) 
-        ret = XSpecific_WaitForWriteDone(GETWRHANDLE(), XSPI_TIMEOUT_DEFAULT_VALUE);
+        ret = XSpiLL_WaitForWriteDone(GETWRDEVHANDLE(), XSPI_TIMEOUT_DEFAULT_VALUE);
     else 
-        ret = XSpecific_WaitForWriteDone_IT(GETWRHANDLE());
+        ret = XSpiLL_WaitForWriteDone_IT(GETWRDEVHANDLE());
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
@@ -704,7 +648,7 @@ static bool WriteSM(void)
         switch ( smData.wrState ) {
             case WRSTATE_START: 
                 /* Enable Write and Send Write Command - both in one step */
-                if ( !XSpecific_WriteCMD(GETWRHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) goto WriteSmTerminate;
+                if ( !XSpiLL_WriteCMD(GETWRDEVHANDLE(), smData.currWriteAddr, smData.currWriteSize) ) goto WriteSmTerminate;
                 /* Continue with next state in any case*/
                 WR_NEXTSTATE(WRSTATE_WRITEBLOCK);
                 WR_SM_PAUSE(false);
@@ -769,32 +713,6 @@ bool XSpi_WriteDMA  (XSpiHandleT *myHandle, uint8_t* pData, uint32_t WriteAddr, 
  * Erase - Erase - Erase - Erase - Erase - Erase - Erase - Erase - Erase - Eras
  *---------------------------------------------------------------------------*/
 
-/******************************************************************************
- * Get the address increment depending from the erase mode
- *****************************************************************************/
-static uint32_t GetEraseAddrInc(XSpiHandleT *myHandle,uint32_t erasemode)
-{
-    switch(erasemode)
-    {
-        case XSPI_ERASE_SECTOR:
-            return myHandle->geometry.EraseSectorSize;
-            break;
-        case XSPI_ERASE_BLOCK:
-            // RHB tbd return myHandle->geometry.EraseBlockSize;
-            return 1 << 15;
-            break;
-        case XSPI_ERASE_ALL:
-            return 1 << 16;
-            break;
-        default:
-            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
-                LOGU_ERROR("GetEraseAddrInc - Error: unkown erasemode %d", erasemode);
-            #endif
-            ;
-    }
-
-    return 1 << 16;
-}
 
 /******************************************************************************
  * Implement a classic loop with four components
@@ -805,7 +723,7 @@ static uint32_t GetEraseAddrInc(XSpiHandleT *myHandle,uint32_t erasemode)
  * This is done, because the loop execution is triggered direcly ( in polling mode )
  * or by interrupts ( in IRQ or DMA mode )
  *****************************************************************************/
-static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numItems, uint32_t opmode, uint32_t erasemode, XSpi_SM_Fn stateMachine)
+static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numItems, XSpi_EraseMode erasemode, uint32_t opmode, XSpi_SM_Fn stateMachine)
 {
     if ( opmode != XSPI_MODE_POLL ) {
         if ( myHandle->bAsyncBusy ) {
@@ -825,24 +743,32 @@ static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
         return false;
     }
 
+    const  NOR_EraseModeTypeT *e = erasemode != XSPI_ERASE_ALL ? myHandle->interface->erase.p_erase[erasemode] : myHandle->interface->erase.f_erase;
+    if ( e == NULL ) {
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOGU_ERROR("EraseInit - Erase mode &d not defined");
+        #endif
+        return false;
+    }
+
     /* Initialize the neccessary erase data */
     smData.currEraseAddr = EraseAddr;
-    smData.EraseAddrInc  = GetEraseAddrInc(myHandle, erasemode);
     smData.EraseItemCnt  = ( erasemode == XSPI_ERASE_ALL ? 1 : numItems);
     smData.EraseMode     = erasemode;
     smData.erOpmode      = opmode;
-    smData.wrOpmode    = opmode;
-    smData.erState     = 0;
-    smData.erHandle    = myHandle;
-    erSM               = stateMachine;
-    wrSM               = NULL;
+    smData.EraseAddrInc  = e->block_size;
+    smData.erState       = 0;
+    smData.erHandle      = myHandle;
+    smData.ecmd          = &e->cmd;
+    erSM                 = stateMachine;
+    wrSM                 = NULL;
 
     #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("Erase Init, start: 0x%08x, itemsize=%d, items=%d, mode=%d", EraseAddr, smData.EraseAddrInc, smData.EraseItemCnt, erasemode);
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->dsInfo && myHandle->dsInfo->bIsDeepSleep && ! XSpecific_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
 
     return true;
 }
@@ -853,9 +779,9 @@ static bool WaitForEraseDone(uint32_t timeout_ms)
 
     /* Configure automatic polling mode to wait for reset of WIP bit */  
     if ( smData.erOpmode == XSPI_MODE_POLL ) 
-        ret = XSpecific_WaitForWriteDone(GETERHANDLE(), timeout_ms);
+        ret = XSpiLL_WaitForWriteDone(GETERDEVHANDLE(), timeout_ms);
     else 
-        ret = XSpecific_WaitForWriteDone_IT(GETERHANDLE());
+        ret = XSpiLL_WaitForWriteDone_IT(GETERDEVHANDLE());
  
     if ( !ret ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
@@ -890,7 +816,6 @@ static bool EraseSM(void)
 {
     bool bSmPause = false;
     uint32_t tmo_ms;
-    uint8_t opcode_unused;
 
     while (!bSmPause ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
@@ -900,14 +825,14 @@ static bool EraseSM(void)
             case ERSTATE_START: 
                 /* Enable Write and Send Erase Command - both in one step */
                 LOGU_VERBOSE("Erase @0x%08x, mode=%d", smData.currEraseAddr, smData.EraseMode);
-                if ( !XSpecific_EraseCMD(GETERHANDLE(), smData.currEraseAddr, smData.EraseMode) ) goto EraseSmTerminate;
+                if ( !XSpiLL_Erase(GETERDEVHANDLE(), smData.currEraseAddr, smData.ecmd) ) goto EraseSmTerminate;
                 /* Continue with next state in any case*/
                 ER_NEXTSTATE(ERSTATE_WAITFORDONE);
                 /* Continue with waiting for completion immediately */
                 ER_SM_PAUSE( false );
                 break;
             case ERSTATE_WAITFORDONE:
-                if ( !XSpecific_GetEraseParams(smData.EraseMode, &tmo_ms, &opcode_unused ) ) goto EraseSmTerminate;
+                tmo_ms = (smData.ecmd->exec_time+500) / 1000;
                 if ( !WaitForEraseDone(tmo_ms) ) goto EraseSmTerminate;
                 LOGU_VERBOSE("Erase done");
                 ER_NEXTSTATE(ERSTATE_INCREMENT);
@@ -944,45 +869,44 @@ EraseSmTerminate:
     WriteEraseTerminate(false, smData.erOpmode, smData.erHandle);
     return false;
 }
-
-
-
-
-/* Erase <numSect> consecutive sectors, first sector specified by <EraseAddr> */
-bool XSpi_EraseSectorWait       (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
+/******************************************************************************
+ * @brief Get different erase sizes and optionally corresponding max erase times
+ * @param  myHandle  - XSpi handle
+ * @param  Sizes     - return array for different erase sizes, not NULL
+ * @param  Max_Times - max erase times[us], may be NULL
+ * @retval Number of defined erase elements 
+ * @note   Does not include Full Chip erase
+ * @note   a returned size of 0 means "not defined"
+ * @note   Array "Sizes" and optionally "Max_Times" 
+ *****************************************************************************/
+uint32_t XSpi_GetEraseData      (XSpiHandleT *myHandle, uint32_t *Sizes, uint32_t *Max_Times)
 {
-    if (!EraseInit(myHandle, EraseAddr, numSect, XSPI_MODE_POLL, XSPI_ERASE_SECTOR, EraseSM )) return false;
-    return EraseSM();
-}
-bool XSpi_EraseSectorIT         (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numSect)
-{
-    if (!EraseInit(myHandle, EraseAddr, numSect, XSPI_MODE_IRQ, XSPI_ERASE_SECTOR, EraseSM )) return false;
-    return EraseSM();
-}
+    const  NOR_EraseModeTypeT * const *e = myHandle->interface->erase.p_erase;
+    /* clear sizes array */
+    memset(Sizes, 0, sizeof(uint32_t)*XSPI_MAX_ERASE_MODE);
 
+    uint32_t i=0;
+    while ( i < XSPI_MAX_ERASE_MODE && e[i] != NULL ) {
+        Sizes[i] = e[i]->block_size;
+        if (Max_Times) Max_Times[i] = e[i]->cmd.exec_time;
+        i++;
+    }
+    
+    return i;
+}
+        
 /* Erase <numSect> consecutive block, first block specified by <EraseAddr> */
-bool XSpi_EraseBlockWait        (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+bool XSpi_EraseWait             (XSpiHandleT *myHandle, XSpi_EraseMode mode, uint32_t EraseAddr, uint32_t numElem)
 {
-    if (!EraseInit(myHandle, EraseAddr, numBlock, XSPI_MODE_POLL, XSPI_ERASE_BLOCK , EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numElem, mode, XSPI_MODE_POLL, EraseSM )) return false;
     return EraseSM();
 }
-bool XSpi_EraseBlockIT          (XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numBlock)
+bool XSpi_EraseIT               ( XSpiHandleT *myHandle, XSpi_EraseMode mode, uint32_t EraseAddr, uint32_t numElem)
 {
-    if (!EraseInit(myHandle, EraseAddr, numBlock, XSPI_MODE_IRQ, XSPI_ERASE_BLOCK, EraseSM )) return false;
+    if (!EraseInit(myHandle, EraseAddr, numElem, mode, XSPI_MODE_IRQ, EraseSM )) return false;
     return EraseSM();
 }
 
-/* Erase entire chip */
-bool XSpi_EraseChipWait         (XSpiHandleT *myHandle)
-{
-    if (!EraseInit(myHandle, 0, 1, XSPI_MODE_POLL, XSPI_ERASE_ALL , EraseSM )) return false;
-    return EraseSM();
-}
-bool XSpi_EraseChipIT           (XSpiHandleT *myHandle)
-{
-    if (!EraseInit(myHandle, 0, 1, XSPI_MODE_IRQ, XSPI_ERASE_ALL , EraseSM )) return false;
-    return EraseSM();
-}
 #if 0
     //RHB todo
 
@@ -1190,8 +1114,12 @@ void XSpi_DeInit(const HW_DeviceType *self)
 bool XSpi_Init(const HW_DeviceType *self)
 {
     bool ret;
+    bool bHasInitSpeed;
+    uint32_t target_speed;
+
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
+    myHandle->interface             = adt->interface;
     XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
     #if USE_OSPI > 0
         hxspi->Instance                 = (OCTOSPI_TypeDef*)self->devBase;
@@ -1199,17 +1127,12 @@ bool XSpi_Init(const HW_DeviceType *self)
         hxspi->Instance                 = (QUADSPI_TypeDef*)self->devBase;
     #endif
 
-    /* If deep sleep is supported, setup the deep sleep information block */
-    if ( adt->myDsInfo ) {
-        myHandle->dsInfo            = adt->myDsInfo;
-        myHandle->dsInfo->bIsDeepSleep = false;
-        myHandle->dsInfo->bInDsTransit = false;
-    } else {
-        myHandle->dsInfo            = NULL;    
-    }
+    myHandle->bInHPMode             = false;
+    myHandle->bInDeepPwrDown        = false;
     myHandle->bAsyncBusy            = false;
     myHandle->bIsMemoryMapped       = false;
     myHandle->bIsInitialized        = false;
+    myHandle->myRWmode              = XSPI_RW_FAST1;    // select 1-1-1 initially
     myHandle->clkspeed              = adt->defaultSpeed;
 
     XSpiClockInit(self, true);
@@ -1231,7 +1154,13 @@ bool XSpi_Init(const HW_DeviceType *self)
         HAL_QSPI_DeInit(hxspi);
     #endif
 
-    ret = XSpecific_SpecificInit(self, myHandle, XSpiGetClockSpeed(self) );
+    XHelper_SetGeometry(myHandle, &myHandle->geometry);
+    XSpiLL_DumpGeometry(&myHandle->geometry);
+ 
+    /* if we have a separate init speed, use this first, otherwise init to normal operating speed */
+    bHasInitSpeed = myHandle->interface->global.flags & FCOMMON_HAS_INIT_SPEED;
+    target_speed  = bHasInitSpeed ? myHandle->interface->global.init_frq : myHandle->interface->global.operating_frq;
+    ret = XSpiLL_ClockInit(myHandle, XSpiGetClockSpeed(self), target_speed,myHandle->geometry.FlashSize );
     
     #if USE_OSPI > 0
         if (ret) ret = OSPI_Configure_OSPIM(self);
@@ -1243,11 +1172,15 @@ bool XSpi_Init(const HW_DeviceType *self)
             HW_SetAllIRQs(self->devIrqList, true);
         }
 
-        #if DEBUG_MODE > 0
-            XSpi_DumpChipInfo(myHandle->id);
-            XSpi_DumpGeometry(&myHandle->geometry);
-            if ( console_debuglevel > 2 )  XSpi_DumpStatus(myHandle);
-        #endif
+        if ( !(ret=XSpiLL_GetID(myHandle)) ) {
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                if ( !ret ) LOGU_ERROR("Unable to read XSpi chip ID");
+            #endif
+            #if DEBUG_MODE > 0
+                XSpiLL_DumpChipInfo(myHandle->id);
+                if ( console_debuglevel > 0 )  XSpi_DumpStatus(myHandle);
+            #endif
+        }
 
         /* 
          * Initialize DMA channel, if configured to use DMA
@@ -1267,16 +1200,34 @@ bool XSpi_Init(const HW_DeviceType *self)
         }
         #endif
 
+        /*
+         * if we have a lower init speed, then execute the chip specific part of initialization
+         * and switch to normal operating speed
+         */
+
+        if ( bHasInitSpeed ) {
+            if ( myHandle->interface->init ) {
+                ret = myHandle->interface->init();
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                    if ( !ret ) LOGU_ERROR("driver specific init failed");
+                #endif
+            }
+            /* now switch to normal operating speed */
+            if ( ret ) {
+                ret = XSpiLL_ClockInit(myHandle, XSpiGetClockSpeed(self), myHandle->interface->global.operating_frq, myHandle->geometry.FlashSize );        
+            }
+        }
+        
+    }
+    if ( ret ) {
         /* If deep sleep is supported, put flash chip into deep sleep mode */
-        if ( adt->myDsInfo ) XSpecific_EnterDeepPowerDown(myHandle);
+        if ( XHelper_HasDeepPowerDown(myHandle) ) XSpi_EnterDeepPowerDown(myHandle);
+    } else {
+        /* If Initialization was unsuccessful, deactivate all */
+        XSpi_DeInit(self);
     }
 
-
-    /* If Initialization was unsuccessful, deactivate all */
-    if ( !ret ) XSpi_DeInit(self);
-
-    /* Otherwise set "initialized" flag and return with success */
-    myHandle->bIsInitialized = true;
+    myHandle->bIsInitialized = ret;
     return ret;
 }
 
@@ -1317,7 +1268,7 @@ void XSpi_BeforeFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    if ( adt->bHasLPMode) XSpecific_HPerfMode( &myHandle->hxspi, true);
+    if ( XHelper_HasHighPerformanceMode( myHandle) ) XSpiLL_EnterHPMode( myHandle);
 }
 
 
@@ -1330,7 +1281,7 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    return XSpecific_BasicInit(myHandle, XSpiGetClockSpeed(self), adt->defaultSpeed, myHandle->geometry.FlashSize, false );
+    return XSpiLL_ClockInit(myHandle, XSpiGetClockSpeed(self), myHandle->clkspeed, myHandle->geometry.FlashSize );
 
 }
 
@@ -1340,10 +1291,6 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
 #if defined(QUADSPI) && USE_QSPI > 0
 
     XSpiHandleT QSpi1Handle;
-
-    #if defined(QSPI1_HAS_DS_MODE)
-        static XSpiDeepSleepT ds_qspi1;
-    #endif
 
     #ifdef QSPI1_USE_DMA
       static DMA_HandleTypeDef hdma_qspi1;
@@ -1369,6 +1316,7 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
 
     static const XSpi_AdditionalDataType additional_qspi1 = {
         .myXSpiHandle       = &QSpi1Handle,
+        .interface          = &flash_interface,
         .defaultSpeed       = QSPI1_CLKSPEED,     
         #if defined(STM32H7_FAMILY)
             #if defined(QSPI1_CLKSOURCE)
@@ -1377,18 +1325,6 @@ bool XSpi_OnFrqChange(const HW_DeviceType *self)
                 .clkSource  = RCC_QSPICLKSOURCE_D1HCLK,
             #endif
         #endif
-        .myDsInfo           =
-            #if defined(QSPI1_HAS_DS_MODE)
-                &ds_qspi1,
-            #else
-                NULL,
-            #endif
-        .bHasLPMode =
-            #if defined(QSPI1_HAS_LP_MODE)
-                1,
-            #else
-                0,
-            #endif
     };
 
 
@@ -1468,7 +1404,8 @@ const HW_DeviceType HW_QSPI1 = {
 
     static const XSpi_AdditionalDataType additional_ospi1 = {
         .myXSpiHandle       = &OSpi1Handle,
-        .defaultSpeed      = OSPI1_CLKSPEED,                 
+        .interface          = &flash_interface;
+        .defaultSpeed       = OSPI1_CLKSPEED,                 
         .myDsInfo           =
             #if defined(OSPI1_HAS_DS_MODE)
                 &ds_ospi1,
@@ -1583,7 +1520,8 @@ const HW_DeviceType HW_OSPI1 = {
 
     static const XSpi_AdditionalDataType additional_ospi2 = {
         .myXSpiHandle       = &OSpi2Handle,
-        .defaultSpeed      = OSPI2_CLKSPEED,                 
+        .interface          = &flash_interface;
+        .defaultSpeed       = OSPI2_CLKSPEED,                 
         .myDsInfo           =
             #if defined(OSPI2_HAS_DS_MODE)
                 &ds_ospi2,

@@ -326,6 +326,8 @@
     // RHB tbd
 #elif defined(PORTENTAH7)
     // RHB tbd
+#elif defined(ARDUINO_GIGA_R1)
+   // RHB tbd
 #else
   #error "No valid device configuration in devices_config.h"
 #endif

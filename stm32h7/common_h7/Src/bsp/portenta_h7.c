@@ -10,6 +10,9 @@
   */
 
 #include "config/config.h"
+
+#if defined(PORTENTAH7)
+
 #include "system/arduino_wrapper.h"
 #include "bsp/portenta_h7.h"
 #include "bsp/portenta_pmic.h"
@@ -192,3 +195,4 @@ void BSP_Board_Init ( void )
 
 }
 
+#endif // #if defined(PORTENTAH7)

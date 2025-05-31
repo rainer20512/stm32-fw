@@ -1,0 +1,346 @@
+    FF5BF89D    vceq.i16 d31, d27, d13
+    3023        adds r0, #0x23
+    105B        asrs r3, r3, #1
+--- mx25r6435f.c -- 402 ------------------------------------
+printf(" last Erase fail. = %d\n", cr & MX25_XXX35F_SECR_E_FAIL ? 1 : 0 );
+printf(" last Prog failed = %d\n", cr & MX25_XXX35F_SECR_P_FAIL ? 1 : 0 );
+printf(" Erase suspended = %d\n", cr & MX25_XXX35F_SECR_ESB ? 1 : 0 );
+printf(" Prog suspended = %d\n", cr & MX25_XXX35F_SECR_PSB ? 1 : 0 );
+printf(" LDSO bit = %d\n", cr & MX25_XXX35F_SECR_LDSO ? 1 : 0 );
+    F0030301    and r3, r3, #1
+    4619        mov r1, r3
+    481C        ldr r0, =0x080339B0
+    F02DFF52    bl 0x08030808 <printf>
+--- mx25r6435f.c -- 407 ------------------------------------
+printf(" factury OTP bit = %d\n", cr & MX25_XXX35F_SECR_SOI ? 1 : 0 );
+    F89D3023    ldrb.w r3, [sp, #0x23]
+    F0030301    and r3, r3, #1
+    4619        mov r1, r3
+    4819        ldr r0, =0x080339CC
+    F02DFF4A    bl 0x08030808 <printf>
+--- mx25r6435f.c -- 408 ------------------------------------
+} else {
+puts(" Cannot read SCUR");
+}
+}
+    E002        b 0x0800297C
+--- mx25r6435f.c -- 409 ------------------------------------
+puts(" Cannot read SCUR");
+    4818        ldr r0, =0x080339E8
+    F02DFF73    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 410 ------------------------------------
+}
+}
+    BF00        nop
+    B01B        add sp, sp, #0x6C
+    F85DFB04    pop.w {pc}
+    080337B4    .word 0x080337B4
+    080337C8    .word 0x080337C8
+    080337E4    .word 0x080337E4
+    08033800    .word 0x08033800
+    08033820    .word 0x08033820
+    0803383C    .word 0x0803383C
+    08033858    .word 0x08033858
+    0803386C    .word 0x0803386C
+    08033888    .word 0x08033888
+    080338A4    .word 0x080338A4
+    080338C0    .word 0x080338C0
+    080338DC    .word 0x080338DC
+    080338F8    .word 0x080338F8
+    08033914    .word 0x08033914
+    08033928    .word 0x08033928
+    08033940    .word 0x08033940
+    0803395C    .word 0x0803395C
+    08033978    .word 0x08033978
+    08033994    .word 0x08033994
+    080339B0    .word 0x080339B0
+    080339CC    .word 0x080339CC
+    080339E8    .word 0x080339E8
+--- mx25r6435f.c -- 414 ------------------------------------
+/******************************************************************************
+* Read Operation command
+*****************************************************************************/
+bool XSpecific_ReadSFDP(XSpiHandleT *myHandle)
+{
+    B500        push {lr}
+    B0D5        sub sp, sp, #0x0154
+    AB54        add r3, sp, #0x0150
+    F5A373A6    sub.w r3, r3, #0x014C
+    6018        str r0, [r3]
+--- mx25r6435f.c -- 421 ------------------------------------
+// Buffer to store SFDP data
+#define SFDP_BUFFER_SIZE 256
+XSPI_CommandTypeDef sCommand={0};
+    AB45        add r3, sp, #0x0114
+    2238        movs r2, #0x38
+    2100        movs r1, #0
+    4618        mov r0, r3
+    F02EF82F    bl 0x08030A52 <memset>
+--- mx25r6435f.c -- 429 ------------------------------------
+bool ret;
+/* Initialize the read SFDP command */
+sCommand.Instruction = SFDP_READ_CMD;
+    235A        movs r3, #0x5A
+    9345        str r3, [sp, #0x0114]
+--- mx25r6435f.c -- 434 ------------------------------------
+sCommand.Address = 0;
+    2300        movs r3, #0
+    9346        str r3, [sp, #0x0118]
+--- mx25r6435f.c -- 435 ------------------------------------
+sCommand.NbData = SFDP_HEADER_SIZE;
+    2308        movs r3, #8
+    934F        str r3, [sp, #0x013C]
+--- mx25r6435f.c -- 436 ------------------------------------
+sCommand.DummyCycles = MX25R6435F_DUMMY_CYCLES_READ_SFDP;
+    2301        movs r3, #1
+    934A        str r3, [sp, #0x0128]
+--- mx25r6435f.c -- 449 ------------------------------------
+sCommand.DataMode = HAL_OSPI_DATA_1_LINE;
+sCommand.DataDtrMode = HAL_OSPI_DATA_DTR_DISABLE;
+sCommand.SIOOMode = HAL_OSPI_SIOO_INST_EVERY_CMD;
+#else
+sCommand.InstructionMode = QSPI_INSTRUCTION_1_LINE;
+    F44F7380    mov.w r3, #0x0100
+    934B        str r3, [sp, #0x012C]
+--- mx25r6435f.c -- 454 ------------------------------------
+sCommand.AddressMode = QSPI_ADDRESS_1_LINE;
+    F44F6380    mov.w r3, #0x0400
+    934C        str r3, [sp, #0x0130]
+--- mx25r6435f.c -- 455 ------------------------------------
+sCommand.AddressSize = QSPI_ADDRESS_24_BITS;
+    F44F5300    mov.w r3, #0x2000
+    9348        str r3, [sp, #0x0120]
+--- mx25r6435f.c -- 456 ------------------------------------
+sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+    2300        movs r3, #0
+    934D        str r3, [sp, #0x0134]
+--- mx25r6435f.c -- 457 ------------------------------------
+sCommand.DataMode = QSPI_DATA_1_LINE;
+    F04F7380    mov.w r3, #0x01000000
+    934E        str r3, [sp, #0x0138]
+--- mx25r6435f.c -- 458 ------------------------------------
+sCommand.DdrMode = QSPI_DDR_MODE_DISABLE;
+    2300        movs r3, #0
+    9350        str r3, [sp, #0x0140]
+--- mx25r6435f.c -- 459 ------------------------------------
+sCommand.DdrHoldHalfCycle = QSPI_DDR_HHC_ANALOG_DELAY;
+    2300        movs r3, #0
+    9351        str r3, [sp, #0x0144]
+--- mx25r6435f.c -- 460 ------------------------------------
+sCommand.SIOOMode = QSPI_SIOO_INST_EVERY_CMD;
+    2300        movs r3, #0
+    9352        str r3, [sp, #0x0148]
+--- mx25r6435f.c -- 461 ------------------------------------
+#endif
+/* Configure the command */
+if (HAL_XSPI_Command(&myHandle->hxspi, &sCommand, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
+    AB54        add r3, sp, #0x0150
+    F5A373A6    sub.w r3, r3, #0x014C
+    681B        ldr r3, [r3]
+    A945        add r1, sp, #0x0114
+    F2413288    movw r2, #0x1388
+    4618        mov r0, r3
+    F013FB5C    bl 0x080160F8 <HAL_QSPI_Command>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D004        beq 0x08002A50
+--- mx25r6435f.c -- 464 ------------------------------------
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+DEBUG_PUTS("XSpi_Read - Error: Command not send");
+    480D        ldr r0, =0x080339FC
+    F02DFF0B    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 466 ------------------------------------
+#endif
+return false;
+    2300        movs r3, #0
+    E011        b 0x08002A74
+--- mx25r6435f.c -- 468 ------------------------------------
+}
+ret = HAL_XSPI_Receive(&myHandle->hxspi, sfdp_header, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+    AB54        add r3, sp, #0x0150
+    F5A373A6    sub.w r3, r3, #0x014C
+    681B        ldr r3, [r3]
+    A903        add r1, sp, #12
+    F2413288    movw r2, #0x1388
+    4618        mov r0, r3
+    F013FD22    bl 0x080164A8 <HAL_QSPI_Receive>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    BF0C        ite eq
+    2301        moveq r3, #1
+    2300        movne r3, #0
+    B2DB        uxtb r3, r3
+    9353        str r3, [sp, #0x014C]
+--- mx25r6435f.c -- 476 ------------------------------------
+ret = HAL_QSPI_Receive(&myHandle->hxspi, sfdp_header, XSPI_TIMEOUT_DEFAULT_VALUE) == HAL_OK;
+#endif
+#endif
+return ret;
+    9B53        ldr r3, [sp, #0x014C]
+--- mx25r6435f.c -- 481 ------------------------------------
+}
+    4618        mov r0, r3
+    B055        add sp, sp, #0x0154
+    F85DFB04    pop.w {pc}
+    080339FC    .word 0x080339FC
+--- mx25r6435f.c -- 485 ------------------------------------
+* - set the flash size and timing parameters
+* - reset flash controller
+*****************************************************************************/
+bool XSpecific_SpecificInit(const HW_DeviceType *self,XSpiHandleT *myHandle, uint32_t clk_frq)
+{
+    B500        push {lr}
+    B089        sub sp, sp, #0x24
+    9005        str r0, [sp, #20]
+    9104        str r1, [sp, #16]
+    9203        str r2, [sp, #12]
+--- mx25r6435f.c -- 490 ------------------------------------
+UNUSED(self);
+uint32_t clkspeed = myHandle->clkspeed;
+    9B04        ldr r3, [sp, #16]
+    6DDB        ldr r3, [r3, #0x5C]
+    9307        str r3, [sp, #28]
+--- mx25r6435f.c -- 493 ------------------------------------
+/*
+* The initialization clock speed is the minimum of selected operating speed and XSPI_INITIAL_SPEED
+* which is a safe speed for initialization
+*/
+uint32_t init_speed = ( clkspeed < XSPI_INITIAL_SPEED ? clkspeed : XSPI_INITIAL_SPEED );
+    9B07        ldr r3, [sp, #28]
+    4A32        ldr r2, =0x000F4240
+    4293        cmp r3, r2
+    BF28        it cs
+    4613        movcs r3, r2
+    9306        str r3, [sp, #24]
+--- mx25r6435f.c -- 498 ------------------------------------
+/* Setup the deep sleep timing parameters, if deep sleep is supported */
+if ( myHandle->dsInfo ) {
+    9B04        ldr r3, [sp, #16]
+    6EDB        ldr r3, [r3, #0x6C]
+    2B00        cmp r3, #0
+    D007        beq 0x08002AB4
+--- mx25r6435f.c -- 501 ------------------------------------
+myHandle->dsInfo->dlyFmSleep = MX25_DLY_FM_SLEEP;
+    9B04        ldr r3, [sp, #16]
+    6EDB        ldr r3, [r3, #0x6C]
+    222D        movs r2, #0x2D
+    805A        strh r2, [r3, #2]
+--- mx25r6435f.c -- 502 ------------------------------------
+myHandle->dsInfo->dlyToSleep = MX25_DLY_TO_SLEEP;
+    9B04        ldr r3, [sp, #16]
+    6EDB        ldr r3, [r3, #0x6C]
+    221E        movs r2, #30
+    801A        strh r2, [r3]
+--- mx25r6435f.c -- 503 ------------------------------------
+}
+/* Basic Initialization with a safe speed and minimum flash size to readout ID data */
+if ( !XSpecific_BasicInit(myHandle, clk_frq, init_speed, MX25_XXX35F_MINIMUM_FLASH_SIZE, true) ) return false;
+    2301        movs r3, #1
+    9300        str r3, [sp]
+    F44F3380    mov.w r3, #0x010000
+    9A06        ldr r2, [sp, #24]
+    9903        ldr r1, [sp, #12]
+    9804        ldr r0, [sp, #16]
+    F7FFFCB3    bl 0x0800242C <XSpecific_BasicInit>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D101        bne 0x08002AD0
+    2300        movs r3, #0
+    E041        b 0x08002B54
+--- mx25r6435f.c -- 507 ------------------------------------
+/* QSPI memory reset */
+if (!XSpecific_ResetMemory(myHandle) ) {
+    9804        ldr r0, [sp, #16]
+    F7FFFD47    bl 0x08002564 <XSpecific_ResetMemory>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D102        bne 0x08002AE2
+--- mx25r6435f.c -- 511 ------------------------------------
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+DEBUG_PUTS("XSPI SpecificInit - Error: ResetMemory failed");
+    4820        ldr r0, =0x08033A20
+    F02DFEC0    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 513 ------------------------------------
+#endif
+}
+/* read ID bytes */
+if ( XSpecific_GetID(myHandle) != XSPI_OK ) {
+    9804        ldr r0, [sp, #16]
+    F7FFFD85    bl 0x080025F2 <XSpecific_GetID>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D004        beq 0x08002AF8
+--- mx25r6435f.c -- 518 ------------------------------------
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+DEBUG_PUTS("XSPI SpecificInit - Error: Cannot read ID bytes");
+    481D        ldr r0, =0x08033A50
+    F02DFEB7    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 520 ------------------------------------
+#endif
+return false;
+    2300        movs r3, #0
+    E02D        b 0x08002B54
+--- mx25r6435f.c -- 522 ------------------------------------
+}
+if ( !XSpecific_ReadSFDP(myHandle) ) return false;
+    9804        ldr r0, [sp, #16]
+    F7FFFF6F    bl 0x080029DC <XSpecific_ReadSFDP>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D101        bne 0x08002B08
+    2300        movs r3, #0
+    E025        b 0x08002B54
+--- mx25r6435f.c -- 525 ------------------------------------
+/* QSPI quad enable */
+if ( !MX25_QuadMode(myHandle, MX25_QUAD_ENABLE) ) {
+    2101        movs r1, #1
+    9804        ldr r0, [sp, #16]
+    F000FB4F    bl 0x080031AE <MX25_QuadMode>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D104        bne 0x08002B20
+--- mx25r6435f.c -- 528 ------------------------------------
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+DEBUG_PUTS("XSPI SpecificInit - Error: Quad mode not set");
+    4814        ldr r0, =0x08033A80
+    F02DFEA3    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 530 ------------------------------------
+#endif
+return false;
+    2300        movs r3, #0
+    E019        b 0x08002B54
+--- mx25r6435f.c -- 532 ------------------------------------
+}
+/* Get geometry data */
+if ( !MX25_GetGeometry(myHandle) ) {
+    9804        ldr r0, [sp, #16]
+    F000FA42    bl 0x08002FAA <MX25_GetGeometry>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D104        bne 0x08002B36
+--- mx25r6435f.c -- 536 ------------------------------------
+#if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+DEBUG_PUTS("XSPI SpecificInit - Error: Cannot set geometry");
+    480F        ldr r0, =0x08033AB0
+    F02DFE98    bl 0x08030862 <puts>
+--- mx25r6435f.c -- 538 ------------------------------------
+#endif
+return false;
+    2300        movs r3, #0
+    E00E        b 0x08002B54
+--- mx25r6435f.c -- 540 ------------------------------------
+}
+/* The operating speed is now set to user configured speed and flash size is set to correct size */
+if ( !XSpecific_BasicInit(myHandle, clk_frq, clkspeed, myHandle->geometry.FlashSize, false) ) return false;
+    9B04        ldr r3, [sp, #16]
+    6C5B        ldr r3, [r3, #0x44]
+    2200        movs r2, #0
+    9200        str r2, [sp]
+    9A07        ldr r2, [sp, #28]
+    9903        ldr r1, [sp, #12]
+    9804        ldr r0, [sp, #16]
+    F7FFFC72    bl 0x0800242C <XSpecific_BasicInit>
+    4603        mov r3, r0
+    2B00        cmp r3, #0
+    D101        bne 0x08002B52
+    2300        movs r3, #0

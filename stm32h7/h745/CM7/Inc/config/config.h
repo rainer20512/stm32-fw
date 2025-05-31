@@ -25,7 +25,8 @@
  */ 
 // #define STM32H745NUCLEO
 // #define STM32H747IDISCO
-#define PORTENTAH7
+// #define PORTENTAH7
+#define ARDUINO_GIGA_R1
 /*
  ********************************************************************************
  * Application selection
@@ -52,11 +53,11 @@
 #define USE_EEPROM_EMUL             0
 #define USE_QENCODER                0
 #define USE_SECONDTIMER             1
-#define USE_HW_PWMTIMER             1
+#define USE_HW_PWMTIMER             0
 #define USE_BASICTIMER              1
 #define USE_QSPI                    1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
-#define USE_BDMA                    0
+#define USE_BDMA                    1            // Set to 1 if using LP devices with DMA ( LPUARTx e.g. )
 #define USE_PERIPHTIMER             1
 
 
@@ -98,8 +99,9 @@
  * Choose one in case of USE_QSPI == 1 
 ******************************************************************************
  */
-#define USE_XSPI_MX25               1
+#define USE_XSPI_MX25               0
 #define USE_XSPI_MT25Q              0
+#define USE_XSPI_AT25SF             1
 
 
 /******************************************************************************
@@ -134,12 +136,20 @@
     #define  HW_HSE_FREQUENCY       8000000
 #endif
 
-#if defined(STM32H747IDISCO)  || defined(PORTENTAH7)
-    /* STM32H747I-DISCO has an external 25MHz Oscillator on board */
+#if defined(STM32H747IDISCO) || defined(PORTENTAH7)
+    /* STM32H747I-DISCO and PortentaH7 have an external 25MHz Oscillator on board */
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       25000000
 #endif
+
+#if defined(ARDUINO_GIGA_R1)
+    /* Arduino Giga has an 16MHz Crystal on board */
+    #define  HW_HAS_HSE_CRYSTAL
+    #undef  HW_HAS_HSE_BYPASS
+    #define  HW_HSE_FREQUENCY       16000000
+#endif
+
 
 /**** !!! Note: HSE_VALUE has to be set in stm32h7xx_hal_conf.h accordingly !!! ****/
 

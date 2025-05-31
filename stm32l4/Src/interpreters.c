@@ -1740,7 +1740,6 @@ ADD_SUBMODULE(Test);
         #define XSPI_HW             HW_QSPI1
     #endif
     #include "dev/xspi_dev.h"
-    #include "dev/xspi/xspi_specific.h"
 
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
@@ -1787,12 +1786,12 @@ ADD_SUBMODULE(Test);
 
       switch((uint32_t)arg) {
         case 0:
-            printf("Flash Size= ...... %d kByte\n", XSpi1Handle.geometry.FlashSize/1024);
-            printf("Erase sector size= %d Byte\n", XSpi1Handle.geometry.EraseSectorSize);
-            printf("   sector count= . %d\n", XSpi1Handle.geometry.EraseSectorsNumber);
+            printf("Flash Size= ...... %d kByte\n", 1 << (XSpi1Handle.geometry.FlashSize-10));
+            printf("Erase sector size= %d Byte\n", XSpi1Handle.geometry.EraseSize[0]);
+            printf("   sector count= . %d\n", XSpi1Handle.geometry.EraseNum[0]);
             printf("Write page size= . %d Byte\n", XSpi1Handle.geometry.ProgPageSize);
             printf("   page count= ... %d\n", XSpi1Handle.geometry.ProgPagesNumber);
-            printf("pages per sector=  %d\n", XSpi1Handle.geometry.EraseSectorSize/XSpi1Handle.geometry.ProgPageSize);            
+            printf("pages per sector=  %d\n", XSpi1Handle.geometry.EraseSize[0]/XSpi1Handle.geometry.ProgPageSize);            
             break;
         case 1:
             if ( CMD_argc() < 1 ) {
@@ -1807,9 +1806,9 @@ ADD_SUBMODULE(Test);
             } else {
                 cnt = 0;
             }
-            addr =  XSpi1Handle.geometry.EraseSectorSize * num;
+            addr =  XSpi1Handle.geometry.EraseSize[0] * num;
             printf("Erase sector %d to %d (startaddr=0x%08x)\n", num, num+cnt, addr);
-            ret = XSpi_EraseSectorIT(&XSpi1Handle, addr, cnt+1);
+            ret = XSpi_EraseIT(&XSpi1Handle, XSPI_ERASE_SECTOR, addr, cnt+1);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
@@ -1926,7 +1925,7 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = XSpecific_EnableMemoryMappedMode(&XSpi1Handle);
+            ret = XSpi_EnableMemoryMappedMode(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
@@ -1940,12 +1939,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = XSpecific_EnterDeepPowerDown(&XSpi1Handle);
+            ret = XSpi_EnterDeepPowerDown(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = XSpecific_LeaveDeepPowerDown(&XSpi1Handle);
+            ret = XSpi_LeaveDeepPowerDown(&XSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:

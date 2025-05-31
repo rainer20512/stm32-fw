@@ -93,7 +93,9 @@
         </folder>
         <folder Name="dev">
           <folder Name="xspi">
-            <file file_name="../common/inc/dev/xspi/xspi_specific.h" />
+            <file file_name="../common/inc/dev/xspi/flash_interface.h" />
+            <file file_name="../common/inc/dev/xspi/xspi_helper.h" />
+            <file file_name="../common/inc/dev/xspi/xspi_lowlevel.h" />
           </folder>
           <file file_name="$(ProjectDir)/../common/Inc/dev/adc_dev.h" />
           <file file_name="$(ProjectDir)/../common/Inc/dev/can_dev.h" />
@@ -135,8 +137,11 @@
         </folder>
         <folder Name="dev">
           <folder Name="xspi">
+            <file file_name="../common/src/dev/xspi/at25sfxxx.c" />
             <file file_name="../common/src/dev/xspi/mx25r6435f.c" />
             <file file_name="../common/src/dev/xspi/mx25r6435f.h" />
+            <file file_name="../common/src/dev/xspi/xspi_helper.c" />
+            <file file_name="../common/src/dev/xspi/xspi_lowlevel.c" />
           </folder>
           <file file_name="$(ProjectDir)/../common/Src/dev/adc_dev.c" />
           <file file_name="$(ProjectDir)/../common/Src/dev/bitbang_spi.c">

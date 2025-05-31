@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file    portenta_h7.h
+  * @file    arduino_giga.h
   * @author  Rainer
-  * @brief   minimal BSP for Portenta H7 board, mainly for debug 
+  * @brief   minimal BSP for Arduino Giga board, mainly for debug 
   *
   *                      ---
   * 
@@ -10,8 +10,8 @@
   */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __PORTENTA_H7_H
-#define __PORTENTA_H7_H
+#ifndef __ARDUINO_GIGA_H
+#define __ARDUINO_GIGA_H
 
 /* define the BOARD LEDS */
 #define LED1    0
@@ -24,16 +24,7 @@
 #define LED_GREEN  1
 #define LED_BLUE   2
 
-/* PMIC Operation modes, will be controlled by PJ0 GPIO */
-typedef enum {
-    PMIC_RUN    = 0,                     
-    PMIC_STBY   = 1,
-} PMIC_RunmodeT;
-
-void PMIC_SetMode           ( PMIC_RunmodeT mode );
-
 void BSP_Board_Init         (void);
-void BSP_LAN7842_Bootstrap  (void);
 void BSP_LED_Init           (uint32_t lednum);
 void BSP_LED_Toggle         (uint32_t lednum);
 void BSP_LED_On             (uint32_t lednum);
@@ -46,4 +37,4 @@ void BSP_PinHigh            (uint32_t lednum);
 void BSP_PinLow             (uint32_t lednum);
 
 
-#endif  //__PORTENTA_H7_H 
+#endif  // __ARDUINO_GIGA_H 

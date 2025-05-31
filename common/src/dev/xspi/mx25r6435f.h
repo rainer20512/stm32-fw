@@ -39,9 +39,10 @@
 /*
  * dummy cycles for 80 MHz
  */
+#define MX25R6435F_DUMMY_CYCLES_READ_SFDP    1
 #define MX25R6435F_DUMMY_CYCLES_READ         8
 #define MX25R6435F_DUMMY_CYCLES_READ_DUAL    4
-#define MX25R6435F_DUMMY_CYCLES_READ_QUAD    4
+#define MX25R6435F_DUMMY_CYCLES_READ_QUAD    2
 #define MX25R6435F_DUMMY_CYCLES_2READ        4
 #define MX25R6435F_DUMMY_CYCLES_4READ        6
 
@@ -65,11 +66,11 @@
 /*
  * dummy cycles for 80 MHz
  */
-#define MX25L12833F_DUMMY_CYCLES_READ         8
-#define MX25L12833F_DUMMY_CYCLES_READ_DUAL    4
-#define MX25L12833F_DUMMY_CYCLES_READ_QUAD    6
-#define MX25L12833F_DUMMY_CYCLES_2READ        8
-#define MX25L12833F_DUMMY_CYCLES_4READ        8
+#define MX25L12835F_DUMMY_CYCLES_READ         8
+#define MX25L12835F_DUMMY_CYCLES_READ_DUAL    4
+#define MX25L12835F_DUMMY_CYCLES_READ_QUAD    6
+#define MX25L12835F_DUMMY_CYCLES_2READ        8
+#define MX25L12835F_DUMMY_CYCLES_4READ        8
 
 /** 
   * @brief  MX25L12833F Flash geometry  
@@ -107,6 +108,10 @@
 #define DUAL_INOUT_READ_CMD                  0xBB
 #define QUAD_OUT_READ_CMD                    0x6B
 #define QUAD_INOUT_READ_CMD                  0xEB
+
+/* SFDP read */
+#define SFDP_READ_CMD                        0x5A
+
 
 /* Program Operations */
 #define PAGE_PROG_CMD                        0x02

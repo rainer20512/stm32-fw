@@ -430,7 +430,7 @@
     // LPUART1 TX-PA9 and RX-PA10 is connectedto UART1 on breakout board
     //#define USE_LPUART1
     #define COM9_USE_TX_DMA
-    #define USE_LPUART1_ALTN1
+    #define USE_LPUART1_ALTN2
     //#define COM9_USE_RX_DMA
     // Clocksource is defined on top for all u(s)arts
     #define USE_LPUART1_DEBUG
@@ -478,6 +478,93 @@
   #if USE_ETH > 0
     #define ETH_USE_RMII
     #define ETH_DEV             HW_ETH
+  #endif
+
+  #define DEFAULT_STOP_MODE                2
+
+#elif defined(ARDUINO_GIGA_R1)
+
+
+    /* Define the LPTimer that does timekeeping in case RTC is not used for that */
+    #define RTCTIMER                LPTIM4
+    #define RTCTIMER_IRQn           LPTIM4_IRQn
+    #define RTCTIMER_IRQHandler     LPTIM4_IRQHandler
+    
+    // Uart7 is connected to WiFi module TX=PF7, RX=PA8
+    // #define USE_UART7  
+    #define USE_UART7_ALTN4
+    // Clocksource is defined on top for all u(s)arts
+    #define COM7_USE_TX_DMA
+    #define COM7_USE_RX_DMA
+
+    // LPUART1 TX-PA9 and RX-PB7 is connectedto USART0 on breakout board
+    #define USE_LPUART1
+    #define COM9_USE_TX_DMA
+    #define USE_LPUART1_ALTN2
+    //#define COM9_USE_RX_DMA
+    // Clocksource is defined on top for all u(s)arts
+    #define USE_LPUART1_DEBUG
+
+    // Usart2 is connected to USART1 on breakout board, TX=PD5, RX=PD6
+    #define USE_USART2  
+    // #define USE_USART2_ALTN1
+    // default configuration
+    // Clocksource is defined on top for all u(s)arts
+    #define COM2_USE_TX_DMA
+    #define COM2_USE_RX_DMA
+    #define USE_UART2_DEBUG
+
+    // Usart4 is connected to UART2 on breakout board, TX=PH13, RX=PI9
+    #define USE_UART4  
+    #define USE_UART4_ALTN7
+    // Clocksource is defined on top for all u(s)arts
+    #define COM4_USE_TX_DMA
+    //#define COM4_USE_RX_DMA
+    // #define USE_UART4_DEBUG
+
+
+    // Usart6 is connected to USART3 on breakout board, TX=PG14, RX=PC7
+    // #define USE_USART6  
+    #define USE_USART6_ALTN2
+    // Clocksource is defined on top for all u(s)arts
+    #define COM6_USE_TX_DMA
+    #define COM6_USE_RX_DMA
+    // #define USE_USART6_DEBUG
+
+
+    #define USE_ADC3
+    #define ADC3_USE_IRQ
+    #define ADC3_USE_DMA 
+    #define USER_ADC      HW_ADC3
+
+  #if USE_PERIPHTIMER > 0
+    #define PERIPH_TIMER          HW_TIM15
+    #define PERIPH_TIMER_TRG_ADC  ADC_EXTERNALTRIG_T15_TRGO
+    #define USE_TIM15
+    #define USE_TIM15_ALTN1
+  #endif   
+
+
+  #if USE_ETH > 0
+    #define ETH_USE_RMII
+    #define ETH_USE_IRQ
+    #define ETH_DEV             HW_ETH
+  #endif
+
+  #if USE_QSPI > 0
+      #define XSPI_DEV          HW_QSPI1
+      #define QSPI_HND          QSpi1Handle
+      #define USE_QSPI1
+      #define QSPI1_CLKSPEED    100000000 
+      #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_D1HCLK           
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_PLL           // PLL1Q
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_PLL2          // PLL2R
+      // #define QSPI1_CLKSOURCE   RCC_QSPICLKSOURCE_CLKP
+      #define QSPI1_HAS_LP_MODE
+      #define USE_QSPI1_ALTN6
+      #define QSPI1_USE_IRQ
+
+      // #define QSPI1_USE_DMA Not implemented yet 
   #endif
 
   #define DEFAULT_STOP_MODE                2

@@ -1085,7 +1085,7 @@ ADD_SUBMODULE(Test);
             break;
         case 2:
             ADC_MeasureChipTemp(&HW_ADC3);
-            printf("Chip Temp = %d°C\n", ADC3Handle.chiptemp); 
+            printf("Chip Temp = %dC\n", ADC3Handle.chiptemp); 
             break;
         case 3:
             if ( CMD_argc() < 1 ) {
@@ -1258,7 +1258,7 @@ ADD_SUBMODULE(Test);
                 TMR_GetActualBaseAndPwmFrq(chn->tmr, &num, &ch);
                 ret = PWM_CH_GetPWMPromille(chn->tmr, chn->channel);
                 DEBUG_PRINTF("  %2d: %s   %d   %d   %d   %8d %6d  %3d%% %s\n",
-                              len, chn->tmr->devName, chn->channel, chn->bInvert, chn->bAutostart, 
+                              len, chn->tmr->devName, chn->channel, chn->bInvert, chn->bUserByte, 
                               num, ch, (ret+5)/10,
                               TMR_IsChnActive(chn->tmr, chn->channel) ? "Y" : "N" );
             }
@@ -1398,12 +1398,12 @@ ADD_SUBMODULE(Test);
 
       switch((uint32_t)arg) {
         case 0:
-            printf("Flash Size= ...... %d kByte\n", QSpi1Handle.geometry.FlashSize/1024);
-            printf("Erase sector size= %d Byte\n", QSpi1Handle.geometry.EraseSectorSize);
-            printf("   sector count= . %d\n", QSpi1Handle.geometry.EraseSectorsNumber);
+            printf("Flash Size= ...... %d kByte\n", 1 << (QSpi1Handle.geometry.FlashSize-10));
+            printf("Erase sector size= %d Byte\n", QSpi1Handle.geometry.EraseSize[0]);
+            printf("   sector count= . %d\n", QSpi1Handle.geometry.EraseNum[0]);
             printf("Write page size= . %d Byte\n", QSpi1Handle.geometry.ProgPageSize);
             printf("   page count= ... %d\n", QSpi1Handle.geometry.ProgPagesNumber);
-            printf("pages per sector=  %d\n", QSpi1Handle.geometry.EraseSectorSize/QSpi1Handle.geometry.ProgPageSize);            
+            printf("pages per sector=  %d\n", QSpi1Handle.geometry.EraseSize[0]/QSpi1Handle.geometry.ProgPageSize);            
             break;
         case 1:
             if ( CMD_argc() < 1 ) {
@@ -1418,9 +1418,9 @@ ADD_SUBMODULE(Test);
             } else {
                 cnt = 0;
             }
-            addr =  QSpi1Handle.geometry.EraseSectorSize * num;
+            addr =  QSpi1Handle.geometry.EraseSize[0] * num;
             printf("Erase sector %d (startaddr=0x%08x) plus %d follwing sectors ", num, addr,cnt );
-            ret = XSpi_EraseSectorWait(&QSpi1Handle, addr, cnt+1);
+            ret = XSpi_EraseWait(&QSpi1Handle, XSPI_ERASE_SECTOR, addr, cnt+1);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 2:
@@ -1537,7 +1537,7 @@ ADD_SUBMODULE(Test);
             break;
         case 5:
             printf("Enable memory mapped mode- ");
-            ret = XSpecific_EnableMemoryMappedMode(&QSpi1Handle);
+            ret = XSpi_EnableMemoryMappedMode(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 6:
@@ -1551,12 +1551,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = XSpecific_EnterDeepPowerDown(&QSpi1Handle);
+            ret = XSpi_EnterDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = XSpecific_LeaveDeepPowerDown(&QSpi1Handle);
+            ret = XSpi_LeaveDeepPowerDown(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:
@@ -1600,7 +1600,7 @@ ADD_SUBMODULE(Test);
             break;
         case 13:
             printf("QSPI chip reset - ");
-            ret = XSpecific_ResetMemory(&QSpi1Handle);
+            ret = XSpiLL_ResetMemory(&QSpi1Handle);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         default:

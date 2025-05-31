@@ -189,6 +189,7 @@
    * ALTN4   TX:PD1  RX:PD0   AF8
    * ALTN5   TX:PH13 RX:PH14  AF8
    * ALTN6   TX:PA0  RX:PI9   AF8  ( Portenta H7 )
+   * ALTN7   TX:PH13 RX:PI9   AF8  ( Arduino Giga )
    * DEFAULT TX:PA0  RX:PA1   AF8
    */
   #if defined(USE_UART4_ALTN1)
@@ -215,6 +216,10 @@
     /* ALTN6 TX:PA0 RX:PI9 with AF8 - Arduino Portenta H7 */
     #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
     #define COM4_RX                        { GPIO_PIN_9, GPIOI, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
+  #elif defined(USE_UART4_ALTN7)
+    /* ALTN6 TX:PH13 RX:PI9 with AF8 - Arduino Giga */
+    #define COM4_TX                        { GPIO_PIN_13, GPIOH, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
+    #define COM4_RX                        { GPIO_PIN_9,  GPIOI, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Rx" }
   #else
     /* DEFAULT TX:PA0  RX:PA1 with AF8 */
     #define COM4_TX                        { GPIO_PIN_0, GPIOA, GPIO_AF8_UART4, GPIO_PULLUP, "Uart4_Tx" }
@@ -279,10 +284,14 @@
    * ALTN1   TX:PG14  RX:PG9   AF7
    * DEFAULT TX:PC6   RX:PC7   AF7
    */
-  #ifdef USE_USART6_ALTN1
+  #if definedUSE_USART6_ALTN1)
     /* PG14/PG9 with AF7 */
-    #define COM6_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
-    #define COM6_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Rx" }
+    #define COM6_TX                        { GPIO_PIN_14, GPIOG, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
+    #define COM6_RX                        { GPIO_PIN_9,  GPIOG, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Rx" }
+  #elif defined(USE_USART6_ALTN2)
+    /* Tx=PG14/AF7 Rx=PC7/AF7  Arduino Giga */
+    #define COM6_TX                        { GPIO_PIN_14, GPIOG, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
+    #define COM6_RX                        { GPIO_PIN_7,  GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
   #else
     /* DEFAULT TX:PC6  RX:PC7  AF8   */
     #define COM6_TX                        { GPIO_PIN_6, GPIOC, GPIO_AF7_USART6, GPIO_PULLUP, "Usart6_Tx" }
@@ -335,6 +344,10 @@
     /* ALTN3   TX:PF7   RX:PF6   AF7    */
     #define COM7_TX                        { GPIO_PIN_7, GPIOF, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Tx" }
     #define COM7_RX                        { GPIO_PIN_6, GPIOF, GPIO_AF7_UART7, GPIO_PULLUP, "Uart7_Rx" }
+  #elif defined(USE_UART7_ALTN4)
+    /* ALTN3   TX:PF7   RX:PA8   AF11    */
+    #define COM7_TX                        { GPIO_PIN_7, GPIOF, GPIO_AF7_UART7,  GPIO_PULLUP, "Uart7_Tx" }
+    #define COM7_RX                        { GPIO_PIN_8, GPIOA, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Rx" }
   #else
     /* DEFAULT TX:PA15  RX:PA8   AF11   */
     #define COM7_TX                        { GPIO_PIN_15,GPIOA, GPIO_AF11_UART7, GPIO_PULLUP, "Uart7_Tx" }
@@ -416,10 +429,14 @@
    * ALTN1   TX:PA9  RX:PA10   AF3
    * DEFAULT TX:PB6  RX:PB7    AF8 
    */
-  #ifdef USE_LPUART1_ALTN1
+  #if defined(USE_LPUART1_ALTN1)
     /* PA9/PA10 with AF3 */
     #define COM9_TX                        { GPIO_PIN_9,  GPIOA, GPIO_AF3_LPUART, GPIO_PULLUP, "Lpuart1_Tx" }
     #define COM9_RX                        { GPIO_PIN_10, GPIOA, GPIO_AF3_LPUART, GPIO_PULLUP, "Lpuart1_Rx" }
+  #elif defined(USE_LPUART1_ALTN2)
+    /* TX=PA9/AF3 Rx=PB7/AF8 */
+    #define COM9_TX                        { GPIO_PIN_9, GPIOA, GPIO_AF3_LPUART, GPIO_PULLUP, "Lpuart1_Tx" }
+    #define COM9_RX                        { GPIO_PIN_7, GPIOB, GPIO_AF8_LPUART, GPIO_PULLUP, "Lpuart1_Rx" }
   #else
     /* DEFAULT TX:PB6  RX:PB7  AF8   */
     #define COM9_TX                        { GPIO_PIN_6, GPIOB, GPIO_AF8_LPUART, GPIO_PULLUP, "Lpuart1_Tx" }

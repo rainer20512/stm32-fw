@@ -52,6 +52,8 @@
     #include "STM32H747I-DISCO/stm32h747i_discovery.h"
 #elif defined(PORTENTAH7)
     #include "bsp/portenta_h7.h"
+#elif defined(ARDUINO_GIGA_R1)
+    #include "bsp/arduino_giga.h"
 #endif
 
 #define INIT_STACK_SIZE 256
@@ -182,10 +184,13 @@ int main(void)
      * Select once at startup the Power supply scheme, 
      * and do not touch again. 
      */
-#if defined(PORTENTAH7)
+#if defined(ARDUINO_GIGA_R1)
+    /* Arduino Giga uses internal LDO to power core */
+    HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+#elif defined(PORTENTAH7)
     /* Portenta H7 uses internal SMPS to power internal LDO, which powers core */
     HAL_PWREx_ConfigSupply(PWR_SMPS_2V5_SUPPLIES_LDO);
-   #else 
+#else 
     /* Nucleo boards use internal SMPS to power core */
     /* 
      * STM32H745 Nucleo does only support SMPS. So select once at startup 

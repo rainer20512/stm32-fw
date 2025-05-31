@@ -25,8 +25,8 @@
  */ 
 // #define STM32H745NUCLEO
 // #define STM32H747IDISCO
-#define PORTENTAH7
-
+// #define PORTENTAH7
+#define ARDUINO_GIGA_R1
 /*
  ********************************************************************************
  * Application selection
@@ -59,9 +59,9 @@
 #define USE_BASICTIMER              1
 #define USE_QSPI                    0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BASICTIMER_FOR_TICKS    1            // Use Basictimer to generate 1ms Ticks instead of SYSTICK-Timer
-#define USE_ETH                     1
+#define USE_ETH                     0
 #define USE_BDMA                    1      
-#define USE_LWIP                    1
+#define USE_LWIP                    0
 #define USE_NEXTION                 0            // must also enable compile of common/nextion 
 
 /* Choose one in case of USE_ETH == 1 
@@ -106,6 +106,7 @@
  */
 #define USE_XSPI_MX25               0
 #define USE_XSPI_MT25Q              0
+#define USE_XSPI_AT25SF             0
 
 /******************************************************************************
  * Check and set constraints for BaseTimer
@@ -138,11 +139,15 @@
     #define  HW_HAS_HSE_BYPASS
     #define  HW_HSE_FREQUENCY       8000000
 #endif
-#if defined(STM32H747IDISCO) || defined(PORTENTAH7)
+#if defined(STM32H747IDISCO) || defined(PORTENTAH7)  || defined(ARDUINO_GIGA_R1)
     /* STM32H747I-DISCO has an external 25MHz Oscillator on board */
     #undef  HW_HAS_HSE_CRYSTAL
     #define  HW_HAS_HSE_BYPASS
-    #define  HW_HSE_FREQUENCY       25000000
+    #if defined(ARDUINO_GIGA_R1)
+        #define  HW_HSE_FREQUENCY       16000000
+    #else
+        #define  HW_HSE_FREQUENCY       25000000
+    #endif
 #endif
 
 /* Can we use an HSE Clock ? */

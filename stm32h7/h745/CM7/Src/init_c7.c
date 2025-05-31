@@ -68,36 +68,39 @@ void Init_DumpAndClearResetSource(void)
   }
 }
 
-/******************************************************************************
- * Initialize all PWM timers and start them
- * debug uart ). This code portion is heavily contaminated by #ifdef's
- * if you add addtional devices, THIS is the place to add the initialization
- * code 
- *****************************************************************************/
-static void Init_AllTimers ( void )
-{
-  const PwmChannelT* act;  
-  int32_t dev_idx;
+#if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+
+    /******************************************************************************
+     * Initialize all PWM timers and start them
+     * debug uart ). This code portion is heavily contaminated by #ifdef's
+     * if you add addtional devices, THIS is the place to add the initialization
+     * code 
+     *****************************************************************************/
+    static void Init_AllTimers ( void )
+    {
+      const PwmChannelT* act;  
+      int32_t dev_idx;
   
-  for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) {
+      for ( act=PWM_CH_IterateBegin(); act; act=PWM_CH_IterateNext() ) {
    
-    /* First check, whether Timer device is already registered */
-    /* due to more than one PWM channel per timer              */
-    if ( GetDevIdx(act->tmr) == DEV_NOTFOUND ) {
-        /* Not in device List so far, so register */
-       dev_idx = AddDevice(act->tmr, PWM_CH_InitTimer, NULL);
-       if ( dev_idx < 0 ) {
-           DEBUG_PRINTF("Failed to init Timer-device %s\n",act->tmr->devName );
-       } else {
-           DeviceInitByIdx(dev_idx, NULL );
-       }
+        /* First check, whether Timer device is already registered */
+        /* due to more than one PWM channel per timer              */
+        if ( GetDevIdx(act->tmr) == DEV_NOTFOUND ) {
+            /* Not in device List so far, so register */
+           dev_idx = AddDevice(act->tmr, PWM_CH_InitTimer, NULL);
+           if ( dev_idx < 0 ) {
+               DEBUG_PRINTF("Failed to init Timer-device %s\n",act->tmr->devName );
+           } else {
+               DeviceInitByIdx(dev_idx, NULL );
+           }
+        }
+
+        /* Next, initialize all PWM channels and start all that are marked as autostart */
+        PWM_CH_Init(act);
+
+      } /* for */
     }
-
-    /* Next, initialize all PWM channels and start all that are marked as autostart */
-    PWM_CH_Init(act);
-
-  } /* for */
-}
+#endif
 
 /******************************************************************************
  * Init all other devices except those, that are initialized early ( IODEV and
@@ -146,7 +149,9 @@ void Init_OtherDevices(void)
       }
   #endif
 
-    Init_AllTimers();
+  #if USE_HW_PWMTIMER > 0 || USE_USER_PWMTIMER > 0
+      Init_AllTimers();
+  #endif
 
   #if USE_HW_PWMTIMER > 0
       // LCD_SetPWMDev(&HW_PWMTIMER, LCD_BKLGHT_CH);
