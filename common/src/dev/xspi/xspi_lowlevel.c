@@ -254,16 +254,20 @@ int32_t XSpi_LeaveDeepPowerDown(XSpiHandleT *myHandle)
  * @retval execution or wait time until HP mode is active, 
  *         -1 in case of error or dpd state was active before
  ******************************************************************************************/
-int32_t XSpiLL_EnterHPMode(XSpiHandleT *myHandle)
+int32_t XSpiLL_SetHPMode(XSpiHandleT *myHandle, bool bEna)
 {
     uint32_t exec_time;
     /* Assert deep power down enable cmd is defined */
-    const NOR_FlashCmdT *cmd = myHandle->interface->cmd.hpen;
+    const NOR_FlashCmdT *cmd;
+    cmd = bEna ? myHandle->interface->cmd.hpen : myHandle->interface->cmd.hpdis;
     assert( cmd );
     
-    if ( myHandle->bInHPMode || !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
+    /* Only execute, if mode actually changes */
+    if ( bEna && myHandle->bInHPMode || !bEna && !myHandle->bInHPMode ) return -1;
+
+    if ( !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
     
-    myHandle->bInHPMode = true;
+    myHandle->bInHPMode = bEna;
     return exec_time;
 }
 
@@ -320,18 +324,26 @@ bool XSpiLL_ResetMemory(XSpiHandleT *myHandle)
 }
 
 
-bool XSpiLL_WriteEnable(XSpiHandleT *myHandle)
+/*******************************************************************************************
+ * @brief  Set or Reset Write Enable Flag
+ * @param  hxspi : QSPI handle
+ * @param  bEna : true = set , false = Reset
+ * @retval true on success, false otherwise
+ ******************************************************************************************/
+bool XSpiLL_WriteEnable(XSpiHandleT *myHandle, bool bEna)
 {
     /* Send write Enable cmd*/
-    const NOR_FlashCmdT *cmd = myHandle->interface->cmd.wen;
+    const NOR_FlashCmdT *cmd;
+    cmd = bEna ? myHandle->interface->cmd.wen : myHandle->interface->cmd.wdis;
     assert( cmd );
+
     if ( myHandle->bInHPMode || !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, NULL ) ) return false;
 
 
-    /* active wait for Write Enable bit to set */
+    /* active wait for Write Enable bit to set or reset */
     const NOR_FlashQueryT *qry = myHandle->interface->query.wel;
     assert( qry );
-    return XHelper_WaitForBitsSetOrReset(myHandle, qry, XSPI_TIMEOUT_DEFAULT_VALUE, XSPI_MODE_POLL, 1);  
+   return XHelper_WaitForBitsSetOrReset(myHandle, qry, XSPI_TIMEOUT_DEFAULT_VALUE, XSPI_MODE_POLL, bEna ? 1 : 0);  
 }
 
 /******************************************************************************
@@ -371,7 +383,7 @@ bool XSpiLL_GetID(XSpiHandleT *myHandle)
 bool XSpiLL_Erase(XSpiHandleT *myHandle, uint32_t Address, const NOR_FlashCmdT  *ecmd )
 {
     /* Enable write operations */
-    if ( !XSpiLL_WriteEnable(myHandle) ) {
+    if ( !XSpiLL_WriteEnable(myHandle, true) ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             DEBUG_PUTS("XSpiLL_Erase - Error: Write enable failed");
         #endif
@@ -473,6 +485,14 @@ bool XSpiLL_WriteCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size)
     /* get the read command. that suits the select RWmode  (1-1-1, 1-2-2 or 1-4-4) */
     const NOR_RWModeTypeT* wr = XHelper_FindWriteCmd( myHandle );
     if ( !wr ) return false;
+
+    /* Enable write operations */
+    if ( !XSpiLL_WriteEnable(myHandle, true) ) {
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PUTS("XSpiLL_WriteCMD - Error: Write enable failed");
+        #endif
+        return false;
+    }
 
     /* Initialize the read command */
     if ( !XHelper_SetupCommand( &sCommand, &wr->cmd, 3, Addr, Size )) return false;

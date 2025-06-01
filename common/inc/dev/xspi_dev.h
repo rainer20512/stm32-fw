@@ -81,6 +81,7 @@ typedef enum {
     XSPI_RW_FAST1   = 0,            // Fast r/w 1-1-1
     XSPI_RW_DUAL2   = 1,            // Dual r/w 1-2-2
     XSPI_RW_QUAD4   = 2,            // quad r/w 1-4-4
+    XSPI_RW_MAXNUM  = 3,            // last and biggest ordinary number
 } XSPI_RWMode;
 
 /* Public typedef -----------------------------------------------------------------------*/
@@ -123,7 +124,7 @@ int32_t XSpi_LeaveDeepPowerDown (XSpiHandleT *myHandle);
 bool XSpi_EnableMemoryMappedMode(XSpiHandleT *myHandle);
 bool XSpi_SetSpeed              (const HW_DeviceType *self, uint32_t new_clkspeed);
 bool XSpi_IsInitialized         (XSpiHandleT *myHandle);
-void XSps_SetRWMode             ( XSPI_RWMode xspi_mode );
+void XSpi_SetRWMode             (XSpiHandleT *myHandle, XSPI_RWMode xspi_mode );
 bool XSpi_ReadWait              (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 bool XSpi_ReadIT                (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 

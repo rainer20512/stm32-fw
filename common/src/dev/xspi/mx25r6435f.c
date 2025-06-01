@@ -116,13 +116,13 @@ static const uint8_t OP_FREQ = 8;
 static const uint8_t OP_FR   = 33;      /* Frequency FR  from datasheet */
 static const uint8_t OP_LPR  = 8;       /* Frequency for all read Ops except 111 read in Low power mode */
 
-/* when Vcc is guaranteed between 3.0 and 3.6V, max frq is FC3 instead of FC4 */
+/* Dummy cycle for ultra low poer mode, data sheet p.7 */
 static const NOR_RWModeTypeT  r_111     = { .cmd = {.cmd = 0x03, .rw_mode = XSPI_MODE_111, .dummy_cycles = 0, }, .mode_bytes = 0, .max_frq = OP_FR, };
-static const NOR_RWModeTypeT  rf_111    = { .cmd = {.cmd = 0x0b, .rw_mode = XSPI_MODE_111, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_LPR, };
-static const NOR_RWModeTypeT  rf_112    = { .cmd = {.cmd = 0x3b, .rw_mode = XSPI_MODE_112, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_LPR, };
-static const NOR_RWModeTypeT  rf_114    = { .cmd = {.cmd = 0x6b, .rw_mode = XSPI_MODE_114, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_LPR, };
-static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 0, }, .mode_bytes = 1, .max_frq = OP_LPR, };
-static const NOR_RWModeTypeT  rf_144    = { .cmd = {.cmd = 0xeb, .rw_mode = XSPI_MODE_144, .dummy_cycles = 2, }, .mode_bytes = 1, .max_frq = OP_LPR, };
+static const NOR_RWModeTypeT  rf_111    = { .cmd = {.cmd = 0x0b, .rw_mode = XSPI_MODE_111, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_LPR, };
+static const NOR_RWModeTypeT  rf_112    = { .cmd = {.cmd = 0x3b, .rw_mode = XSPI_MODE_112, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_LPR, };
+static const NOR_RWModeTypeT  rf_114    = { .cmd = {.cmd = 0x6b, .rw_mode = XSPI_MODE_114, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_LPR, };
+static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 4, }, .mode_bytes = 1, .max_frq = OP_LPR, };
+static const NOR_RWModeTypeT  rf_144    = { .cmd = {.cmd = 0xeb, .rw_mode = XSPI_MODE_144, .dummy_cycles = 6, }, .mode_bytes = 1, .max_frq = OP_LPR, };
 
 static const NOR_RWModeTypeT  p_111     = { .cmd = {.cmd = 0x02, .rw_mode = XSPI_MODE_111, .dummy_cycles = 0, }, .pgm_time = 10000 };
 static const NOR_RWModeTypeT  p_144     = { .cmd = {.cmd = 0x38, .rw_mode = XSPI_MODE_144, .dummy_cycles = 0, }, .pgm_time = 10000 };
@@ -389,6 +389,177 @@ static uint16_t MX25_GetType(XSpiHandleT *myHandle)
     return ret << 8 | myHandle->id[2];
 }
 
+/******************************************************************************
+ * @brief  Perform an AutoPoll for reset of the WIP flag. The timeout may vary
+ *         in dependance of the kind of write op ( page write, sector erase,
+ *         block erase, chip erase
+ * @param  hxspi : QUADSPI HAL-Handle
+ * @param  Timeout : Timeout for auto-polling
+ * @retval true if WIP was reset before timeout
+ *         false if timeout occured
+ *****************************************************************************/
+static bool MX25_WaitForWriteDoneInternal(XXSPI_HandleTypeDef *hxspi, uint32_t Timeout, uint32_t opmode)
+{
+    XSPI_CommandTypeDef     sCommand={0};
+    XSPI_AutoPollingTypeDef sConfig={0};
+
+    /* Configure automatic polling mode to wait for memory ready */  
+    #if USE_OSPI > 0
+        sCommand.OperationType     = HAL_OSPI_OPTYPE_COMMON_CFG;
+        sCommand.FlashId           = HAL_OSPI_FLASH_ID_1;
+        sCommand.InstructionMode   = HAL_OSPI_INSTRUCTION_1_LINE;
+        sCommand.Instruction       =  READ_STATUS_REG_CMD;
+        sCommand.AddressMode       = HAL_OSPI_ADDRESS_NONE;
+        sCommand.AlternateBytesMode= HAL_OSPI_ALTERNATE_BYTES_NONE;
+        sCommand.DataMode          = HAL_OSPI_DATA_1_LINE;
+        sCommand.DataDtrMode       = HAL_OSPI_DATA_DTR_DISABLE;
+        sCommand.DummyCycles       = 0;
+        sCommand.NbData            = 1;
+        sCommand.SIOOMode          = HAL_OSPI_SIOO_INST_EVERY_CMD;
+        if (HAL_OSPI_Command(hxspi, &sCommand, HAL_OSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
+            #if DEBUG_MDOE > 0 && DEBUG_XSPI > 0
+                DEBUG_PRINTF("WaitForWrite: Cannot setup autopoll");
+            #endif
+            return false;
+        }
+
+        sConfig.Match           = 0;
+        sConfig.Mask            = MX25_XXX35F_SR_WIP;
+        sConfig.MatchMode       = HAL_OSPI_MATCH_MODE_AND;
+        sConfig.Interval        = 0x10;
+        sConfig.AutomaticStop   = HAL_OSPI_AUTOMATIC_STOP_ENABLE;
+
+    #else
+        sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+        sCommand.Instruction       = READ_STATUS_REG_CMD;
+        sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+        sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+        sCommand.DataMode          = QSPI_DATA_1_LINE;
+        sCommand.DummyCycles       = 0;
+        sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+        sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+        sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+
+        sConfig.Match           = 0;
+        sConfig.Mask            = MX25_XXX35F_SR_WIP;
+        sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
+        sConfig.StatusBytesSize = 1;
+        sConfig.Interval        = 0x10;
+        sConfig.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
+   #endif 
+   
+   switch(opmode) {
+        case XSPI_MODE_IRQ:
+        case XSPI_MODE_DMA:
+        #if USE_OSPI > 0
+            if (HAL_XSPI_AutoPolling_IT(hxspi, &sConfig) != HAL_OK) {
+        #else
+            if (HAL_XSPI_AutoPolling_IT(hxspi, &sCommand, &sConfig) != HAL_OK) {
+        #endif
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                    DEBUG_PUTS("QSpi_AutoPolling_IT - Error: Setup failed");
+                #endif
+                return false;
+            }
+            break;
+        default:
+        #if USE_OSPI > 0
+            if (HAL_XSPI_AutoPolling(hxspi, &sConfig, Timeout) != HAL_OK) {
+         #else
+            if (HAL_XSPI_AutoPolling(hxspi, &sCommand, &sConfig, Timeout) != HAL_OK) {
+         #endif
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                    DEBUG_PUTS("QSpi_AutoPolling - Error: Timeout when waiting for write done");
+                #endif
+                return false;
+            }
+    } // switch
+    return true;
+}
+
+bool XSpecific_WaitForWriteDone(XXSPI_HandleTypeDef *hxspi, uint32_t Timeout) {
+    return MX25_WaitForWriteDoneInternal(hxspi, Timeout, XSPI_MODE_POLL);
+}
+
+bool XSpecific_WriteEnable(XXSPI_HandleTypeDef *hxspi)
+{
+  XSPI_CommandTypeDef     sCommand={0};
+  XSPI_AutoPollingTypeDef sConfig={0};
+
+  /* Enable write operations */
+  #if USE_OSPI > 0
+        sCommand.OperationType     = HAL_OSPI_OPTYPE_COMMON_CFG;
+        sCommand.FlashId           = HAL_OSPI_FLASH_ID_1;
+        sCommand.InstructionMode   = HAL_OSPI_INSTRUCTION_1_LINE;
+        sCommand.Instruction       = WRITE_ENABLE_CMD;
+        sCommand.AddressMode       = HAL_OSPI_ADDRESS_NONE;
+        sCommand.AlternateBytesMode= HAL_OSPI_ALTERNATE_BYTES_NONE;
+        sCommand.DataMode          = HAL_OSPI_DATA_NONE;
+        sCommand.DummyCycles       = 0;
+        sCommand.SIOOMode          = HAL_OSPI_SIOO_INST_EVERY_CMD;
+  #else
+      sCommand.InstructionMode   = QSPI_INSTRUCTION_1_LINE;
+      sCommand.Instruction       = WRITE_ENABLE_CMD;
+      sCommand.AddressMode       = QSPI_ADDRESS_NONE;
+      sCommand.AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
+      sCommand.DataMode          = QSPI_DATA_NONE;
+      sCommand.DummyCycles       = 0;
+      sCommand.DdrMode           = QSPI_DDR_MODE_DISABLE;
+      sCommand.DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
+      sCommand.SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
+  #endif
+    
+  if (HAL_XSPI_Command(hxspi, &sCommand, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) return false;
+
+  
+  /* Configure automatic polling mode to wait for write enabling */  
+  #if USE_OSPI > 0
+      /* Most sCommand parameter settings are taken from above */
+      sCommand.Instruction = READ_STATUS_REG_CMD;
+      sCommand.DataMode    = HAL_OSPI_DATA_1_LINE;
+      sCommand.DataDtrMode = HAL_OSPI_DATA_DTR_DISABLE;
+      sCommand.NbData      = 1; 
+
+      if (HAL_XSPI_Command(hxspi, &sCommand, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
+        #if DEBUG_MDOE > 0 && DEBUG_XSPI > 0
+            DEBUG_PRINTF("XSPI WriteEnable: cannot configure AutoPoll");
+        #endif
+        return false;
+      }
+
+      sConfig.Match           = MX25_XXX35F_SR_WEL;
+      sConfig.Mask            = MX25_XXX35F_SR_WEL;
+      sConfig.MatchMode       = HAL_OSPI_MATCH_MODE_AND;
+      sConfig.Interval        = 10;
+      sConfig.AutomaticStop   = HAL_OSPI_AUTOMATIC_STOP_ENABLE;
+
+      if (HAL_XSPI_AutoPolling(hxspi, &sConfig, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
+        #if DEBUG_MDOE > 0 && DEBUG_XSPI > 0
+            DEBUG_PRINTF("XSPI WriteEnable: cannot start AutoPoll");
+        #endif
+        return false;
+      }
+  #else
+      sConfig.Match           = MX25_XXX35F_SR_WEL;
+      sConfig.Mask            = MX25_XXX35F_SR_WEL;
+      sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
+      sConfig.StatusBytesSize = 1;
+      sConfig.Interval        = 0x10;
+      sConfig.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
+
+      sCommand.Instruction    = READ_STATUS_REG_CMD;
+      sCommand.DataMode       = QSPI_DATA_1_LINE;
+
+      if (HAL_XSPI_AutoPolling(hxspi, &sCommand, &sConfig, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
+        /* Automatic poling mode must be aborted in case of timeout */
+        hxspi->State = HAL_QSPI_STATE_BUSY;
+        HAL_QSPI_Abort(hxspi);
+        return false;
+      }
+  #endif
+  return true;
+}
 
 
 #endif /* #if USE_XSPI_MX25 > 0 */
+

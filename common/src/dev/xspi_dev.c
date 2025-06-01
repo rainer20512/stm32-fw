@@ -346,6 +346,14 @@ void XSpi_SetAsyncCallbacks(XSpiHandleT *myHandle, XSpiCallbackT rdDoneCB, XSpiC
     myHandle->XSpi_ErrorCB   = errorCB; 
 }
 
+/**************************************************************************************
+ * Set the read and write mode to single, dual or quad line access
+  *************************************************************************************/
+void XSpi_SetRWMode( XSpiHandleT *myHandle, XSPI_RWMode xspi_mode )
+{
+    if ( xspi_mode >= XSPI_RW_MAXNUM ) return;
+    myHandle->myRWmode = xspi_mode;
+}
 /******************************************************************************
  ******************************************************************************
  * Implementation of the read operation:
@@ -1268,7 +1276,7 @@ void XSpi_BeforeFrqChange(const HW_DeviceType *self)
     XSpi_AdditionalDataType *adt    = XSpi_GetAdditionalData(self);
     XSpiHandleT *myHandle           = adt->myXSpiHandle;  
 
-    if ( XHelper_HasHighPerformanceMode( myHandle) ) XSpiLL_EnterHPMode( myHandle);
+    if ( XHelper_HasHighPerformanceMode( myHandle) ) XSpiLL_SetHPMode( myHandle, true);
 }
 
 

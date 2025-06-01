@@ -73,7 +73,7 @@ bool XHelper_SetupCommand( XSPI_CommandTypeDef *sCmd, const NOR_FlashCmdT *cmd, 
         sCmd->AddressMode       = arglen > 0 ? addr_lines[AddrLines[cmd->rw_mode]] : HAL_OSPI_ADDRESS_NONE;
         sCmd->AddressSize       = adr_size[arglen];
         sCmd->AlternateBytesMode= HAL_OSPI_ALTERNATE_BYTES_NONE;
-        sCmd->DataMode          = data_lines[DataLines[cmd->rw_mode]];
+        sCmd->DataMode          = retlen ? data_lines[DataLines[cmd->rw_mode]] : HAL_OSPI_DATA_NONE; 
         sCmd->DataDtrMode       = HAL_OSPI_DATA_DTR_DISABLE;
         sCmd->SIOOMode          = HAL_OSPI_SIOO_INST_EVERY_CMD;
     #else
@@ -81,7 +81,7 @@ bool XHelper_SetupCommand( XSPI_CommandTypeDef *sCmd, const NOR_FlashCmdT *cmd, 
         sCmd->AddressMode       = arglen > 0 ? addr_lines[AddrLines[cmd->rw_mode]] : QSPI_ADDRESS_NONE;
         sCmd->AddressSize       = addr_size[arglen];
         sCmd->AlternateByteMode = QSPI_ALTERNATE_BYTES_NONE;
-        sCmd->DataMode          = data_lines[DataLines[cmd->rw_mode]];
+        sCmd->DataMode          = retlen ? data_lines[DataLines[cmd->rw_mode]] : QSPI_DATA_NONE;
         sCmd->DdrMode           = QSPI_DDR_MODE_DISABLE;
         sCmd->DdrHoldHalfCycle  = QSPI_DDR_HHC_ANALOG_DELAY;
         sCmd->SIOOMode          = QSPI_SIOO_INST_EVERY_CMD;
@@ -92,7 +92,7 @@ bool XHelper_SetupCommand( XSPI_CommandTypeDef *sCmd, const NOR_FlashCmdT *cmd, 
     sCmd->Address               = arglen > 0 ? arg : 0;
     sCmd->NbData                = retlen;
 
-    #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+    #if DEBUG_MODE > 0 && DEBUG_XSPI > 1
         DEBUG_PRINTF("SetupCommand: Cmd=0x%02x, RWMode=%d, CmdLines=%d AddrLines=%d AddrSize=%d, DataLines=%d, DummyCyc=%d, DataLen=%d\n",
                       cmd->cmd, cmd->rw_mode, CmdLines[cmd->rw_mode], arglen > 0 ? AddrLines[cmd->rw_mode]:0, arglen, DataLines[cmd->rw_mode],cmd->dummy_cycles, retlen );
     #endif
@@ -217,19 +217,18 @@ bool XHelper_WaitForBitsSetOrReset(XSpiHandleT *myHandle, const NOR_FlashQueryT 
     if ( bSet ) {
         /* config for bits set */
         sConfig.Match           = qry->access_mask << qry->access_shift;
-        sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
     } else {
         /* config for bits reset */
         sConfig.Match           = 0;
-        sConfig.MatchMode       = QSPI_MATCH_MODE_OR;
     }
     /* 
      * dummy cycle are fixed set 0, because we don't have dummy cycles coded 
      * in ordinary commands. could be improved in future
      */
+    sConfig.MatchMode       = QSPI_MATCH_MODE_AND;
+    sConfig.Mask            = qry->access_mask << qry->access_shift;
     sCommand.DummyCycles    = 0 ;
     sCommand.Instruction    = qry->exec->cmd;
-    sConfig.Mask            = qry->access_mask << qry->access_shift;
     sConfig.Interval        = 0x10;
     sConfig.AutomaticStop   = QSPI_AUTOMATIC_STOP_ENABLE;
     sConfig.StatusBytesSize = (uint32_t)qry->exec->arg_size;
@@ -245,6 +244,9 @@ bool XHelper_WaitForBitsSetOrReset(XSpiHandleT *myHandle, const NOR_FlashQueryT 
                 #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     DEBUG_PUTS("XSpi_AutoPolling_IT - Error: Setup failed");
                 #endif
+                /* Automatic poling mode must be aborted in case of timeout */
+                hxspi->State = HAL_QSPI_STATE_BUSY;
+                HAL_QSPI_Abort_IT(hxspi);
                 return false;
             }
             break;
@@ -257,6 +259,9 @@ bool XHelper_WaitForBitsSetOrReset(XSpiHandleT *myHandle, const NOR_FlashQueryT 
                 #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                     DEBUG_PUTS("OSpi_AutoPolling - Error: Timeout when waiting for write done");
                 #endif
+                /* Automatic poling mode must be aborted in case of timeout */
+                hxspi->State = HAL_QSPI_STATE_BUSY;
+                HAL_QSPI_Abort(hxspi);
                 return false;
             }
     } // switch

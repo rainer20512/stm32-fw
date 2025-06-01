@@ -1739,8 +1739,10 @@ ADD_SUBMODULE(Test);
         #define XSPI_BASE           QSPI_BASE
         #define XSPI_HW             HW_QSPI1
     #endif
-    #include "dev/xspi_dev.h"
-
+    #include "dev/xspi_dev.h"   
+    
+    bool XSpecific_WriteEnable(XXSPI_HandleTypeDef *hxspi);
+    
     /*********************************************************************************
      * @brief  Submenu for QuadSpi
      *         
@@ -1986,12 +1988,47 @@ ADD_SUBMODULE(Test);
                 ret = XSpi_SetSpeed(&XSPI_HW, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
+        case 13:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: WEN {0|1}  - Reset ot Set Write Enable Flag\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            //ret = XSpecific_WriteEnable(&XSpi1Handle.hxspi);
+            ret = XSpiLL_WriteEnable(&XSpi1Handle, addr != 0 );
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
+        case 14:
+            const NOR_FlashCmdListT *cmd = &XSpi1Handle.interface->cmd;
+            if ( cmd->r_jid ) {   
+                ret = XHelper_CmdArgRead ( &XSpi1Handle, cmd->r_jid, 0, (uint8_t *)&addr, 3 );
+                if ( ret ) {
+                    printf ( "%02x %02x %02x \n", addr & 0xff, (addr>>8)&0xff,(addr>>16)&0xff);
+                } else {
+                    printf("Read JedecID failed\n");
+                }
+            } else {
+                printf("Read JedecID not implemented\n");
+            }
+            break;
+        case 15:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: QSPI mode {0|1|2}  - Set QSPI mode 1-1-1, 1-2-2 or 1-4-4\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            if ( addr > 2 ) return false;
+            XSpi_SetRWMode(&XSpi1Handle, addr);
+            printf ( "%s\n", ret ? "ok": "fail");
+            break;
         default:
           DEBUG_PUTS("PM_Menu: command not implemented");
-      } /* end switch */
+              } /* end switch */
 
-      return true;
-    }
+              return true;
+            }
 
     static const char *pmtQSPI (void)
     {
@@ -2013,6 +2050,10 @@ ADD_SUBMODULE(Test);
         { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10),"Write many bytes IRQ mode" },
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
         { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> kHz" },
+        { "WEN {0|1}",                ctype_fn, .exec.fn = QSPI_Menu, VOID(13),"Reset ot Set Write Enable Flag" },
+        { "Read JedecID",             ctype_fn, .exec.fn = QSPI_Menu, VOID(14),"Read 3-byte Jedec ID" },
+        { "QSPI mode {0|1|2}",        ctype_fn, .exec.fn = QSPI_Menu, VOID(15),"Set QSPI mode 1-1-1, 1-2-2, 1-4-4" },
+
     };
     ADD_SUBMODULE(QSPI);
 #endif

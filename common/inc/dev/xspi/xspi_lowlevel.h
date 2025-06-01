@@ -16,9 +16,8 @@ bool        XSpiLL_ClockInit(XSpiHandleT *myHandle, uint32_t clk_frq, uint32_t d
 uint32_t    XSpiLL_ExecuteCmd( XSpiHandleT *myHandle, const NOR_FlashCmdT *cmd, uint32_t arg, uint8_t *retbuf, uint32_t *retlen, uint32_t *exec_time );
 bool        XSpiLL_WaitForWriteDone(XSpiHandleT *myHandle, uint32_t Timeout);
 bool        XSpiLL_WaitForWriteDone_IT(XSpiHandleT *myHandle);
-int32_t     XSpiLL_EnterHPMode(XSpiHandleT *myHandle);
-int32_t     XSpiLL_LeaveHPMode(XSpiHandleT *myHandle);
-bool        XSpiLL_WriteEnable(XSpiHandleT *myHandle);
+int32_t     XSpiLL_SetHPMode  (XSpiHandleT *myHandle, bool bEna);
+bool        XSpiLL_WriteEnable(XSpiHandleT *myHandle, bool bEna);
 bool        XSpiLL_ResetMemory(XSpiHandleT *myHandle);
 bool        XSpiLL_GetID(XSpiHandleT *myHandle);
 bool        XSpiLL_Erase(XSpiHandleT *myHandle, uint32_t Address,const NOR_FlashCmdT  *ecmd );
