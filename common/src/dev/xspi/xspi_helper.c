@@ -27,14 +27,14 @@
     static const uint32_t addr_lines[5] = { HAL_OSPI_ADDRESS_NONE,          HAL_OSPI_ADDRESS_1_LINE,          HAL_OSPI_ADDRESS_2_LINES,         0,                                HAL_OSPI_ADDRESS_4_LINES, };
     static const uint32_t data_lines[5] = { HAL_OSPI_DATA_NONE,             HAL_OSPI_DATA_1_LINE,             HAL_OSPI_DATA_2_LINES,            0,                                HAL_OSPI_DATA_4_LINES, };
     static const uint32_t alt_lines[5]  = { HAL_OSPI_ALTERNATE_BYTES_NONE,  HAL_OSPI_ALTERNATE_BYTES_1_LINE,  HAL_OSPI_ALTERNATE_BYTES_2_LINES, 0,                                HAL_OSPI_ALTERNATE_BYTES_4_LINES, };
-    static const uint32_t alt_size[5]   = { HAL_OSPI_ALTERNATE_BYTES_NONE,  HAL_OSPI_ALTERNATE_BYTES_8_BITS,  HAL_OSPI_ALTERNATE_BYTES_16_BITS, HAL_OSPI_ALTERNATE_BYTES_24_BITS, HAL_OSPI_ALTERNATE_BYTES_32_BITS, };
+    static const uint32_t alt_size[5]   = { 0,                              HAL_OSPI_ALTERNATE_BYTES_8_BITS,  HAL_OSPI_ALTERNATE_BYTES_16_BITS, HAL_OSPI_ALTERNATE_BYTES_24_BITS, HAL_OSPI_ALTERNATE_BYTES_32_BITS, };
 #else
     static const uint32_t cmd_lines[5]  = { QSPI_INSTRUCTION_NONE,     QSPI_INSTRUCTION_1_LINE,      QSPI_INSTRUCTION_2_LINES,     0,                            QSPI_INSTRUCTION_4_LINES, };
-    static const uint32_t addr_size[5]  = { QSPI_ADDRESS_NONE,         QSPI_ADDRESS_8_BITS,          QSPI_ADDRESS_16_BITS,         QSPI_ADDRESS_24_BITS,         QSPI_ADDRESS_32_BITS, };
+    static const uint32_t addr_size[5]  = { 0,                         QSPI_ADDRESS_8_BITS,          QSPI_ADDRESS_16_BITS,         QSPI_ADDRESS_24_BITS,         QSPI_ADDRESS_32_BITS, };
     static const uint32_t addr_lines[5] = { QSPI_ADDRESS_NONE,         QSPI_ADDRESS_1_LINE,          QSPI_ADDRESS_2_LINES,         0,                            QSPI_ADDRESS_4_LINES, };
     static const uint32_t data_lines[5] = { QSPI_DATA_NONE,            QSPI_DATA_1_LINE,             QSPI_DATA_2_LINES,            0,                            QSPI_DATA_4_LINES, };
     static const uint32_t alt_lines[5]  = { QSPI_ALTERNATE_BYTES_NONE, QSPI_ALTERNATE_BYTES_1_LINE,  QSPI_ALTERNATE_BYTES_2_LINES, 0,                            QSPI_ALTERNATE_BYTES_4_LINES, };
-    static const uint32_t alt_size[5]   = { QSPI_ALTERNATE_BYTES_NONE, QSPI_ALTERNATE_BYTES_8_BITS,  QSPI_ALTERNATE_BYTES_16_BITS, QSPI_ALTERNATE_BYTES_24_BITS, QSPI_ALTERNATE_BYTES_32_BITS, };
+    static const uint32_t alt_size[5]   = { 0,                         QSPI_ALTERNATE_BYTES_8_BITS,  QSPI_ALTERNATE_BYTES_16_BITS, QSPI_ALTERNATE_BYTES_24_BITS, QSPI_ALTERNATE_BYTES_32_BITS, };
 #endif
 
 const uint8_t CmdLines[]    = CMD_LINES;
@@ -116,6 +116,10 @@ void XHelper_SetupAltBytes( XSPI_CommandTypeDef *sCmd, const NOR_RWModeTypeT *rd
         sCmd->AlternateByteMode  = alt_lines[AddrLines[rd->cmd.rw_mode]];
         sCmd->AlternateBytesSize = alt_size[rd->mode_bytes];
         sCmd->AlternateBytes     = alt_bytes;
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 1
+            DEBUG_PRINTF("SetupAltBytes: Cmd=0x%02x, RWMode=%d, AltLines=%d AltSize=%d, AltBytes=0x%08x\n",
+                          rd->cmd.cmd, rd->cmd.rw_mode, AddrLines[rd->cmd.rw_mode], rd->mode_bytes, alt_bytes );
+        #endif
     }
 }
     

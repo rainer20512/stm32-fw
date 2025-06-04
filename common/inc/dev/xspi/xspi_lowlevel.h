@@ -23,6 +23,7 @@ bool        XSpiLL_GetID(XSpiHandleT *myHandle);
 bool        XSpiLL_Erase(XSpiHandleT *myHandle, uint32_t Address,const NOR_FlashCmdT  *ecmd );
 bool        XSpiLL_ReadCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size);
 bool        XSpiLL_WriteCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size);
+bool        XSpiLL_Execute(XSpiHandleT *myHandle, const NOR_FlashSetterT* rs, uint32_t numarg[]);
 
 #if DEBUG_MODE > 0
     const char *XSpiLL_GetChipManufacturer(uint8_t mf_id );

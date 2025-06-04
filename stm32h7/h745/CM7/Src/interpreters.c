@@ -1390,6 +1390,7 @@ ADD_SUBMODULE(Test);
       uint32_t addr;
       uint32_t i,j;
       bool ret;
+      const NOR_FlashCmdListT *cmd;      
       
       UNUSED(cmdline);UNUSED(len);
 #if defined(QSPI1_USE_IRQ)
@@ -1551,12 +1552,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = XSpi_EnterDeepPowerDown(&QSpi1Handle);
+            ret = XSpi_SetDeepPowerDown(&QSpi1Handle, true);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = XSpi_LeaveDeepPowerDown(&QSpi1Handle);
+            ret = XSpi_SetDeepPowerDown(&QSpi1Handle, false);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:
@@ -1598,12 +1599,69 @@ ADD_SUBMODULE(Test);
                 ret = XSpi_SetSpeed(&HW_QSPI1, addr * 1000 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
-        case 13:
-            printf("QSPI chip reset - ");
-            ret = XSpiLL_ResetMemory(&QSpi1Handle);
+       case 13:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: WEN {0|1}  - Reset ot Set Write Enable Flag\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            //ret = XSpecific_WriteEnable(&XSpi1Handle.hxspi);
+            ret = XSpiLL_WriteEnable(&QSpi1Handle, addr != 0 );
             printf ( "%s\n", ret ? "ok": "fail");
             break;
-        default:
+       case 14:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: Quad Enable {0|1}  - Reset ot Set Quad Enable Flag\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            ret = XSpiLL_WriteEnable(&QSpi1Handle, true );
+            XSpi_SetQuad(&QSpi1Handle, addr != 0 );
+            printf ( "ok\n");
+            break;
+        case 15:
+            cmd = &QSpi1Handle.interface->cmd;
+            if ( cmd->r_jid ) {   
+                ret = XHelper_CmdArgRead ( &QSpi1Handle, cmd->r_jid, 0, (uint8_t *)&addr, 3 );
+                if ( ret ) {
+                    printf ( "%02x %02x %02x \n", addr & 0xff, (addr>>8)&0xff,(addr>>16)&0xff);
+                } else {
+                    printf("Read JedecID failed\n");
+                }
+            } else {
+                printf("Read JedecID not implemented\n");
+            }
+            break;
+        case 16:
+            if ( CMD_argc() < 1 ) {
+              printf("Usage: QSPI mode {0|1|2}  - Set QSPI mode 1-1-1, 1-2-2 or 1-4-4\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            if ( addr > 2 ) return false;
+            XSpi_SetRWMode(&QSpi1Handle, addr);
+            printf ( "ok\n");
+            break;
+        case 17:
+            cmd = &QSpi1Handle.interface->cmd;
+            if ( cmd->r_jedec ) {   
+                ret = XHelper_CmdArgRead ( &QSpi1Handle, cmd->r_jedec, 0, PageBuffer, 8 );
+                if ( ret ) {
+                    for ( uint8_t i=0; i<8; i++ ) {
+                       printf ("%02x ", PageBuffer[i]);
+                    }
+                    printf ("\n");
+                } else {
+                    printf("Read SFDP failed\n");
+                }
+            } else {
+                printf("Read SFDP not implemented\n");
+            }
+            break;
+         default:
           DEBUG_PUTS("PM_Menu: command not implemented");
       } /* end switch */
 
@@ -1630,7 +1688,11 @@ ADD_SUBMODULE(Test);
         { "Write much IT",            ctype_fn, .exec.fn = QSPI_Menu, VOID(10), "Write many bytes IRQ mode" },
         { "Write much DMA",           ctype_fn, .exec.fn = QSPI_Menu, VOID(11),"Write many bytes DMA mode" },
         { "Clk speed <n>",            ctype_fn, .exec.fn = QSPI_Menu, VOID(12),"Set QSPI clock speed to <n> kHz" },
-        { "Reset memory",             ctype_fn, .exec.fn = QSPI_Menu, VOID(13),"Reset QSPI Memory" },
+        { "WEN {0|1}",                ctype_fn, .exec.fn = QSPI_Menu, VOID(13),"Reset ot Set Write Enable Flag" },
+        { "Quad Enable {0|1}",        ctype_fn, .exec.fn = QSPI_Menu, VOID(14),"Reset ot Set Quad Enable Flag" },
+        { "Read JedecID",             ctype_fn, .exec.fn = QSPI_Menu, VOID(15),"Read 3-byte Jedec ID" },
+        { "QSPI mode {0|1|2}",        ctype_fn, .exec.fn = QSPI_Menu, VOID(16),"Set QSPI mode 1-1-1, 1-2-2, 1-4-4" },
+        { "QSPI SFDP",                ctype_fn, .exec.fn = QSPI_Menu, VOID(17),"Read SFDP root block" },
     };
     ADD_SUBMODULE(QSPI);
 #endif

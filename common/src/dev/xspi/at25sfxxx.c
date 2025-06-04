@@ -52,11 +52,11 @@ static const uint8_t OP_FC4  = 108;     /* Frequency FC4 from datasheet */
 
 /* when Vcc is guaranteed between 3.0 and 3.6V, max frq is FC3 instead of FC4 */
 static const NOR_RWModeTypeT  r_111     = { .cmd = {.cmd = 0x03, .rw_mode = XSPI_MODE_111, .dummy_cycles = 0, }, .mode_bytes = 0, .max_frq = OP_FC2, };
-static const NOR_RWModeTypeT  rf_111    = { .cmd = {.cmd = 0x0b, .rw_mode = XSPI_MODE_111, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_FC3, };
-static const NOR_RWModeTypeT  rf_112    = { .cmd = {.cmd = 0x3b, .rw_mode = XSPI_MODE_112, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_FC3, };
-static const NOR_RWModeTypeT  rf_114    = { .cmd = {.cmd = 0x6b, .rw_mode = XSPI_MODE_114, .dummy_cycles = 1, }, .mode_bytes = 0, .max_frq = OP_FC1, };
-static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 0, }, .mode_bytes = 1, .max_frq = OP_FC3, };
-static const NOR_RWModeTypeT  rf_144    = { .cmd = {.cmd = 0xeb, .rw_mode = XSPI_MODE_144, .dummy_cycles = 2, }, .mode_bytes = 1, .max_frq = OP_FC3, };
+static const NOR_RWModeTypeT  rf_111    = { .cmd = {.cmd = 0x0b, .rw_mode = XSPI_MODE_111, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC3, };
+static const NOR_RWModeTypeT  rf_112    = { .cmd = {.cmd = 0x3b, .rw_mode = XSPI_MODE_112, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC3, };
+static const NOR_RWModeTypeT  rf_114    = { .cmd = {.cmd = 0x6b, .rw_mode = XSPI_MODE_114, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC1, };
+static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 4, }, .mode_bytes = 1, .max_frq = OP_FC3, };
+static const NOR_RWModeTypeT  rf_144    = { .cmd = {.cmd = 0xeb, .rw_mode = XSPI_MODE_144, .dummy_cycles = 4, }, .mode_bytes = 1, .max_frq = OP_FC3, };
 
 static const NOR_RWModeTypeT  p_111     = { .cmd = {.cmd = 0x02, .rw_mode = XSPI_MODE_111, .dummy_cycles = 0, }, .pgm_time = 2400 };
 static const NOR_RWModeTypeT  p_114     = { .cmd = {.cmd = 0x32, .rw_mode = XSPI_MODE_114, .dummy_cycles = 0, }, .pgm_time = 2400 };
@@ -84,6 +84,7 @@ static const NOR_FlashCmdT      w_st3   = { .cmd = 0x11, .rw_mode = XSPI_MODE_11
 static const NOR_FlashCmdT      r_ems   = { .cmd = 0x90, .rw_mode = XSPI_MODE_111, .cmdaddr_size = 3, .dummy_cycles = 0, .arg_size = 2, .exec_time = 0 };       // Read Device ID: Manufaturers DeviceID
 static const NOR_FlashCmdT      r_jid   = { .cmd = 0x9F, .rw_mode = XSPI_MODE_111, .cmdaddr_size = 0, .dummy_cycles = 0, .arg_size = 3, .exec_time = 0 };       // Read JEDEC-ID: ManufacturerID, MemTypeID, MemDensityID
 static const NOR_FlashCmdT      r_uid   = { .cmd = 0x4b, .rw_mode = XSPI_MODE_111, .cmdaddr_size = 0, .dummy_cycles = 4, .arg_size = 8, .exec_time = 0 };       // Read UID
+static const NOR_FlashCmdT      r_sfdp  = { .cmd = 0x5a, .rw_mode = XSPI_MODE_111, .cmdaddr_size = 3, .dummy_cycles = 8, .arg_size = 8, .exec_time = 0 };       // Read SFDP root block
 
 
 static const NOR_FlashQueryT    r_wip   = { .exec = &r_st1, .access_mask = WIP_MASK, .access_shift = WIP_SHFT, };    // How to query WIP flag
@@ -93,8 +94,13 @@ static const NOR_FlashQueryT    r_drv   = { .exec = &r_st3, .access_mask = DRV_M
 static const NOR_FlashQueryT    r_psb   = { .exec = &r_st2, .access_mask = PSB_MASK, .access_shift = PSB_SHFT, };    // How to query program suspend bit
 static const NOR_FlashQueryT    r_esb   = { .exec = &r_st2, .access_mask = ESB_MASK, .access_shift = ESB_SHFT, };    // How to query erase suspend bit
 
-static const NOR_FlashSetterT   s_qe     = { .qry = &r_qe,  &w_st2, };                                               // Set quad enable bit        
-static const NOR_FlashSetterT   s_drv    = { .qry = &r_drv, &w_st3, };                                               // Set driver strength
+static const NOR_FlashOpT       op_s_qe =  { .qry = &r_qe,  .op = XSPI_BITOP_SET, };                                  // Operation to set quad enable bit          
+static const NOR_FlashOpT       op_r_qe =  { .qry = &r_qe,  .op = XSPI_BITOP_RESET, };                                // Operation to reset quad enable bit          
+static const NOR_FlashOpT       op_s_drv=  { .qry = &r_drv, .op = XSPI_BITOP_SETNUM, };                               // Operation to set high performance
+
+static const NOR_FlashSetterT   ss_qe    =  { .ops = { &op_s_qe,  NULL, },     .set_cmd = &w_st2 };                   // Set Quad Enable
+static const NOR_FlashSetterT   sr_qe    =  { .ops = { &op_r_qe,  NULL, },     .set_cmd = &w_st2 };                   // Reset Quad Enable
+static const NOR_FlashSetterT   set_drv  =  { .ops = { &op_s_drv, NULL, },     .set_cmd = &w_st3 };                   // Set driver strength
 
 const NOR_FlashT flash_interface = {
     .global = {
@@ -140,7 +146,7 @@ const NOR_FlashT flash_interface = {
         .r_ems    = &r_ems,
         .r_jid    = &r_jid,
         .r_uid    = &r_uid,
-        .r_jedec  = NULL,
+        .r_jedec  = &r_sfdp,
         .status_rd = { &r_st1, &r_st2, &r_st3, NULL, },
         .status_wr = { &w_st1, &w_st2, &w_st3, NULL, },
         },
@@ -154,9 +160,9 @@ const NOR_FlashT flash_interface = {
         .mode    = NULL,
         },   
      .setter = {
-        .qe      = &s_qe,
-        .drv     = &s_drv,
-        .mode    = NULL,
+        .qe      = {&ss_qe, &sr_qe},
+        .drv     = {NULL, NULL },
+        .mode    = {&set_drv, NULL},
         },     
 };
 

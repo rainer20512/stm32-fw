@@ -1899,19 +1899,12 @@ ADD_SUBMODULE(Test);
                 cnt = 0;
             }
             addr =  XSpi1Handle.geometry.ProgPageSize * num;
-            if ( XSpi1Handle.bIsMemoryMapped ) {
-            } else {
-                
-            }
+            /* In memory mapped mode, use the mapped address */
+            if ( XSpi1Handle.bIsMemoryMapped ) addr += XSPI_BASE;
             for ( i=0; i <=cnt; i++ ) {
                 printf("Read page %d (startaddr=0x%08x) in %s mode - ", num+i, addr,  XSpi1Handle.bIsMemoryMapped ? "MemoryMapped" : "QSPI" );
                 if ( XSpi1Handle.bIsMemoryMapped ) {
-                    memmove(PageBuffer,(void *)(XSPI_BASE+addr), XSpi1Handle.geometry.ProgPageSize);
-                    /*
-                    for ( j  = 0; j < XSpi1Handle.geometry.ProgPageSize; j++ ) {
-                        PageBuffer[j] = *((uint8_t *)(QSPI_BASE+addr+j));
-                    }
-                    */
+                    memmove(PageBuffer,(void *)(addr), XSpi1Handle.geometry.ProgPageSize);
                     ret = true;
                 } else {
                     ret = XSpi_ReadWait(&XSpi1Handle, PageBuffer, addr, XSpi1Handle.geometry.ProgPageSize);
@@ -1941,12 +1934,12 @@ ADD_SUBMODULE(Test);
             break;
         case 8:
             printf("Enter power down - ");
-            ret = XSpi_EnterDeepPowerDown(&XSpi1Handle);
+            ret = XSpi_SetDeepPowerDown(&XSpi1Handle, true);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 9:
             printf("Exit power down - ");
-            ret = XSpi_LeaveDeepPowerDown(&XSpi1Handle);
+            ret = XSpi_SetDeepPowerDown(&XSpi1Handle, false);
             printf ( "%s\n", ret ? "ok": "fail");
             break;
         case 10:

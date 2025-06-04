@@ -216,41 +216,29 @@ bool XSpiLL_WaitForWriteDone_IT(XSpiHandleT *myHandle) {
  * @retval execution or wait time until Deep power down state is active, 
  *         -1 in case of error or dpd state was active before
  ******************************************************************************************/
-int32_t XSpi_EnterDeepPowerDown(XSpiHandleT *myHandle)
+int32_t XSpi_SetDeepPowerDown(XSpiHandleT *myHandle, bool bEna)
 {
     uint32_t exec_time;
-    /* Assert deep power down enable cmd is defined */
-    const NOR_FlashCmdT *cmd = myHandle->interface->cmd.dpen;
+    
+    /* Assert deep power down operation is defined */
+    const NOR_FlashCmdT *cmd;
+    cmd = bEna ? myHandle->interface->cmd.dpen : myHandle->interface->cmd.dpdis;
     assert( cmd );
     
-    if ( myHandle->bInDeepPwrDown || !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
+    /* Only execute, if mode actually changes */
+    if ( (bEna && myHandle->bInDeepPwrDown) || (!bEna && !myHandle->bInDeepPwrDown) ) return -1;
+
+    if ( !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
     
-    myHandle->bInDeepPwrDown = true;
+    myHandle->bInDeepPwrDown = bEna;
     return exec_time;
 }
 
-/*******************************************************************************************
- * @brief leave deep power down state
- * @param myHandle - XSpi handle
- * @retval execution or wait time until Deep power down state is left, 
- *         -1 in case of error
- ******************************************************************************************/
-int32_t XSpi_LeaveDeepPowerDown(XSpiHandleT *myHandle)
-{
-    uint32_t exec_time;
-    /* Assert deep power down disable cmd is defined */
-    const NOR_FlashCmdT *cmd = myHandle->interface->cmd.dpdis;
-    assert( cmd );
-
-    if ( !myHandle->bInDeepPwrDown || !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
-
-    myHandle->bInDeepPwrDown = false;
-    return exec_time;
-}
 
 /*******************************************************************************************
  * @brief Set device to High performance mode, must not be in HP mode before
  * @param myHandle - XSpi handle
+ * @param bEna - true=Enable, false=Disable
  * @retval execution or wait time until HP mode is active, 
  *         -1 in case of error or dpd state was active before
  ******************************************************************************************/
@@ -263,7 +251,7 @@ int32_t XSpiLL_SetHPMode(XSpiHandleT *myHandle, bool bEna)
     assert( cmd );
     
     /* Only execute, if mode actually changes */
-    if ( bEna && myHandle->bInHPMode || !bEna && !myHandle->bInHPMode ) return -1;
+    if ( (bEna && myHandle->bInHPMode) || (!bEna && !myHandle->bInHPMode) ) return -1;
 
     if ( !XSpiLL_ExecuteCmd(myHandle, cmd, 0, NULL, NULL, &exec_time ) ) return -1;
     
@@ -412,7 +400,7 @@ bool XSpi_EnableMemoryMappedMode(XSpiHandleT *myHandle)
     const NOR_RWModeTypeT*   rd;
 
     /* Wake up device, if deep sleep capability and in in deep sleep */
-    if ( myHandle->bInDeepPwrDown && ! XSpi_LeaveDeepPowerDown(myHandle) ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_SetDeepPowerDown(myHandle,false)==-1 ) return false;
 
     /* Get a continuous quad read mode: first try 444 then 144 */
     if ( rd = myHandle->interface->read.rf_444c, !rd ) rd = myHandle->interface->read.rf_144c;
@@ -426,7 +414,7 @@ bool XSpi_EnableMemoryMappedMode(XSpiHandleT *myHandle)
     }
     
     /* Initialize the read command */
-    if ( !XHelper_SetupCommand( &sCommand, &rd->cmd, 3, 0, 0 )) return false;
+    if ( !XHelper_SetupCommand( &sCommand, &rd->cmd, 3, 0, 1 )) return false;
 
     /*
      *  SetupCommand does not handle Alternate Bytes, so if alternate bytes are
@@ -509,6 +497,118 @@ bool XSpiLL_WriteCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size)
 }
 
 
+/******************************************************************************
+ * @brief Execute one query plus bit operation and write the result to writebuf
+ * @param  myHandle - XSpi handle
+ * @param  op - query + bitoperation
+ * @param  writebuf - result write buffer
+ * @returns length of query result in bytes or -1 in case of error
+ *****************************************************************************/
+static int8_t ExecuteOp(XSpiHandleT *myHandle, const NOR_FlashOpT *op, uint8_t *writebuf, uint32_t *numarg)
+{
+    /* Length of query result */
+    uint32_t qlen = op->qry->exec->arg_size;
+    uint32_t work;
+    if ( qlen > 4 ) {
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            DEBUG_PRINTF("XSpiLL_ExecuteOp: Query length of %d exceededs limit of 4\n", qlen);
+        #endif
+        return -1;
+    }
+    uint32_t arglen = 4;
+    /* Execute query */
+    if ( !XSpiLL_ExecuteCmd(myHandle, op->qry->exec, 0, (uint8_t*)&work, &arglen, NULL ) ) return -1;
+
+    /* Execute bit operation */
+    switch(op->op ) {
+        case XSPI_BITOP_NONE:   // No Operation
+            break;
+        case XSPI_BITOP_SET:    // Set queried bits 
+            work |= ( op->qry->access_mask << op->qry->access_shift );
+            break;
+        case XSPI_BITOP_RESET:  // Reset queried bits 
+            work &= ~( op->qry->access_mask << op->qry->access_shift );
+            break;
+        case XSPI_BITOP_SETNUM: // Set queried to a specified value
+            if ( !numarg ) {
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                    DEBUG_PRINTF("XSpiLL_ExecuteOp, Op SETNUM: numarg not specified\n");
+                #endif
+                return -1;
+            }
+            /* clear masked bits */
+            work &= ~( op->qry->access_mask << op->qry->access_shift );  
+            /* fill in numarg */
+            work |= ((*numarg & op->qry->access_mask ) << op->qry->access_shift ); 
+            break;
+        default:
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                DEBUG_PRINTF("XSpiLL_ExecuteOp: undefined opcode of %d\n",op->op);
+            #endif
+            return -1;
+    }
+
+    /* copy reault to write buffer */
+    for ( uint8_t i = 0; i < arglen; i++ ) {
+        *(writebuf+i) = work & 0xff;
+        work >>= 8;
+    }
+    return (int8_t)arglen;
+}
+
+/******************************************************************************
+ * @brief Execute a set or reset command
+ * @param  myHandle - XSpi handle
+ * @param  rs - Set or Reset command sequence
+ * @param  numarg - numerical value in case of XSPI_BITOP_SETNUM command
+ *                  must be at least as long as the list of operations
+ *****************************************************************************/
+bool XSpiLL_Execute ( XSpiHandleT *myHandle, const NOR_FlashSetterT* rs, uint32_t numarg[] )
+{
+    static const uint8_t MAX_LEN = 8;
+    uint8_t writebuf[MAX_LEN];
+    uint32_t wrptr = 0;
+    int8_t len;
+    const NOR_FlashOpT *op;
+    bool ret=true, bWasDPD=myHandle->bInDeepPwrDown;
+
+    /* wake up is in Deep Sleep */ 
+    if ( bWasDPD ) XSpi_SetDeepPowerDown(myHandle, false);
+
+    /* Iterate thru all read operations/manipulations */
+    for ( uint8_t i=0; i < FLASH_MAX_OPS; i++ ) {
+        if ( op = rs->ops[i], op ) {
+            /* check the argsize being >= 0 and total length not exceeding write buffer */
+            len = op->qry->exec->arg_size;
+            if ( len < 0 || wrptr+len > MAX_LEN ) {
+                #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                    DEBUG_PRINTF("XSpiLL_Execute: actual len=%d, total len=%d: limits exceeded\n", len, wrptr);
+                #endif
+                ret=false;
+                break;
+            }
+            if ( len = ExecuteOp(myHandle, op, writebuf+wrptr, numarg ? numarg+i : NULL ), len < 0 ) { ret=false; break; }
+            wrptr+= len; 
+        }
+    }
+
+    if ( ret ) {
+        /* check that length of all read operations matches write op length */
+        /* argsize is < 0 for write commands */
+        if ( wrptr + rs->set_cmd->arg_size != 0 ) {
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                DEBUG_PRINTF("XSpiLL_Execute: Rd (%d) and Wr size (%d) do not match\n", wrptr, rs->set_cmd->arg_size*-1);
+            #endif
+            return false;
+        }
+    
+        ret = XHelper_CmdArgRead ( myHandle, rs->set_cmd, 0, writebuf, rs->set_cmd->arg_size );
+    }
+
+    /* if in Deep Sleep before go to deep sleep again*/ 
+    if ( bWasDPD ) XSpi_SetDeepPowerDown(myHandle, true);
+    return true;
+}
 /* Exported functions -------------------------------------------------------*/
 
 

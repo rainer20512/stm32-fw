@@ -322,7 +322,7 @@ void XSpi_DumpStatus(XSpiHandleT *myHandle)
 {
     bool sleep = myHandle->bInDeepPwrDown;
     /* Wake up device, if in deep sleep */
-    if ( sleep && XSpi_LeaveDeepPowerDown(myHandle)==0 ) {
+    if ( sleep && XSpi_SetDeepPowerDown(myHandle,false)==-1 ) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
             LOG_ERROR("XSpi_DumpStatus - Error: Cannot wake up flash device");
         #endif
@@ -331,7 +331,7 @@ void XSpi_DumpStatus(XSpiHandleT *myHandle)
 
     XSpecific_DumpStatusInternal(myHandle);
     
-    if ( sleep ) XSpi_EnterDeepPowerDown(myHandle);
+    if ( sleep ) XSpi_SetDeepPowerDown(myHandle, true);
 }
 
 /**************************************************************************************
@@ -348,12 +348,36 @@ void XSpi_SetAsyncCallbacks(XSpiHandleT *myHandle, XSpiCallbackT rdDoneCB, XSpiC
 
 /**************************************************************************************
  * Set the read and write mode to single, dual or quad line access
-  *************************************************************************************/
+ *************************************************************************************/
 void XSpi_SetRWMode( XSpiHandleT *myHandle, XSPI_RWMode xspi_mode )
 {
     if ( xspi_mode >= XSPI_RW_MAXNUM ) return;
     myHandle->myRWmode = xspi_mode;
 }
+
+/**************************************************************************************
+ * Set or Reset Quad data mode
+ *************************************************************************************/
+void XSpi_SetQuad (XSpiHandleT *myHandle, bool bEna )
+{
+    /* Write Enable first */
+    if (!XSpiLL_WriteEnable(myHandle, true) ) {
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOGU_ERROR("XSpi_SetQuad: write enable failed");
+        #endif
+    }
+    /* get the quad enable or disable function */
+    const NOR_FlashSetterT *rs = myHandle->interface->setter.qe[bEna?0:1];
+    assert(rs);
+    if (!XSpiLL_Execute (myHandle, rs, NULL ) ) {
+        #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+            LOGU_ERROR("XSpi_SetQuad failed");
+        #endif
+    }
+}
+
+
+
 /******************************************************************************
  ******************************************************************************
  * Implementation of the read operation:
@@ -367,7 +391,7 @@ bool XSpi_ReadOperation(XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr
     bool ret;
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_SetDeepPowerDown(myHandle,false)==-1 ) return false;
 
     #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
         LOGU_VERBOSE("%s read, area: 0x%08x ... 0x%08x", XSpiStr, ReadAddr, ReadAddr+Size-1);
@@ -533,7 +557,7 @@ static bool WriteInit(XSpiHandleT *myHandle,  uint8_t* pData, uint32_t WriteAddr
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_SetDeepPowerDown(myHandle,false)==-1 ) return false;
 
     return true;
 }
@@ -776,7 +800,7 @@ static bool EraseInit(XSpiHandleT *myHandle, uint32_t EraseAddr, uint32_t numIte
     #endif
 
     /* Wake up device, if it has deep sleep capability and is in deep sleep */
-    if ( myHandle->bInDeepPwrDown && XSpi_LeaveDeepPowerDown(myHandle)==0 ) return false;
+    if ( myHandle->bInDeepPwrDown && XSpi_SetDeepPowerDown(myHandle,false)==-1 ) return false;
 
     return true;
 }
@@ -1015,12 +1039,18 @@ bool XSpi_EraseIT               ( XSpiHandleT *myHandle, XSpi_EraseMode mode, ui
  *****************************************************************************/
 bool XSpi_Abort(XSpiHandleT *myHandle)
 {
+    bool ret;
     XXSPI_HandleTypeDef *hxspi       = &myHandle->hxspi;
     #if USE_OSPI > 0
-        return HAL_OSPI_Abort(hxspi) == HAL_OK;
+        ret = HAL_OSPI_Abort(hxspi) == HAL_OK;
     #else
-        return HAL_QSPI_Abort(hxspi) == HAL_OK;
+        ret = HAL_QSPI_Abort(hxspi) == HAL_OK;
     #endif
+    
+    /* if device is in memory mapped mode, this will end MMM */
+    if (ret && myHandle->bIsMemoryMapped ) myHandle->bIsMemoryMapped = 0;
+
+    return ret;
 }
 
 
@@ -1180,6 +1210,12 @@ bool XSpi_Init(const HW_DeviceType *self)
             HW_SetAllIRQs(self->devIrqList, true);
         }
 
+        /* Perform a software reset of Flash chip */
+        if ( !XSpiLL_ResetMemory(myHandle) ) {
+            #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
+                if ( !ret ) LOGU_ERROR("Unable to perform chip reset");
+            #endif
+        }
         if ( !(ret=XSpiLL_GetID(myHandle)) ) {
             #if DEBUG_MODE > 0 && DEBUG_XSPI > 0
                 if ( !ret ) LOGU_ERROR("Unable to read XSpi chip ID");
@@ -1227,9 +1263,14 @@ bool XSpi_Init(const HW_DeviceType *self)
         }
         
     }
+
+
+    /* enable quad mode */
+    if ( ret ) XSpi_SetQuad(myHandle, true);
+
     if ( ret ) {
         /* If deep sleep is supported, put flash chip into deep sleep mode */
-        if ( XHelper_HasDeepPowerDown(myHandle) ) XSpi_EnterDeepPowerDown(myHandle);
+        if ( XHelper_HasDeepPowerDown(myHandle) ) XSpi_SetDeepPowerDown(myHandle, true);
     } else {
         /* If Initialization was unsuccessful, deactivate all */
         XSpi_DeInit(self);

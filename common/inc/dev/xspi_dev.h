@@ -119,12 +119,12 @@ void XSpi_GetGeometry           (XSpiHandleT *myHandle, XSpiGeometryT *pInfo);
 void XSpi_DumpStatus            (XSpiHandleT *myHandle);
 void XSpi_SetAsyncCallbacks     (XSpiHandleT *myHandle, XSpiCallbackT rdDoneCB, XSpiCallbackT wrDoneCB, XSpiCallbackT errorCB);
 bool XSpi_Abort                 (XSpiHandleT *myHandle);
-int32_t XSpi_EnterDeepPowerDown (XSpiHandleT *myHandle);
-int32_t XSpi_LeaveDeepPowerDown (XSpiHandleT *myHandle);
+int32_t XSpi_SetDeepPowerDown   (XSpiHandleT *myHandle, bool bEna);
 bool XSpi_EnableMemoryMappedMode(XSpiHandleT *myHandle);
 bool XSpi_SetSpeed              (const HW_DeviceType *self, uint32_t new_clkspeed);
 bool XSpi_IsInitialized         (XSpiHandleT *myHandle);
 void XSpi_SetRWMode             (XSpiHandleT *myHandle, XSPI_RWMode xspi_mode );
+void XSpi_SetQuad               (XSpiHandleT *myHandle, bool bEna );
 bool XSpi_ReadWait              (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 bool XSpi_ReadIT                (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr,  uint32_t Size);
 

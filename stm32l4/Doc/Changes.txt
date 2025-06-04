@@ -55,3 +55,5 @@ where <nnn> is the threeed igit number from below
     found, only then BME280/BMP180 are used as temp source
 
 *** 14.02.25 Version V1.08  
+
+014 Rework of XSPI device to use an universl flash chip interface
