@@ -92,10 +92,6 @@ bool XHelper_SetupCommand( XSPI_CommandTypeDef *sCmd, const NOR_FlashCmdT *cmd, 
     sCmd->Address               = arglen > 0 ? arg : 0;
     sCmd->NbData                = retlen;
 
-    #if DEBUG_MODE > 0 && DEBUG_XSPI > 1
-        DEBUG_PRINTF("SetupCommand: Cmd=0x%02x, RWMode=%d, CmdLines=%d AddrLines=%d AddrSize=%d, DataLines=%d, DummyCyc=%d, DataLen=%d\n",
-                      cmd->cmd, cmd->rw_mode, CmdLines[cmd->rw_mode], arglen > 0 ? AddrLines[cmd->rw_mode]:0, arglen, DataLines[cmd->rw_mode],cmd->dummy_cycles, retlen );
-    #endif
 
     return true;
 }
@@ -379,6 +375,25 @@ void XHelper_SetGeometry(XSpiHandleT *myHandle, XSpiGeometryT *geometry)
 const NOR_RWModeTypeT* XHelper_FindReadCmd( XSpiHandleT *myHandle )
 {
     NOR_FlashReadT const *rd = &myHandle->interface->read;
+
+#if XSPI_TUNE_MANUALLY > 0
+    /* 
+     * in read tuning mode, select the read mode that is selected by cmd code
+     * in readCmd member variable
+     */
+     #define RDCHECK(_a_) if (rd->_a_ && rd->_a_->cmd.cmd==myHandle->readCmd) return rd->_a_
+     if ( myHandle->bReadTuning ) {
+         /* check all defined read modes */
+         RDCHECK(r_111);
+         RDCHECK(rf_111);
+         RDCHECK(rf_112);
+         RDCHECK(rf_122);
+         RDCHECK(rf_114);
+         RDCHECK(rf_144);
+         RDCHECK(rf_444);
+     }
+#endif    
+
     switch ( myHandle->myRWmode ) {
         case XSPI_RW_FAST1:
             /* When fast read is defined, then fast read, otherwise normal read */

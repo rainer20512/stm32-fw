@@ -3,11 +3,9 @@
  <Bookmarks/>
  <Breakpoints groups="Breakpoints" active_group="Breakpoints">
   <BreakpointListItem trigger="" line="396" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="../../common/src/dev/xspi/at25sfxxx.c" useHWbreakpoint="false"/>
-  <BreakpointListItem trigger="" line="1664" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="CM7/Src/interpreters.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="322" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="../../common/src/dev/xspi/mx25r6435f.c" useHWbreakpoint="false"/>
   <BreakpointListItem trigger="" line="359" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="../../common/src/dev/xspi/mx25r6435f.c" useHWbreakpoint="false"/>
-  <BreakpointListItem trigger="" line="925" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="../../common/src/dev/xspi_dev.c" useHWbreakpoint="false"/>
-  <BreakpointListItem trigger="" line="395" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="2" filename="../../common/src/dev/xspi/xspi_helper.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="948" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" stopAll="false" group="Breakpoints" type="Breakpoint" state="4" filename="../../common/src/dev/xspi_dev.c" useHWbreakpoint="false"/>
   <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
  </Breakpoints>
  <ExecutionProfileWindow/>
@@ -112,12 +110,13 @@
    <Watchpoint expression="RCC" name="RCC" radix="16" linenumber="0" filename="../h745"/>
    <Watchpoint expression="p" name="p" radix="-1" linenumber="354" filename="../common_h7/Src/system/hw_util.c"/>
    <Watchpoint expression="hqspi" name="hqspi" radix="-1" linenumber="306" filename="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c"/>
-   <Watchpoint expression="myHandle" name="myHandle" radix="-1" linenumber="344" filename="../../common/src/dev/xspi/xspi_helper.c"/>
-   <Watchpoint expression="target_speed" name="target_speed" radix="10" linenumber="1186" filename="../../common/src/dev/xspi_dev.c"/>
-   <Watchpoint expression="retbuf" name="retbuf" radix="-1" linenumber="303" filename="../../common/src/dev/xspi/xspi_helper.c"/>
-   <Watchpoint expression="sCommand" name="sCommand" radix="-1" linenumber="296" filename="../../common/src/dev/xspi/xspi_helper.c"/>
-   <Watchpoint expression="cmd" name="cmd" radix="-1" linenumber="293" filename="../../common/src/dev/xspi/xspi_helper.c"/>
-   <Watchpoint expression="op" name="op" radix="-1" linenumber="580" filename="../../common/src/dev/xspi/xspi_lowlevel.c"/>
+   <Watchpoint expression="myHandle" name="myHandle" radix="-1" linenumber="340" filename="../../common/src/dev/xspi/xspi_helper.c"/>
+   <Watchpoint expression="target_speed" name="target_speed" radix="10" linenumber="1209" filename="../../common/src/dev/xspi_dev.c"/>
+   <Watchpoint expression="retbuf" name="retbuf" radix="-1" linenumber="299" filename="../../common/src/dev/xspi/xspi_helper.c"/>
+   <Watchpoint expression="sCommand" name="sCommand" radix="-1" linenumber="292" filename="../../common/src/dev/xspi/xspi_helper.c"/>
+   <Watchpoint expression="cmd" name="cmd" radix="-1" linenumber="289" filename="../../common/src/dev/xspi/xspi_helper.c"/>
+   <Watchpoint expression="op" name="op" radix="-1" linenumber="614" filename="../../common/src/dev/xspi/xspi_lowlevel.c"/>
+   <Watchpoint expression="rd" name="rd" radix="-1" linenumber="468" filename="../../common/src/dev/xspi/xspi_lowlevel.c"/>
   </Watches>
  </Watch1>
  <Watch2>
@@ -130,12 +129,12 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1268" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/interpreters.c" path="../../common/src/dev/xspi_dev.c" left="0" top="1235" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="545" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="CM7/Inc/config/devices_config.h" left="0" top="523" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="379" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/interpreters.c" path="../../common/src/dev/xspi_dev.c" left="0" top="324" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="545" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="CM7/Inc/config/devices_config.h" left="0" top="522" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="233" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_helper.c" path="../../common/src/dev/xspi/mx25r6435f.c" left="0" top="180" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="173" useTextEdit="1" path="CM7/Src/main_c7.c" left="0" top="140" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="173" useTextEdit="1" path="CM7/Src/main_c7.c" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="23" y="521" useTextEdit="1" path="../../common/src/dev/timer_dev.c" left="0" top="521" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="145" useTextEdit="1" path="CM7/Inc/config/config.h" left="0" top="107" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="193" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/inc/dev/xspi_dev.h" path="CM7/Inc/config/config.h" left="0" selected="1" top="39" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="8" y="117" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/at25sfxxx.c" path="../../common/src/dev/xspi/mx25r6435f.h" left="0" top="66" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="215" y="35" useTextEdit="1" path="../common_h7/Inc/config/qspi_config.h" left="17" top="25" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="64" y="69" useTextEdit="1" path="../common_h7/Inc/config/gpio_config.h" left="0" top="47" codecName="Default"/>
@@ -144,19 +143,20 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="36" y="53" useTextEdit="1" path="../../common/src/debug_outbuf.c" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/init_c7.c" path="../common_h7/Inc/task/minitask.h" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="4" y="71" useTextEdit="1" path="../../common/inc/dev/hw_device.h" left="0" top="12" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="405" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/src/dev/xspi/xspi_helper.c" left="0" top="361" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="66" y="27" useTextEdit="1" path="../../common/inc/dev/xspi/xspi_helper.h" left="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="126" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/inc/dev/xspi_dev.h" left="0" top="100" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="112" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/at25sfxxx.c" left="0" selected="1" top="99" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="39" y="442" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/xspi_lowlevel.c" left="0" top="414" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="26" y="178" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/inc/dev/xspi/flash_interface.h" left="0" top="119" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="83" y="36" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/src/dev/xspi/xspi_helper.c" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="18" useTextEdit="1" path="../../common/inc/dev/xspi/xspi_helper.h" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="9" y="153" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/inc/dev/xspi_dev.h" left="0" top="103" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="73" y="73" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/at25sfxxx.c" left="0" top="39" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="79" y="460" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/xspi_lowlevel.c" left="0" top="452" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="129" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/inc/dev/xspi/flash_interface.h" left="0" top="110" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="97" y="25" useTextEdit="1" path="../../common/inc/dev/xspi/xspi_lowlevel.h" left="0" top="9" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="47" y="19" useTextEdit="1" path="../../common/nextion/util/Utilities.h" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1032" useTextEdit="1" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" left="0" top="968" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="328" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_helper.c" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_qspi.h" left="0" top="284" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="69" y="1650" useTextEdit="1" path="CM7/Src/interpreters.c" left="0" top="1622" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="58" y="341" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_helper.c" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_qspi.h" left="0" top="306" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="12" y="1673" useTextEdit="1" path="CM7/Src/interpreters.c" left="0" top="1648" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="19" y="47" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/interpreters.c" path="CM7/Inc/eeprom.h" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="9" y="41" useTextEdit="1" path="../../common/src/log.c" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="8" y="22453" useTextEdit="1" openedFrom="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_qspi.h" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h747xx.h" left="0" top="22420" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*" autoConnectTarget="SEGGER J-Link" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/inc/dev/xspi" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>

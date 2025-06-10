@@ -1661,6 +1661,20 @@ ADD_SUBMODULE(Test);
                 printf("Read SFDP not implemented\n");
             }
             break;
+#if XSPI_TUNE_MANUALLY > 0
+        case 99:
+            if ( CMD_argc() < 2 ) {
+              printf("Usage: Read tune <cmd> <dcycl> - manually set rd instr. and # dcycles\n");
+              return false;
+            }
+            CMD_get_one_word( &word, &wordlen );
+            addr = CMD_to_number ( word, wordlen );
+            CMD_get_one_word( &word, &wordlen );
+            cnt = CMD_to_number ( word, wordlen );
+            SetupReadTuning(&QSpi1Handle, addr, cnt);
+            printf ( "ok\n");
+            break;
+#endif
          default:
           DEBUG_PUTS("PM_Menu: command not implemented");
       } /* end switch */
@@ -1693,6 +1707,9 @@ ADD_SUBMODULE(Test);
         { "Read JedecID",             ctype_fn, .exec.fn = QSPI_Menu, VOID(15),"Read 3-byte Jedec ID" },
         { "QSPI mode {0|1|2}",        ctype_fn, .exec.fn = QSPI_Menu, VOID(16),"Set QSPI mode 1-1-1, 1-2-2, 1-4-4" },
         { "QSPI SFDP",                ctype_fn, .exec.fn = QSPI_Menu, VOID(17),"Read SFDP root block" },
+        #if XSPI_TUNE_MANUALLY > 0
+            { "Read Tune <cmd> <dycl>",   ctype_fn, .exec.fn = QSPI_Menu, VOID(99),"manually set rd instr. and # dcycles" },
+        #endif
     };
     ADD_SUBMODULE(QSPI);
 #endif

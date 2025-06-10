@@ -52,8 +52,8 @@
 
 #include "system/tm1637.h"
 #define  STATUS(i)          TM1637_displayInteger(i,0,99)
-ARD_PinT clk = { GPIOB, 0 };
-ARD_PinT dio = { GPIOB, 1 };
+ARD_PinT clk = { GPIOB, 0, 1 };
+ARD_PinT dio = { GPIOB, 1, 1 };
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -343,7 +343,31 @@ int main(void)
         Init_StartUserPWM();
     #endif
 
+#if USE_U8G2 > 0
 
+    #include "u8g2.h"
+
+    uint8_t u8x8_gpio_and_delay_stm32l4_spi(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr);
+
+    u8g2_t u8g2; // a structure which will contain all the data for one display
+
+    //u8g2_Setup_st7920_128x64_1(&u8g2, U8G2_R0, u8x8_byte_4wire_sw_spi, u8x8_gpio_and_delay_stm32l4_spi);    
+    u8g2_Setup_st7920_s_128x64_1(&u8g2, U8G2_R0, u8x8_byte_4wire_sw_spi, u8x8_gpio_and_delay_stm32l4_spi);    
+    u8g2_InitDisplay(&u8g2); // send init sequence to the display, display is in sleep mode after this,
+    u8g2_SetPowerSave(&u8g2, 0); // wake up display
+    u8g2_uint_t h = u8g2_GetDisplayHeight(&u8g2);
+    u8g2_uint_t w = u8g2_GetDisplayWidth(&u8g2);
+    
+    u8g2_ClearDisplay(&u8g2);
+    u8g2_FirstPage(&u8g2);
+    do {
+        u8g2_DrawLine(&u8g2, 0, 0, w, h);
+        u8g2_DrawLine(&u8g2, w, 0, 0, h);
+        u8g2_DrawFrame(&u8g2,0,0, w, h);
+        u8g2_DrawRFrame(&u8g2,0,0, w, h,5);
+    } while( u8g2_NextPage(&u8g2) );
+    u8g2_SendBuffer(&u8g2);
+#endif
     /* Run forever */
     while(1) { 
         CheckForSleep();

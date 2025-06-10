@@ -55,7 +55,7 @@ static const NOR_RWModeTypeT  r_111     = { .cmd = {.cmd = 0x03, .rw_mode = XSPI
 static const NOR_RWModeTypeT  rf_111    = { .cmd = {.cmd = 0x0b, .rw_mode = XSPI_MODE_111, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC3, };
 static const NOR_RWModeTypeT  rf_112    = { .cmd = {.cmd = 0x3b, .rw_mode = XSPI_MODE_112, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC3, };
 static const NOR_RWModeTypeT  rf_114    = { .cmd = {.cmd = 0x6b, .rw_mode = XSPI_MODE_114, .dummy_cycles = 8, }, .mode_bytes = 0, .max_frq = OP_FC1, };
-static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 4, }, .mode_bytes = 1, .max_frq = OP_FC3, };
+static const NOR_RWModeTypeT  rf_122    = { .cmd = {.cmd = 0xbb, .rw_mode = XSPI_MODE_122, .dummy_cycles = 0, }, .mode_bytes = 1, .max_frq = OP_FC3, };
 static const NOR_RWModeTypeT  rf_144    = { .cmd = {.cmd = 0xeb, .rw_mode = XSPI_MODE_144, .dummy_cycles = 4, }, .mode_bytes = 1, .max_frq = OP_FC3, };
 
 static const NOR_RWModeTypeT  p_111     = { .cmd = {.cmd = 0x02, .rw_mode = XSPI_MODE_111, .dummy_cycles = 0, }, .pgm_time = 2400 };
@@ -118,8 +118,8 @@ const NOR_FlashT flash_interface = {
         .rf_144c  = &rf_144,
         .rf_444   = NULL,
         .rf_444c  = NULL,
-        .continuous_rd_on =  0xaa,
-        .continuous_rd_off = 0xa5,
+        .continuous_rd_on =  0xA0,  // Bits[5:4] = 10 enables continuous read
+        .continuous_rd_off = 0xF0,
         },
     .write = {
         .p_111    = &p_111,

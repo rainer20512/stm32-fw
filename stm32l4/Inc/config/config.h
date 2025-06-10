@@ -81,6 +81,7 @@
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
 #define USE_USER_PWMTIMER   0
+#define USE_U8G2            1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate

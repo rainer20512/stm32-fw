@@ -103,6 +103,8 @@
 #define USE_XSPI_MT25Q              0
 #define USE_XSPI_AT25SF             1
 
+#define XSPI_TUNE_MANUALLY          1 // Set != 0 to manually find out fitting
+                                      // read dummy cycles
 
 /******************************************************************************
  * Check and set constraints for BaseTimer

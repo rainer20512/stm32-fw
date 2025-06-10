@@ -98,11 +98,16 @@
   #define IO_02_IRQ                         { BUTTON_IRQ_PRIO, 0 }
   #define IO_02                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_RISING_FALLING, GPIO_SPEED_FREQ_HIGH, GPIO_PULLUP, HW_IO_NORMAL,   HW_INPUT,         IO_02_IRQ, "Blue PushBtn" }
 
+  #define IO_03                             { GPIO_PIN_2,  GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "G8x2 DnC" }
+  #define IO_04                             { GPIO_PIN_3,  GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "G8x2 SCK" }
+  #define IO_05                             { GPIO_PIN_5,  GPIOB, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "G8x2 MOSI" }
+  #define IO_06                             { GPIO_PIN_15, GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_PULLUP, HW_IO_NORMAL,   HW_OUTPUT_HIGH,    GPIO_NO_IRQ, "G8x2 nSEL" }
+
 /* Example entry for additional IO-Pins
   #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "GpioOutput" }
 */
 
-  #define IO_NUM                            3
+  #define IO_NUM                            7
 
 #elif defined(DRAGONFLY476)
   // LEDs  

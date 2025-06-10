@@ -376,6 +376,16 @@ void XSpi_SetQuad (XSpiHandleT *myHandle, bool bEna )
     }
 }
 
+#if XSPI_TUNE_MANUALLY > 0
+    void SetupReadTuning        (XSpiHandleT *myHandle, uint8_t readCmd, uint8_t waitCycles )
+    {
+        myHandle->readCmd     = readCmd;
+        myHandle->waitCycles  = waitCycles;
+        
+        /* Read Cmd means: Auto tuning off */
+        myHandle->bReadTuning = readCmd != 0x00;
+    }
+#endif
 
 
 /******************************************************************************
@@ -461,6 +471,19 @@ bool XSpi_ReadIT    (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, u
 bool XSpi_ReadDMA   (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
     return XSpi_ReadOperation(myHandle, pData, ReadAddr, Size, XSPI_MODE_DMA );
 }
+
+/******************************************************************************
+ * Like XSpi_ReadWait, but with specifying read instruction and
+ * dummy cycles direcly
+ * Transmit the write command ( this is device specific ) and start writing
+ * in polling, irq or dma mode   
+ * Since maximum one page can be written with one write operation, the write
+ * operation is repeaded as often as possible, until the whole buffer is written
+ *****************************************************************************/
+bool XSpi_ReadWaitTestOnly  (XSpiHandleT *myHandle, uint8_t* pData, uint32_t ReadAddr, uint32_t Size) {
+    return XSpi_ReadOperation(myHandle, pData, ReadAddr, Size, XSPI_MODE_POLL );
+}
+
 
 /******************************************************************************
  ******************************************************************************

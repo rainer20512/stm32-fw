@@ -84,6 +84,30 @@
             }
         }
     }
+
+    #if DEBUG_XSPI > 1
+        /**************************************************************************************
+         * Dump CommandTypeDef structure
+         * automatically later. Now just chip info is dumped                                  *
+         *************************************************************************************/
+        void XSpiLL_DumpScmd(XSPI_CommandTypeDef *sCmd)
+        {
+            DEBUG_PRINTF("sCommand: Cmd=0x%02x IMode=0x%08x D.cycles=%d\n", sCmd->Instruction, sCmd->InstructionMode, sCmd->DummyCycles);
+            if ( sCmd->AddressMode > 0 ) {
+                DEBUG_PRINTF( "Addr==0x%08x, AMode=0x%08x, ASize=0x%08x\n", sCmd->Address, sCmd->AddressMode, sCmd->AddressSize);
+            }
+            if ( sCmd->DataMode > 0 ) {
+                DEBUG_PRINTF( "DMode=0x%08x, DSize=%d\n", sCmd->DataMode, sCmd->NbData);
+            }
+            if ( sCmd->AlternateByteMode > 0 ) {
+                DEBUG_PRINTF( "ABMode=0x%08x, ABSize=%d, ABytes=0x%08x\n", sCmd->AlternateByteMode, sCmd->AlternateBytesSize, sCmd->AlternateBytes);
+            }
+            
+            DEBUG_PRINTF( "ABMode=0x%08x, ABSize=%d, ABytes=0x%08x\n", sCmd->AlternateByteMode, sCmd->AlternateBytesSize, sCmd->AlternateBytes);
+            DEBUG_PRINTF( "DDRmode=%d, SIOOmode=%d, HoldHalf=%d\n", sCmd->DdrMode, sCmd->SIOOMode, sCmd->DdrHoldHalfCycle);
+        }
+    #endif
+
 #endif
 
 /******************************************************************************
@@ -443,8 +467,14 @@ bool XSpiLL_ReadCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size)
     const NOR_RWModeTypeT* rd = XHelper_FindReadCmd( myHandle );
     if ( !rd ) return false;
 
+#if XSPI_TUNE_MANUALLY > 0
+        NOR_RWModeTypeT r2 = *rd;
+        if ( myHandle->bReadTuning ) r2.cmd.dummy_cycles = myHandle->waitCycles;
+        if ( !XHelper_SetupCommand( &sCommand, &r2.cmd, 3, Addr, Size )) return false;
+#else
     /* Initialize the read command */
     if ( !XHelper_SetupCommand( &sCommand, &rd->cmd, 3, Addr, Size )) return false;
+#endif
 
     /*
      *  SetupCommand does not handle Alternate Bytes, so if alternate bytes are
@@ -452,6 +482,10 @@ bool XSpiLL_ReadCMD(XSpiHandleT *myHandle, uint32_t Addr, uint32_t Size)
      */
     if ( rd->mode_bytes > 0 ) XHelper_SetupAltBytes(&sCommand, rd, myHandle->interface->read.continuous_rd_off );
  
+     #if DEBUG_MODE > 0 && DEBUG_XSPI > 1
+        XSpiLL_DumpScmd(&sCommand);
+    #endif
+
     /* Excute read */
     if (HAL_XSPI_Command(&myHandle->hxspi, &sCommand, XSPI_TIMEOUT_DEFAULT_VALUE) != HAL_OK) {
         #if DEBUG_MODE > 0 && DEBUG_XSPI > 0

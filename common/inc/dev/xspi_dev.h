@@ -113,6 +113,11 @@ typedef struct XSpiHandleType {
     uint8_t             bIsInitialized;  /* true, iff device is initialized successfully      */
     uint8_t             bInDeepPwrDown;  /* true if device currently in deep pwr down state   */
     uint8_t             bInHPMode;       /* true if device currently in high performance mode */
+    #if XSPI_TUNE_MANUALLY > 0
+        uint8_t             bReadTuning;     /* true if read tuning is active                     */
+        uint8_t             readCmd;         /* read cmd code to be tuned                         */
+        uint8_t             waitCycles       /* wait cycles to use for that cmd                   */
+    #endif
 } XSpiHandleT; 
 
 void XSpi_GetGeometry           (XSpiHandleT *myHandle, XSpiGeometryT *pInfo);
@@ -143,8 +148,12 @@ bool XSpi_EraseIT               ( XSpiHandleT *myHandle, XSpi_EraseMode mode, ui
 bool XSpi_EraseChipWait         (XSpiHandleT *myHandle);
 bool XSpi_EraseChipIT           (XSpiHandleT *myHandle);
 
-
 void XSpi_EarlyInit             (void);
+
+#if XSPI_TUNE_MANUALLY > 0
+    void SetupReadTuning        (XSpiHandleT *myHandle, uint8_t readCmd, uint8_t waitCycles );
+#endif
+
 
 /* Global variables ---------------------------------------------------------------------*/
 #if defined(QUADSPI) && USE_QSPI > 0 
