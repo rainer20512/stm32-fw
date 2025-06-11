@@ -249,6 +249,11 @@ void CheckForSleep(void)
     } /* if nothing to do */
 }
 
+int GC9A01_init(void);
+static void Init_Lvgl(void)
+{
+    GC9A01_init();
+}
 
 int main(void)
 {
@@ -343,6 +348,7 @@ int main(void)
         Init_StartUserPWM();
     #endif
 
+    Init_Lvgl();
 
     /* Run forever */
     while(1) { 

@@ -1,0 +1,27 @@
+Steps to make LVGL run                                           RHB / 11.06.25
+-------------------------------------------------------------------------------
+
+001 As describe in setup guide, copy lv_conf-Template.h to lv_conf.h and chng
+    #if 0 to #if 1
+
+002 in lv_conf_internal.h in he scr subdir, remove one ../ from the line
+           #include "../../lv_conf.h"                /* Else assume lv_conf.h is next to the lvgl folder. */
+    so it reads
+           #include "../lv_conf.h"                /* Else assume lv_conf.h is next to the lvgl folder. */
+
+003 in lv_font_montserrat_14_aligned.c : change
+      #include "lvgl/lvgl.h"
+    to read
+      #include "../../lvgl/lvgl.h"
+
+004 in lv_conf.h: set LV_USE_LOG to 1
+
+005 The whole lvgl-tree should compile now w/o any errors or warnings
+
+006 connect tick interface: in stm32xxx_it.c in SysTick_Handler: 
+    insert these two lines:
+      #include "../../lvgl/lv_conf.h"
+      lv_tick_inc(1);
+
+007
+

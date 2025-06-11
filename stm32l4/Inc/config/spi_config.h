@@ -226,7 +226,7 @@
         #define SPI1_SCK                          { GPIO_PIN_3  , GPIOB, 0, GPIO_NOPULL, "BbSpi1_Sck" }
         #define SPI1_NSEL                         { GPIO_PIN_15 , GPIOA, 0, GPIO_NOPULL, "BbSpi1_nSel" }
         #ifdef SPI1_USE_MISO 
-              #define SPI1_MISO                       { GPIO_PIN_4  , GPIOB, 0, GPIO_PULLUP, "BbSpi1_Miso" }
+              #define SPI1_MISO                   { GPIO_PIN_4  , GPIOB, 0, GPIO_PULLUP, "BbSpi1_Miso" }
           #ifdef SPI2_USE_MISO_IRQ
             #define SPI2_MISO_IRQ                 { EXTI4_IRQn, SPI_IRQ_PRIO, 0 }
           #endif

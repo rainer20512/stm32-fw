@@ -245,7 +245,18 @@ void Init_OtherDevices(void)
         if (!RFM_IsPresent() ) DeviceDeInitByIdx(dev_idx);
       }
   #endif
-  #if USE_EPAPER > 0
+
+  #if USE_LVGL_LOWLEVEL > 0 || USE_LVGL > 0
+      dev_idx = AddDevice(&EPAPER_DEV, NULL, NULL);
+      if ( dev_idx < 0 ) {
+        DEBUG_PRINTF("Failed to init Lvgl-device %s\n", EPAPER_DEV.devName );
+      } else {
+        /* Landscape mode */
+        DeviceInitByIdx(dev_idx, (void *)1 );
+      }
+  #endif
+  
+  #if USE_EPAPER > 0 
       dev_idx = AddDevice(&EPAPER_DEV, EPD_PostInit, NULL);
       if ( dev_idx < 0 ) {
         DEBUG_PRINTF("Failed to init Epaper-device %s\n", EPAPER_DEV.devName );

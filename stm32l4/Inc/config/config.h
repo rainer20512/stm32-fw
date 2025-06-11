@@ -81,6 +81,8 @@
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
 #define USE_USER_PWMTIMER   0
+#define USE_LVGL            0
+#define USE_LVGL_LOWLEVEL   1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -269,10 +271,7 @@
  */
   
 #ifndef __cplusplus
-    typedef uint32_t bool;
-
-    #define true  1
-    #define false 0
+    #include <stdbool.h>
 #endif
 
 
@@ -338,20 +337,25 @@
     MK_CONFIGSTR(USE_FMC_NOR,22)
     MK_CONFIGSTR(USE_PERIPHTIMER,23)
     MK_CONFIGSTR(USE_USER_PWMTIMER,24)
+    MK_CONFIGSTR(USE_LVGL,25)
+    MK_CONFIGSTR(USE_LVGL_LOWLEVEL,26)
+
     
-    #define MAX_CONFIGSTR   24
+    #define MAX_CONFIGSTR   25
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
             ConfigStr1,  ConfigStr2,  ConfigStr3,  ConfigStr4,  ConfigStr5,  ConfigStr6,  ConfigStr7,  ConfigStr8,
             ConfigStr9,  ConfigStr10, ConfigStr11, ConfigStr12, ConfigStr13, ConfigStr14, ConfigStr15, ConfigStr16,
             ConfigStr17, ConfigStr18, ConfigStr19, ConfigStr20, ConfigStr21, ConfigStr22, ConfigStr23, ConfigStr24,
+            ConfigStr25, ConfigStr26, // ConfigStr27, ConfigStr28, ConfigStr29, ConfigStr30, ConfigStr31, ConfigStr32,
         };
     const uint8_t ConfigValues[MAX_CONFIGSTR] = 
         {
             ConfigVal1,  ConfigVal2,  ConfigVal3,  ConfigVal4,  ConfigVal5,  ConfigVal6,  ConfigVal7,  ConfigVal8,
             ConfigVal9,  ConfigVal10, ConfigVal11, ConfigVal12, ConfigVal13, ConfigVal14, ConfigVal15, ConfigVal16,
             ConfigVal17, ConfigVal18, ConfigVal19, ConfigVal20, ConfigVal21, ConfigVal22, ConfigVal23, ConfigVal24,
+            ConfigVal25, ConfigVal26, // ConfigVal27, ConfigVal28, ConfigVal29, ConfigVal30, ConfigVal31, ConfigVal32,
         };
 
 #endif

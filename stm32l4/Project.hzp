@@ -190,6 +190,7 @@
     <folder Name="Doc">
       <file file_name="Doc/Changes.txt" />
       <file file_name="Doc/clues.txt" />
+      <file file_name="Doc/Make_LVGL_Run.txt" />
       <file file_name="$(ProjectDir)/Doc/readme.txt" />
     </folder>
     <folder Name="Drivers">
@@ -241,6 +242,7 @@
       </folder>
     </folder>
     <folder Name="lvgl">
+      <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
       <folder Name="src">
         <folder Name="core">
           <file file_name="../lvgl/src/core/lv_global.h" />
@@ -1228,10 +1230,12 @@
         <file file_name="../lvgl/src/lv_api_map_v9_1.h" />
         <file file_name="../lvgl/src/lv_conf_internal.h" />
         <file file_name="../lvgl/src/lv_conf_kconfig.h" />
+        <file file_name="../lvgl/src/lv_init.c" />
         <file file_name="../lvgl/src/lv_init.h" />
         <file file_name="../lvgl/src/lvgl.h" />
         <file file_name="../lvgl/src/lvgl_private.h" />
       </folder>
+      <file file_name="../lvgl/lv_conf.h" />
       <file file_name="../lvgl/lv_conf_template.h" />
       <file file_name="../lvgl/lv_version.h" />
       <file file_name="../lvgl/lvgl.h" />
@@ -1367,6 +1371,12 @@
         <file file_name="$(ProjectDir)/Inc/version.h" />
         <file file_name="$(ProjectDir)/Inc/watch.h" />
         <file file_name="$(ProjectDir)/Inc/wireless.h" />
+      </folder>
+      <folder Name="lvgl_test">
+        <file file_name="../lvgl/src/drivers/display/gc9a01/GC9A01.c" />
+        <file file_name="../lvgl/src/drivers/display/gc9a01/GC9A01.h" />
+        <file file_name="../lvgl/src/drivers/display/gc9a01/lv_4wire_spi.c" />
+        <file file_name="../lvgl/src/drivers/display/gc9a01/lv_4wire_spi.h" />
       </folder>
       <folder Name="Src">
         <folder Name="debug">

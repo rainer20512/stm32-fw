@@ -269,6 +269,10 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+#if USE_LVGL > 0
+  #include "../../lvgl/lv_conf.h"
+  lv_tick_inc(1);
+#endif
 }
 
 /******************************************************************************/

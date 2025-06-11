@@ -389,7 +389,7 @@
     #define I2C2_USE_DMA
 
     // Spi for ePaper
-    #if USE_EPAPER > 0 || USE_DOGM132
+    #if USE_EPAPER > 0 || USE_DOGM132 > 0 || USE_LVGL_LOWLEVEL > 0
         #define USE_BBSPI1
         // #define USE_SPI1
         #define EPAPER_DEV SPIDEV1_DEV
@@ -401,7 +401,9 @@
         #define SPI1_USE_DNC
         //#define SPI1_USE_HW_IRQ
         //#define SPI1_USE_DMA
-        //#define SPI1_USE_RST
+        #if  USE_LVGL_LOWLEVEL > 0
+            #define SPI1_USE_RST
+        #endif
         //#define SPI1_USE_BUSY
         //#define SPI1_USE_BUSY_IRQ
     #endif
