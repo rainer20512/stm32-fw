@@ -242,7 +242,13 @@
       </folder>
     </folder>
     <folder Name="lvgl">
-      <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+      <configuration Name="THUMB Debug" build_exclude_from_build="No" />
+      <folder
+        Name="examples"
+        exclude=""
+        filter="*.*"
+        path="E:/temp/LVGL/lvgl-master/lvgl-master/examples"
+        recurse="Yes" />
       <folder Name="src">
         <folder Name="core">
           <file file_name="../lvgl/src/core/lv_global.h" />
@@ -512,7 +518,7 @@
             exclude=""
             filter="*.*"
             path="../lvgl/src/drivers/display"
-            recurse="No" />
+            recurse="Yes" />
           <folder
             Name="evdev"
             exclude=""
@@ -1373,6 +1379,7 @@
         <file file_name="$(ProjectDir)/Inc/wireless.h" />
       </folder>
       <folder Name="lvgl_test">
+        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         <file file_name="../lvgl/src/drivers/display/gc9a01/GC9A01.c" />
         <file file_name="../lvgl/src/drivers/display/gc9a01/GC9A01.h" />
         <file file_name="../lvgl/src/drivers/display/gc9a01/lv_4wire_spi.c" />

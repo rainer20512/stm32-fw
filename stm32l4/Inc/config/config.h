@@ -81,7 +81,7 @@
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
 #define USE_USER_PWMTIMER   0
-#define USE_LVGL            0
+#define USE_LVGL            1
 #define USE_LVGL_LOWLEVEL   1
 
 #define GENERAL_BAUDRATE    500000

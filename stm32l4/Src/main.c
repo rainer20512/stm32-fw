@@ -52,8 +52,8 @@
 
 #include "system/tm1637.h"
 #define  STATUS(i)          TM1637_displayInteger(i,0,99)
-ARD_PinT clk = { GPIOB, 0 };
-ARD_PinT dio = { GPIOB, 1 };
+ARD_PinT clk = { GPIOB, 0,0 };
+ARD_PinT dio = { GPIOB, 1, 0 };
 
 
 /* Private typedef -----------------------------------------------------------*/
@@ -249,10 +249,20 @@ void CheckForSleep(void)
     } /* if nothing to do */
 }
 
+
+#include "../../../../lvgl/lv_conf.h"
+#include "../../../../lvgl/src/display/lv_display.h"
+#include "../../../../lvgl/src/drivers/lv_drivers.h"
+void lv_example_get_started_1(void);
 int GC9A01_init(void);
+void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size, 
+                       const uint8_t * param, size_t param_size);
+
 static void Init_Lvgl(void)
 {
-    GC9A01_init();
+    lv_init();
+    lv_display_t * disp = lv_gc9a01_create(240, 240, LV_LCD_FLAG_NONE, gc9a01_send_cmd, gc9a01_send_cmd );
+    lv_example_get_started_1();
 }
 
 int main(void)
