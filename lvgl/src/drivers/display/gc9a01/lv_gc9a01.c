@@ -19,6 +19,10 @@
  *      DEFINES
  *********************/
 
+#define MY_DISP_HOR_RES         240
+#define MY_DISP_VER_RES         240
+#define BYTE_PER_PIXEL          2
+
 /* GC9A01 Commands that we know of.  Limited documentation */
 #define GC9A01_INVOFF		0x20
 #define GC9A01_INVON		0x21
@@ -389,19 +393,32 @@ static struct GC9A01_function GC9A01_cfg_script[] = {
 /**********************
  *      Forward decls
  **********************/
+static void GC9A01_hard_reset( void );
 static void GC9A01_run_cfg_script(void);
+static void disp_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map);
+
 
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
-
+#define GRMEM __attribute((section(".bss2")))
+#define NUMROWS     60          // Number of rows in partial buffer
 lv_display_t * lv_gc9a01_create(uint32_t hor_res, uint32_t ver_res, lv_lcd_flag_t flags,
                                 lv_gc9a01_send_cmd_cb_t send_cmd_cb, lv_gc9a01_send_color_cb_t send_color_cb)
 {
-    lv_display_t * disp = lv_lcd_generic_mipi_create(hor_res, ver_res, flags, send_cmd_cb, send_color_cb);
+    GC9A01_hard_reset();
     GC9A01_run_cfg_script();
+
+    lv_display_t * disp = lv_lcd_generic_mipi_create(hor_res, ver_res, flags, send_cmd_cb, send_color_cb);
     // lv_lcd_generic_mipi_send_cmd_list(disp, init_cmd_list);
-     GC9A01_fillScreen(GC9A01_Color565(0x33,0x33,0x33)); // ?
+
+     /* One buffer for partial rendering*/
+    LV_ATTRIBUTE_MEM_ALIGN
+    static GRMEM uint8_t buf_1_1[MY_DISP_HOR_RES * NUMROWS * BYTE_PER_PIXEL];            /*A buffer for 10 rows*/
+    lv_display_set_buffers(disp, buf_1_1, NULL, sizeof(buf_1_1), LV_DISPLAY_RENDER_MODE_PARTIAL);
+    uint16_t temp = (uint16_t)BASTMR_GetMicrosecond(&BASTIM_HANDLE);
+    GC9A01_fillScreen(GC9A01_Color565(temp, temp>>4, temp>>8)); // ?
+    GC9A01_fillRect( 60, 60, 80, 80, GC9A01_Color565(0xFF,0x00,0x00));
     return disp;
 }
 
@@ -429,7 +446,21 @@ void lv_gc9a01_send_cmd_list(lv_display_t * disp, const uint8_t * cmd_list)
 *******************************************************************************
 * 4W-SPI-Driver for GC9A01
 *******************************************************************************
+
 ******************************************************************************/
+// hard reset of the tft controller
+// ----------------------------------------------------------
+static void GC9A01_hard_reset( void )
+{
+
+    LV_DRV_DISP_RST(1);
+    LV_DRV_DELAY_MS(50);
+    LV_DRV_DISP_RST(0);
+    LV_DRV_DELAY_MS(50);
+    LV_DRV_DISP_RST(1);
+    LV_DRV_DELAY_MS(50);
+}
+
 /**
  * Write a command to the GC9A01
  * @param cmd the command
@@ -527,7 +558,9 @@ void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size,
     size_t i;
     LV_UNUSED(disp);
 
-    if ( cmd_size > 0 ) {
+   LV_DRV_DISP_SPI_CS(0);  // Listen to us
+
+   if ( cmd_size > 0 ) {
 	LV_DRV_DISP_CMD_DATA(GC9A01_CMD_MODE);
         for ( i = 0, p=cmd; i < cmd_size; p++,i++ ) {
             LV_DRV_DISP_SPI_WR_BYTE(*p);
@@ -536,15 +569,109 @@ void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size,
 	LV_DRV_DISP_CMD_DATA(GC9A01_DATA_MODE);
     }
     if ( param_size > 0 ) {
-	LV_DRV_DISP_CMD_DATA(GC9A01_CMD_MODE);
+        DEBUG_PRINTF("%d data bytes starting with 0x%02x", param_size, *param);
         for ( i = 0, p=param; i < param_size; p++,i++ ) {
             LV_DRV_DISP_SPI_WR_BYTE(*p);
-            DEBUG_PRINTF("D 0x%02x ", *p);
         }
     }
+
+    LV_DRV_DISP_SPI_CS(1);
+
     DEBUG_PRINTF("\n");
+
+
+    /*IMPORTANT!!!
+     *Inform the graphics library that you are ready with the flushing*/
+    lv_display_flush_ready(disp);
 }
 
+void gc9a01_send_mass_data(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size, 
+                       const uint8_t * param, size_t param_size)
+{
+    LV_UNUSED(disp);
+    uint32_t byte_left;
+    uint8_t *pt;
+    size_t i;
+
+    LV_DRV_DISP_SPI_CS(0);  // Listen to us
+
+   if ( cmd_size > 0 ) {
+	LV_DRV_DISP_CMD_DATA(GC9A01_CMD_MODE);
+        for ( i = 0, pt=cmd; i < cmd_size; pt++,i++ ) {
+            LV_DRV_DISP_SPI_WR_BYTE(*pt);
+            DEBUG_PRINTF("C 0x%02x ", *pt);
+        }
+	LV_DRV_DISP_CMD_DATA(GC9A01_DATA_MODE);
+    }
+    if ( param_size > 0 ) {
+        DEBUG_PRINTF("Blockwise: %d data bytes starting with 0x%02x", param_size, *param);
+        byte_left = param_size;
+        pt = param;
+        while (byte_left)
+        {
+                if (byte_left > 64)
+                {
+                        LV_DRV_DISP_SPI_WR_ARRAY(pt, 64);
+                        byte_left = byte_left - 64;
+                        pt = pt + 64;
+                }
+                else
+                {
+                        LV_DRV_DISP_SPI_WR_ARRAY(pt, byte_left);
+                        byte_left=0;
+                }
+        }
+    }
+
+    LV_DRV_DISP_SPI_CS(1);
+
+    DEBUG_PRINTF("\n");
+
+    /*IMPORTANT!!!
+     *Inform the graphics library that you are ready with the flushing*/
+    lv_display_flush_ready(disp);
+}
+
+volatile bool disp_flush_enabled = true;
+
+/* Enable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_enable_update(void)
+{
+    disp_flush_enabled = true;
+}
+
+/* Disable updating the screen (the flushing process) when disp_flush() is called by LVGL
+ */
+void disp_disable_update(void)
+{
+    disp_flush_enabled = false;
+}
+
+/*Flush the content of the internal buffer the specific area on the display.
+ *`px_map` contains the rendered image as raw pixel map and it should be copied to `area` on the display.
+ *You can use DMA or any hardware acceleration to do this operation in the background but
+ *'lv_display_flush_ready()' has to be called when it's finished.*/
+static void disp_flush(lv_display_t * disp_drv, const lv_area_t * area, uint8_t * px_map)
+{
+    if(disp_flush_enabled) {
+        /*The most simple case (but also the slowest) to put all pixels to the screen one-by-one*/
+
+        int32_t x;
+        int32_t y;
+        for(y = area->y1; y <= area->y2; y++) {
+            for(x = area->x1; x <= area->x2; x++) {
+                /*Put a pixel to the display. For example:*/
+                /*put_px(x, y, *px_map)*/
+                px_map++;
+            }
+        }
+    }
+
+    /*IMPORTANT!!!
+     *Inform the graphics library that you are ready with the flushing*/
+    lv_display_flush_ready(disp_drv);
+}
 
 /**********************
  *   STATIC FUNCTIONS

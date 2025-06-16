@@ -17,7 +17,7 @@ void LV_DRV_DELAY_MS(uint32_t wait_ms)
     BASTMR_DelayUs(wait_ms * 1000);
 }
 
-void LV_DRV_DISP_SPI_WR_ARRAY(char *arr, uint32_t len)
+void LV_DRV_DISP_SPI_WR_ARRAY(uint8_t *arr, uint32_t len)
 {
     while ( len-- ) {
         LV_DRV_DISP_SPI_WR_BYTE(*(arr++));

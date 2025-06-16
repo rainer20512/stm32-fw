@@ -264,6 +264,10 @@ static void flush_cb(lv_display_t * disp, const lv_area_t * area, uint8_t * px_m
     y_start += drv->y_gap;
     y_end += drv->y_gap;
 
+    #include "debug_outbuf.h"
+    DEBUG_PRINTF("AddrWin=(%d,%d) (%d,%d)\n", x_start, y_start, x_end, y_end);
+
+
     /* define an area of frame memory where MCU can access */
     send_cmd(drv, LV_LCD_CMD_SET_COLUMN_ADDRESS, (uint8_t[]) {
         (x_start >> 8) & 0xFF,

@@ -398,6 +398,11 @@ void Init_OtherDevices(void)
     void U2U_RunTask(uint32_t arg);
 #endif
 
+#if USE_LVGL > 0
+    void task_init_lvgl(void);
+    void task_handle_lvgl(uint32_t arg);
+#endif
+
 #if DEBUG_FEATURES > 0 && DEBUG_DEBUGIO > 0
     void stdin_Init ( void );
     void task_handle_in( uint32_t arg );
@@ -445,8 +450,10 @@ void Init_DefineTasks(void)
   TaskRegisterTask(task_init_ds,  task_handle_ds,   TASK_OW,      JOB_TASK_ONEWIRE,  "OneWire task");
 #endif
 #if USE_QSPI > 0 || USE_OSPI > 0
-
   TaskRegisterTask(NULL,          task_handle_xspi, TASK_XSPI,    JOB_TASK_XSPI,     "QSPI task");
+#endif
+#if USE_LVGL > 0 
+  TaskRegisterTask(task_init_lvgl, task_handle_lvgl, TASK_LVGL,    JOB_TASK_LVGL,     "LVGL task");
 #endif
 #ifdef TX18LISTENER
     TaskRegisterTask(PulsesInit,  task_handle_pulse,TASK_PULSE,   JOB_TASK_MAIN,     "Pulse sequencer");

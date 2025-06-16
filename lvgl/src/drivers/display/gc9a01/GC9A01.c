@@ -561,7 +561,7 @@ int GC9A01_init(void)
     return 0;
 }
 
-static void GC9A01_set_addr_win(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
+static void  GC9A01_set_addr_win(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
   uint16_t x_start = x0 + GC9A01_XSTART, x_end = x1 + GC9A01_XSTART;
   uint16_t y_start = y0 + GC9A01_YSTART, y_end = y1 + GC9A01_YSTART;
@@ -570,13 +570,16 @@ static void GC9A01_set_addr_win(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t 
   GC9A01_data(x_start >> 8);
   GC9A01_data(x_start & 0xFF);     // XSTART
   GC9A01_data(x_end >> 8);
-  GC9A01_data(x_end & 0xFF);     // XEND
+  GC9A01_data(x_end & 0xFF);       // XEND
 
   GC9A01_command(GC9A01_RASET); // Row addr set
   GC9A01_data(y_start >> 8);
   GC9A01_data(y_start & 0xFF);     // YSTART
   GC9A01_data(y_end >> 8);
   GC9A01_data(y_end & 0xFF);     // YEND
+    
+  #include "debug_outbuf.h"
+  DEBUG_PRINTF("AddrWin=(%d,%d) (%d,%d)\n", x_start, y_start, x_end, y_end);
 
   GC9A01_command(GC9A01_RAMWR);
 }

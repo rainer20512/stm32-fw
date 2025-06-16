@@ -41,11 +41,11 @@
       arm_fp_abi="Soft"
       arm_fpu_type="FPv4-SP-D16"
       arm_gcc_target="arm-unknown-eabi"
-      arm_linker_heap_size="128"
+      arm_linker_heap_size="4096"
       arm_linker_jtag_pad_pre_dr="1"
       arm_linker_jtag_pad_pre_ir="5"
       arm_linker_process_stack_size="0"
-      arm_linker_stack_size="1024"
+      arm_linker_stack_size="2048"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
       arm_simulator_memory_simulation_parameter="STM32L476RG;0x100000;0x20000"
       arm_target_connect_with_reset="Yes"
@@ -58,7 +58,7 @@
       debug_register_definition_file="$(TargetsDir)/STM32/STM32L4x6_Peripherals.xml"
       linker_memory_map_file="$(ProjectDir)/stm32l476rg_MemoryMap.xml"
       linker_post_build_command="$(ToolChainDir)/objdump -d &quot;$(OutDir)/$(ProjectName)$(EXE)&quot; &gt; &quot;$(OutDir)/$(ProjectName).lss&quot;"
-      linker_section_placement_file="$(StudioDir)/targets/Cortex_M/flash_placement.xml"
+      linker_section_placement_file="$(ProjectDir)/flash_placement.xml"
       macros="DeviceVectorsFile=STM32L476xx.vec"
       project_directory=""
       project_type="Executable"
@@ -205,8 +205,12 @@
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c" />
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c">
+          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
+        </file>
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
@@ -950,6 +954,12 @@
         </folder>
         <folder Name="stdlib">
           <folder
+            Name="arclabel"
+            exclude=""
+            filter="*.*"
+            path="../lvgl/src/widgets/arclabel"
+            recurse="No" />
+          <folder
             Name="builtin"
             exclude=""
             filter="*.*"
@@ -1031,12 +1041,6 @@
             exclude=""
             filter="*.*"
             path="../lvgl/src/widgets/arc"
-            recurse="No" />
-          <folder
-            Name="arclabel"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/arclabel"
             recurse="No" />
           <folder
             Name="bar"
@@ -1469,6 +1473,7 @@
       </folder>
     </folder>
     <folder Name="System Files">
+      <file file_name="flash_placement.xml" />
       <file file_name="$(ProjectDir)/Src/hardfault.s" />
       <file file_name="Src/system/RamPreset.c" />
       <file file_name="C:/Users/bimse/AppData/Local/Rowley Associates Limited/CrossWorks for ARM/v4/packages/targets/STM32/STM32_Startup.s" />

@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    system/profiling.h
   * @author  Rainer
-  * @brief   Functions for a basic profiling support on the basis of a µs-Timer
+  * @brief   Functions for a basic profiling support on the basis of a s-Timer
   *
   ******************************************************************************
   */
@@ -37,6 +37,9 @@ typedef enum ActiveJobEnum {
 #endif
 #if USE_QSPI > 0 || USE_OSPI  >0
     JOB_TASK_XSPI,
+#endif
+#if USE_LVGL > 0
+    JOB_TASK_LVGL,
 #endif
 #if USE_USB > 0
     JOB_TASK_USBD,
@@ -93,15 +96,21 @@ typedef enum ActiveJobEnum {
 #else
     #define JOBNAMES4 JOBNAMES3
 #endif             
-#if USE_USB > 0
+#if USE_LVGL > 0
     #define JOBNAMES5 JOBNAMES4 \
-    "USB-DEV",
+    "LVGL",
 #else
     #define JOBNAMES5 JOBNAMES4
 #endif             
+#if USE_USB > 0
+    #define JOBNAMES6 JOBNAMES5 \
+    "USB-DEV",
+#else
+    #define JOBNAMES6 JOBNAMES5
+#endif             
 
 #define JOBNAMES99 \
-    JOBNAMES5     \
+    JOBNAMES6     \
     "ADC",        \
     "SLEEP",      \
     "STOP0",      \

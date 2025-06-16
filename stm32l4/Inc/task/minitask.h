@@ -42,6 +42,7 @@
 #define TASK_STDIN            10
 #define TASK_XSPI             11
 #define TASK_LCD              12
+#define TASK_LVGL             13
 #define TASK_PULSE            20
 #define TASK_SEQUENCE         21
 #define TASK_THP              30
