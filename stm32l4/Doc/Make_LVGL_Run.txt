@@ -1,6 +1,9 @@
 Steps to make LVGL run                                           RHB / 11.06.25
 -------------------------------------------------------------------------------
 
+000 As third party tools rely on that, the name of the subdir, lvgl resides in, 
+    has to be 'lvgl'!
+     
 001 As describe in setup guide, copy lv_conf-Template.h to lv_conf.h and chng
     #if 0 to #if 1
 
@@ -23,5 +26,21 @@ Steps to make LVGL run                                           RHB / 11.06.25
       #include "../../lvgl/lv_conf.h"
       lv_tick_inc(1);
 
-007
-
+007 Enable GC9A01 Driver:
+    a) Find this line in lv_conf: 
+        #define LV_USE_ST7735        0
+    b) after that define block add
+        #define LV_USE_GC9A01        1 
+    c) and also expand the or-clause at the following #if by
+         ... | LV_USE_GC9A01 ...
+    d) after the #if block add the following:
+        #if LV_USE_GC9A01
+            /* 
+             * GC9A01 driver needs this set to 1
+             */
+             #define LV_COLOR_16_SWAP  1 
+        #endif
+    e) Find this line in src/lv_conf_internal.h
+      #if (LV_USE_ST7735 | LV_USE_ST7789 | LV_USE_ST7796 | LV_USE_ILI9341 .....
+    f) add  ... | LV_USE_GC9A01 ... to the or'ed expression
+    g) unter src/drivers/display den komletten ordner gc9a01 ( 6 files ) ablegen
