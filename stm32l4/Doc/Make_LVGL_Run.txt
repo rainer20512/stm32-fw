@@ -4,7 +4,7 @@ Steps to make LVGL run                                           RHB / 11.06.25
 001 As describe in setup guide, copy lv_conf-Template.h to lv_conf.h and chng
     #if 0 to #if 1
 
-002 in lv_conf_internal.h in he scr subdir, remove one ../ from the line
+002 in lv_conf_internal.h in the scr subdir, remove one ../ from the line
            #include "../../lv_conf.h"                /* Else assume lv_conf.h is next to the lvgl folder. */
     so it reads
            #include "../lv_conf.h"                /* Else assume lv_conf.h is next to the lvgl folder. */

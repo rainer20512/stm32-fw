@@ -270,8 +270,10 @@ void SysTick_Handler(void)
 {
   HAL_IncTick();
 #if USE_LVGL > 0
+  void my_ui_tick(void);
   #include "../../lvgl/lv_conf.h"
   lv_tick_inc(1);
+  my_ui_tick();
 #endif
 }
 

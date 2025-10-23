@@ -253,6 +253,8 @@ void CheckForSleep(void)
 #include "../../../../lvgl/lv_conf.h"
 #include "../../../../lvgl/src/display/lv_display.h"
 #include "../../../../lvgl/src/drivers/lv_drivers.h"
+#include "../../../../eez-ui/src/ui/ui.h"
+
 #include "timer.h"
 #include "rtc.h"
 
@@ -263,18 +265,26 @@ void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size,
 void gc9a01_send_mass_data(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size, 
                        const uint8_t * param, size_t param_size);
 
+uint8_t ui_inited = 0;
 void task_init_lvgl(void)
 {
     lv_init();
     lv_display_t * disp = lv_gc9a01_create(240, 240, LV_LCD_FLAG_MIRROR_Y, gc9a01_send_cmd, gc9a01_send_mass_data );
-    lv_example_get_started_1();
+    ui_init();
+    // lv_example_get_started_1();
     TaskNotify(TASK_LVGL);
 }
+
 
 void Lvgl_TimerCB ( uint32_t arg)
 {
    UNUSED(arg);
    TaskNotify(TASK_LVGL);
+}
+
+void my_ui_tick(void)
+{
+    if ( ui_inited ) ui_tick();
 }
 
 void task_handle_lvgl( uint32_t arg )
@@ -284,6 +294,7 @@ void task_handle_lvgl( uint32_t arg )
     if(time_till_next == LV_NO_TIMER_READY) time_till_next = LV_DEF_REFR_PERIOD; /*handle LV_NO_TIMER_READY. Another option is to `sleep` for longer*/
     // os_delay_ms(time_till_next);
     MsTimerSetAbs ( MILLISEC_TO_TIMERUNIT(time_till_next), Lvgl_TimerCB, 0 );
+    ui_inited = 1;
 }
 
 int main(void)
