@@ -45,7 +45,7 @@
       arm_linker_jtag_pad_pre_dr="1"
       arm_linker_jtag_pad_pre_ir="5"
       arm_linker_process_stack_size="0"
-      arm_linker_stack_size="2048"
+      arm_linker_stack_size="4096"
       arm_simulator_memory_simulation_filename="$(TargetsDir)/STM32/STM32SimulatorMemory$(HostDLL)"
       arm_simulator_memory_simulation_parameter="STM32L476RG;0x100000;0x20000"
       arm_target_connect_with_reset="Yes"
@@ -208,12 +208,8 @@
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_cortex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_dma.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_exti.c" />
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
-        </file>
-        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c">
-          <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
-        </file>
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash.c" />
+        <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_flash_ex.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_gpio.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c.c" />
         <file file_name="E:/STM32L4/STM32Cube_FW_L4_V1.17.0/Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal_i2c_ex.c" />
@@ -253,11 +249,9 @@
       <folder
         Name="examples"
         exclude=""
-        filter="*.*"
-        path="E:/temp/LVGL/lvgl-master/lvgl-master/examples"
-        recurse="Yes">
-        <configuration Name="Common" build_exclude_from_build="Yes" />
-      </folder>
+        filter=""
+        path="../lvgl/examples"
+        recurse="Yes" />
       <folder Name="src">
         <folder Name="core">
           <file file_name="../lvgl/src/core/lv_global.h" />
@@ -951,27 +945,21 @@
             exclude=""
             filter="*.*"
             path="../lvgl/src/others/xml"
-            recurse="No" />
+            recurse="Yes" />
         </folder>
         <folder Name="stdlib">
-          <folder
-            Name="arclabel"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/arclabel"
-            recurse="No" />
           <folder
             Name="builtin"
             exclude=""
             filter="*.*"
             path="../lvgl/src/stdlib/builtin"
-            recurse="No" />
+            recurse="Yes" />
           <folder
             Name="clib"
             exclude=""
             filter="*.*"
             path="../lvgl/src/stdlib/clib"
-            recurse="No" />
+            recurse="Yes" />
           <folder
             Name="micropython"
             exclude=""
@@ -1024,218 +1012,12 @@
           <file file_name="../lvgl/src/tick/lv_tick.h" />
           <file file_name="../lvgl/src/tick/lv_tick_private.h" />
         </folder>
-        <folder Name="widgets">
-          <folder
-            Name="3dtexture"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/3dtexture"
-            recurse="No" />
-          <folder
-            Name="animimage"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/animimage"
-            recurse="No" />
-          <folder
-            Name="arc"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/arc"
-            recurse="No" />
-          <folder
-            Name="bar"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/bar"
-            recurse="No" />
-          <folder
-            Name="button"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/button"
-            recurse="No" />
-          <folder
-            Name="buttonmatrix"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/buttonmatrix"
-            recurse="No" />
-          <folder
-            Name="calendar"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/calendar"
-            recurse="No" />
-          <folder
-            Name="canvas"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/canvas"
-            recurse="No" />
-          <folder
-            Name="chart"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/chart"
-            recurse="No" />
-          <folder
-            Name="checkbox"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/checkbox"
-            recurse="No" />
-          <folder
-            Name="dropdown"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/dropdown"
-            recurse="No" />
-          <folder
-            Name="image"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/image"
-            recurse="No" />
-          <folder
-            Name="imagebutton"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/imagebutton"
-            recurse="No" />
-          <folder
-            Name="keyboard"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/keyboard"
-            recurse="No" />
-          <folder
-            Name="label"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/label"
-            recurse="No" />
-          <folder
-            Name="led"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/led"
-            recurse="No" />
-          <folder
-            Name="line"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/line"
-            recurse="No" />
-          <folder
-            Name="list"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/list"
-            recurse="No" />
-          <folder
-            Name="lottie"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/lottie"
-            recurse="No" />
-          <folder
-            Name="menu"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/menu"
-            recurse="No" />
-          <folder
-            Name="msgbox"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/msgbox"
-            recurse="No" />
-          <folder
-            Name="objx_templ"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/objx_templ"
-            recurse="No" />
-          <folder
-            Name="property"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/property"
-            recurse="No" />
-          <folder
-            Name="roller"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/roller"
-            recurse="No" />
-          <folder
-            Name="scale"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/scale"
-            recurse="No" />
-          <folder
-            Name="slider"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/slider"
-            recurse="No" />
-          <folder
-            Name="span"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/span"
-            recurse="No" />
-          <folder
-            Name="spinbox"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/spinbox"
-            recurse="No" />
-          <folder
-            Name="spinner"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/spinner"
-            recurse="No" />
-          <folder
-            Name="switch"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/switch"
-            recurse="No" />
-          <folder
-            Name="table"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/table"
-            recurse="No" />
-          <folder
-            Name="tabview"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/tabview"
-            recurse="No" />
-          <folder
-            Name="textarea"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/textarea"
-            recurse="No" />
-          <folder
-            Name="tileview"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/tileview"
-            recurse="No" />
-          <folder
-            Name="win"
-            exclude=""
-            filter="*.*"
-            path="../lvgl/src/widgets/win"
-            recurse="No" />
-        </folder>
+        <folder
+          Name="widgets"
+          exclude=""
+          filter="*.*"
+          path="../lvgl/src/widgets"
+          recurse="Yes" />
         <file file_name="../lvgl/src/lv_api_map_v8.h" />
         <file file_name="../lvgl/src/lv_api_map_v9_0.h" />
         <file file_name="../lvgl/src/lv_api_map_v9_1.h" />
@@ -1294,11 +1076,13 @@
     <folder Name="Project Files">
       <configuration Name="Common" filter="c;cpp;cxx;cc;h;s;asm;inc" />
       <folder Name="eez-ui">
+        <configuration Name="THUMB Debug" build_exclude_from_build="Yes" />
         <folder Name="src">
           <folder Name="flow">
             <file file_name="../eez-ui/src/ui/eez-flow.cpp">
               <configuration
                 Name="Common"
+                c_additional_options="-fpermissive"
                 gcc_cplusplus_language_standard="c++17" />
             </file>
             <file file_name="../eez-ui/src/ui/eez-flow.h" />

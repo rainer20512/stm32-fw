@@ -21,11 +21,18 @@ Steps to make LVGL run                                           RHB / 11.06.25
 
 005 The whole lvgl-tree should compile now w/o any errors or warnings
 
-006 connect tick interface: in stm32xxx_it.c in SysTick_Handler: 
-    insert these two lines:
-      #include "../../lvgl/lv_conf.h"
-      lv_tick_inc(1);
-
+006 connect tick interface: 
+    a) in stm32xxx_it.c in SysTick_Handler: 
+       insert these three lines:
+         #include "../../lvgl/lv_conf.h"
+         lv_tick_inc(1);
+         TaskNotify(TASK_LVGL);
+    b) in main.c/CheckForSleep:
+       comment out the code lines manipultating SysTick
+          // HAL_SuspendTick();
+       and below
+          // HAL_ResumeTick();
+    c) set CPU frq to a sufficient value, ie >= 24MHz to make (re)draw efficient 
 007 Enable GC9A01 Driver:
     a) Find this line in lv_conf: 
         #define LV_USE_ST7735        0
@@ -44,3 +51,8 @@ Steps to make LVGL run                                           RHB / 11.06.25
       #if (LV_USE_ST7735 | LV_USE_ST7789 | LV_USE_ST7796 | LV_USE_ILI9341 .....
     f) add  ... | LV_USE_GC9A01 ... to the or'ed expression
     g) unter src/drivers/display den komletten ordner gc9a01 ( 6 files ) ablegen
+
+008 Enable XML runtime Support
+    a) in lv_conf.h:
+        set LV_USE_OBJ_NAME to 1
+        set LV_USE_XML to 1

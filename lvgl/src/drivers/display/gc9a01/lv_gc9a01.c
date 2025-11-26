@@ -42,6 +42,7 @@
 #define GC9A01_DATA_MODE     	1
 
 
+#define GC9A01_DEBUG            0
 
 /**********************
  *      TYPEDEFS
@@ -564,12 +565,16 @@ void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size,
 	LV_DRV_DISP_CMD_DATA(GC9A01_CMD_MODE);
         for ( i = 0, p=cmd; i < cmd_size; p++,i++ ) {
             LV_DRV_DISP_SPI_WR_BYTE(*p);
-            DEBUG_PRINTF("C 0x%02x ", *p);
+            #if GC9A01_DEBUG > 0
+                DEBUG_PRINTF("C 0x%02x ", *p);
+            #endif
         }
 	LV_DRV_DISP_CMD_DATA(GC9A01_DATA_MODE);
     }
     if ( param_size > 0 ) {
-        DEBUG_PRINTF("%d data bytes starting with 0x%02x", param_size, *param);
+        #if GC9A01_DEBUG > 0
+            DEBUG_PRINTF("%d data bytes starting with 0x%02x", param_size, *param);
+        #endif
         for ( i = 0, p=param; i < param_size; p++,i++ ) {
             LV_DRV_DISP_SPI_WR_BYTE(*p);
         }
@@ -577,8 +582,9 @@ void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size,
 
     LV_DRV_DISP_SPI_CS(1);
 
-    DEBUG_PRINTF("\n");
-
+    #if GC9A01_DEBUG > 0
+        DEBUG_PRINTF("\n");
+    #endif
 
     /*IMPORTANT!!!
      *Inform the graphics library that you are ready with the flushing*/
@@ -599,12 +605,16 @@ void gc9a01_send_mass_data(lv_display_t * disp, const uint8_t * cmd, size_t cmd_
 	LV_DRV_DISP_CMD_DATA(GC9A01_CMD_MODE);
         for ( i = 0, pt=cmd; i < cmd_size; pt++,i++ ) {
             LV_DRV_DISP_SPI_WR_BYTE(*pt);
-            DEBUG_PRINTF("C 0x%02x ", *pt);
+            #if GC9A01_DEBUG > 0
+                DEBUG_PRINTF("C 0x%02x ", *pt);
+            #endif
         }
 	LV_DRV_DISP_CMD_DATA(GC9A01_DATA_MODE);
     }
     if ( param_size > 0 ) {
-        DEBUG_PRINTF("Blockwise: %d data bytes starting with 0x%02x", param_size, *param);
+        #if GC9A01_DEBUG > 0
+            DEBUG_PRINTF("Blockwise: %d data bytes starting with 0x%02x", param_size, *param);
+        #endif
         byte_left = param_size;
         pt = param;
         while (byte_left)
@@ -625,7 +635,9 @@ void gc9a01_send_mass_data(lv_display_t * disp, const uint8_t * cmd, size_t cmd_
 
     LV_DRV_DISP_SPI_CS(1);
 
-    DEBUG_PRINTF("\n");
+    #if GC9A01_DEBUG > 0
+        DEBUG_PRINTF("\n");
+    #endif
 
     /*IMPORTANT!!!
      *Inform the graphics library that you are ready with the flushing*/

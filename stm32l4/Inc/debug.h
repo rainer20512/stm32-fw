@@ -70,7 +70,7 @@
 #define CMACDEBUG           0
 #define DEBUG_PULSES        0
 
-#define DEBUG_PRINT_ADDITIONAL_TIMESTAMPS 0
+#define DEBUG_PRINT_ADDITIONAL_TIMESTAMPS 1
 
 #if DEBUG_MODE 
   #include <stdint.h>

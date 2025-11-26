@@ -266,14 +266,20 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
+static uint32_t cnt;
 void SysTick_Handler(void)
 {
   HAL_IncTick();
+  if ( 0 && ++cnt > 5000 ) {
+    cnt=0;
+    COM_print_time('t', true);
+  }
 #if USE_LVGL > 0
-  void my_ui_tick(void);
+  // void my_ui_tick(void);
   #include "../../lvgl/lv_conf.h"
   lv_tick_inc(1);
-  my_ui_tick();
+  TaskNotify(TASK_LVGL);
+// my_ui_tick();
 #endif
 }
 

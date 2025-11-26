@@ -185,7 +185,9 @@ void CheckForSleep(void)
         * Otherwise the Systick interrupt will wake up the device within 1ms (HAL time base)
         */
         // ProfilerPush(JOB_PREP_SLEEP);
-        HAL_SuspendTick();
+        #if USE_LVGL == 0
+            HAL_SuspendTick();
+        #endif
 
         /* Enable Power Control clock */
         __HAL_RCC_PWR_CLK_ENABLE();
@@ -239,7 +241,9 @@ void CheckForSleep(void)
         /*}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}*/
 
         /* Resume Tick interrupt if disabled prior to sleep mode entry*/
-        HAL_ResumeTick();
+        #if USE_LVGL == 0
+            HAL_ResumeTick();
+        #endif
         ProfilerPop();
         IO_UserLedOn(0);
         IO_UserLedOn(1);
@@ -259,19 +263,21 @@ void CheckForSleep(void)
 #include "rtc.h"
 
 void lv_example_get_started_1(void);
+void lv_example_anim_2(void);
 int GC9A01_init(void);
 void gc9a01_send_cmd(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size, 
                        const uint8_t * param, size_t param_size);
 void gc9a01_send_mass_data(lv_display_t * disp, const uint8_t * cmd, size_t cmd_size, 
                        const uint8_t * param, size_t param_size);
 
-uint8_t ui_inited = 0;
 void task_init_lvgl(void)
 {
     lv_init();
+    lv_tick_set_cb(HAL_GetTick);
     lv_display_t * disp = lv_gc9a01_create(240, 240, LV_LCD_FLAG_MIRROR_Y, gc9a01_send_cmd, gc9a01_send_mass_data );
-    ui_init();
-    // lv_example_get_started_1();
+    //lv_example_get_started_1();
+    lv_example_anim_2();
+    // lv_xml_register_component_from_data();
     TaskNotify(TASK_LVGL);
 }
 
@@ -282,20 +288,18 @@ void Lvgl_TimerCB ( uint32_t arg)
    TaskNotify(TASK_LVGL);
 }
 
-void my_ui_tick(void)
-{
-    if ( ui_inited ) ui_tick();
-}
 
 void task_handle_lvgl( uint32_t arg )
 {
     UNUSED(arg);
     uint32_t time_till_next = lv_timer_handler();
-    if(time_till_next == LV_NO_TIMER_READY) time_till_next = LV_DEF_REFR_PERIOD; /*handle LV_NO_TIMER_READY. Another option is to `sleep` for longer*/
-    // os_delay_ms(time_till_next);
-    MsTimerSetAbs ( MILLISEC_TO_TIMERUNIT(time_till_next), Lvgl_TimerCB, 0 );
-    ui_inited = 1;
-}
+
+    #if 0
+        if(time_till_next == LV_NO_TIMER_READY) time_till_next = LV_DEF_REFR_PERIOD; /*handle LV_NO_TIMER_READY. Another option is to `sleep` for longer*/
+        // os_delay_ms(time_till_next);
+        MsTimerSetAbs ( MILLISEC_TO_TIMERUNIT(time_till_next), Lvgl_TimerCB, 0 );
+     #endif
+}  
 
 int main(void)
 {
@@ -393,7 +397,7 @@ int main(void)
     /* Run forever */
     while(1) { 
         CheckForSleep();
-        TaskRunAll();
+        TaskRunAll();     
     }  
 }
 

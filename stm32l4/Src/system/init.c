@@ -175,7 +175,7 @@ void Init_DumpAndClearResetSource(void)
  * if you add addtional devices, THIS is the place to add the initialization
  * code 
  *****************************************************************************/
-static void Init_AllTimers ( void )
+static void Init_PWM_Timers ( void )
 {
   const PwmChannelT* act;  
   int32_t dev_idx;
@@ -276,7 +276,7 @@ void Init_OtherDevices(void)
       }
   #endif
 
-  Init_AllTimers();
+  Init_PWM_Timers();
 
 
   #if USE_DISPLAY > 0
@@ -452,7 +452,7 @@ void Init_DefineTasks(void)
 #if USE_QSPI > 0 || USE_OSPI > 0
   TaskRegisterTask(NULL,          task_handle_xspi, TASK_XSPI,    JOB_TASK_XSPI,     "QSPI task");
 #endif
-#if USE_LVGL > 0 
+#if USE_LVGL > 0
   TaskRegisterTask(task_init_lvgl, task_handle_lvgl, TASK_LVGL,    JOB_TASK_LVGL,     "LVGL task");
 #endif
 #ifdef TX18LISTENER

@@ -65,7 +65,7 @@
 #define USE_EPAPER          0
 #define USE_ONEWIRE         0
 #define USE_DS18X20         0
-#define USE_EEPROM_EMUL     0
+#define USE_EEPROM_EMUL     1
 #define USE_QENCODER        0
 #define USE_DISPLAY         0
 #define USE_DOGM132         0
@@ -341,7 +341,7 @@
     MK_CONFIGSTR(USE_LVGL_LOWLEVEL,26)
 
     
-    #define MAX_CONFIGSTR   25
+    #define MAX_CONFIGSTR   26
 
     const char *ConfigStrings[MAX_CONFIGSTR] = 
         {
