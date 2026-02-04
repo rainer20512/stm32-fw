@@ -411,6 +411,7 @@ void Init_OtherDevices(void)
 void task_handle_out  (uint32_t);
 void task_handle_xspi (uint32_t);
 
+
 /******************************************************************************
  * Initially put all tasks to task list. 
  * This code portion is heavily contaminated by #ifdef's. If you add 

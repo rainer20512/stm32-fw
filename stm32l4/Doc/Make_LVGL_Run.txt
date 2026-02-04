@@ -56,3 +56,5 @@ Steps to make LVGL run                                           RHB / 11.06.25
     a) in lv_conf.h:
         set LV_USE_OBJ_NAME to 1
         set LV_USE_XML to 1
+    b) in xmlparse.c in getDebugLevel ( ganz unten ):
+       da "getenv" nicht definiert ist, immer "defaultDebugLevel" zurückgeben

@@ -47,19 +47,9 @@
   <ProjectSessionItem path="FreeRTOS_Dual"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;config"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;Application;src;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;dev"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;dev;xspi"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;inc;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;debug"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;dev"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;dev;xspi"/>
-  <ProjectSessionItem path="FreeRTOS_Dual;CM7;common;src;system"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;BSP"/>
   <ProjectSessionItem path="FreeRTOS_Dual;CM7;common_h7;inc"/>
@@ -137,26 +127,27 @@
   <SessionOpenFile windowGroup="DockEditLeft" x="23" y="521" useTextEdit="1" path="../../common/src/dev/timer_dev.c" left="0" top="521" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="28" y="145" useTextEdit="1" path="CM7/Inc/config/config.h" left="0" top="107" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="8" y="117" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/at25sfxxx.c" path="../../common/src/dev/xspi/mx25r6435f.h" left="0" top="66" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="215" y="35" useTextEdit="1" path="../common_h7/Inc/config/qspi_config.h" left="17" top="25" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="215" y="35" useTextEdit="1" path="../common_h7/Inc/config/qspi_config.h" left="104" top="25" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="64" y="69" useTextEdit="1" path="../common_h7/Inc/config/gpio_config.h" left="0" top="47" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="456" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/main_c7.c" path="../common_h7/Src/system/devices_c7.c" left="0" top="417" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="1" y="45" useTextEdit="1" path="../common_h7/Src/bsp/arduino_giga.c" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="36" y="53" useTextEdit="1" path="../../common/src/debug_outbuf.c" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/init_c7.c" path="../common_h7/Inc/task/minitask.h" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="4" y="71" useTextEdit="1" path="../../common/inc/dev/hw_device.h" left="0" top="12" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="405" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/src/dev/xspi/xspi_helper.c" left="0" top="361" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="405" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/src/dev/xspi/xspi_helper.c" left="0" top="351" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="66" y="27" useTextEdit="1" path="../../common/inc/dev/xspi/xspi_helper.h" left="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="126" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/inc/dev/xspi_dev.h" left="0" top="100" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="112" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/at25sfxxx.c" left="0" selected="1" top="99" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="126" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/inc/dev/xspi_dev.h" left="0" top="86" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="28" y="112" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/at25sfxxx.c" left="0" top="99" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="39" y="442" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi_dev.c" path="../../common/src/dev/xspi/xspi_lowlevel.c" left="0" top="414" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="26" y="178" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_lowlevel.c" path="../../common/inc/dev/xspi/flash_interface.h" left="0" top="119" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="97" y="25" useTextEdit="1" path="../../common/inc/dev/xspi/xspi_lowlevel.h" left="0" top="9" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="47" y="19" useTextEdit="1" path="../../common/nextion/util/Utilities.h" left="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1032" useTextEdit="1" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" left="0" top="968" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="1032" useTextEdit="1" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_qspi.c" left="0" top="975" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="8" y="328" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/common/src/dev/xspi/xspi_helper.c" path="E:/STM32H7/STM32Cube_FW_H7_V1.9.0/Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_qspi.h" left="0" top="284" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="69" y="1650" useTextEdit="1" path="CM7/Src/interpreters.c" left="0" top="1622" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="19" y="47" useTextEdit="1" openedFrom="E:/GIT-Repos/stm32-fw/stm32h7/h745/CM7/Src/interpreters.c" path="CM7/Inc/eeprom.h" left="0" top="0" codecName="Default"/>
   <SessionOpenFile windowGroup="DockEditLeft" x="9" y="41" useTextEdit="1" path="../../common/src/log.c" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="30" useTextEdit="1" path="../common_h7/Inc/hardware.h" left="0" selected="1" top="0" codecName="Default"/>
  </Files>
  <ARMCrossStudioWindow activeProject="CM7" fileDialogDefaultFilter="*" autoConnectTarget="SEGGER J-Link" buildConfiguration="THUMB Debug" sessionSettings="" debugSearchFileMap="E:/GIT-Repos/stm32-fw/stm32h7/main.c&#xa;" fileDialogInitialDirectory="E:/GIT-Repos/stm32-fw/common/inc/dev/xspi" debugSearchPath="" autoConnectCapabilities="266111"/>
 </session>
