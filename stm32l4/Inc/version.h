@@ -24,6 +24,8 @@ extern "C" {
     #define APP_NAME "TxListener"
 #elif defined(PWM_DEVICE)
     #define APP_NAME "PWM Output"
+#elif defined(IO_DEVICE)
+    #define APP_NAME "Digital I/O"
 #else
     #define APP_NAME "Unknown App"
 #endif

@@ -44,6 +44,7 @@ void task_handle_tmr(uint32_t);                      /* Handle timer requests   
     int8_t SecTimerSetRel   ( uint32_t delta_secs, uint32_t bPeriodic, TimerCBT myCB, uint32_t arg  );
     int8_t SecTimerReUseRel ( int8_t id, uint32_t delta_secs, uint32_t bPeriodic, TimerCBT myCB, uint32_t arg  );
     int8_t SecTimerReSetRel ( int8_t id, uint32_t delta_secs );
+    void   SecTimerCancel   ( int8_t id );
     #ifdef TX18LISTENER
         bool SECTimerGetRel ( int8_t id, uint32_t *remaining_s );
     #endif // TX18LISTENER

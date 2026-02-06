@@ -57,3 +57,8 @@ where <nnn> is the threeed igit number from below
 *** 14.02.25 Version V1.08  
 
 014 Rework of XSPI device to use an universl flash chip interface
+
+015 New application type IO_DEVICE
+
+*** 06.02.26 Version V1.09
+

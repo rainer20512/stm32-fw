@@ -99,6 +99,9 @@ bool Config_SetVal(uint8_t idx, uint8_t newval)
     /* Update in RAM */
     *(config_raw+idx) = newval;
 
+    /* if a callback is specified, then it's time to call is */
+    if ( ptr->cb ) ptr->cb(newval);
+
     return true;
 }
 

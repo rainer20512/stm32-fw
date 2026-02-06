@@ -222,7 +222,9 @@ bool HW_IsEvtMode           ( uint32_t mode );
 bool HW_IsInputMode         ( uint32_t mode );
 bool HW_IsOutputMode        ( uint32_t mode );
 
+bool GpioIOInitOne          ( uint32_t devIdx, const HW_Gpio_IO_Type *gpio );
 bool GpioIOInitAll          ( uint32_t devIdx, const HW_GpioList_IO *gpioList );
+void GpioIODeInitOne        ( uint32_t devIdx, const HW_Gpio_IO_Type *gpio );
 void GpioIODeInitAll        ( uint32_t devIdx, const HW_GpioList_IO *gpioList );
 
 bool GpioADCInitAll         ( uint32_t devIdx, const HW_GpioList_ADC *gpioList );

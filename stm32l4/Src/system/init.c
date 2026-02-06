@@ -141,6 +141,89 @@ void Init_StartUserPWM ( void )
 
 #endif
 
+#if defined(IO_DEVICE)
+
+  #include "timer.h"
+  #include "eeprom.h"
+  #include "dev/io_dev.h"
+
+  #define DIGITAL_IO_NUM    3       // Index of digital IO PIn to use ( defined in gpio_config.h )
+  int8_t my_sectimer;               // ID of secondtimer to use, must be allocated permanently once
+  const HW_Gpio_IO_Type *my_io;     // digital output to use
+    
+  /******************************************************************************
+   * Callback for the Digital IO Timer
+   *****************************************************************************/
+  void DigIO_TimerCB (uint32_t currently_on)
+  {
+    uint32_t off_secs = MAX(0, config.sec_period - config.sec_ontime );
+
+    /* if duty_cycle = 100%, restart timer with period and leav output high */
+    if ( off_secs == 0 ) {
+       SecTimerReUseRel( my_sectimer, config.sec_period, false, DigIO_TimerCB, 1 );
+        return;
+    }
+    
+    /* otherwise toggle output and restart timer */
+    if ( currently_on ) {
+        /* Currently on: Output to low and restart timer for the rest of period */
+        IO_OutputLow(DIGITAL_IO_NUM);
+        SecTimerReUseRel( my_sectimer, off_secs, false, DigIO_TimerCB, 0 );
+    }else {
+        /* Currently off: Output to high and restart timer with high period */
+        IO_OutputHigh(DIGITAL_IO_NUM);
+        SecTimerReUseRel( my_sectimer, config.sec_ontime, false, DigIO_TimerCB, 1 );
+    }
+  }
+
+  /******************************************************************************
+   * Handle enable/disable of digital output
+   *****************************************************************************/
+  void OnUpd_IO_enable( uint32_t newval ) 
+  {
+    /* Make sure, we have a timer */    
+    if (my_sectimer == NO_TIMER_ID) {
+        DEBUG_PUTS("Digital IO - Error: No Timer");
+        return;
+    }
+
+    if ( newval ) {
+        /* if enabled, Configure digital output as configured */
+        GpioIOInitOne ( GetDevIdx(&HW_IO), my_io );
+        /* Output High*/
+        IO_OutputHigh(DIGITAL_IO_NUM);
+        /* Start Timer with duration of high period */
+        SecTimerReUseRel( my_sectimer, config.sec_ontime, false, DigIO_TimerCB, 1 );
+
+    } else {
+        /* if disabled, revert Gpio config to default ( ie analog inpt pin */
+        GpioIODeInitOne( GetDevIdx(&HW_IO), my_io );
+        /* cancel timer */
+        SecTimerCancel(my_sectimer);
+    }
+  }
+  /******************************************************************************
+   * Initialization of Digital I/O
+   * - Allocate a permanent second timer,
+   * - get digital output
+   * - start Timer,  if enabled
+   *****************************************************************************/
+  void IO_Timer_Init ( void )
+  {
+    my_sectimer = SecTimerAllocate(NO_TIMER_ID);
+    if (my_sectimer == NO_TIMER_ID) {
+        /* Allocation failed */
+        DEBUG_PUTS("Error: Cannot allocate permanent IO Timer");
+    }
+
+    my_io = &HW_IO.devGpioIO->gpio[DIGITAL_IO_NUM];
+    OnUpd_IO_enable(config.sec_enable);
+  }
+
+#endif
+
+
+
 /******************************************************************************
  * Find, dump and clear the most recent reset reason in PWR-SRx
  *****************************************************************************/
@@ -196,6 +279,7 @@ static void Init_AllTimers ( void )
 
     /* Next, initialize all PWM channels and start all that are marked as autostart */
     PWM_CH_Init(act);
+
 
   } /* for */
 }
@@ -350,6 +434,9 @@ void Init_OtherDevices(void)
        
   #endif
 
+  #if defined(IO_DEVICE)
+    IO_Timer_Init();
+  #endif
 }
 
 #include "task/minitask.h"

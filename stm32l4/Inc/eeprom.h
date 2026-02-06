@@ -61,11 +61,16 @@ extern const EE_LimitsT eelimits[];
 
 
 /* declare callbacks for PWM_DEVICE changes */
-#ifdef PWM_DEVICE
+#if defined(PWM_DEVICE)
+    /* declare callbacks for PWM_DEVICE changes */
     void OnUpd_PWM1_duty( uint32_t );
     void OnUpd_PWM2_duty( uint32_t );
     void OnUpd_PWM_frq( uint32_t );
+#elif defined ( IO_DEVICE )
+    /* declare callbacks for IO_DEVICE changes */
+    void OnUpd_IO_enable( uint32_t );
 #endif
+
 
 /******************************************************************************
  * Define the limits for every single eeprom item
@@ -99,6 +104,10 @@ extern const EE_LimitsT eelimits[];
     #define EELIMITS0E EELIMITS03 \
     /* 0e */ {                40,   0, 100, OnUpd_PWM1_duty, EEType_Uint8_Dec,   "PWM1 duty cycle[%]" },                                       \
     /* 0f */ {                60,   0, 100, OnUpd_PWM2_duty, EEType_Uint8_Dec,   "PWM2 duty cycle[%]" },               
+#elif   defined(IO_DEVICE)
+    #define EELIMITS0E EELIMITS03 \
+    /* 0e */ {                20,   0, 255, NULL, EEType_Uint8_Dec,   "Signal Period [s]" },                                       \
+    /* 0f */ {                10,   0, 255, NULL, EEType_Uint8_Dec,   "Signal Hi time [s]" },               
 #elif defined(TX18LISTENER)
     #define EELIMITS0E EELIMITS03 \
     /* 0e */ {    TX18_SKIP_INIT,   0,  32, NULL, EEType_Uint8_Dec,   "OOK-Skips in init mode" },                                \
@@ -125,19 +134,23 @@ extern const EE_LimitsT eelimits[];
     /* 1d */ { USER_CLOCKCONFIG,    0,  25, NULL, EEType_Uint8_Dec,   "Clock configuration to use" },                            
 #if defined(TX18LISTENER)
     #define EELIMITS1E EELIMITS10 \
-    /* 1e */ {         TX_OOK_FRQ,  0,   1, NULL, EEType_Uint8_Dec,   "OOK-Frequency\n0=434.000, 1=433.850" },                    
+    /* 1e */ {         TX_OOK_FRQ,  0,   1, NULL, EEType_Uint8_Dec,   "OOK-Frequency\n0=434.000, 1=433.850" },                   \
+    /* 1f */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1f" },   
 #elif defined(PWM_DEVICE)
     #define EELIMITS1E EELIMITS10 \
-   /* 1e */ {                100,  10, 200, OnUpd_PWM_frq, EEType_Uint8_Dec,   "PWM frequency[Hz*100]" },               
+    /* 1e */ {                100,  10, 200, OnUpd_PWM_frq, EEType_Uint8_Dec,   "PWM frequency[Hz*100]" },                       \
+    /* 1f */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1f" },   
+#elif defined(IO_DEVICE)
+    #define EELIMITS1E EELIMITS10 \
+    /* 1e */ {                 1,   0,   1, OnUpd_IO_enable, EEType_Uint8_Dec,   "Enable digital I/O" },                       \
+    /* 1f */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1f" },   
 #else
     #define EELIMITS1E EELIMITS10 \
-    /* 1e */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1e" },                                             
+    /* 1e */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1e" },                                             \
+    /* 1f */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1f" },   
 #endif
 
-#define EELIMITS1F EELIMITS1E \
-    /* 1f */ {                 0,   0, 255, NULL, EEType_Uint8_Dec,   "Unused 1f" },   
-
-#define EELIMITS { EELIMITS1F }
+#define EELIMITS { EELIMITS1E }
 
 #define EEPROM_FORCE_RESET_IDX		0				// Index of the reset flag
 #define EEPROM_DISPLAY_SCHEME_IDX       9                               // Index of display scheme
@@ -172,6 +185,9 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
 #elif defined(PWM_DEVICE)
     /* 0e */ uint8_t pwm_duty1;           //!< PWM1 duty cycle
     /* 0f */ uint8_t pwm_duty2;           //!< PWM2 duty cycle
+#elif defined(IO_DEVICE)
+    /* 0e */ uint8_t sec_period;          //!< Period of output signal
+    /* 0f */ uint8_t sec_ontime;          //!< duration on High-signal within period
 #else
     /* 0e */ uint8_t unused_0e;           //!< Unused
     /* 0f */ uint8_t unused_0f;           //!< Unused
@@ -185,16 +201,23 @@ typedef struct { // each variables must be uint8_t or int8_t without exception
     /* 1d */ uint8_t clk_config;          //!< clock configuration to use
     #if defined(TX18LISTENER)
         /* 1e */ uint8_t ook_frq;             //!< ook frequency select
+        /* 1f */ uint8_t unused_1f;           //!< Unused
     #elif defined(PWM_DEVICE)
-       /* 1e */ uint8_t pwm_frq;              //!< user PWM frequency in Hz*100
+        /* 1e */ uint8_t pwm_frq;             //!< user PWM frequency in Hz*100
+        /* 1f */ uint8_t unused_1f;           //!< Unused
+    #elif defined(IO_DEVICE)
+        /* 1e */ uint8_t sec_enable;          //!< enable the digital output 
+        /* 1f */ uint8_t unused_1f;           //!< Unused
     #else
         /* 1e */ uint8_t unused_1e;           //!< Unused
+        /* 1f */ uint8_t unused_1f;           //!< Unused
     #endif
-    /* 1f */ uint8_t unused_1f;           //!< Unused
 } EE_ConfigT;
 
 
-#if defined(PWM_DEVICE)
+#if defined(IO_DEVICE)
+	#define EE_LAYOUT (0xD4) //!< EEPROM layout version (IO-Device)
+#elif defined(PWM_DEVICE)
 	#define EE_LAYOUT (0xD3) //!< EEPROM layout version (PWM-Output)
 #elif defined(STROMSENSOR)
 	#define EE_LAYOUT (0xD2) //!< EEPROM layout version (Stromsensor)

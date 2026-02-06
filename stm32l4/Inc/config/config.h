@@ -37,12 +37,12 @@
  ********************************************************************************
  */ 
 //#define NOEXTENSION 
-#define UNIVERSAL 
+//#define UNIVERSAL 
 //#define MULTITEMP
 //#define ENVIRONMENTAL
 //#define TX18LISTENER
 //#define PWM_DEVICE        
-
+#define IO_DEVICE  
 
 /*
  ********************************************************************************
@@ -50,29 +50,29 @@
  ********************************************************************************
  */ 
 #define MAJOR_VERSION   1
-#define MINOR_VERSION   08
+#define MINOR_VERSION   09
 
 /*
  ********************************************************************************
  * Application tayloring
  ********************************************************************************
  */ 
-#define USE_RFM12           0
-#define USE_RFM69           0           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_RFM12           1
+#define USE_RFM69           1           // When RFMxx is installed, always initialize it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_BMP085          0
 #define USE_BME280          0
 #define USE_CCS811          0
 #define USE_EPAPER          0
-#define USE_ONEWIRE         0
-#define USE_DS18X20         0
+#define USE_ONEWIRE         1
+#define USE_DS18X20         1
 #define USE_EEPROM_EMUL     1
-#define USE_QENCODER        0
-#define USE_DISPLAY         0
-#define USE_DOGM132         0
+#define USE_QENCODER        1
+#define USE_DISPLAY         1
+#define USE_DOGM132         1
 #define USE_SECONDTIMER     1
 #define USE_HW_PWMTIMER     1
 #define USE_BASICTIMER      1
-#define USE_QSPI            1            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
+#define USE_QSPI            0            // When QSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI1           0            // When OSPI flash is installed, always USE it, otherwise it will consume roundabout 2mA in uninitialized state!
 #define USE_OSPI2           0            
 #define USE_CAN             0
@@ -80,7 +80,7 @@
 #define USE_FMC_SRAM        0
 #define USE_FMC_NOR         0
 #define USE_PERIPHTIMER     1
-#define USE_USER_PWMTIMER   0
+#define USE_USER_PWMTIMER   1
 
 #define GENERAL_BAUDRATE    500000
 #define CAN_BAUDRATE        500000       // default CAN Baudrate
@@ -244,6 +244,15 @@
 #if defined(MULTITEMP)
     #if !defined(USE_DS18X20) || USE_DS18X20 < 1
         #error "MULTITEMP requires USE_DS18X20"
+    #endif
+#endif
+
+/******************************************************************************
+ * Check and set constraints for IO_DEVICE
+ *****************************************************************************/
+#if defined(IO_DEVICE)
+    #if USE_SECONDTIMER < 1
+        #error "IO_DEVICE requires USE_SECONDTIMER"
     #endif
 #endif
 

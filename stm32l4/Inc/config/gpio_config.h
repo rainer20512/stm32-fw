@@ -97,12 +97,18 @@
   // Blue pushbutton
   #define IO_02_IRQ                         { BUTTON_IRQ_PRIO, 0 }
   #define IO_02                             { GPIO_PIN_13, GPIOC, GPIO_MODE_IT_RISING_FALLING, GPIO_SPEED_FREQ_HIGH, GPIO_PULLUP, HW_IO_NORMAL,   HW_INPUT,         IO_02_IRQ, "Blue PushBtn" }
-
+#if defined (IO_DEVICE)
+  #define IO_03                             { GPIO_PIN_3,  GPIOA, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "Digtal Output" }
+#endif
 /* Example entry for additional IO-Pins
-  #define IO_03                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "GpioOutput" }
+  #define IO_04                             { GPIO_PIN_8,  GPIOC, GPIO_MODE_OUTPUT_PP,         GPIO_SPEED_FREQ_LOW, GPIO_NOPULL, HW_IO_NORMAL,   HW_OUTPUT_LOW,    GPIO_NO_IRQ, "GpioOutput" }
 */
 
+#if defined (IO_DEVICE)
+  #define IO_NUM                            4
+#else
   #define IO_NUM                            3
+#endif
 
 #elif defined(DRAGONFLY476)
   // LEDs  

@@ -195,7 +195,7 @@ bool HW_IsOutputMode ( uint32_t mode )
  * Alle GPIO_InitTypeDef-structure members are defined in the corresponding
  * gpio-structure.
  *****************************************************************************/
-static bool GpioIOInitOne(uint32_t devIdx, const HW_Gpio_IO_Type *gpio)
+ bool GpioIOInitOne(uint32_t devIdx, const HW_Gpio_IO_Type *gpio)
 {
     GPIO_InitTypeDef Init;
 
@@ -238,7 +238,7 @@ bool GpioIOInitAll ( uint32_t devIdx, const HW_GpioList_IO *gpioList )
    return true;
 }
 
-static void GpioIODeInitOne   ( uint32_t devIdx, const HW_Gpio_IO_Type *gpio )
+void GpioIODeInitOne   ( uint32_t devIdx, const HW_Gpio_IO_Type *gpio )
 {
     /* Disable Interrupt, if Input and Interrupt mode configured and interrupt configured */
     /* and interrupt is not shared between more than one pin ( PIN5 .. PIN15 have shared interrupts ) */

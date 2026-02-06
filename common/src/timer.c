@@ -876,7 +876,19 @@ int8_t SecTimerSetRel ( uint32_t delta_secs, uint32_t bPeriodic, TimerCBT myCB, 
     return SecTimerReUseRel(id, delta_secs, bPeriodic, myCB, arg );
 }
 
-
+/*********************************************************************************
+ * @brief  cancel a running second timer, ie no more events for this timer
+ *
+ * @param  id         - previous allocated secTimer-ID.
+ ********************************************************************************/
+void SecTimerCancel(int8_t id)
+{
+    if (SECTIMER_USED(id) ) {
+        SECTIMER_FREE(id);
+        /* recalculate next second timer match */
+        sectmrFindNext();
+    }
+}
 
 /*********************************************************************************
  * @brief  Handle Second timers. Should be called with every second change
