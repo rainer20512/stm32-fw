@@ -47,7 +47,7 @@ void SetFskDataAvailableCB  (RFM_DeviceType *rfm, pFnIrqCB cb);
     void     rfm_spi_write8     (uint8_t addr, uint8_t val8);
     void     rfm_spi_write16    (uint8_t addr, uint16_t val16);
     void     rfm_spi_write24    (uint8_t addr, uint32_t val32);
-    void     rfm_spi_write_bulk (uint8_t addr, uint8_t *data, uint8_t size);
+    /* RHB unused void     rfm_spi_write_bulk (uint8_t addr, uint8_t *data, uint8_t size); */
     uint8_t  rfm_spi_read8      (uint8_t addr);
     uint16_t rfm_spi_read16     (uint8_t addr);
     #define RFM69_INT_DIS()           BUSY_IRQ_Disable(rfmSpi);

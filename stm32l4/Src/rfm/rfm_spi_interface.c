@@ -193,6 +193,7 @@ void rfm_spi_write24(uint8_t addr, uint32_t val24)
  *  \param size number of bytes to be written
  *
  ******************************************************************************/
+/* RHB unused ----------------------------------------------------------------
 void rfm_spi_write_bulk(uint8_t addr, uint8_t *data, uint8_t size)
 {
 
@@ -206,7 +207,7 @@ void rfm_spi_write_bulk(uint8_t addr, uint8_t *data, uint8_t size)
     Spi8TxVector(rfmSpi, data, size);
     RFMxx_SPI_DESELECT();
 }
-
+----------------------------------------------------------------------------- */
 
 /*!
  *******************************************************************************

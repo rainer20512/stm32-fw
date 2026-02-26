@@ -1739,8 +1739,11 @@ ADD_SUBMODULE(Test);
         #define XSPI_BASE           QSPI_BASE
         #define XSPI_HW             HW_QSPI1
     #endif
+
     #include "dev/xspi_dev.h"   
-    
+    #include "dev/xspi/xspi_lowlevel.h"
+    #include "dev/xspi/xspi_helper.h"
+
     bool XSpecific_WriteEnable(XXSPI_HandleTypeDef *hxspi);
     
     /*********************************************************************************
